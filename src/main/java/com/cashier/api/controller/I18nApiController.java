@@ -3,9 +3,9 @@ package com.cashier.api.controller;
 import com.cashier.i18n.I18nManager;
 import com.cashier.i18n.I18nManager.LocaleInfo;
 import com.cashier.i18n.I18n;
+import com.cashier.util.LoggerFactoryUtil;
 import io.javalin.http.Context;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  * 国际化 REST API 控制器
  */
 public class I18nApiController {
-    private static final Logger logger = LoggerFactory.getLogger(I18nApiController.class);
+    private static final Logger logger = LoggerFactoryUtil.getLogger(I18nApiController.class);
     
     /**
      * 获取当前语言
@@ -42,8 +42,8 @@ public class I18nApiController {
      */
     public static void setLocale(Context ctx) {
         try {
-            Map<String, Object> body = ctx.bodyAsClass(Map.class);
-            String localeStr = (String) body.get("locale");
+            Map<?, ?> body = ctx.bodyAsClass(Map.class);
+            String localeStr = getString(body, "locale");
             
             if (localeStr == null || localeStr.isEmpty()) {
                 ctx.status(400).json(Map.of(
@@ -207,5 +207,10 @@ public class I18nApiController {
                 "error", "找不到语言包: " + localeTag
             ));
         }
+    }
+
+    private static String getString(Map<?, ?> body, String key) {
+        Object value = body.get(key);
+        return value != null ? value.toString() : null;
     }
 }

@@ -6,9 +6,9 @@ import com.cashier.dao.BackupDAO;
 import com.cashier.service.BackupService;
 import com.cashier.api.sync.SyncManager;
 import com.cashier.api.sync.SyncEventType;
+import com.cashier.util.LoggerFactoryUtil;
 import io.javalin.http.Context;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  * 云备份 REST API 控制器
  */
 public class BackupApiController {
-    private static final Logger logger = LoggerFactory.getLogger(BackupApiController.class);
+    private static final Logger logger = LoggerFactoryUtil.getLogger(BackupApiController.class);
     
     /**
      * 执行备份
@@ -30,11 +30,11 @@ public class BackupApiController {
      */
     public static void executeBackup(Context ctx) {
         try {
-            Map<String, Object> body = ctx.bodyAsClass(Map.class);
+            Map<?, ?> body = ctx.bodyAsClass(Map.class);
             
-            String contentTypeStr = (String) body.getOrDefault("contentType", "FULL");
-            String targetStr = (String) body.getOrDefault("target", "LOCAL");
-            String operator = (String) body.getOrDefault("operator", "system");
+            String contentTypeStr = getString(body, "contentType", "FULL");
+            String targetStr = getString(body, "target", "LOCAL");
+            String operator = getString(body, "operator", "system");
             
             BackupRecord.BackupContentType contentType = 
                 BackupRecord.BackupContentType.valueOf(contentTypeStr);
@@ -247,42 +247,42 @@ public class BackupApiController {
      */
     public static void updateConfig(Context ctx) {
         try {
-            Map<String, Object> body = ctx.bodyAsClass(Map.class);
+            Map<?, ?> body = ctx.bodyAsClass(Map.class);
             
             BackupConfig config = BackupService.getConfig();
             
             if (body.containsKey("autoBackupEnabled")) {
-                config.autoBackupEnabled = Boolean.parseBoolean(body.get("autoBackupEnabled").toString());
+                config.autoBackupEnabled = Boolean.parseBoolean(String.valueOf(body.get("autoBackupEnabled")));
             }
             if (body.containsKey("target")) {
-                config.target = BackupRecord.BackupTarget.fromString((String) body.get("target"));
+                config.target = BackupRecord.BackupTarget.fromString(getString(body, "target", null));
             }
             if (body.containsKey("contentType")) {
-                config.contentType = BackupRecord.BackupContentType.valueOf((String) body.get("contentType"));
+                config.contentType = BackupRecord.BackupContentType.valueOf(getString(body, "contentType", null));
             }
             if (body.containsKey("backupIntervalHours")) {
-                config.backupIntervalHours = ((Number) body.get("backupIntervalHours")).intValue();
+                config.backupIntervalHours = getInt(body, "backupIntervalHours", config.backupIntervalHours);
             }
             if (body.containsKey("retentionDays")) {
-                config.retentionDays = ((Number) body.get("retentionDays")).intValue();
+                config.retentionDays = getInt(body, "retentionDays", config.retentionDays);
             }
             if (body.containsKey("maxBackupCount")) {
-                config.maxBackupCount = ((Number) body.get("maxBackupCount")).intValue();
+                config.maxBackupCount = getInt(body, "maxBackupCount", config.maxBackupCount);
             }
             if (body.containsKey("localBackupPath")) {
-                config.localBackupPath = (String) body.get("localBackupPath");
+                config.localBackupPath = getString(body, "localBackupPath", null);
             }
             
             // 云存储配置
-            if (body.containsKey("aliyunEndpoint")) config.aliyunEndpoint = (String) body.get("aliyunEndpoint");
-            if (body.containsKey("aliyunBucket")) config.aliyunBucket = (String) body.get("aliyunBucket");
-            if (body.containsKey("aliyunAccessKey")) config.aliyunAccessKey = (String) body.get("aliyunAccessKey");
-            if (body.containsKey("aliyunSecretKey")) config.aliyunSecretKey = (String) body.get("aliyunSecretKey");
+            if (body.containsKey("aliyunEndpoint")) config.aliyunEndpoint = getString(body, "aliyunEndpoint", null);
+            if (body.containsKey("aliyunBucket")) config.aliyunBucket = getString(body, "aliyunBucket", null);
+            if (body.containsKey("aliyunAccessKey")) config.aliyunAccessKey = getString(body, "aliyunAccessKey", null);
+            if (body.containsKey("aliyunSecretKey")) config.aliyunSecretKey = getString(body, "aliyunSecretKey", null);
             
-            if (body.containsKey("tencentRegion")) config.tencentRegion = (String) body.get("tencentRegion");
-            if (body.containsKey("tencentBucket")) config.tencentBucket = (String) body.get("tencentBucket");
-            if (body.containsKey("tencentSecretId")) config.tencentSecretId = (String) body.get("tencentSecretId");
-            if (body.containsKey("tencentSecretKey")) config.tencentSecretKey = (String) body.get("tencentSecretKey");
+            if (body.containsKey("tencentRegion")) config.tencentRegion = getString(body, "tencentRegion", null);
+            if (body.containsKey("tencentBucket")) config.tencentBucket = getString(body, "tencentBucket", null);
+            if (body.containsKey("tencentSecretId")) config.tencentSecretId = getString(body, "tencentSecretId", null);
+            if (body.containsKey("tencentSecretKey")) config.tencentSecretKey = getString(body, "tencentSecretKey", null);
             
             BackupService.updateConfig(config);
             
@@ -314,18 +314,19 @@ public class BackupApiController {
                 .sum();
             
             BackupConfig config = BackupService.getConfig();
+
+            Map<String, Object> data = new HashMap<>();
+            data.put("totalBackups", totalBackups);
+            data.put("successfulBackups", successful.size());
+            data.put("totalSizeBytes", totalSize);
+            data.put("totalSizeFormatted", formatSize(totalSize));
+            data.put("autoBackupEnabled", config.autoBackupEnabled);
+            data.put("nextBackupTime", config.nextBackupTime != null ? config.nextBackupTime.toString() : null);
+            data.put("retentionDays", config.retentionDays);
             
             ctx.json(Map.of(
                 "success", true,
-                "data", Map.of(
-                    "totalBackups", totalBackups,
-                    "successfulBackups", successful.size(),
-                    "totalSizeBytes", totalSize,
-                    "totalSizeFormatted", formatSize(totalSize),
-                    "autoBackupEnabled", config.autoBackupEnabled,
-                    "nextBackupTime", config.nextBackupTime != null ? config.nextBackupTime.toString() : null,
-                    "retentionDays", config.retentionDays
-                )
+                "data", data
             ));
             
         } catch (SQLException e) {
@@ -398,5 +399,21 @@ public class BackupApiController {
         if (bytes < 1024 * 1024) return (bytes / 1024) + " KB";
         if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)) + " MB";
         return (bytes / (1024 * 1024 * 1024)) + " GB";
+    }
+
+    private static String getString(Map<?, ?> body, String key, String defaultValue) {
+        Object value = body.get(key);
+        return value != null ? value.toString() : defaultValue;
+    }
+
+    private static int getInt(Map<?, ?> body, String key, int defaultValue) {
+        Object value = body.get(key);
+        if (value instanceof Number number) {
+            return number.intValue();
+        }
+        if (value != null) {
+            return Integer.parseInt(value.toString());
+        }
+        return defaultValue;
     }
 }

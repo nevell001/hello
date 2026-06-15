@@ -9,7 +9,7 @@ import com.cashier.model.Transaction;
 import com.cashier.api.sync.SyncBroadcastService;
 import com.cashier.api.sync.SyncEventType;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.cashier.util.LoggerFactoryUtil;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -23,7 +23,7 @@ import java.util.Map;
  * 发票服务层
  */
 public class InvoiceService {
-    private static final Logger logger = LoggerFactory.getLogger(InvoiceService.class);
+    private static final Logger logger = LoggerFactoryUtil.getLogger(InvoiceService.class);
     
     // 默认销售方信息（可配置）
     private static String defaultSellerName = "某某商贸有限公司";

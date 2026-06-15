@@ -4,7 +4,7 @@ import com.cashier.model.BackupRecord;
 import com.cashier.model.BackupConfig;
 import com.cashier.util.DatabaseManager;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.cashier.util.LoggerFactoryUtil;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -15,7 +15,7 @@ import java.util.List;
  * 备份记录数据访问层
  */
 public class BackupDAO {
-    private static final Logger logger = LoggerFactory.getLogger(BackupDAO.class);
+    private static final Logger logger = LoggerFactoryUtil.getLogger(BackupDAO.class);
 
     /**
      * 创建备份表

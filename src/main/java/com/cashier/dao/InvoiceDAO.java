@@ -4,7 +4,7 @@ import com.cashier.model.Invoice;
 import com.cashier.model.InvoiceItem;
 import com.cashier.util.DatabaseManager;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.cashier.util.LoggerFactoryUtil;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -15,7 +15,7 @@ import java.util.List;
  * 发票数据访问层
  */
 public class InvoiceDAO {
-    private static final Logger logger = LoggerFactory.getLogger(InvoiceDAO.class);
+    private static final Logger logger = LoggerFactoryUtil.getLogger(InvoiceDAO.class);
     
     /**
      * 创建发票表

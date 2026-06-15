@@ -8,7 +8,7 @@ import com.cashier.util.PasswordUtil;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.cashier.util.LoggerFactoryUtil;
 
 import java.util.HashMap;
 import java.util.List;
@@ -18,7 +18,7 @@ import java.util.Map;
  * 用户管理 REST API
  */
 public class UserApiController {
-    private static final Logger logger = LoggerFactory.getLogger(UserApiController.class);
+    private static final Logger logger = LoggerFactoryUtil.getLogger(UserApiController.class);
     
     /**
      * 检查管理员权限

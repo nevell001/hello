@@ -7,7 +7,7 @@ import com.cashier.util.PasswordUtil;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.cashier.util.LoggerFactoryUtil;
 
 import java.util.Map;
 
@@ -15,7 +15,7 @@ import java.util.Map;
  * 认证接口
  */
 public class AuthController {
-    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
+    private static final Logger logger = LoggerFactoryUtil.getLogger(AuthController.class);
     
     /**
      * 登录

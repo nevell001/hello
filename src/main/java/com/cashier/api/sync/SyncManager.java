@@ -4,7 +4,7 @@ import com.cashier.model.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.websocket.WsContext;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.cashier.util.LoggerFactoryUtil;
 
 import java.util.List;
 import java.util.Map;
@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 管理多终端连接和事件广播
  */
 public class SyncManager {
-    private static final Logger logger = LoggerFactory.getLogger(SyncManager.class);
+    private static final Logger logger = LoggerFactoryUtil.getLogger(SyncManager.class);
     private static final ObjectMapper mapper = new ObjectMapper();
     
     private static SyncManager instance;

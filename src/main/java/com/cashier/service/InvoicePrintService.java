@@ -3,7 +3,7 @@ package com.cashier.service;
 import com.cashier.model.Invoice;
 import com.cashier.model.InvoiceItem;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.cashier.util.LoggerFactoryUtil;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -21,7 +21,7 @@ import java.util.Date;
  * 生成发票 HTML/PDF 文件
  */
 public class InvoicePrintService {
-    private static final Logger logger = LoggerFactory.getLogger(InvoicePrintService.class);
+    private static final Logger logger = LoggerFactoryUtil.getLogger(InvoicePrintService.class);
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     
     // 输出目录

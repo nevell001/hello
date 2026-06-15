@@ -76,4 +76,12 @@
     <!-- 缓存管理器日志 -->
     <logger name="com.cashier.util.CacheManager" level="DEBUG" />
 
+    <!-- 第三方库日志：避免开发 DEBUG 根级别输出 POI/PDFBox 内部细节 -->
+    <logger name="org.apache.poi" level="WARN" />
+    <logger name="org.apache.pdfbox" level="WARN" />
+    <logger name="org.apache.fontbox" level="WARN" />
+    <logger name="org.eclipse.jetty" level="INFO" />
+    <logger name="com.zaxxer.hikari" level="INFO" />
+    <logger name="org.apache.logging.log4j" level="WARN" />
+
 </configuration>

@@ -8,9 +8,9 @@ import com.cashier.dao.InvoiceDAO;
 import com.cashier.api.ApiConfig;
 import com.cashier.api.sync.SyncManager;
 import com.cashier.api.sync.SyncEventType;
+import com.cashier.util.LoggerFactoryUtil;
 import io.javalin.http.Context;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.net.Socket;
 import java.net.InetSocketAddress;
@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  * 网络打印机管理、打印任务提交、状态查询
  */
 public class PrintApiController {
-    private static final Logger logger = LoggerFactory.getLogger(PrintApiController.class);
+    private static final Logger logger = LoggerFactoryUtil.getLogger(PrintApiController.class);
     
     private static final int DEFAULT_PAPER_WIDTH = 48; // 80mm 纸张约48字符
     
@@ -148,12 +148,11 @@ public class PrintApiController {
      */
     public static void addPrinter(Context ctx) {
         try {
-            Map<String, Object> body = ctx.bodyAsClass(Map.class);
+            Map<?, ?> body = ctx.bodyAsClass(Map.class);
             
-            String name = (String) body.get("name");
-            String host = (String) body.get("host");
-            Integer port = body.get("port") != null ? 
-                ((Number) body.get("port")).intValue() : 9100;
+            String name = getString(body, "name", null);
+            String host = getString(body, "host", null);
+            int port = getInt(body, "port", 9100);
             
             if (name == null || host == null) {
                 ctx.status(400).json(Map.of(
@@ -172,12 +171,12 @@ public class PrintApiController {
             // 设置配置
             if (body.containsKey("timeout")) {
                 Map<String, String> config = new HashMap<>();
-                config.put("timeout", String.valueOf(((Number) body.get("timeout")).intValue()));
+                config.put("timeout", String.valueOf(getInt(body, "timeout", 0)));
                 printer.setConfiguration(config);
             }
             
             if (body.containsKey("paperWidth")) {
-                printer.setPaperWidth(((Number) body.get("paperWidth")).intValue());
+                printer.setPaperWidth(getInt(body, "paperWidth", DEFAULT_PAPER_WIDTH));
             }
             
             // 注册到管理器
@@ -446,10 +445,10 @@ public class PrintApiController {
         String deviceId = ctx.pathParam("id");
         
         try {
-            Map<String, Object> body = ctx.bodyAsClass(Map.class);
-            String content = (String) body.get("content");
-            Boolean printLogo = body.get("printLogo") != null ? (Boolean) body.get("printLogo") : false;
-            Boolean openCashDrawer = body.get("openCashDrawer") != null ? (Boolean) body.get("openCashDrawer") : false;
+            Map<?, ?> body = ctx.bodyAsClass(Map.class);
+            String content = getString(body, "content", null);
+            boolean printLogo = getBoolean(body, "printLogo", false);
+            boolean openCashDrawer = getBoolean(body, "openCashDrawer", false);
             
             if (content == null || content.isEmpty()) {
                 ctx.status(400).json(Map.of(
@@ -727,5 +726,26 @@ public class PrintApiController {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private static String getString(Map<?, ?> body, String key, String defaultValue) {
+        Object value = body.get(key);
+        return value != null ? value.toString() : defaultValue;
+    }
+
+    private static int getInt(Map<?, ?> body, String key, int defaultValue) {
+        Object value = body.get(key);
+        if (value instanceof Number number) {
+            return number.intValue();
+        }
+        if (value != null) {
+            return Integer.parseInt(value.toString());
+        }
+        return defaultValue;
+    }
+
+    private static boolean getBoolean(Map<?, ?> body, String key, boolean defaultValue) {
+        Object value = body.get(key);
+        return value != null ? Boolean.parseBoolean(value.toString()) : defaultValue;
     }
 }

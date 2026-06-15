@@ -7,14 +7,14 @@ import io.javalin.websocket.WsConnectContext;
 import io.javalin.websocket.WsCloseContext;
 import io.javalin.websocket.WsMessageContext;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.cashier.util.LoggerFactoryUtil;
 
 /**
  * WebSocket 同步处理器
  * 处理终端连接、断开、消息
  */
 public class SyncWebSocketHandler {
-    private static final Logger logger = LoggerFactory.getLogger(SyncWebSocketHandler.class);
+    private static final Logger logger = LoggerFactoryUtil.getLogger(SyncWebSocketHandler.class);
     
     /**
      * 处理连接

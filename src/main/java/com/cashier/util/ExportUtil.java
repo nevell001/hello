@@ -140,9 +140,9 @@ public class ExportUtil {
                 }
             }
 
-            // 自动调整列宽
+            // 根据字符数设置列宽，避免 autoSizeColumn 触发 AWT 字体测量导致无图形环境崩溃
             for (int i = 0; i < headers.size(); i++) {
-                sheet.autoSizeColumn(i);
+                sheet.setColumnWidth(i, calculateExcelColumnWidth(headers, data, i));
             }
 
             // 保存文件
@@ -153,6 +153,31 @@ public class ExportUtil {
             logger.info("Excel 导出成功: {}", filePath);
             return filePath;
         }
+    }
+
+    private static int calculateExcelColumnWidth(List<String> headers, List<String[]> data, int columnIndex) {
+        int maxChars = getDisplayWidth(headers.get(columnIndex));
+        for (String[] row : data) {
+            if (row != null && columnIndex < row.length) {
+                maxChars = Math.max(maxChars, getDisplayWidth(row[columnIndex]));
+            }
+        }
+
+        int paddedChars = Math.min(Math.max(maxChars + 2, 10), 60);
+        return paddedChars * 256;
+    }
+
+    private static int getDisplayWidth(String value) {
+        if (value == null || value.isEmpty()) {
+            return 0;
+        }
+
+        int width = 0;
+        for (int i = 0; i < value.length(); i++) {
+            char ch = value.charAt(i);
+            width += ch <= 0x7F ? 1 : 2;
+        }
+        return width;
     }
 
     /**
@@ -168,11 +193,11 @@ public class ExportUtil {
         if (os.contains("mac")) {
             // macOS 系统字体路径
             systemFontPaths = new String[]{
+                "/Library/Fonts/Arial Unicode.ttf",             // Arial Unicode
+                "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
                 "/System/Library/Fonts/PingFang.ttc",           // 苹方字体
                 "/System/Library/Fonts/STHeiti Light.ttc",      // 黑体
-                "/System/Library/Fonts/Hiragino Sans GB.ttc",   // 冬青黑体
-                "/Library/Fonts/Arial Unicode.ttf",             // Arial Unicode
-                "/System/Library/Fonts/Supplemental/Arial Unicode.ttf"
+                "/System/Library/Fonts/Hiragino Sans GB.ttc"    // 冬青黑体
             };
         } else if (os.contains("win")) {
             // Windows 系统字体路径

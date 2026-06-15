@@ -273,6 +273,13 @@
             <version>1.4.14</version>
         </dependency>
 
+        <!-- Log4j2 到 SLF4J 桥接 - 统一 Apache POI 等依赖的日志输出 -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-to-slf4j</artifactId>
+            <version>2.21.1</version>
+        </dependency>
+
         <!-- Javalin - REST API 框架 -->
         <dependency>
             <groupId>io.javalin</groupId>
@@ -306,6 +313,17 @@
                     <source>17</source>
                     <target>17</target>
                     <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+
+            <!-- Maven 资源插件 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <encoding>UTF-8</encoding>
+                    <propertiesEncoding>UTF-8</propertiesEncoding>
                 </configuration>
             </plugin>
 
@@ -456,7 +474,6 @@
                         <configuration>
                             <skip>${innosetup.skip}</skip>
                             <executable>ISCC.exe</executable>
-                            <basedir>${env.ProgramFiles(x86)}\Inno Setup 6</basedir>
                             <arguments>
                                 <argument>/O+${project.build.directory}\installer-output</argument>
                                 <argument>/DAppVersion=${project.version}</argument>

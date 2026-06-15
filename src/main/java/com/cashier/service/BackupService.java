@@ -7,7 +7,7 @@ import com.cashier.util.DatabaseManager;
 import com.cashier.api.sync.SyncManager;
 import com.cashier.api.sync.SyncEventType;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.cashier.util.LoggerFactoryUtil;
 
 import java.io.*;
 import java.nio.file.*;
@@ -24,7 +24,7 @@ import java.util.zip.*;
  * 支持本地备份和云存储上传
  */
 public class BackupService {
-    private static final Logger logger = LoggerFactory.getLogger(BackupService.class);
+    private static final Logger logger = LoggerFactoryUtil.getLogger(BackupService.class);
     
     private static BackupService instance;
     private static BackupConfig config;

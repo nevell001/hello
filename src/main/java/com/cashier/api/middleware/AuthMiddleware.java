@@ -5,7 +5,7 @@ import com.cashier.model.User;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.cashier.util.LoggerFactoryUtil;
 
 import java.util.Map;
 
@@ -13,7 +13,7 @@ import java.util.Map;
  * Token 认证中间件
  */
 public class AuthMiddleware {
-    private static final Logger logger = LoggerFactory.getLogger(AuthMiddleware.class);
+    private static final Logger logger = LoggerFactoryUtil.getLogger(AuthMiddleware.class);
     
     /**
      * 验证 Token 并设置用户属性
@@ -24,6 +24,7 @@ public class AuthMiddleware {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             ctx.status(HttpStatus.UNAUTHORIZED)
                .json(Map.of("success", false, "message", "缺少认证 Token"));
+            ctx.skipRemainingHandlers();
             return;
         }
         
@@ -34,6 +35,7 @@ public class AuthMiddleware {
             if (user == null) {
                 ctx.status(HttpStatus.UNAUTHORIZED)
                    .json(Map.of("success", false, "message", "Token 无效或已过期"));
+                ctx.skipRemainingHandlers();
                 return;
             }
             
@@ -42,6 +44,7 @@ public class AuthMiddleware {
             logger.error("Token 验证失败", e);
             ctx.status(HttpStatus.UNAUTHORIZED)
                .json(Map.of("success", false, "message", "Token 验证失败"));
+            ctx.skipRemainingHandlers();
         }
     }
 }

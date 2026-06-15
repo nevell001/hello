@@ -6,7 +6,7 @@ import com.cashier.dao.PaymentDAO;
 import com.cashier.api.sync.SyncManager;
 import com.cashier.api.sync.SyncEventType;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.cashier.util.LoggerFactoryUtil;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -20,7 +20,7 @@ import java.util.Map;
  * 统一管理微信支付、支付宝支付等电子支付渠道
  */
 public class PaymentService {
-    private static final Logger logger = LoggerFactory.getLogger(PaymentService.class);
+    private static final Logger logger = LoggerFactoryUtil.getLogger(PaymentService.class);
     
     // 支付配置
     private static PaymentConfig config = new PaymentConfig();

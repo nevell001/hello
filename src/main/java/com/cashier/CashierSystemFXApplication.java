@@ -582,10 +582,14 @@ public class CashierSystemFXApplication extends Application {
 
             // 启动 REST API 服务器
             try {
-                com.cashier.api.ApiServer apiServer = com.cashier.api.ApiServer.getInstance();
-                int apiPort = com.cashier.api.ApiConfig.getPort();
-                apiServer.start(apiPort);
-                logger.info("REST API 服务器已启动，端口: {}", apiPort);
+                if (com.cashier.api.ApiConfig.isEnabled()) {
+                    com.cashier.api.ApiServer apiServer = com.cashier.api.ApiServer.getInstance();
+                    int apiPort = com.cashier.api.ApiConfig.getPort();
+                    apiServer.start(apiPort);
+                    logger.info("REST API 服务器已启动，端口: {}", apiPort);
+                } else {
+                    logger.info("REST API 服务器已禁用");
+                }
             } catch (Exception e) {
                 logger.error("启动 REST API 服务器失败", e);
             }

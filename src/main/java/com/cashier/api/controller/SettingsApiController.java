@@ -96,8 +96,9 @@ public class SettingsApiController {
     public static void set(Context ctx) {
         try {
             String key = ctx.pathParam("key");
-            Map<String, String> body = ctx.bodyAsClass(Map.class);
-            String value = body.get("value");
+            Map<?, ?> body = ctx.bodyAsClass(Map.class);
+            Object rawValue = body.get("value");
+            String value = rawValue != null ? rawValue.toString() : null;
             
             if (value == null) {
                 ctx.status(HttpStatus.BAD_REQUEST)

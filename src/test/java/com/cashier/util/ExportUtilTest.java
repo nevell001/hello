@@ -38,7 +38,6 @@ class ExportUtilTest {
         File file = new File(filePath);
         assertTrue(file.exists(), "Excel文件不存在");
         assertTrue(file.length() > 0, "Excel文件为空");
-        System.out.println("Excel导出成功: " + filePath);
     }
 
     @Test
@@ -60,7 +59,6 @@ class ExportUtilTest {
         File file = new File(filePath);
         assertTrue(file.exists(), "PDF文件不存在");
         assertTrue(file.length() > 0, "PDF文件为空");
-        System.out.println("PDF导出成功: " + filePath);
     }
 
     @Test
@@ -84,8 +82,6 @@ class ExportUtilTest {
         assertNotNull(pdfPath, "导出PDF失败");
         File pdfFile = new File(pdfPath);
         assertTrue(pdfFile.exists(), "PDF文件不存在");
-
-        System.out.println("时间格式数据导出成功");
     }
 
     @Test
@@ -107,7 +103,5 @@ class ExportUtilTest {
         assertNotNull(pdfPath, "导出PDF失败");
         File pdfFile = new File(pdfPath);
         assertTrue(pdfFile.exists(), "PDF文件不存在");
-
-        System.out.println("空数据导出成功");
     }
 }

@@ -3,10 +3,10 @@ package com.cashier.api.controller;
 import com.cashier.dao.InvoiceDAO;
 import com.cashier.model.Invoice;
 import com.cashier.service.InvoiceService;
+import com.cashier.util.LoggerFactoryUtil;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -18,7 +18,7 @@ import java.util.Map;
  * 发票管理 REST API
  */
 public class InvoiceApiController {
-    private static final Logger logger = LoggerFactory.getLogger(InvoiceApiController.class);
+    private static final Logger logger = LoggerFactoryUtil.getLogger(InvoiceApiController.class);
     
     /**
      * 获取发票列表
@@ -225,14 +225,14 @@ public class InvoiceApiController {
      */
     public static void setSellerInfo(Context ctx) {
         try {
-            Map<String, String> info = ctx.bodyAsClass(Map.class);
+            Map<?, ?> info = ctx.bodyAsClass(Map.class);
             
             InvoiceService.setDefaultSellerInfo(
-                info.getOrDefault("name", ""),
-                info.getOrDefault("taxId", ""),
-                info.getOrDefault("address", ""),
-                info.getOrDefault("phone", ""),
-                info.getOrDefault("bank", "")
+                getString(info, "name"),
+                getString(info, "taxId"),
+                getString(info, "address"),
+                getString(info, "phone"),
+                getString(info, "bank")
             );
             
             logger.info("销售方信息已更新");
@@ -307,5 +307,10 @@ public class InvoiceApiController {
     public static class PrintRequest {
         public String pdfPath;
         public String imagePath;
+    }
+
+    private static String getString(Map<?, ?> info, String key) {
+        Object value = info.get(key);
+        return value != null ? value.toString() : "";
     }
 }

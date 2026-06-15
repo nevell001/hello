@@ -6,7 +6,7 @@ import com.cashier.model.Product;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.cashier.util.LoggerFactoryUtil;
 
 import java.util.HashMap;
 import java.util.List;
@@ -17,7 +17,7 @@ import java.util.Map;
  * 已重构为使用重构版 DAO
  */
 public class InventoryApiController {
-    private static final Logger logger = LoggerFactory.getLogger(InventoryApiController.class);
+    private static final Logger logger = LoggerFactoryUtil.getLogger(InventoryApiController.class);
     private static final ProductDAORefactored productDAO = DAOFactory.getInstance().getProductDAO();
     
     /**

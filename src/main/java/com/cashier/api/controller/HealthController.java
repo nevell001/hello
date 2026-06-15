@@ -4,7 +4,7 @@ import com.cashier.util.DatabaseManager;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.cashier.util.LoggerFactoryUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,7 +13,7 @@ import java.util.Map;
  * 健康检查接口
  */
 public class HealthController {
-    private static final Logger logger = LoggerFactory.getLogger(HealthController.class);
+    private static final Logger logger = LoggerFactoryUtil.getLogger(HealthController.class);
     
     /**
      * 基础健康检查

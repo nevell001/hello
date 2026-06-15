@@ -12,9 +12,14 @@ import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import io.javalin.json.JavalinJackson;
+import com.cashier.util.LoggerFactoryUtil;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +31,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 基于 Javalin 框架
  */
 public class ApiServer {
-    private static final Logger logger = LoggerFactory.getLogger(ApiServer.class);
+    private static final Logger logger = LoggerFactoryUtil.getLogger(ApiServer.class);
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    private static final int TOKEN_BYTES = 32;
+    private static final String HMAC_ALGORITHM = "HmacSHA256";
     
     private static ApiServer instance;
     private Javalin app;
@@ -35,7 +43,6 @@ public class ApiServer {
     
     // Token 存储
     private final ConcurrentHashMap<String, TokenInfo> tokens = new ConcurrentHashMap<>();
-    private static final long TOKEN_EXPIRE_MS = 24 * 60 * 60 * 1000; // 24小时
 
     // 速率限制：每个IP每分钟最多60次请求
     private final ConcurrentHashMap<String, RateLimitEntry> rateLimitMap = new ConcurrentHashMap<>();
@@ -111,6 +118,13 @@ public class ApiServer {
 
         // 速率限制
         app.before(this::checkRateLimit);
+
+        // API 认证，健康检查和登录接口除外
+        app.before(ctx -> {
+            if (!isPublicApiPath(ctx.path())) {
+                AuthMiddleware.authenticate(ctx);
+            }
+        });
 
         // 注册路由
         registerRoutes();
@@ -274,6 +288,12 @@ public class ApiServer {
             ctx.json(Map.of("success", false, "message", "接口不存在: " + ctx.path()));
         });
     }
+
+    private boolean isPublicApiPath(String path) {
+        return path.equals("/api/health")
+            || path.equals("/api/health/detail")
+            || path.equals("/api/auth/login");
+    }
     
     /**
      * 停止 API 服务器
@@ -304,9 +324,35 @@ public class ApiServer {
      * 生成 Token
      */
     public String generateToken(User user) {
-        String token = "TK" + System.currentTimeMillis() + "_" + user.id;
-        tokens.put(token, new TokenInfo(user.id, System.currentTimeMillis() + TOKEN_EXPIRE_MS));
+        String token = createSecureToken();
+        tokens.put(token, new TokenInfo(user.id, System.currentTimeMillis() + getTokenExpireMs()));
         return token;
+    }
+
+    private String createSecureToken() {
+        byte[] randomBytes = new byte[TOKEN_BYTES];
+        SECURE_RANDOM.nextBytes(randomBytes);
+        String tokenId = Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
+        return tokenId + "." + signTokenId(tokenId);
+    }
+
+    private String signTokenId(String tokenId) {
+        try {
+            Mac mac = Mac.getInstance(HMAC_ALGORITHM);
+            SecretKeySpec keySpec = new SecretKeySpec(
+                ApiConfig.getTokenSecret().getBytes(StandardCharsets.UTF_8),
+                HMAC_ALGORITHM
+            );
+            mac.init(keySpec);
+            byte[] signature = mac.doFinal(tokenId.getBytes(StandardCharsets.UTF_8));
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(signature);
+        } catch (Exception e) {
+            throw new IllegalStateException("生成 Token 签名失败", e);
+        }
+    }
+
+    private long getTokenExpireMs() {
+        return ApiConfig.getTokenExpireHours() * 60L * 60L * 1000L;
     }
     
     /**

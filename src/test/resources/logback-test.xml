@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <root level="WARN">
+        <appender-ref ref="CONSOLE" />
+    </root>
+
+    <logger name="com.cashier.service.ReturnService" level="OFF" />
+    <logger name="com.cashier.service.TransactionService" level="OFF" />
+    <logger name="com.cashier.service.MemberService" level="OFF" />
+    <logger name="com.cashier.service.InventoryService" level="OFF" />
+    <logger name="com.cashier.util.ExportUtil" level="WARN" />
+    <logger name="com.cashier.api.ApiConfig" level="ERROR" />
+    <logger name="org.apache.poi" level="WARN" />
+    <logger name="org.apache.pdfbox" level="WARN" />
+    <logger name="org.apache.fontbox" level="WARN" />
+</configuration>

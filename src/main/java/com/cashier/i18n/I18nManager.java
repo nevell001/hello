@@ -1,7 +1,7 @@
 package com.cashier.i18n;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.cashier.util.LoggerFactoryUtil;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,7 +12,7 @@ import java.text.MessageFormat;
  * 支持 ResourceBundle 多语言
  */
 public class I18nManager {
-    private static final Logger logger = LoggerFactory.getLogger(I18nManager.class);
+    private static final Logger logger = LoggerFactoryUtil.getLogger(I18nManager.class);
     
     private static I18nManager instance;
     private Locale currentLocale;
@@ -46,7 +46,7 @@ public class I18nManager {
             try {
                 com.cashier.util.CurrencyUtil.refresh();
             } catch (Exception e) {
-                LoggerFactory.getLogger(I18nManager.class).warn("刷新货币格式失败", e);
+                LoggerFactoryUtil.getLogger(I18nManager.class).warn("刷新货币格式失败", e);
             }
         }
         return instance;

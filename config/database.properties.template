@@ -9,7 +9,7 @@
 
 # 数据库连接 URL
 # 格式: jdbc:mysql://[主机]:[端口]/[数据库]?参数
-db.url=jdbc:mysql://localhost:3306/lisuan_system?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=utf8mb4
+db.url=jdbc:mysql://localhost:3306/lisuan_system?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8
 
 # 数据库用户名
 db.username=root

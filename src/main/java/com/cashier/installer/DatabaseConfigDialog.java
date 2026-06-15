@@ -1,5 +1,8 @@
 package com.cashier.installer;
 
+import com.cashier.util.LoggerFactoryUtil;
+import org.slf4j.Logger;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -13,6 +16,8 @@ import java.sql.*;
  * Simple GUI for configuring database connection
  */
 public class DatabaseConfigDialog {
+    private static final Logger logger = LoggerFactoryUtil.getLogger(DatabaseConfigDialog.class);
+
     private JFrame frame;
     private JComboBox<String> dbTypeCombo;
     private JTextField hostField;
@@ -311,7 +316,7 @@ public class DatabaseConfigDialog {
             }
 
             // Write database.properties
-            String fullDbUrl = String.format("jdbc:mysql://%s:%s/%s?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=utf8mb4",
+            String fullDbUrl = String.format("jdbc:mysql://%s:%s/%s?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8",
                     host, port, dbName);
 
             String config = String.format(
@@ -374,7 +379,7 @@ public class DatabaseConfigDialog {
     private boolean importInitScript(String host, String port, String dbName, String user, String pass) {
         File initScript = new File("docker/mysql-init/00-init-complete.sql");
         if (!initScript.exists()) {
-            System.err.println("[WARN] Init script not found: " + initScript.getAbsolutePath());
+            logger.warn("Init script not found: {}", initScript.getAbsolutePath());
             return false;
         }
 
@@ -403,7 +408,7 @@ public class DatabaseConfigDialog {
                                 stmt.execute(sql);
                             } catch (SQLException e) {
                                 // Some statements might fail if already exists, that's ok
-                                System.err.println("[WARN] SQL execution failed (may be ok): " + e.getMessage());
+                                logger.warn("SQL execution failed (may be ok): {}", e.getMessage());
                             }
                         }
                     }
@@ -412,8 +417,7 @@ public class DatabaseConfigDialog {
 
             return true;
         } catch (Exception e) {
-            System.err.println("[ERROR] Failed to import init script: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Failed to import init script: {}", e.getMessage(), e);
             return false;
         }
     }

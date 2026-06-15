@@ -6,9 +6,9 @@ import com.cashier.dao.PaymentDAO;
 import com.cashier.service.PaymentService;
 import com.cashier.api.sync.SyncManager;
 import com.cashier.api.sync.SyncEventType;
+import com.cashier.util.LoggerFactoryUtil;
 import io.javalin.http.Context;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
  * 微信支付、支付宝支付管理
  */
 public class PaymentApiController {
-    private static final Logger logger = LoggerFactory.getLogger(PaymentApiController.class);
+    private static final Logger logger = LoggerFactoryUtil.getLogger(PaymentApiController.class);
     
     /**
      * 创建支付订单
@@ -29,13 +29,13 @@ public class PaymentApiController {
      */
     public static void createPayment(Context ctx) {
         try {
-            Map<String, Object> body = ctx.bodyAsClass(Map.class);
+            Map<?, ?> body = ctx.bodyAsClass(Map.class);
             
-            String transactionId = (String) body.get("transactionId");
-            BigDecimal amount = new BigDecimal(body.get("amount").toString());
-            String channelStr = (String) body.getOrDefault("channel", "WECHAT");
-            String terminalId = (String) body.getOrDefault("terminalId", "default");
-            String operator = (String) body.getOrDefault("operator", "system");
+            String transactionId = getString(body, "transactionId", null);
+            BigDecimal amount = getBigDecimal(body, "amount");
+            String channelStr = getString(body, "channel", "WECHAT");
+            String terminalId = getString(body, "terminalId", "default");
+            String operator = getString(body, "operator", "system");
             
             if (transactionId == null || amount == null) {
                 ctx.status(400).json(Map.of(
@@ -221,11 +221,11 @@ public class PaymentApiController {
         String paymentId = ctx.pathParam("paymentId");
         
         try {
-            Map<String, Object> body = ctx.bodyAsClass(Map.class);
+            Map<?, ?> body = ctx.bodyAsClass(Map.class);
             
-            BigDecimal refundAmount = new BigDecimal(body.get("amount").toString());
-            String reason = (String) body.getOrDefault("reason", "用户申请退款");
-            String operator = (String) body.getOrDefault("operator", "system");
+            BigDecimal refundAmount = getBigDecimal(body, "amount");
+            String reason = getString(body, "reason", "用户申请退款");
+            String operator = getString(body, "operator", "system");
             
             RefundRecord refund = PaymentService.applyRefund(paymentId, refundAmount, reason, operator);
             
@@ -366,38 +366,38 @@ public class PaymentApiController {
      */
     public static void setConfig(Context ctx) {
         try {
-            Map<String, Object> body = ctx.bodyAsClass(Map.class);
+            Map<?, ?> body = ctx.bodyAsClass(Map.class);
             
             PaymentService.PaymentConfig config = PaymentService.getConfig();
             
             if (body.containsKey("wechatEnabled")) {
-                config.wechatEnabled = Boolean.parseBoolean(body.get("wechatEnabled").toString());
+                config.wechatEnabled = Boolean.parseBoolean(String.valueOf(body.get("wechatEnabled")));
             }
             if (body.containsKey("wechatAppId")) {
-                config.wechatAppId = (String) body.get("wechatAppId");
+                config.wechatAppId = getString(body, "wechatAppId", null);
             }
             if (body.containsKey("wechatMchId")) {
-                config.wechatMchId = (String) body.get("wechatMchId");
+                config.wechatMchId = getString(body, "wechatMchId", null);
             }
             if (body.containsKey("wechatApiKey")) {
-                config.wechatApiKey = (String) body.get("wechatApiKey");
+                config.wechatApiKey = getString(body, "wechatApiKey", null);
             }
             
             if (body.containsKey("alipayEnabled")) {
-                config.alipayEnabled = Boolean.parseBoolean(body.get("alipayEnabled").toString());
+                config.alipayEnabled = Boolean.parseBoolean(String.valueOf(body.get("alipayEnabled")));
             }
             if (body.containsKey("alipayAppId")) {
-                config.alipayAppId = (String) body.get("alipayAppId");
+                config.alipayAppId = getString(body, "alipayAppId", null);
             }
             if (body.containsKey("alipayPrivateKey")) {
-                config.alipayPrivateKey = (String) body.get("alipayPrivateKey");
+                config.alipayPrivateKey = getString(body, "alipayPrivateKey", null);
             }
             
             if (body.containsKey("orderExpireMinutes")) {
-                config.orderExpireMinutes = ((Number) body.get("orderExpireMinutes")).intValue();
+                config.orderExpireMinutes = getInt(body, "orderExpireMinutes", config.orderExpireMinutes);
             }
             if (body.containsKey("notifyUrl")) {
-                config.notifyUrl = (String) body.get("notifyUrl");
+                config.notifyUrl = getString(body, "notifyUrl", null);
             }
             
             PaymentService.setConfig(config);
@@ -434,5 +434,32 @@ public class PaymentApiController {
         data.put("expireTime", order.expireTime);
         data.put("channelTransactionId", order.channelTransactionId);
         return data;
+    }
+
+    private static String getString(Map<?, ?> body, String key, String defaultValue) {
+        Object value = body.get(key);
+        return value != null ? value.toString() : defaultValue;
+    }
+
+    private static BigDecimal getBigDecimal(Map<?, ?> body, String key) {
+        Object value = body.get(key);
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof BigDecimal decimal) {
+            return decimal;
+        }
+        return new BigDecimal(value.toString());
+    }
+
+    private static int getInt(Map<?, ?> body, String key, int defaultValue) {
+        Object value = body.get(key);
+        if (value instanceof Number number) {
+            return number.intValue();
+        }
+        if (value != null) {
+            return Integer.parseInt(value.toString());
+        }
+        return defaultValue;
     }
 }

@@ -189,7 +189,7 @@ FLUSH PRIVILEGES;
 
 ```properties
 # 数据库连接配置
-db.url=jdbc:mysql://localhost:3306/lisuan_system?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=utf8mb4
+db.url=jdbc:mysql://localhost:3306/lisuan_system?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8
 db.username=cashier
 db.password=YourStrongPassword123!
 db.pool.size=10

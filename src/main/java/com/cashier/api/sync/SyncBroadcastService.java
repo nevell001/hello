@@ -6,7 +6,7 @@ import com.cashier.model.Product;
 import com.cashier.model.Transaction;
 import com.cashier.model.Member;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.cashier.util.LoggerFactoryUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,7 +16,7 @@ import java.util.Map;
  * 在业务操作完成后广播同步事件
  */
 public class SyncBroadcastService {
-    private static final Logger logger = LoggerFactory.getLogger(SyncBroadcastService.class);
+    private static final Logger logger = LoggerFactoryUtil.getLogger(SyncBroadcastService.class);
     
     /**
      * 广播交易创建事件
