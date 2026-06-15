@@ -20,7 +20,15 @@ if exist ".env" (
     )
 )
 
-set "APP_VERSION=2.5.7"
+REM Try to read version from pom.xml
+set "APP_VERSION="
+for /f "tokens=3 delims=<>" %%a in ('findstr /R "<version>[0-9]" pom.xml 2^>nul ^| findstr /V "javafx maven java mysql hikaricp"') do (
+    set "APP_VERSION=%%a"
+    goto :version_found
+)
+:version_found
+REM Fallback version if pom.xml not found or unreadable
+if "%APP_VERSION%"=="" set "APP_VERSION=2.5.7"
 
 REM 环境类型：development 或 production
 if "%ENVIRONMENT%"=="" set "ENVIRONMENT=development"
@@ -120,8 +128,16 @@ echo ----------------------------------------
 echo This may take a while on first run...
 echo.
 
-if exist "target\lisuan-fx-%APP_VERSION%-jar-with-dependencies.jar" (
-    echo [SKIP] Detected existing compiled files, skipping compilation
+REM Check for any existing compiled JAR
+set "EXISTING_JAR="
+for %%f in (target\lisuan-fx-*-jar-with-dependencies.jar) do (
+    set "EXISTING_JAR=%%f"
+    goto :jar_check_done
+)
+:jar_check_done
+
+if not "%EXISTING_JAR%"=="" (
+    echo [SKIP] Detected existing compiled JAR: %EXISTING_JAR%
     echo [TIP] Run 'mvn clean package -DskipTests' to rebuild
     goto :build_done
 )

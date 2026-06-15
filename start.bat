@@ -68,11 +68,16 @@ echo.
 echo [4/5] Checking application files...
 echo ----------------------------------------
 
-set "JAR_FILE=target\lisuan-fx-%APP_VERSION%-jar-with-dependencies.jar"
+REM Auto-detect JAR file (works for any version)
+set "JAR_FILE="
+for %%f in (target\lisuan-fx-*-jar-with-dependencies.jar) do (
+    set "JAR_FILE=%%f"
+    goto :jar_found
+)
+:jar_found
 
-if not exist "%JAR_FILE%" (
-    echo [WARNING] JAR file not found: %JAR_FILE%
-    echo [INFO] Building project...
+if "%JAR_FILE%"=="" (
+    echo [WARNING] JAR file not found, building project...
     echo.
     call mvn clean package -DskipTests -Dinnosetup.skip=true
     if errorlevel 1 (
@@ -80,9 +85,20 @@ if not exist "%JAR_FILE%" (
         pause
         exit /b 1
     )
-    echo [OK] Build completed
+    REM Retry detection after build
+    for %%f in (target\lisuan-fx-*-jar-with-dependencies.jar) do (
+        set "JAR_FILE=%%f"
+        goto :jar_found_built
+    )
+    :jar_found_built
+    if "!JAR_FILE!"=="" (
+        echo [ERROR] Build completed but JAR still not found
+        pause
+        exit /b 1
+    )
+    echo [OK] Build completed: %JAR_FILE%
 ) else (
-    echo [OK] JAR file found
+    echo [OK] JAR file found: %JAR_FILE%
 )
 
 echo.
@@ -113,9 +129,10 @@ echo.
 echo [INFO] Setting up JavaFX...
 
 set "JFX_BASE=%USERPROFILE%\.m2\repository\org\openjfx"
-set "JFX_PATH=%JFX_BASE%\javafx-base\17.0.12;%JFX_BASE%\javafx-controls\17.0.12;%JFX_BASE%\javafx-fxml\17.0.12;%JFX_BASE%\javafx-graphics\17.0.12"
+REM Use Windows-specific JavaFX JARs to avoid platform conflict
+set "JFX_PATH=%JFX_BASE%\javafx-base\17.0.12\javafx-base-17.0.12-win.jar;%JFX_BASE%\javafx-controls\17.0.12\javafx-controls-17.0.12-win.jar;%JFX_BASE%\javafx-fxml\17.0.12\javafx-fxml-17.0.12-win.jar;%JFX_BASE%\javafx-graphics\17.0.12\javafx-graphics-17.0.12-win.jar"
 
-if not exist "%JFX_BASE%\javafx-base\17.0.12" (
+if not exist "%JFX_BASE%\javafx-base\17.0.12\javafx-base-17.0.12-win.jar" (
     echo [WARNING] JavaFX not found in Maven repository
     echo [INFO] Will use standard classpath
     set "JFX_PATH="

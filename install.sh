@@ -49,7 +49,12 @@ else
     MYSQL_PASSWORD=${MYSQL_PASSWORD:-"LisuanPassword123!"}
 fi
 
-JAR_PATH="target/lisuan-fx-${APP_VERSION}-jar-with-dependencies.jar"
+# Auto-detect JAR file (works for any version)
+JAR_PATH=$(ls target/lisuan-fx-*-jar-with-dependencies.jar 2>/dev/null | head -n 1)
+# Fallback to regular JAR if shaded JAR not found
+if [ -z "$JAR_PATH" ]; then
+    JAR_PATH=$(ls target/lisuan-fx-*.jar 2>/dev/null | grep -v "original\|jar-with-dependencies" | head -n 1)
+fi
 
 echo "========================================"
 echo "  LiSuan Installation"
