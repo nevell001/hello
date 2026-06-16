@@ -435,7 +435,9 @@ public class DatabaseConfigDialog {
                 // Try to run start.bat
                 File startBat = new File(currentDir, "start.bat");
                 if (startBat.exists()) {
-                    Runtime.getRuntime().exec("cmd /c start /wait start.bat", null, currentDir);
+                    new ProcessBuilder("cmd", "/c", "start", "", "start.bat", "--gui")
+                            .directory(currentDir)
+                            .start();
                     showMessage("Application starting...", JOptionPane.INFORMATION_MESSAGE);
                 } else {
                     showMessage("start.bat not found. Please run it manually.", JOptionPane.ERROR_MESSAGE);

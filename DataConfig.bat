@@ -24,31 +24,27 @@ echo [INFO] ENVIRONMENT: %ENVIRONMENT%
 echo [INFO] Launching database configuration tool...
 echo.
 
-REM Find MySQL JDBC driver
-set "MYSQL_JAR="
-if exist "%USERPROFILE%\.m2\repository\com\mysql\mysql-connector-j\8.4.0\mysql-connector-j-8.4.0.jar" (
-    set "MYSQL_JAR=%USERPROFILE%\.m2\repository\com\mysql\mysql-connector-j\8.4.0\mysql-connector-j-8.4.0.jar"
+REM Find executable fat JAR. It contains the installer and all runtime dependencies.
+set "JAR_FILE="
+for %%f in (target\lisuan-fx-*-jar-with-dependencies.jar) do (
+    set "JAR_FILE=%%f"
+    goto :jar_found
 )
-if exist "%USERPROFILE%\.m2\repository\com\mysql\mysql-connector-j\8.0.33\mysql-connector-j-8.0.33.jar" (
-    set "MYSQL_JAR=%USERPROFILE%\.m2\repository\com\mysql\mysql-connector-j\8.0.33\mysql-connector-j-8.0.33.jar"
-)
-if exist "%USERPROFILE%\.m2\repository\mysql\mysql-connector-java\8.0.33\mysql-connector-java-8.0.33.jar" (
-    set "MYSQL_JAR=%USERPROFILE%\.m2\repository\mysql\mysql-connector-java\8.0.33\mysql-connector-java-8.0.33.jar"
-)
+:jar_found
 
-if "%MYSQL_JAR%"=="" (
-    echo [ERROR] MySQL JDBC driver not found in Maven repository!
+if "%JAR_FILE%"=="" (
+    echo [ERROR] Application JAR not found!
     echo.
     echo Please run: mvn clean package
     pause
     exit /b 1
 )
 
-echo [INFO] Found MySQL JDBC driver
+echo [INFO] Found application JAR: %JAR_FILE%
 echo [INFO] Starting configuration tool...
 echo.
 
-java -cp "target/classes;%MYSQL_JAR%" com.cashier.installer.DatabaseConfigDialog
+java -cp "%JAR_FILE%" com.cashier.installer.DatabaseConfigDialog
 
 if errorlevel 1 (
     echo.

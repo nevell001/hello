@@ -82,11 +82,16 @@ echo ""
 
 # 检查依赖文件
 echo "[4/6] Checking dependency files..."
-JAR_FILE="target/lisuan-fx-${APP_VERSION}.jar"
+JAR_FILE="target/lisuan-fx-${APP_VERSION}-jar-with-dependencies.jar"
 
-# 如果 shaded JAR 不存在，尝试旧版本的命名
+# 优先使用包含依赖的 shaded JAR。普通 JAR 不包含 MySQL/日志等运行时依赖。
 if [ ! -f "$JAR_FILE" ]; then
-    JAR_FILE="target/lisuan-fx-${APP_VERSION}-jar-with-dependencies.jar"
+    JAR_FILE="$(ls target/lisuan-fx-*-jar-with-dependencies.jar 2>/dev/null | head -n 1)"
+fi
+
+# 如果 shaded JAR 不存在，退回普通 JAR，并提示可能需要 Maven classpath。
+if [ -z "$JAR_FILE" ] || [ ! -f "$JAR_FILE" ]; then
+    JAR_FILE="target/lisuan-fx-${APP_VERSION}.jar"
 fi
 
 if [ ! -f "$JAR_FILE" ]; then
@@ -98,6 +103,12 @@ if [ ! -f "$JAR_FILE" ]; then
         exit 1
     fi
     echo "[Done] Compilation completed"
+
+    JAR_FILE="$(ls target/lisuan-fx-*-jar-with-dependencies.jar 2>/dev/null | head -n 1)"
+    if [ -z "$JAR_FILE" ] || [ ! -f "$JAR_FILE" ]; then
+        echo "[Error] Compilation completed but executable fat JAR was not found"
+        exit 1
+    fi
 fi
 
 echo "[Done] Dependency files checked"

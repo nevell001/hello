@@ -112,12 +112,16 @@
 
 ### Windows 用户
 
-**首次安装流程**:
+**首次安装流程（推荐）**:
 ```
-1. install.bat      → 构建 JAR（检查 Java/Maven 环境，编译打包）
-2. DataConfig.bat   → 配置数据库（GUI 工具，填写数据库连接信息）
-3. 点击 Save & Start → 自动启动应用
+1. 双击 install.bat
+   → 自动检查 Java/Maven、构建 JAR，并打开数据库 GUI 配置工具
+2. 在 GUI 中填写数据库连接信息
+3. 点击 Save & Start
+   → 保存 config/database.properties 并启动应用
 ```
+
+`DataConfig.bat` 仍保留为单独的 GUI 数据库配置入口，适合后续修改数据库连接信息时使用。
 
 **日常启动**:
 ```bash
@@ -137,8 +141,19 @@ start.bat
 
 **注意**:
 - 需要安装 Java 17+
-- 需要安装 Maven 3.8+（开发模式）
+- 首次从源码安装需要 Maven 3.8+
 - JavaFX 运行时会自动从 Maven 本地仓库加载
+
+### Linux / macOS 用户
+
+**首次安装流程**:
+```bash
+chmod +x install.sh start.sh
+./install.sh
+./start.sh
+```
+
+`install.sh` 会检查 Java/Maven、构建可执行 JAR，并按提示配置 Docker、本地或远程 MySQL。`start.sh` 会优先启动 `target/lisuan-fx-*-jar-with-dependencies.jar`，避免普通 JAR 缺少运行时依赖。
 
 ### 开发者安装
 

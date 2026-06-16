@@ -190,29 +190,25 @@ echo [INFO] Creating database configuration tool...
     echo echo [INFO^] ENVIRONMENT: %%ENVIRONMENT%%
     echo echo [INFO] Launching database configuration tool...
     echo echo.
-    echo REM Build classpath
-    echo set "CP=target\classes"
+    echo REM Find executable fat JAR. It contains the installer and all runtime dependencies.
+    echo set "JAR_FILE="
+    echo for %%%%f in ^(target\lisuan-fx-*-jar-with-dependencies.jar^) do ^(
+    echo     set "JAR_FILE=%%%%f"
+    echo     goto :jar_found
+    echo ^)
+    echo :jar_found
     echo.
-    echo REM Add MySQL JDBC driver from Maven repo (supports both 8.x versions)
-    echo set "M2_REPO=%%USERPROFILE%%\.m2\repository"
-    echo if exist "%%M2_REPO%%\com\mysql\mysql-connector-j\8.4.0\mysql-connector-j-8.4.0.jar" (
-    echo     set "MYSQL_JAR=%%M2_REPO%%\com\mysql\mysql-connector-j\8.4.0\mysql-connector-j-8.4.0.jar"
-    echo ^) else if exist "%%M2_REPO%%\com\mysql\mysql-connector-j\8.0.33\mysql-connector-j-8.0.33.jar" (
-    echo     set "MYSQL_JAR=%%M2_REPO%%\com\mysql\mysql-connector-j\8.0.33\mysql-connector-j-8.0.33.jar"
-    echo ^) else if exist "%%M2_REPO%%\mysql\mysql-connector-java\8.0.33\mysql-connector-java-8.0.33.jar" (
-    echo     set "MYSQL_JAR=%%M2_REPO%%\mysql\mysql-connector-java\8.0.33\mysql-connector-java-8.0.33.jar"
-    echo ^) else (
-    echo     echo [ERROR] MySQL JDBC driver not found in Maven repository!
+    echo if "%%JAR_FILE%%"=="" ^(
+    echo     echo [ERROR] Application JAR not found!
     echo     echo Please run: mvn clean package
     echo     pause
     echo     exit /b 1
     echo ^)
     echo.
-    echo set "CP=%%CP%%;%%MYSQL_JAR%%"
+    echo echo [INFO] Found application JAR: %%JAR_FILE%%
+    echo java -cp "%%JAR_FILE%%" com.cashier.installer.DatabaseConfigDialog
     echo.
-    echo java -cp "%%CP%%" com.cashier.installer.DatabaseConfigDialog
-    echo.
-    echo if errorlevel 1 (
+    echo if errorlevel 1 ^(
     echo     echo.
     echo     echo [ERROR] Configuration tool failed
     echo     echo.
@@ -230,6 +226,14 @@ echo [INFO] Creating database configuration tool...
 
 echo [OK] Created DataConfig.bat
 
+echo [INFO] Launching GUI database configuration...
+call DataConfig.bat
+if errorlevel 1 (
+    echo [ERROR] Database configuration failed
+    pause
+    exit /b 1
+)
+
 echo.
 echo =========================================
 echo   Installation Complete!
@@ -240,8 +244,8 @@ echo   Version: %APP_VERSION%
 echo   JAR: target\lisuan-fx-%APP_VERSION%-jar-with-dependencies.jar
 echo.
 echo Next Steps:
-echo   1. Run DataConfig.bat to configure database
-echo   2. Run start.bat to launch the application
+echo   1. Use the GUI configuration tool to save database settings
+echo   2. Click Save ^& Start in the GUI, or run start.bat later
 echo.
 echo Default Login: admin / admin123
 echo.

@@ -49,12 +49,8 @@ else
     MYSQL_PASSWORD=${MYSQL_PASSWORD:-"LisuanPassword123!"}
 fi
 
-# Auto-detect JAR file (works for any version)
+# Auto-detect executable fat JAR (works for any version)
 JAR_PATH=$(ls target/lisuan-fx-*-jar-with-dependencies.jar 2>/dev/null | head -n 1)
-# Fallback to regular JAR if shaded JAR not found
-if [ -z "$JAR_PATH" ]; then
-    JAR_PATH=$(ls target/lisuan-fx-*.jar 2>/dev/null | grep -v "original\|jar-with-dependencies" | head -n 1)
-fi
 
 echo "========================================"
 echo "  LiSuan Installation"
@@ -190,7 +186,19 @@ if [ "$DB_TYPE" == "docker" ]; then
 
         echo "[Docker] MySQL container started successfully"
         echo "[Docker] Waiting for MySQL to be ready..."
-        sleep 10
+        MYSQL_READY=0
+        for i in {1..60}; do
+            if docker exec ${MYSQL_CONTAINER_NAME} mysqladmin ping -uroot -p${MYSQL_ROOT_PASSWORD} --silent &>/dev/null; then
+                MYSQL_READY=1
+                break
+            fi
+            sleep 2
+        done
+
+        if [ "$MYSQL_READY" != "1" ]; then
+            echo "[Error] MySQL did not become ready in time"
+            exit 1
+        fi
 
         echo "[Docker] Creating database if not exists..."
         docker exec ${MYSQL_CONTAINER_NAME} mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>/dev/null
@@ -381,7 +389,7 @@ echo "========================================"
 echo ""
 echo "Application Info:"
 echo "  Version: ${APP_VERSION}"
-echo "  JAR: target/lisuan-fx-${APP_VERSION}.jar"
+echo "  JAR: target/lisuan-fx-${APP_VERSION}-jar-with-dependencies.jar"
 echo ""
 
 if [ "$DB_TYPE" == "docker" ]; then
