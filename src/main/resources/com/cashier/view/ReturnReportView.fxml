@@ -27,14 +27,14 @@
     </HBox>
 
     <!-- 统计摘要 -->
-    <HBox spacing="15" style="-fx-background-color: #f5f5f5; -fx-padding: 15;">
+    <HBox spacing="15" styleClass="surface-muted" style="-fx-padding: 15">
         <VBox spacing="5" prefWidth="150">
             <Label text="%return_report.total_orders" style="-fx-font-weight: bold;"/>
-            <Label fx:id="totalReturnOrdersLabel" text="0" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: blue;"/>
+            <Label fx:id="totalReturnOrdersLabel" text="0" styleClass="text-info" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
         </VBox>
         <VBox spacing="5" prefWidth="150">
             <Label text="%return_report.total_amount" style="-fx-font-weight: bold;"/>
-            <Label fx:id="totalReturnAmountLabel" text="¥0.00" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: red;"/>
+            <Label fx:id="totalReturnAmountLabel" text="¥0.00" styleClass="text-danger" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
         </VBox>
         <VBox spacing="5" prefWidth="150">
             <Label text="%return_report.avg_amount" style="-fx-font-weight: bold;"/>
@@ -42,19 +42,19 @@
         </VBox>
         <VBox spacing="5" prefWidth="120">
             <Label text="%return_report.pending_orders" style="-fx-font-weight: bold;"/>
-            <Label fx:id="pendingOrdersLabel" text="0" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: orange;"/>
+            <Label fx:id="pendingOrdersLabel" text="0" styleClass="text-warning" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
         </VBox>
         <VBox spacing="5" prefWidth="120">
             <Label text="%return_report.approved_orders" style="-fx-font-weight: bold;"/>
-            <Label fx:id="approvedOrdersLabel" text="0" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: green;"/>
+            <Label fx:id="approvedOrdersLabel" text="0" styleClass="text-success" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
         </VBox>
         <VBox spacing="5" prefWidth="120">
             <Label text="%return_report.rejected_orders" style="-fx-font-weight: bold;"/>
-            <Label fx:id="rejectedOrdersLabel" text="0" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: red;"/>
+            <Label fx:id="rejectedOrdersLabel" text="0" styleClass="text-danger" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
         </VBox>
         <VBox spacing="5" prefWidth="120">
             <Label text="%return_report.completed_orders" style="-fx-font-weight: bold;"/>
-            <Label fx:id="completedOrdersLabel" text="0" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: blue;"/>
+            <Label fx:id="completedOrdersLabel" text="0" styleClass="text-info" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
         </VBox>
     </HBox>
 

@@ -1230,7 +1230,8 @@ private Button shiftBtn;
             tabHeader.setAlignment(javafx.geometry.Pos.CENTER);
             tabHeader.setStyle("-fx-padding: 0 2 0 2; -fx-background-color: transparent;");
             Label headerLabel = new Label(title);
-            headerLabel.setStyle("-fx-font-size: 12px; -fx-font-family: \"Noto Sans CJK JP\", \"Noto Sans SC\", \"Microsoft YaHei\", sans-serif; -fx-text-fill: #212121;");
+            headerLabel.getStyleClass().add("text-default");
+            headerLabel.setStyle("-fx-font-size: 12px; -fx-font-family: \"Noto Sans CJK JP\", \"Noto Sans SC\", \"Microsoft YaHei\", sans-serif;");
             tabHeader.getChildren().addAll(headerLabel, closeButton);
             tab.setGraphic(tabHeader);
             tab.setText("");
@@ -1238,16 +1239,19 @@ private Button shiftBtn;
             // 创建占位符内容
             VBox placeholder = new VBox(20);
             placeholder.setAlignment(javafx.geometry.Pos.CENTER);
-            placeholder.setStyle("-fx-background-color: #F5F5F5; -fx-padding: 40;");
+            placeholder.getStyleClass().add("surface-muted");
+            placeholder.setStyle("-fx-padding: 40;");
 
             Label iconLabel = new Label(icon);
             iconLabel.setStyle("-fx-font-size: 64px; -fx-font-family: 'Segoe UI Symbol', 'Microsoft YaHei', sans-serif;");
 
             Label titleLabel = new Label(title);
-            titleLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #3F51B5;");
+            titleLabel.getStyleClass().add("text-primary");
+            titleLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
 
             Label messageLabel = new Label(message);
-            messageLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #757575;");
+            messageLabel.getStyleClass().add("text-muted");
+            messageLabel.setStyle("-fx-font-size: 14px;");
 
             placeholder.getChildren().addAll(iconLabel, titleLabel, messageLabel);
 
@@ -1286,7 +1290,8 @@ private Button shiftBtn;
             tabHeader.setAlignment(javafx.geometry.Pos.CENTER);
             tabHeader.setStyle("-fx-padding: 0 2 0 2; -fx-background-color: transparent;");
             Label headerLabel = new Label(title);
-            headerLabel.setStyle("-fx-font-size: 12px; -fx-font-family: \"Noto Sans CJK JP\", \"Noto Sans SC\", \"Microsoft YaHei\", sans-serif; -fx-text-fill: #212121;");
+            headerLabel.getStyleClass().add("text-default");
+            headerLabel.setStyle("-fx-font-size: 12px; -fx-font-family: \"Noto Sans CJK JP\", \"Noto Sans SC\", \"Microsoft YaHei\", sans-serif;");
             tabHeader.getChildren().addAll(headerLabel, closeButton);
             tab.setGraphic(tabHeader);
             tab.setText("");

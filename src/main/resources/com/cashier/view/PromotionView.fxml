@@ -50,7 +50,7 @@
 
             <Region HBox.hgrow="ALWAYS"/>
 
-            <Label fx:id="countLabel" text="%promotion.count" style="-fx-text-fill: #757575;"/>
+            <Label fx:id="countLabel" text="%promotion.count" styleClass="text-muted"/>
         </HBox>
 
         <!-- 第二行：筛选和搜索 -->
@@ -98,7 +98,7 @@
             <TableColumn fx:id="statusColumn" text="%promotion.status" prefWidth="120"/>
         </columns>
         <placeholder>
-            <Label text="%promotion.no_data" style="-fx-text-fill: #9E9E9E; -fx-font-size: 14px;"/>
+            <Label text="%promotion.no_data" styleClass="text-muted" style="-fx-font-size: 14px"/>
         </placeholder>
     </TableView>
 

@@ -7,7 +7,7 @@
 <VBox xmlns="http://javafx.com/javafx/17"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.cashier.controller.ReturnApprovalController"
-      spacing="10" styleClass="main-container">
+      spacing="10" styleClass="main-container, return-approval-view">
 
     <padding>
         <Insets top="20" right="20" bottom="20" left="20"/>
@@ -20,9 +20,9 @@
         <Button text="%return_approval.refresh" onAction="#handleRefresh"/>
     </HBox>
 
-    <SplitPane dividerPositions="0.5" VBox.vgrow="ALWAYS">
+    <SplitPane dividerPositions="0.5" VBox.vgrow="ALWAYS" styleClass="return-approval-split-pane">
         <!-- 左侧：待审批订单列表 -->
-        <VBox spacing="10">
+        <VBox spacing="10" styleClass="return-approval-panel">
             <Label text="%return_approval.pending_orders" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
             <TableView fx:id="pendingOrderTable" VBox.vgrow="ALWAYS">
                 <columns>
@@ -37,7 +37,7 @@
         </VBox>
 
         <!-- 右侧：订单详情和审批 -->
-        <VBox spacing="10">
+        <VBox spacing="10" styleClass="return-approval-panel">
             <Label text="%return_approval.order_details" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
 
             <!-- 订单基本信息 -->
@@ -50,7 +50,8 @@
 
                 <Label text="%return_approval.total_amount_label" GridPane.columnIndex="2" GridPane.rowIndex="0"/>
                 <Label fx:id="totalAmountLabel" GridPane.columnIndex="3" GridPane.rowIndex="0"
-                       style="-fx-text-fill: red; -fx-font-weight: bold; -fx-font-size: 16px;"/>
+                       styleClass="text-danger"
+                       style="-fx-font-weight: bold; -fx-font-size: 16px;"/>
 
                 <Label text="%return_approval.return_date_label" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
                 <Label fx:id="returnDateLabel" GridPane.columnIndex="3" GridPane.rowIndex="1"/>
@@ -71,7 +72,7 @@
             <!-- 原交易信息 -->
             <HBox spacing="10" alignment="CENTER_LEFT">
                 <Label text="%return_approval.original_transaction"/>
-                <Label fx:id="originalTransactionLabel" style="-fx-text-fill: blue;"/>
+                <Label fx:id="originalTransactionLabel" styleClass="text-info"/>
                 <Button text="%return_approval.view_original_detail" onAction="#handleViewOriginalTransaction" prefWidth="100"/>
             </HBox>
 
@@ -91,7 +92,7 @@
             </VBox>
 
             <!-- 审批操作 -->
-            <VBox spacing="10" style="-fx-background-color: #f5f5f5; -fx-padding: 10;">
+            <VBox spacing="10" styleClass="surface-muted" style="-fx-padding: 10">
                 <Label text="%return_approval.approval_action" style="-fx-font-weight: bold;"/>
 
                 <GridPane hgap="10" vgap="5">

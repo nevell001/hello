@@ -112,13 +112,16 @@ public class ReturnApprovalController {
                 super.updateItem(item, empty);
                 if (empty || item == null) {
                     setText(null);
+                    clearSemanticTextStyles(this);
                 } else {
                     try {
                         double amount = FormValidator.parseDouble(item);
                         setText(CurrencyUtil.format(amount));
-                        setStyle("-fx-font-weight: bold; -fx-text-fill: red;");
+                        setStyle("-fx-font-weight: bold;");
+                        applySemanticTextStyle(this, "text-danger");
                     } catch (Exception e) {
                         setText(item);
+                        clearSemanticTextStyles(this);
                     }
                 }
             }
@@ -154,9 +157,11 @@ public class ReturnApprovalController {
                 super.updateItem(item, empty);
                 if (empty || item == null) {
                     setText(null);
+                    clearSemanticTextStyles(this);
                 } else {
                     setText(CurrencyUtil.format(item));
                     setStyle("-fx-font-weight: bold;");
+                    clearSemanticTextStyles(this);
                 }
             }
         });
@@ -167,28 +172,39 @@ public class ReturnApprovalController {
                 super.updateItem(item, empty);
                 if (empty || item == null) {
                     setText(null);
+                    clearSemanticTextStyles(this);
                 } else {
                     switch (item) {
                         case "GOOD":
                             setText("完好");
-                            setStyle("-fx-text-fill: green;");
+                            applySemanticTextStyle(this, "text-success");
                             break;
                         case "DAMAGED":
                             setText("损坏");
-                            setStyle("-fx-text-fill: red;");
+                            applySemanticTextStyle(this, "text-danger");
                             break;
                         case "OPENED":
                             setText("已拆封");
-                            setStyle("-fx-text-fill: orange;");
+                            applySemanticTextStyle(this, "text-warning");
                             break;
                         default:
                             setText(item);
+                            clearSemanticTextStyles(this);
                     }
                 }
             }
         });
 
         itemTable.setItems(itemList);
+    }
+
+    private void applySemanticTextStyle(TableCell<?, ?> cell, String styleClass) {
+        clearSemanticTextStyles(cell);
+        cell.getStyleClass().add(styleClass);
+    }
+
+    private void clearSemanticTextStyles(TableCell<?, ?> cell) {
+        cell.getStyleClass().removeAll("text-success", "text-danger", "text-warning", "text-info");
     }
 
     private void loadPendingOrders() {

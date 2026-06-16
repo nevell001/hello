@@ -28,39 +28,39 @@
     </HBox>
 
     <!-- 统计摘要 - 紧凑的两行布局 -->
-    <HBox spacing="15" style="-fx-background-color: #f5f5f5; -fx-padding: 15;">
+    <HBox spacing="15" styleClass="surface-muted" style="-fx-padding: 15">
         <!-- 第一行：主要指标 -->
         <VBox spacing="5" prefWidth="150">
             <Label text="%statistics.total_sales" style="-fx-font-weight: bold; -fx-font-size: 11px;"/>
-            <Label fx:id="totalSalesLabel" text="¥0.00" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #3F51B5;"/>
+            <Label fx:id="totalSalesLabel" text="¥0.00" styleClass="text-primary" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
         </VBox>
         <VBox spacing="5" prefWidth="120">
             <Label text="%statistics.transaction_count" style="-fx-font-weight: bold; -fx-font-size: 11px;"/>
-            <Label fx:id="transactionCountLabel" text="0" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #4CAF50;"/>
+            <Label fx:id="transactionCountLabel" text="0" styleClass="text-success" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
         </VBox>
         <VBox spacing="5" prefWidth="130">
             <Label text="%statistics.avg_transaction" style="-fx-font-weight: bold; -fx-font-size: 11px;"/>
-            <Label fx:id="avgTransactionLabel" text="¥0.00" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #FF9800;"/>
+            <Label fx:id="avgTransactionLabel" text="¥0.00" styleClass="text-warning" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
         </VBox>
         <VBox spacing="5" prefWidth="130">
             <Label text="%statistics.member_sales" style="-fx-font-weight: bold; -fx-font-size: 11px;"/>
-            <Label fx:id="memberSalesLabel" text="¥0.00" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #9C27B0;"/>
+            <Label fx:id="memberSalesLabel" text="¥0.00" styleClass="text-accent" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
         </VBox>
         <VBox spacing="5" prefWidth="110">
             <Label text="%statistics.cash_payment" style="-fx-font-weight: bold; -fx-font-size: 11px;"/>
-            <Label fx:id="cashSalesLabel" text="¥0.00" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #607D8B;"/>
+            <Label fx:id="cashSalesLabel" text="¥0.00" styleClass="text-muted" style="-fx-font-size: 20px; -fx-font-weight: bold"/>
         </VBox>
         <VBox spacing="5" prefWidth="110">
             <Label text="%statistics.wechat_payment" style="-fx-font-weight: bold; -fx-font-size: 11px;"/>
-            <Label fx:id="wechatSalesLabel" text="¥0.00" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2196F3;"/>
+            <Label fx:id="wechatSalesLabel" text="¥0.00" styleClass="text-info" style="-fx-font-size: 20px; -fx-font-weight: bold"/>
         </VBox>
         <VBox spacing="5" prefWidth="110">
             <Label text="%statistics.alipay_payment" style="-fx-font-weight: bold; -fx-font-size: 11px;"/>
-            <Label fx:id="alipaySalesLabel" text="¥0.00" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #03A9F4;"/>
+            <Label fx:id="alipaySalesLabel" text="¥0.00" styleClass="text-info" style="-fx-font-size: 20px; -fx-font-weight: bold"/>
         </VBox>
         <VBox spacing="5" prefWidth="110">
             <Label text="%statistics.card_payment" style="-fx-font-weight: bold; -fx-font-size: 11px;"/>
-            <Label fx:id="cardSalesLabel" text="¥0.00" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #00BCD4;"/>
+            <Label fx:id="cardSalesLabel" text="¥0.00" styleClass="text-info" style="-fx-font-size: 20px; -fx-font-weight: bold"/>
         </VBox>
     </HBox>
 
@@ -123,16 +123,16 @@
             <VBox spacing="10" style="-fx-padding: 20;">
                 <HBox spacing="20" alignment="CENTER_LEFT">
                     <VBox spacing="3">
-                        <Label text="%statistics.top_product_name" style="-fx-text-fill: #757575; -fx-font-size: 12px;"/>
+                        <Label text="%statistics.top_product_name" styleClass="text-muted" style="-fx-font-size: 12px"/>
                         <Label fx:id="topProductLabel" text="%statistics.no_data" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
                     </VBox>
                     <VBox spacing="3">
-                        <Label text="%statistics.top_product_count" style="-fx-text-fill: #757575; -fx-font-size: 12px;"/>
+                        <Label text="%statistics.top_product_count" styleClass="text-muted" style="-fx-font-size: 12px"/>
                         <Label fx:id="topProductCountLabel" text="0" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
                     </VBox>
                     <VBox spacing="3">
-                        <Label text="%statistics.top_product_amount" style="-fx-text-fill: #757575; -fx-font-size: 12px;"/>
-                        <Label fx:id="topProductAmountLabel" text="¥0.00" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #4CAF50;"/>
+                        <Label text="%statistics.top_product_amount" styleClass="text-muted" style="-fx-font-size: 12px"/>
+                        <Label fx:id="topProductAmountLabel" text="¥0.00" styleClass="text-success" style="-fx-font-size: 18px; -fx-font-weight: bold"/>
                     </VBox>
                 </HBox>
             </VBox>

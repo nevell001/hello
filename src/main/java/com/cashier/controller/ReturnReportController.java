@@ -137,32 +137,43 @@ public class ReturnReportController {
                 super.updateItem(item, empty);
                 if (empty || item == null) {
                     setText(null);
+                    clearSemanticTextStyles(this);
                 } else {
                     switch (item) {
                         case "PENDING":
                             setText("待审批");
-                            setStyle("-fx-text-fill: orange;");
+                            applySemanticTextStyle(this, "text-warning");
                             break;
                         case "APPROVED":
                             setText("已批准");
-                            setStyle("-fx-text-fill: green;");
+                            applySemanticTextStyle(this, "text-success");
                             break;
                         case "REJECTED":
                             setText("已拒绝");
-                            setStyle("-fx-text-fill: red;");
+                            applySemanticTextStyle(this, "text-danger");
                             break;
                         case "COMPLETED":
                             setText("已完成");
-                            setStyle("-fx-text-fill: blue;");
+                            applySemanticTextStyle(this, "text-info");
                             break;
                         default:
                             setText(item);
+                            clearSemanticTextStyles(this);
                     }
                 }
             }
         });
 
         returnOrderTable.setItems(returnOrderList);
+    }
+
+    private void applySemanticTextStyle(TableCell<?, ?> cell, String styleClass) {
+        clearSemanticTextStyles(cell);
+        cell.getStyleClass().add(styleClass);
+    }
+
+    private void clearSemanticTextStyles(TableCell<?, ?> cell) {
+        cell.getStyleClass().removeAll("text-success", "text-danger", "text-warning", "text-info");
     }
 
     private void initializeCharts() {

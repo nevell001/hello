@@ -262,6 +262,7 @@ public class CheckoutController {
         if (phone.isEmpty()) {
             currentMember = null;
             memberInfoLabel.setText("");
+            setStateMessageStyle(memberInfoLabel, true);
             updateStatistics();
             return;
         }
@@ -273,9 +274,11 @@ public class CheckoutController {
             currentMember = member;
             memberInfoLabel.setText(String.format("会员: %s (余额: ¥%.2f, 积分: %d)", 
                 member.name, member.getBalance(), member.getPoints().intValue()));
+            setStateMessageStyle(memberInfoLabel, true);
         } else {
             currentMember = null;
             memberInfoLabel.setText("未找到该会员");
+            setStateMessageStyle(memberInfoLabel, false);
         }
 
         updateStatistics();
@@ -776,7 +779,7 @@ public class CheckoutController {
             if (coupon == null) {
                 showError("优惠券代码无效！");
                 couponInfoLabel.setText("优惠券代码无效");
-                couponInfoLabel.setStyle("-fx-text-fill: #F44336;");
+                setStateMessageStyle(couponInfoLabel, false);
                 return;
             }
 
@@ -784,7 +787,7 @@ public class CheckoutController {
             if (!coupon.enabled) {
                 showError("优惠券已禁用！");
                 couponInfoLabel.setText("优惠券已禁用");
-                couponInfoLabel.setStyle("-fx-text-fill: #F44336;");
+                setStateMessageStyle(couponInfoLabel, false);
                 return;
             }
 
@@ -792,7 +795,7 @@ public class CheckoutController {
             if (!coupon.isValid()) {
                 showError("优惠券已过期！");
                 couponInfoLabel.setText("优惠券已过期");
-                couponInfoLabel.setStyle("-fx-text-fill: #F44336;");
+                setStateMessageStyle(couponInfoLabel, false);
                 return;
             }
 
@@ -800,14 +803,14 @@ public class CheckoutController {
             if (coupon.maxUsage > 0 && coupon.usageCount >= coupon.maxUsage) {
                 showError("优惠券已达到最大使用次数！");
                 couponInfoLabel.setText("优惠券已达到最大使用次数");
-                couponInfoLabel.setStyle("-fx-text-fill: #F44336;");
+                setStateMessageStyle(couponInfoLabel, false);
                 return;
             }
 
             // 验证成功，应用优惠券
             appliedCoupon = coupon;
             couponInfoLabel.setText(String.format("优惠券: %s (面额: ¥%.2f)", coupon.name, coupon.discount));
-            couponInfoLabel.setStyle("-fx-text-fill: #4CAF50;");
+            setStateMessageStyle(couponInfoLabel, true);
             clearCouponButton.setDisable(false);
             logger.info("优惠券验证成功: {} (面额: ¥{})", coupon.name, coupon.discount);
 
@@ -835,7 +838,13 @@ public class CheckoutController {
         appliedCoupon = null;
         couponCodeField.clear();
         couponInfoLabel.setText("");
+        setStateMessageStyle(couponInfoLabel, true);
         clearCouponButton.setDisable(true);
         logger.info("优惠券已清除");
+    }
+
+    private void setStateMessageStyle(Label label, boolean success) {
+        label.getStyleClass().removeAll("checkout-state-success", "checkout-state-error");
+        label.getStyleClass().add(success ? "checkout-state-success" : "checkout-state-error");
     }
 }

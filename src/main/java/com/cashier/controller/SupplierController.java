@@ -322,8 +322,7 @@ public class SupplierController {
             root.setPrefWidth(500);
 
             Scene scene = new Scene(root);
-            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
-            scene.getStylesheets().add(getClass().getResource("/css/light-theme.css").toExternalForm());
+            com.cashier.util.ThemeUtils.applyCurrentTheme(scene, getClass());
 
             dialogStage.setScene(scene);
             dialogStage.showAndWait();

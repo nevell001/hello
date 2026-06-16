@@ -238,13 +238,13 @@ public class PurchaseOrderController {
             // 创建对话框内容
             VBox root = new VBox(15);
             root.setPadding(new javafx.geometry.Insets(20));
-            root.setStyle("-fx-background-color: white;");
+            root.getStyleClass().add("surface-muted");
 
             // 表单字段
             GridPane gridPane = new GridPane();
             gridPane.setHgap(15);
             gridPane.setVgap(15);
-            gridPane.setStyle("-fx-background-color: white;");
+            gridPane.setStyle("-fx-background-color: transparent;");
 
             // 设置列约束
             javafx.scene.layout.ColumnConstraints col1 = new javafx.scene.layout.ColumnConstraints();
@@ -358,9 +358,11 @@ public class PurchaseOrderController {
 
             // 供应商详细信息显示区域
             Label supplierInfoLabel = new Label("供应商信息:");
-            supplierInfoLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #666;");
+            supplierInfoLabel.getStyleClass().add("text-muted");
+            supplierInfoLabel.setStyle("-fx-font-weight: bold;");
             Label supplierDetailLabel = new Label("请选择供应商");
-            supplierDetailLabel.setStyle("-fx-text-fill: #999; -fx-font-size: 12px;");
+            supplierDetailLabel.getStyleClass().add("text-muted");
+            supplierDetailLabel.setStyle("-fx-font-size: 12px;");
             supplierDetailLabel.setWrapText(true);
 
             // 监听供应商选择变化
@@ -373,10 +375,12 @@ public class PurchaseOrderController {
                         info.append("  |  地址: ").append(newVal.address);
                     }
                     supplierDetailLabel.setText(info.toString());
-                    supplierDetailLabel.setStyle("-fx-text-fill: #333; -fx-font-size: 12px;");
+                    supplierDetailLabel.getStyleClass().removeAll("text-muted", "text-default");
+                    supplierDetailLabel.getStyleClass().add("text-default");
                 } else {
                     supplierDetailLabel.setText("请选择供应商");
-                    supplierDetailLabel.setStyle("-fx-text-fill: #999; -fx-font-size: 12px;");
+                    supplierDetailLabel.getStyleClass().removeAll("text-muted", "text-default");
+                    supplierDetailLabel.getStyleClass().add("text-muted");
                 }
             });
 
@@ -442,7 +446,8 @@ public class PurchaseOrderController {
             actionCol.setCellFactory(col -> new TableCell<PurchaseOrderItem, String>() {
                 private final Button deleteBtn = new Button("删除");
                 {
-                    deleteBtn.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold;");
+                    deleteBtn.getStyleClass().add("danger-button");
+                    deleteBtn.setStyle("-fx-font-weight: bold;");
                     deleteBtn.setOnAction(e -> {
                         PurchaseOrderItem item = getTableView().getItems().get(getIndex());
                         itemTable.getItems().remove(item);
@@ -478,16 +483,19 @@ public class PurchaseOrderController {
 
             // 添加商品按钮
             Button addProductButton = new Button("添加商品");
-            addProductButton.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px;");
+            addProductButton.getStyleClass().add("primary-button");
+            addProductButton.setStyle("-fx-font-weight: bold; -fx-font-size: 13px;");
             addProductButton.setOnAction(e -> showProductSelector(itemTable));
 
             // 总金额标签
             Label totalLabel = new Label("总金额: ¥0.00");
-            totalLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #000000;");
+            totalLabel.getStyleClass().add("text-default");
+            totalLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
 
             // 商品明细标签
             Label itemLabel = new Label("商品明细:");
-            itemLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #000000;");
+            itemLabel.getStyleClass().add("text-default");
+            itemLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
 
             // 按钮
             Button saveButton = new Button("保存");
@@ -550,8 +558,7 @@ public class PurchaseOrderController {
             root.getChildren().addAll(gridPane, itemLabel, addProductButton, itemTable, totalLabel, buttonBox);
 
             Scene scene = new Scene(root, 750, 550);
-            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
-            scene.getStylesheets().add(getClass().getResource("/css/light-theme.css").toExternalForm());
+            applyCurrentTheme(scene);
 
             dialogStage.setScene(scene);
             dialogStage.showAndWait();
@@ -576,25 +583,26 @@ public class PurchaseOrderController {
 
             VBox root = new VBox(10);
             root.setPadding(new javafx.geometry.Insets(15));
-            root.setStyle("-fx-background-color: white;");
+            root.getStyleClass().add("surface-muted");
 
             // 搜索框和分类筛选
             TextField searchField = new TextField();
             searchField.setPromptText("输入商品名称搜索");
-            searchField.setStyle("-fx-text-fill: black; -fx-prompt-text-fill: #666666;");
             searchField.setPrefWidth(200);
             
             Label searchLabel = new Label("搜索:");
-            searchLabel.setStyle("-fx-text-fill: #000000; -fx-font-weight: bold; -fx-font-size: 13px;");
+            searchLabel.getStyleClass().add("text-default");
+            searchLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 13px;");
             
             // 分类筛选
             ComboBox<String> categoryCombo = new ComboBox<>();
             categoryCombo.setPromptText("全部分类");
             categoryCombo.setPrefWidth(150);
-            categoryCombo.setStyle("-fx-text-fill: black; -fx-border-color: #BDBDBD; -fx-border-radius: 4px; -fx-padding: 5px 10px;");
+            categoryCombo.setStyle("-fx-border-radius: 4px; -fx-padding: 5px 10px;");
             
             Label categoryLabel = new Label("分类:");
-            categoryLabel.setStyle("-fx-text-fill: #000000; -fx-font-weight: bold; -fx-font-size: 13px;");
+            categoryLabel.getStyleClass().add("text-default");
+            categoryLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 13px;");
             
             HBox searchBox = new HBox(10, searchLabel, searchField, categoryLabel, categoryCombo);
             searchBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
@@ -703,7 +711,8 @@ public class PurchaseOrderController {
 
             // 添加按钮
             Button addButton = new Button("添加选中商品");
-            addButton.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
+            addButton.getStyleClass().add("primary-button");
+            addButton.setStyle("-fx-font-weight: bold;");
             addButton.setOnAction(e -> {
                 ObservableList<Product> selectedProducts = productTable.getSelectionModel().getSelectedItems();
                 if (selectedProducts == null || selectedProducts.isEmpty()) {
@@ -742,7 +751,8 @@ public class PurchaseOrderController {
             });
 
             Button cancelButton = new Button("取消");
-            cancelButton.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
+            cancelButton.getStyleClass().add("secondary-button");
+            cancelButton.setStyle("-fx-font-weight: bold;");
             cancelButton.setOnAction(e -> selectorStage.close());
 
             HBox buttonBox = new HBox(10, addButton, cancelButton);
@@ -754,7 +764,7 @@ public class PurchaseOrderController {
             root.getChildren().addAll(searchBox, productTable, selectBox);
 
             Scene scene = new Scene(root);
-            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+            applyCurrentTheme(scene);
             selectorStage.setScene(scene);
             selectorStage.showAndWait();
 
@@ -947,8 +957,7 @@ public class PurchaseOrderController {
             root.getChildren().addAll(new Label("订单信息:"), infoPane, new Label("商品明细:"), itemTable, closeButton);
 
             Scene scene = new Scene(root, 600, 500);
-            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
-            scene.getStylesheets().add(getClass().getResource("/css/light-theme.css").toExternalForm());
+            applyCurrentTheme(scene);
 
             dialogStage.setScene(scene);
             dialogStage.showAndWait();
@@ -1171,7 +1180,14 @@ public class PurchaseOrderController {
      */
     private Label createLabel(String text) {
         Label label = new Label(text);
-        label.setStyle("-fx-text-fill: #000000; -fx-font-weight: bold; -fx-font-size: 13px;");
+        label.getStyleClass().add("text-default");
+        label.setStyle("-fx-font-weight: bold; -fx-font-size: 13px;");
         return label;
+    }
+
+    private void applyCurrentTheme(Scene scene) {
+        scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+        String themeName = com.cashier.service.DataService.loadThemePreference();
+        scene.getStylesheets().add(getClass().getResource("/css/" + themeName + "-theme.css").toExternalForm());
     }
 }

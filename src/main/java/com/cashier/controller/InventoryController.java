@@ -330,8 +330,7 @@ public class InventoryController extends BaseController<Product> {
             dialogStage.setResizable(false);
 
             Scene scene = new Scene(root);
-            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
-            scene.getStylesheets().add(getClass().getResource("/css/light-theme.css").toExternalForm());
+            com.cashier.util.ThemeUtils.applyCurrentTheme(scene, getClass());
 
             dialogStage.setScene(scene);
             controller.setDialogStage(dialogStage);
@@ -370,8 +369,7 @@ public class InventoryController extends BaseController<Product> {
                 dialogStage.setResizable(false);
 
                 Scene scene = new Scene(root);
-                scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
-                scene.getStylesheets().add(getClass().getResource("/css/light-theme.css").toExternalForm());
+                com.cashier.util.ThemeUtils.applyCurrentTheme(scene, getClass());
 
                 dialogStage.setScene(scene);
                 controller.setDialogStage(dialogStage);

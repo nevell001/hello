@@ -15,9 +15,12 @@
         <Insets top="40" right="40" bottom="40" left="40"/>
     </padding>
 
-    <!-- 标题区域 -->
-    <VBox alignment="CENTER" spacing="10">
-        <Label text="%app.name"
+    <!-- 品牌区域 -->
+    <VBox alignment="CENTER" spacing="12" styleClass="login-brand">
+        <StackPane styleClass="login-logo">
+            <Label text="狸" styleClass="login-logo-text"/>
+        </StackPane>
+        <Label text="%app.brand"
                styleClass="login-title"/>
         <Label text="%app.subtitle"
                styleClass="login-subtitle"/>
@@ -28,6 +31,11 @@
         <padding>
             <Insets top="40" right="40" bottom="40" left="40"/>
         </padding>
+
+        <Label text="%login.title"
+               maxWidth="Infinity"
+               alignment="CENTER"
+               styleClass="login-card-title"/>
 
         <!-- 用户名 -->
         <VBox spacing="8">

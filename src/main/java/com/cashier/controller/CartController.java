@@ -709,14 +709,17 @@ public class CartController {
         grid.setPadding(new javafx.geometry.Insets(25, 150, 15, 15));
 
         Label amountLabel = new Label("应付金额: " + CurrencyUtil.format(finalAmount.doubleValue()));
-        amountLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #F44336;");
+        amountLabel.getStyleClass().add("text-danger");
+        amountLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
 
         Label paidLabel = new Label("已支付: " + CurrencyUtil.format(alreadyPaidAmount.doubleValue()));
-        paidLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: #4CAF50;");
+        paidLabel.getStyleClass().add("text-success");
+        paidLabel.setStyle("-fx-font-size: 18px;");
 
         BigDecimal initialRemaining = finalAmount.subtract(alreadyPaidAmount);
         Label remainingLabel = new Label("还需支付: " + CurrencyUtil.format(initialRemaining.doubleValue()));
-        remainingLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #F44336;");
+        remainingLabel.getStyleClass().add("text-danger");
+        remainingLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
 
         TextField receivedField = new TextField();
         receivedField.setPromptText("请输入本次支付金额");
@@ -727,7 +730,8 @@ public class CartController {
         receivedLabel.setStyle("-fx-font-size: 18px;");
 
         Label changeLabel = new Label("找零: ¥0.00");
-        changeLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #4CAF50;");
+        changeLabel.getStyleClass().add("text-success");
+        changeLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
         grid.add(amountLabel, 0, 0, 2, 1);
         grid.add(paidLabel, 0, 1, 2, 1);
@@ -792,10 +796,12 @@ public class CartController {
                 BigDecimal remaining = finalAmount.subtract(totalPaid);
                 if (remaining.compareTo(BigDecimal.ZERO) <= 0) {
                     changeLabel.setText("找零: " + CurrencyUtil.format(remaining.abs().doubleValue()));
-                    changeLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #4CAF50;");
+                    changeLabel.getStyleClass().removeAll("text-success", "text-danger");
+                    changeLabel.getStyleClass().add("text-success");
                 } else {
                     changeLabel.setText("还需: " + CurrencyUtil.format(remaining.doubleValue()));
-                    changeLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #F44336;");
+                    changeLabel.getStyleClass().removeAll("text-success", "text-danger");
+                    changeLabel.getStyleClass().add("text-danger");
                 }
             } catch (NumberFormatException e) {
                 BigDecimal remaining = finalAmount.subtract(alreadyPaidAmount);

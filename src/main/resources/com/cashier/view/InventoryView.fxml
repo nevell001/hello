@@ -56,7 +56,7 @@
 
             <Region HBox.hgrow="ALWAYS"/>
 
-            <Label fx:id="countLabel" text="%inventory.count" style="-fx-text-fill: #757575;"/>
+            <Label fx:id="countLabel" text="%inventory.count" styleClass="text-muted"/>
         </HBox>
 
         <!-- 第二行：搜索和排序 -->
@@ -107,7 +107,7 @@
             <TableColumn fx:id="warningColumn" text="%inventory.warning_status" prefWidth="80"/>
         </columns>
         <placeholder>
-            <Label text="%inventory.no_data" style="-fx-text-fill: #9E9E9E; -fx-font-size: 14px;"/>
+            <Label text="%inventory.no_data" styleClass="text-muted" style="-fx-font-size: 14px"/>
         </placeholder>
     </TableView>
 

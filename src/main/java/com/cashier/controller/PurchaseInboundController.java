@@ -243,32 +243,6 @@ public class PurchaseInboundController {
 
             itemTable.getColumns().addAll(productNameCol, orderQtyCol, inboundedQtyCol, inboundQtyCol, unitPriceCol, totalCol);
             
-            // 设置行工厂，使选中行背景色更明显
-            itemTable.setRowFactory(tv -> {
-                TableRow<InboundItemWrapper> row = new TableRow<>();
-                ChangeListener<Boolean> changeListener = (obs, wasSelected, isNowSelected) -> {
-                    if (isNowSelected) {
-                        row.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white;");
-                        // 为每个单元格设置白色文字
-                        for (Node node : row.getChildrenUnmodifiable()) {
-                            if (node instanceof Labeled) {
-                                ((Labeled) node).setTextFill(javafx.scene.paint.Color.WHITE);
-                            }
-                        }
-                    } else {
-                        row.setStyle("");
-                        // 恢复默认文字颜色
-                        for (Node node : row.getChildrenUnmodifiable()) {
-                            if (node instanceof Labeled) {
-                                ((Labeled) node).setTextFill(javafx.scene.paint.Color.BLACK);
-                            }
-                        }
-                    }
-                };
-                row.selectedProperty().addListener(changeListener);
-                return row;
-            });
-
             // 加载订单明细
             List<PurchaseOrderItem> items = PurchaseOrderItemDAO.findByOrderId(order.id);
             logger.debug("加载订单明细: 订单ID={}, 商品数={}", order.id, items.size());
@@ -303,7 +277,8 @@ public class PurchaseInboundController {
 
             // 操作提示
             Label hintLabel = new Label("提示：双击'本次入库'列输入入库数量");
-            hintLabel.setStyle("-fx-text-fill: #666; -fx-font-size: 12px;");
+            hintLabel.getStyleClass().add("text-muted");
+            hintLabel.setStyle("-fx-font-size: 12px;");
 
             // 备注字段
             TextArea remarkArea = new TextArea();
@@ -312,7 +287,7 @@ public class PurchaseInboundController {
 
             // 按钮
             Button confirmButton = new Button("确认入库");
-            confirmButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
+            confirmButton.getStyleClass().add("success-button");
 
             Button cancelButton = new Button("取消");
 
@@ -426,8 +401,7 @@ public class PurchaseInboundController {
             );
 
             Scene scene = new Scene(root, 700, 600);
-            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
-            scene.getStylesheets().add(getClass().getResource("/css/light-theme.css").toExternalForm());
+            applyCurrentTheme(scene);
 
             dialogStage.setScene(scene);
             dialogStage.showAndWait();
@@ -539,8 +513,7 @@ public class PurchaseInboundController {
             );
 
             Scene scene = new Scene(root, 600, 500);
-            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
-            scene.getStylesheets().add(getClass().getResource("/css/light-theme.css").toExternalForm());
+            applyCurrentTheme(scene);
 
             dialogStage.setScene(scene);
             dialogStage.showAndWait();
@@ -617,8 +590,7 @@ public class PurchaseInboundController {
             root.getChildren().addAll(inboundTable, closeButton);
 
             Scene scene = new Scene(root, 800, 400);
-            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
-            scene.getStylesheets().add(getClass().getResource("/css/light-theme.css").toExternalForm());
+            applyCurrentTheme(scene);
 
             dialogStage.setScene(scene);
             dialogStage.showAndWait();
@@ -696,8 +668,7 @@ public class PurchaseInboundController {
             detailStage.initOwner(parentStage);
 
             Scene scene = new Scene(root, 600, 500);
-            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
-            scene.getStylesheets().add(getClass().getResource("/css/light-theme.css").toExternalForm());
+            applyCurrentTheme(scene);
 
             detailStage.setScene(scene);
             detailStage.showAndWait();
@@ -747,6 +718,12 @@ public class PurchaseInboundController {
      */
     private void updateStatus(String status) {
         StatusBarManager.updateStatus(status);
+    }
+
+    private void applyCurrentTheme(Scene scene) {
+        scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+        String themeName = com.cashier.service.DataService.loadThemePreference();
+        scene.getStylesheets().add(getClass().getResource("/css/" + themeName + "-theme.css").toExternalForm());
     }
 
     /**

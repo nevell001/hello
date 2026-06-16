@@ -282,11 +282,13 @@ public class InventoryAlertController {
 
         if (isRunning) {
             serviceStatusLabel.setText("运行中");
-            serviceStatusLabel.setStyle("-fx-text-fill: #4CAF50;");
+            serviceStatusLabel.getStyleClass().removeAll("text-success", "text-danger");
+            serviceStatusLabel.getStyleClass().add("text-success");
             statusIndicator.setFill(Color.web("#4CAF50"));
         } else {
             serviceStatusLabel.setText("未启动");
-            serviceStatusLabel.setStyle("-fx-text-fill: #F44336;");
+            serviceStatusLabel.getStyleClass().removeAll("text-success", "text-danger");
+            serviceStatusLabel.getStyleClass().add("text-danger");
             statusIndicator.setFill(Color.web("#F44336"));
         }
 

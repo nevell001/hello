@@ -422,6 +422,69 @@
     -fx-border-width: 0 0 1 0;
 }
 
+.app-title-label,
+.welcome-title {
+    -fx-text-fill: #3F51B5;
+}
+
+.toolbar-meta-label,
+.user-role-label,
+.status-text {
+    -fx-text-fill: #616161;
+}
+
+.user-name-label {
+    -fx-text-fill: #212121;
+}
+
+.nav-group-title {
+    -fx-text-fill: #666666;
+}
+
+.welcome-subtitle {
+    -fx-text-fill: #9E9E9E;
+}
+
+.text-primary {
+    -fx-text-fill: #3F51B5;
+}
+
+.text-success {
+    -fx-text-fill: #4CAF50;
+}
+
+.text-warning {
+    -fx-text-fill: #FF9800;
+}
+
+.text-danger {
+    -fx-text-fill: #F44336;
+}
+
+.text-info {
+    -fx-text-fill: #2196F3;
+}
+
+.text-muted {
+    -fx-text-fill: #757575;
+}
+
+.text-default {
+    -fx-text-fill: #212121;
+}
+
+.text-accent {
+    -fx-text-fill: #9C27B0;
+}
+
+.surface-muted {
+    -fx-background-color: #F5F5F5;
+}
+
+.surface-warning {
+    -fx-background-color: #FFF3E0;
+}
+
 /* ========== 侧边栏样式 ========== */
 .sidebar {
     -fx-background-color: #FFFFFF;
@@ -657,6 +720,66 @@
     -fx-border-color: #E0E0E0;
     -fx-border-radius: 8px;
     -fx-border-width: 1px;
+}
+
+.checkout-title,
+.checkout-section-title {
+    -fx-text-fill: #3F51B5;
+}
+
+.checkout-meta-label,
+.checkout-field-label {
+    -fx-text-fill: #757575;
+}
+
+.checkout-value-success,
+.checkout-state-success {
+    -fx-text-fill: #4CAF50;
+}
+
+.checkout-state-error,
+.checkout-final-amount {
+    -fx-text-fill: #F44336;
+}
+
+.checkout-split-pane .split-pane-divider {
+    -fx-background-color: #E0E0E0;
+}
+
+.checkout-panel {
+    -fx-background-color: #F8F9FA;
+}
+
+.coupon-section {
+    -fx-background-color: transparent;
+}
+
+/* ========== 退货审核视图样式 ========== */
+.return-approval-view,
+.return-approval-panel {
+    -fx-background-color: #F8F9FA;
+}
+
+.return-approval-split-pane {
+    -fx-background-color: #E0E0E0;
+}
+
+.return-approval-split-pane .split-pane-divider {
+    -fx-background-color: #E0E0E0;
+}
+
+/* ========== 退货订单视图样式 ========== */
+.return-order-view,
+.return-order-detail-panel {
+    -fx-background-color: #F8F9FA;
+}
+
+.return-order-split-pane {
+    -fx-background-color: #E0E0E0;
+}
+
+.return-order-split-pane .split-pane-divider {
+    -fx-background-color: #E0E0E0;
 }
 /* ========== 字号大小类 ========== */
 /* 小字号 - 10% smaller */

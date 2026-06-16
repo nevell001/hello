@@ -39,10 +39,10 @@
                     <Insets top="6" right="8" bottom="6" left="8"/>
                 </padding>
 
-                <Label text="%app.name" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #3F51B5;"/>
+                <Label text="%app.name" styleClass="app-title-label" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
                 <Region HBox.hgrow="ALWAYS"/>
-                <Label fx:id="currentUserLabel" style="-fx-font-size: 13px; -fx-text-fill: #616161;"/>
-                <Label fx:id="currentTimeLabel" style="-fx-font-size: 13px; -fx-text-fill: #616161;"/>
+                <Label fx:id="currentUserLabel" styleClass="toolbar-meta-label" style="-fx-font-size: 13px;"/>
+                <Label fx:id="currentTimeLabel" styleClass="toolbar-meta-label" style="-fx-font-size: 13px;"/>
             </HBox>
         </VBox>
     </top>
@@ -67,10 +67,12 @@
 
                 <Label fx:id="userNameLabel"
                        text="%login.username"
-                       style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #212121;"/>
+                       styleClass="user-name-label"
+                       style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
                 <Label fx:id="userRoleLabel"
                        text="%user.role_label"
-                       style="-fx-font-size: 13px; -fx-text-fill: #616161;"/>
+                       styleClass="user-role-label"
+                       style="-fx-font-size: 13px;"/>
             </VBox>
 
             <!-- 导航按钮 - 分组优化版本 -->
@@ -87,7 +89,7 @@
                                 <Insets top="6" right="8" bottom="6" left="8"/>
                             </padding>
                             <Label text="" styleClass="icon"/>
-                            <Label text="%nav.group.pos" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #666666;"/>
+                            <Label text="%nav.group.pos" styleClass="nav-group-title" style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
                         </HBox>
                         <VBox spacing="1" styleClass="nav-group-content">
                             <Button fx:id="cartBtn" text="%nav.cart" onAction="#handleCart" styleClass="nav-button, nav-button-active">
@@ -108,7 +110,7 @@
                                 <Insets top="6" right="8" bottom="6" left="8"/>
                             </padding>
                             <Label text="" styleClass="icon"/>
-                            <Label text="%nav.group.product" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #666666;"/>
+                            <Label text="%nav.group.product" styleClass="nav-group-title" style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
                         </HBox>
                         <VBox spacing="1" styleClass="nav-group-content">
                             <Button fx:id="inventoryBtn" text="%nav.inventory" onAction="#handleInventory" styleClass="nav-button">
@@ -129,7 +131,7 @@
                                 <Insets top="6" right="8" bottom="6" left="8"/>
                             </padding>
                             <Label text="" styleClass="icon"/>
-                            <Label text="%nav.group.customer" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #666666;"/>
+                            <Label text="%nav.group.customer" styleClass="nav-group-title" style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
                         </HBox>
                         <VBox spacing="1" styleClass="nav-group-content">
                             <Button fx:id="membersBtn" text="%nav.members" onAction="#handleMembers" styleClass="nav-button">
@@ -150,7 +152,7 @@
                                 <Insets top="6" right="8" bottom="6" left="8"/>
                             </padding>
                             <Label text="" styleClass="icon"/>
-                            <Label text="%nav.group.purchase" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #666666;"/>
+                            <Label text="%nav.group.purchase" styleClass="nav-group-title" style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
                         </HBox>
                         <VBox spacing="1" styleClass="nav-group-content">
                             <Button fx:id="supplierBtn" text="%nav.supplier" onAction="#handleSupplier" styleClass="nav-button">
@@ -177,7 +179,7 @@
                                 <Insets top="6" right="8" bottom="6" left="8"/>
                             </padding>
                             <Label text="" styleClass="icon"/>
-                            <Label text="%nav.group.statistics" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #666666;"/>
+                            <Label text="%nav.group.statistics" styleClass="nav-group-title" style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
                         </HBox>
                         <VBox spacing="1" styleClass="nav-group-content">
                             <Button fx:id="transactionsBtn" text="%nav.transactions" onAction="#handleTransactions" styleClass="nav-button">
@@ -201,7 +203,7 @@
                                 <Insets top="6" right="8" bottom="6" left="8"/>
                             </padding>
                             <Label text="" styleClass="icon"/>
-                            <Label text="%nav.group.reports" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #666666;"/>
+                            <Label text="%nav.group.reports" styleClass="nav-group-title" style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
                         </HBox>
                         <VBox spacing="1" styleClass="nav-group-content">
                             <Button fx:id="purchaseReportBtn" text="%nav.purchase_report" onAction="#handlePurchaseReport" styleClass="nav-button">
@@ -228,7 +230,7 @@
                                 <Insets top="6" right="8" bottom="6" left="8"/>
                             </padding>
                             <Label text="" styleClass="icon"/>
-                            <Label text="%nav.group.system" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #666666;"/>
+                            <Label text="%nav.group.system" styleClass="nav-group-title" style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
                         </HBox>
                         <VBox spacing="1" styleClass="nav-group-content">
                             <Button fx:id="userManagementBtn" text="%nav.user_management" onAction="#handleUserManagement" styleClass="nav-button">
@@ -258,9 +260,11 @@
                     </padding>
 
                     <Label text="%main.welcome.title"
-                           style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #3F51B5;"/>
+                           styleClass="welcome-title"
+                           style="-fx-font-size: 32px; -fx-font-weight: bold;"/>
                     <Label text="%main.welcome.subtitle"
-                           style="-fx-font-size: 16px; -fx-text-fill: #9E9E9E;"/>
+                           styleClass="welcome-subtitle"
+                           style="-fx-font-size: 16px;"/>
 
                     <HBox spacing="20" alignment="CENTER" style="-fx-padding-top: 30;">
                         <Button text="%main.get_started"
@@ -286,11 +290,11 @@
                 <Insets top="4" right="8" bottom="4" left="8"/>
             </padding>
 
-            <Label fx:id="statusLabel" text="%status.ready" style="-fx-text-fill: #616161;"/>
+            <Label fx:id="statusLabel" text="%status.ready" styleClass="status-text"/>
             <Region HBox.hgrow="ALWAYS"/>
-            <Label fx:id="currentShiftLabel" text="%status.shift_not_started" style="-fx-text-fill: #616161;"/>
+            <Label fx:id="currentShiftLabel" text="%status.shift_not_started" styleClass="status-text"/>
             <Separator orientation="VERTICAL"/>
-            <Label fx:id="dateLabel" style="-fx-text-fill: #616161;"/>
+            <Label fx:id="dateLabel" styleClass="status-text"/>
         </HBox>
     </bottom>
 

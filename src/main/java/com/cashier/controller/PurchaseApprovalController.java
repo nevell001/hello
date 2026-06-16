@@ -283,8 +283,7 @@ public class PurchaseApprovalController {
             );
 
             Scene scene = new Scene(root, 500, 450);
-            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
-            scene.getStylesheets().add(getClass().getResource("/css/light-theme.css").toExternalForm());
+            com.cashier.util.ThemeUtils.applyCurrentTheme(scene, getClass());
 
             dialogStage.setScene(scene);
             dialogStage.showAndWait();
@@ -397,8 +396,7 @@ public class PurchaseApprovalController {
             );
 
             Scene scene = new Scene(root, 600, 600);
-            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
-            scene.getStylesheets().add(getClass().getResource("/css/light-theme.css").toExternalForm());
+            com.cashier.util.ThemeUtils.applyCurrentTheme(scene, getClass());
 
             dialogStage.setScene(scene);
             dialogStage.showAndWait();

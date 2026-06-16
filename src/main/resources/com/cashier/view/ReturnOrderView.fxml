@@ -7,7 +7,7 @@
 <VBox xmlns="http://javafx.com/javafx/17"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.cashier.controller.ReturnOrderController"
-      spacing="10" styleClass="main-container">
+      spacing="10" styleClass="main-container, return-order-view">
 
     <padding>
         <Insets top="20" right="20" bottom="20" left="20"/>
@@ -27,9 +27,9 @@
         <Label text="%return_order_list.title" styleClass="title-label" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
     </HBox>
 
-    <SplitPane dividerPositions="0.6" VBox.vgrow="ALWAYS">
+    <SplitPane dividerPositions="0.6" VBox.vgrow="ALWAYS" styleClass="return-order-split-pane">
         <!-- 左侧：退货订单列表 -->
-        <TableView fx:id="returnOrderTable" VBox.vgrow="ALWAYS">
+        <TableView fx:id="returnOrderTable" VBox.vgrow="ALWAYS" styleClass="return-order-table">
             <columns>
                 <TableColumn fx:id="returnOrderIdColumn" text="%return_order_list.return_id" prefWidth="150"/>
                 <TableColumn fx:id="memberNameColumn" text="%return_order_list.member_name" prefWidth="100"/>
@@ -41,7 +41,7 @@
         </TableView>
 
         <!-- 右侧：退货订单详情 -->
-        <VBox spacing="10">
+        <VBox spacing="10" styleClass="return-order-detail-panel">
             <Label text="%return_order_list.detail_title" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
 
             <!-- 订单基本信息 -->
@@ -53,7 +53,7 @@
                 <Label fx:id="memberNameLabel" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
                 <Label text="%return_order_list.total_amount_label" GridPane.columnIndex="2" GridPane.rowIndex="0"/>
-                <Label fx:id="totalAmountLabel" GridPane.columnIndex="3" GridPane.rowIndex="0" style="-fx-text-fill: red; -fx-font-weight: bold;"/>
+                <Label fx:id="totalAmountLabel" GridPane.columnIndex="3" GridPane.rowIndex="0" styleClass="text-danger" style="-fx-font-weight: bold;"/>
 
                 <Label text="%return_order_list.status_label" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
                 <Label fx:id="statusLabel" GridPane.columnIndex="3" GridPane.rowIndex="1"/>
@@ -85,7 +85,7 @@
                     <Button text="%return_order_list.print_receipt" onAction="#handlePrintReturnReceipt" styleClass="primary-button" prefWidth="140"/>
                     <Button text="%return_order_list.complete" onAction="#handleCompleteReturn" styleClass="success-button" prefWidth="120"/>
                 </HBox>
-                <TableView fx:id="itemTable" VBox.vgrow="ALWAYS">
+                <TableView fx:id="itemTable" VBox.vgrow="ALWAYS" styleClass="return-order-item-table">
                     <columns>
                         <TableColumn fx:id="productCodeColumn" text="%return_order.product_code" prefWidth="100"/>
                         <TableColumn fx:id="productNameColumn" text="%return_order.product_name" prefWidth="150"/>

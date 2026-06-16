@@ -18,7 +18,7 @@
 
     <!-- 标题 -->
     <Label text="%recharge.title"
-           style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #3F51B5;"/>
+           styleClass="text-primary" style="-fx-font-size: 20px; -fx-font-weight: bold"/>
 
     <!-- 会员信息 -->
     <VBox spacing="5" styleClass="member-info-box">
@@ -35,11 +35,11 @@
         </HBox>
         <HBox spacing="10">
             <Label text="%recharge.current_balance" style="-fx-font-weight: bold;"/>
-            <Label fx:id="currentBalanceLabel" text="" style="-fx-text-fill: #4CAF50; -fx-font-weight: bold;"/>
+            <Label fx:id="currentBalanceLabel" text="" styleClass="text-success" style="-fx-font-weight: bold"/>
         </HBox>
         <HBox spacing="10">
             <Label text="%recharge.current_points" style="-fx-font-weight: bold;"/>
-            <Label fx:id="currentPointsLabel" text="" style="-fx-text-fill: #FF9800; -fx-font-weight: bold;"/>
+            <Label fx:id="currentPointsLabel" text="" styleClass="text-warning" style="-fx-font-weight: bold"/>
         </HBox>
     </VBox>
 
@@ -69,18 +69,18 @@
         </padding>
         <HBox spacing="10">
             <Label text="%recharge.new_balance" style="-fx-font-weight: bold;"/>
-            <Label fx:id="newBalanceLabel" text="" style="-fx-text-fill: #4CAF50; -fx-font-weight: bold; -fx-font-size: 14px;"/>
+            <Label fx:id="newBalanceLabel" text="" styleClass="text-success" style="-fx-font-weight: bold; -fx-font-size: 14px"/>
         </HBox>
         <HBox spacing="10">
             <Label text="%recharge.bonus_points" style="-fx-font-weight: bold;"/>
-            <Label fx:id="bonusPointsLabel" text="" style="-fx-text-fill: #FF9800; -fx-font-weight: bold; -fx-font-size: 14px;"/>
-            <Label text="%recharge.points_hint" style="-fx-text-fill: #757575; -fx-font-size: 12px;"/>
+            <Label fx:id="bonusPointsLabel" text="" styleClass="text-warning" style="-fx-font-weight: bold; -fx-font-size: 14px"/>
+            <Label text="%recharge.points_hint" styleClass="text-muted" style="-fx-font-size: 12px"/>
         </HBox>
     </VBox>
 
     <!-- 充值历史记录 -->
     <VBox spacing="5">
-        <Label text="%recharge.history" style="-fx-font-weight: bold; -fx-text-fill: #3F51B5;"/>
+        <Label text="%recharge.history" styleClass="text-primary" style="-fx-font-weight: bold"/>
         <TableView fx:id="historyTable" prefHeight="150">
             <columns>
                 <TableColumn fx:id="dateColumn" text="%recharge.date" prefWidth="140"/>

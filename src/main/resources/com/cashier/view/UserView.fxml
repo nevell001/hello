@@ -83,7 +83,7 @@
         <Region HBox.hgrow="ALWAYS"/>
 
         <!-- 统计信息 -->
-        <Label fx:id="countLabel" text="%user.count" style="-fx-text-fill: #757575;"/>
+        <Label fx:id="countLabel" text="%user.count" styleClass="text-muted"/>
     </HBox>
 
     <!-- 用户列表表格 -->
@@ -99,7 +99,7 @@
             <TableColumn fx:id="statusColumn" text="%user.status" prefWidth="80"/>
         </columns>
         <placeholder>
-            <Label text="%user.no_data" style="-fx-text-fill: #9E9E9E; -fx-font-size: 14px;"/>
+            <Label text="%user.no_data" styleClass="text-muted" style="-fx-font-size: 14px"/>
         </placeholder>
     </TableView>
 

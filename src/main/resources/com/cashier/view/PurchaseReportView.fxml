@@ -62,32 +62,32 @@
                     <padding>
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding>
-                    <Label text="%purchase_report.total_orders" style="-fx-text-fill: #757575; -fx-font-size: 11px;"/>
-                    <Label fx:id="totalOrdersLabel" text="0" style="-fx-text-fill: #3F51B5; -fx-font-size: 22px; -fx-font-weight: bold;"/>
+                    <Label text="%purchase_report.total_orders" styleClass="text-muted" style="-fx-font-size: 11px"/>
+                    <Label fx:id="totalOrdersLabel" text="0" styleClass="text-primary" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
                 </VBox>
 
                 <VBox spacing="4" styleClass="stat-card-compact" GridPane.columnIndex="1" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS">
                     <padding>
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding>
-                    <Label text="%purchase_report.total_amount" style="-fx-text-fill: #757575; -fx-font-size: 11px;"/>
-                    <Label fx:id="totalAmountLabel" text="¥0.00" style="-fx-text-fill: #4CAF50; -fx-font-size: 22px; -fx-font-weight: bold;"/>
+                    <Label text="%purchase_report.total_amount" styleClass="text-muted" style="-fx-font-size: 11px"/>
+                    <Label fx:id="totalAmountLabel" text="¥0.00" styleClass="text-success" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
                 </VBox>
 
                 <VBox spacing="4" styleClass="stat-card-compact" GridPane.columnIndex="2" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS">
                     <padding>
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding>
-                    <Label text="%purchase_report.total_quantity" style="-fx-text-fill: #757575; -fx-font-size: 11px;"/>
-                    <Label fx:id="totalQuantityLabel" text="0" style="-fx-text-fill: #FF9800; -fx-font-size: 22px; -fx-font-weight: bold;"/>
+                    <Label text="%purchase_report.total_quantity" styleClass="text-muted" style="-fx-font-size: 11px"/>
+                    <Label fx:id="totalQuantityLabel" text="0" styleClass="text-warning" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
                 </VBox>
 
                 <VBox spacing="4" styleClass="stat-card-compact" GridPane.columnIndex="3" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS">
                     <padding>
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding>
-                    <Label text="%purchase_report.avg_order_amount" style="-fx-text-fill: #757575; -fx-font-size: 11px;"/>
-                    <Label fx:id="avgOrderAmountLabel" text="¥0.00" style="-fx-text-fill: #9C27B0; -fx-font-size: 22px; -fx-font-weight: bold;"/>
+                    <Label text="%purchase_report.avg_order_amount" styleClass="text-muted" style="-fx-font-size: 11px"/>
+                    <Label fx:id="avgOrderAmountLabel" text="¥0.00" styleClass="text-accent" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
                 </VBox>
 
                 <!-- 第二行：3列 -->
@@ -95,24 +95,24 @@
                     <padding>
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding>
-                    <Label text="%purchase_report.pending_orders" style="-fx-text-fill: #757575; -fx-font-size: 11px;"/>
-                    <Label fx:id="pendingOrdersLabel" text="0" style="-fx-text-fill: #F44336; -fx-font-size: 22px; -fx-font-weight: bold;"/>
+                    <Label text="%purchase_report.pending_orders" styleClass="text-muted" style="-fx-font-size: 11px"/>
+                    <Label fx:id="pendingOrdersLabel" text="0" styleClass="text-danger" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
                 </VBox>
 
                 <VBox spacing="4" styleClass="stat-card-compact" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS">
                     <padding>
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding>
-                    <Label text="%purchase_report.approved_orders" style="-fx-text-fill: #757575; -fx-font-size: 11px;"/>
-                    <Label fx:id="approvedOrdersLabel" text="0" style="-fx-text-fill: #2196F3; -fx-font-size: 22px; -fx-font-weight: bold;"/>
+                    <Label text="%purchase_report.approved_orders" styleClass="text-muted" style="-fx-font-size: 11px"/>
+                    <Label fx:id="approvedOrdersLabel" text="0" styleClass="text-info" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
                 </VBox>
 
                 <VBox spacing="4" styleClass="stat-card-compact" GridPane.columnIndex="2" GridPane.rowIndex="1" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS">
                     <padding>
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding>
-                    <Label text="%purchase_report.completed_orders" style="-fx-text-fill: #757575; -fx-font-size: 11px;"/>
-                    <Label fx:id="completedOrdersLabel" text="0" style="-fx-text-fill: #00BCD4; -fx-font-size: 22px; -fx-font-weight: bold;"/>
+                    <Label text="%purchase_report.completed_orders" styleClass="text-muted" style="-fx-font-size: 11px"/>
+                    <Label fx:id="completedOrdersLabel" text="0" styleClass="text-info" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
                 </VBox>
             </GridPane>
         </VBox>
@@ -134,7 +134,7 @@
                     <padding>
                         <Insets top="12" right="12" bottom="12" left="12"/>
                     </padding>
-                    <Label text="%purchase_report.status_distribution" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #3F51B5;"/>
+                    <Label text="%purchase_report.status_distribution" styleClass="text-primary" style="-fx-font-size: 14px; -fx-font-weight: bold"/>
                     <PieChart fx:id="statusPieChart" VBox.vgrow="ALWAYS" legendSide="RIGHT"/>
                 </VBox>
 
@@ -143,7 +143,7 @@
                     <padding>
                         <Insets top="12" right="12" bottom="12" left="12"/>
                     </padding>
-                    <Label text="%purchase_report.amount_trend" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #4CAF50;"/>
+                    <Label text="%purchase_report.amount_trend" styleClass="text-success" style="-fx-font-size: 14px; -fx-font-weight: bold"/>
                     <LineChart fx:id="amountTrendLineChart" VBox.vgrow="ALWAYS">
                         <xAxis>
                             <CategoryAxis label="%purchase_report.date_axis"/>
@@ -159,7 +159,7 @@
                     <padding>
                         <Insets top="12" right="12" bottom="12" left="12"/>
                     </padding>
-                    <Label text="%purchase_report.supplier_comparison" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #FF9800;"/>
+                    <Label text="%purchase_report.supplier_comparison" styleClass="text-warning" style="-fx-font-size: 14px; -fx-font-weight: bold"/>
                     <BarChart fx:id="supplierComparisonBarChart" VBox.vgrow="ALWAYS">
                         <xAxis>
                             <CategoryAxis label="%purchase_report.supplier_axis"/>

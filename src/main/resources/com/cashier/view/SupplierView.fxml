@@ -59,7 +59,7 @@
         <Region HBox.hgrow="ALWAYS"/>
 
         <!-- 统计信息 -->
-        <Label fx:id="countLabel" text="%supplier.count" style="-fx-text-fill: #757575;"/>
+        <Label fx:id="countLabel" text="%supplier.count" styleClass="text-muted"/>
     </HBox>
 
     <!-- 供应商表格 -->
@@ -76,7 +76,7 @@
             <TableColumn fx:id="addressColumn" text="%supplier.address" prefWidth="350" minWidth="250"/>
         </columns>
         <placeholder>
-            <Label text="%supplier.no_data" style="-fx-text-fill: #9E9E9E; -fx-font-size: 14px;"/>
+            <Label text="%supplier.no_data" styleClass="text-muted" style="-fx-font-size: 14px"/>
         </placeholder>
     </TableView>
 

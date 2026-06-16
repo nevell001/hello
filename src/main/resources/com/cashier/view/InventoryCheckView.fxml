@@ -76,7 +76,7 @@
         <Region HBox.hgrow="ALWAYS"/>
 
         <!-- 统计信息 -->
-        <Label fx:id="countLabel" text="%inventory_check.count" style="-fx-text-fill: #757575;"/>
+        <Label fx:id="countLabel" text="%inventory_check.count" styleClass="text-muted"/>
     </HBox>
 
     <!-- 库存盘点表格 -->
@@ -93,7 +93,7 @@
             <TableColumn fx:id="operatorColumn" text="%inventory_check.operator" prefWidth="100"/>
         </columns>
         <placeholder>
-            <Label text="%inventory_check.no_data" style="-fx-text-fill: #9E9E9E; -fx-font-size: 14px;"/>
+            <Label text="%inventory_check.no_data" styleClass="text-muted" style="-fx-font-size: 14px"/>
         </placeholder>
     </TableView>
 

@@ -34,12 +34,12 @@
         <padding>
             <Insets top="8" right="15" bottom="8" left="15"/>
         </padding>
-        <Label text="%search.results" style="-fx-text-fill: #757575; -fx-font-size: 12px;"/>
-        <Label fx:id="resultCountLabel" text="0" style="-fx-text-fill: #3F51B5; -fx-font-weight: bold; -fx-font-size: 12px;"/>
+        <Label text="%search.results" styleClass="text-muted" style="-fx-font-size: 12px"/>
+        <Label fx:id="resultCountLabel" text="0" styleClass="text-primary" style="-fx-font-weight: bold; -fx-font-size: 12px"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Label text="↑↓ 选择" style="-fx-text-fill: #9E9E9E; -fx-font-size: 11px;"/>
-        <Label text="Enter 打开" style="-fx-text-fill: #9E9E9E; -fx-font-size: 11px;"/>
-        <Label text="Esc 关闭" style="-fx-text-fill: #9E9E9E; -fx-font-size: 11px;"/>
+        <Label text="↑↓ 选择" styleClass="text-muted" style="-fx-font-size: 11px"/>
+        <Label text="Enter 打开" styleClass="text-muted" style="-fx-font-size: 11px"/>
+        <Label text="Esc 关闭" styleClass="text-muted" style="-fx-font-size: 11px"/>
     </HBox>
 
 </VBox>

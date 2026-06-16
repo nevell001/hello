@@ -36,7 +36,7 @@
                         <Insets top="20" right="20" bottom="20" left="20"/>
                     </padding>
 
-                    <Label text="%settings.store_info" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #3F51B5;"/>
+                    <Label text="%settings.store_info" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
 
                     <GridPane hgap="10" vgap="10">
                         <padding>
@@ -55,7 +55,7 @@
 
                     <Separator/>
 
-                    <Label text="%settings.financial" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #3F51B5;"/>
+                    <Label text="%settings.financial" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
 
                     <GridPane hgap="10" vgap="10">
                         <padding>
@@ -64,12 +64,12 @@
 
                         <Label text="%settings.tax_rate_label" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
                         <TextField fx:id="taxRateField" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="150" promptText="%settings.tax_rate_hint"/>
-                        <Label text="%settings.tax_rate_hint2" GridPane.columnIndex="2" GridPane.rowIndex="0" style="-fx-text-fill: #757575;"/>
+                        <Label text="%settings.tax_rate_hint2" GridPane.columnIndex="2" GridPane.rowIndex="0" styleClass="text-muted"/>
                     </GridPane>
 
                     <Separator/>
 
-                    <Label text="%settings.ui" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #3F51B5;"/>
+                    <Label text="%settings.ui" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
 
                     <GridPane hgap="10" vgap="10">
                         <padding>
@@ -113,7 +113,7 @@
 
                     <Separator/>
 
-                    <Label text="%settings.printer_name" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #3F51B5;"/>
+                    <Label text="%settings.printer_name" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
 
                     <GridPane hgap="10" vgap="10">
                         <padding>
@@ -129,7 +129,7 @@
 
                     <Separator/>
 
-                    <Label text="%settings.logo_settings" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #3F51B5;"/>
+                    <Label text="%settings.logo_settings" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
 
                     <VBox spacing="10" styleClass="logo-section">
                         <padding>
@@ -138,7 +138,7 @@
 
                         <HBox spacing="10" alignment="CENTER_LEFT">
                             <CheckBox fx:id="printLogoCheckBox" text="%settings.print_logo"/>
-                            <Label text="%settings.logo_format_hint" style="-fx-text-fill: #666; -fx-font-size: 11px;"/>
+                            <Label text="%settings.logo_format_hint" styleClass="text-muted" style="-fx-font-size: 11px"/>
                         </HBox>
 
                         <HBox spacing="10" alignment="CENTER_LEFT">
@@ -149,24 +149,24 @@
 
                         <!-- Logo 预览区域 -->
                         <HBox spacing="10" alignment="CENTER_LEFT" styleClass="logo-preview-container">
-                            <StackPane prefWidth="120" prefHeight="120" style="-fx-background-color: #f5f5f5; -fx-border-color: #ddd; -fx-border-width: 1;">
+                            <StackPane prefWidth="120" prefHeight="120" styleClass="surface-muted" style="-fx-border-color: #ddd; -fx-border-width: 1">
                                 <padding>
                                     <Insets top="5" right="5" bottom="5" left="5"/>
                                 </padding>
                                 <ImageView fx:id="logoPreviewImage" fitWidth="110" fitHeight="110" preserveRatio="true"/>
-                                <Label fx:id="logoPreviewPlaceholder" text="%settings.no_logo" style="-fx-text-fill: #999;" visible="true"/>
+                                <Label fx:id="logoPreviewPlaceholder" text="%settings.no_logo" styleClass="text-muted" visible="true"/>
                             </StackPane>
                             <VBox spacing="5">
                                 <Label text="%settings.logo_preview" style="-fx-font-weight: bold;"/>
-                                <Label fx:id="logoInfoLabel" text="%settings.logo_hint" style="-fx-text-fill: #666; -fx-font-size: 11px;"/>
-                                <Label text="%settings.logo_print_hint" style="-fx-text-fill: #999; -fx-font-size: 10px;"/>
+                                <Label fx:id="logoInfoLabel" text="%settings.logo_hint" styleClass="text-muted" style="-fx-font-size: 11px"/>
+                                <Label text="%settings.logo_print_hint" styleClass="text-muted" style="-fx-font-size: 10px"/>
                             </VBox>
                         </HBox>
                     </VBox>
 
                     <Separator/>
 
-                    <Label text="%settings.other_print_options" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #3F51B5;"/>
+                    <Label text="%settings.other_print_options" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
 
                     <VBox spacing="10">
                         <padding>
@@ -200,7 +200,7 @@
 
                     <Separator/>
 
-                    <Label text="%settings.backup_settings" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #3F51B5;"/>
+                    <Label text="%settings.backup_settings" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
 
                     <GridPane hgap="10" vgap="10">
                         <padding>
@@ -219,7 +219,7 @@
 
                     <Separator/>
 
-                    <Label text="%settings.manual_operations" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #3F51B5;"/>
+                    <Label text="%settings.manual_operations" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
 
                     <HBox spacing="10">
                         <Button fx:id="backupNowButton"
@@ -254,7 +254,7 @@
                         <Insets top="20" right="20" bottom="20" left="20"/>
                     </padding>
 
-                    <Label text="%settings.session_security" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #3F51B5;"/>
+                    <Label text="%settings.session_security" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
 
                     <GridPane hgap="10" vgap="10">
                         <padding>
@@ -268,7 +268,7 @@
 
                     <Separator/>
 
-                    <Label text="%settings.password_policy" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #3F51B5;"/>
+                    <Label text="%settings.password_policy" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
 
                     <GridPane hgap="10" vgap="10">
                         <padding>
@@ -304,7 +304,7 @@
                         <Insets top="20" right="20" bottom="20" left="20"/>
                     </padding>
 
-                    <Label text="%settings.csv_import" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #3F51B5;"/>
+                    <Label text="%settings.csv_import" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
 
                     <GridPane hgap="10" vgap="10">
                         <padding>
@@ -323,15 +323,15 @@
                         </HBox>
                     </GridPane>
 
-                    <VBox spacing="10" style="-fx-background-color: #FFF3E0; -fx-padding: 15; -fx-background-radius: 5;">
-                        <Label text="%settings.csv_format" style="-fx-font-weight: bold; -fx-text-fill: #F57C00;"/>
-                        <Label text="%settings.csv_format_comma" style="-fx-font-weight: 600; -fx-text-fill: #F57C00;"/>
+                    <VBox spacing="10" styleClass="surface-warning" style="-fx-padding: 15; -fx-background-radius: 5">
+                        <Label text="%settings.csv_format" styleClass="text-warning" style="-fx-font-weight: bold"/>
+                        <Label text="%settings.csv_format_comma" styleClass="text-warning" style="-fx-font-weight: 600"/>
                         <Label text="%settings.csv_format_detail_1" style="-fx-wrap-text: true;"/>
                         <Label text="%settings.csv_format_detail_2" style="-fx-wrap-text: true;"/>
                         <Label text="%settings.csv_format_detail_3" style="-fx-wrap-text: true;"/>
                         <Label text="%settings.csv_format_detail_4" style="-fx-wrap-text: true;"/>
                         <Label text=""/>
-                        <Label text="%settings.csv_format_pipe" style="-fx-font-weight: 600; -fx-text-fill: #F57C00;"/>
+                        <Label text="%settings.csv_format_pipe" styleClass="text-warning" style="-fx-font-weight: 600"/>
                         <Label text="%settings.csv_format_detail_5" style="-fx-wrap-text: true;"/>
                         <Label text="%settings.csv_format_detail_6" style="-fx-wrap-text: true;"/>
                         <Label text="%settings.csv_format_detail_7" style="-fx-wrap-text: true;"/>
@@ -354,7 +354,7 @@
 
                     <Separator/>
 
-                    <Label text="%settings.import_statistics" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #3F51B5;"/>
+                    <Label text="%settings.import_statistics" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
 
                     <GridPane hgap="20" vgap="10">
                         <padding>
@@ -365,16 +365,16 @@
                         <Label fx:id="totalProcessedLabel" text="0" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 
                         <Label text="%settings.import_success_label" GridPane.columnIndex="0" GridPane.rowIndex="1" style="-fx-font-weight: 600;"/>
-                        <Label fx:id="successCountLabel" text="0" GridPane.columnIndex="1" GridPane.rowIndex="1" style="-fx-text-fill: #4CAF50;"/>
+                        <Label fx:id="successCountLabel" text="0" GridPane.columnIndex="1" GridPane.rowIndex="1" styleClass="text-success"/>
 
                         <Label text="%settings.import_skipped_label" GridPane.columnIndex="0" GridPane.rowIndex="2" style="-fx-font-weight: 600;"/>
-                        <Label fx:id="skippedCountLabel" text="0" GridPane.columnIndex="1" GridPane.rowIndex="2" style="-fx-text-fill: #FF9800;"/>
+                        <Label fx:id="skippedCountLabel" text="0" GridPane.columnIndex="1" GridPane.rowIndex="2" styleClass="text-warning"/>
 
                         <Label text="%settings.import_errors_label" GridPane.columnIndex="0" GridPane.rowIndex="3" style="-fx-font-weight: 600;"/>
-                        <Label fx:id="errorCountLabel" text="0" GridPane.columnIndex="1" GridPane.rowIndex="3" style="-fx-text-fill: #F44336;"/>
+                        <Label fx:id="errorCountLabel" text="0" GridPane.columnIndex="1" GridPane.rowIndex="3" styleClass="text-danger"/>
                     </GridPane>
 
-                    <VBox fx:id="importMessagesArea" spacing="5" style="-fx-background-color: #F5F5F5; -fx-padding: 10; -fx-background-radius: 5; -fx-pref-height: 150;">
+                    <VBox fx:id="importMessagesArea" spacing="5" styleClass="surface-muted" style="-fx-padding: 10; -fx-background-radius: 5; -fx-pref-height: 150">
                         <padding>
                             <Insets top="5" right="5" bottom="5" left="5"/>
                         </padding>

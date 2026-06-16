@@ -76,7 +76,7 @@
         <Region HBox.hgrow="ALWAYS"/>
 
         <!-- 统计信息 -->
-        <Label fx:id="countLabel" text="%purchase_order.count" style="-fx-text-fill: #757575;"/>
+        <Label fx:id="countLabel" text="%purchase_order.count" styleClass="text-muted"/>
     </HBox>
 
     <!-- 采购订单表格 -->
@@ -92,7 +92,7 @@
             <TableColumn fx:id="purchaserColumn" text="%purchase_order.purchaser" prefWidth="100"/>
         </columns>
         <placeholder>
-            <Label text="%purchase_order.no_data" style="-fx-text-fill: #9E9E9E; -fx-font-size: 14px;"/>
+            <Label text="%purchase_order.no_data" styleClass="text-muted" style="-fx-font-size: 14px"/>
         </placeholder>
     </TableView>
 

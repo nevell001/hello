@@ -446,8 +446,7 @@ public class InventoryCheckController {
             );
 
             Scene scene = new Scene(root, 700, 600);
-            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
-            scene.getStylesheets().add(getClass().getResource("/css/light-theme.css").toExternalForm());
+            com.cashier.util.ThemeUtils.applyCurrentTheme(scene, getClass());
 
             dialogStage.setScene(scene);
             dialogStage.showAndWait();
@@ -656,8 +655,7 @@ public class InventoryCheckController {
             root.getChildren().addAll(filterBox, selectButtonsBox, productTable, buttonBox);
 
             Scene scene = new Scene(root, 600, 450);
-            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
-            scene.getStylesheets().add(getClass().getResource("/css/light-theme.css").toExternalForm());
+            com.cashier.util.ThemeUtils.applyCurrentTheme(scene, getClass());
 
             selectorStage.setScene(scene);
             selectorStage.showAndWait();
@@ -832,8 +830,7 @@ public class InventoryCheckController {
             );
 
             Scene scene = new Scene(root, 600, 500);
-            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
-            scene.getStylesheets().add(getClass().getResource("/css/light-theme.css").toExternalForm());
+            com.cashier.util.ThemeUtils.applyCurrentTheme(scene, getClass());
 
             Stage dialogStage = new Stage();
             dialogStage.setTitle("盘点详情 - " + check.checkNo);
