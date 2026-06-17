@@ -26,9 +26,9 @@
         </padding>
         <columnConstraints>
             <ColumnConstraints hgrow="NEVER" minWidth="90" prefWidth="90"/>
-            <ColumnConstraints hgrow="SOMETIMES" percentWidth="30"/>
+            <ColumnConstraints hgrow="ALWAYS" minWidth="170" prefWidth="190"/>
             <ColumnConstraints hgrow="NEVER" minWidth="90" prefWidth="90"/>
-            <ColumnConstraints hgrow="SOMETIMES" percentWidth="30"/>
+            <ColumnConstraints hgrow="ALWAYS" minWidth="210" prefWidth="230"/>
         </columnConstraints>
 
         <!-- 会员编号和自动生成复选框 -->
@@ -64,6 +64,7 @@
                styleClass="form-label"/>
         <TextField fx:id="pointsField"
                    GridPane.columnIndex="1" GridPane.rowIndex="2"
+                   GridPane.hgrow="ALWAYS"
                    promptText="%member.edit.points_hint"
                    styleClass="form-input, input-number"/>
 
@@ -72,7 +73,13 @@
                styleClass="form-label"/>
         <ComboBox fx:id="levelComboBox"
                   GridPane.columnIndex="3" GridPane.rowIndex="2"
-                  styleClass="form-combo"/>
+                  GridPane.hgrow="ALWAYS"
+                  minWidth="210"
+                  prefWidth="230"
+                  minHeight="36"
+                  prefHeight="36"
+                  maxWidth="Infinity"
+                  styleClass="form-combo, member-level-combo"/>
 
         <!-- 折扣 -->
         <Label text="%member.edit.discount" GridPane.columnIndex="0" GridPane.rowIndex="3"
@@ -87,13 +94,17 @@
                styleClass="form-label"/>
         <TextField fx:id="balanceField"
                    GridPane.columnIndex="3" GridPane.rowIndex="3"
+                   GridPane.hgrow="ALWAYS"
                    promptText="%member.edit.balance_hint"
                    styleClass="form-input, input-amount"/>
 
         <!-- 折扣说明 -->
         <Label text="%member.edit.discount_hint2"
                GridPane.columnIndex="0" GridPane.rowIndex="4"
-               styleClass="form-hint"/>
+               GridPane.columnSpan="4"
+               maxWidth="Infinity"
+               wrapText="true"
+               styleClass="form-hint, member-discount-hint"/>
 
         <!-- 生日 -->
         <Label text="%member.edit.birthday" GridPane.columnIndex="0" GridPane.rowIndex="5"

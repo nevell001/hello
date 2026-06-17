@@ -1186,8 +1186,6 @@ public class PurchaseOrderController {
     }
 
     private void applyCurrentTheme(Scene scene) {
-        scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
-        String themeName = com.cashier.service.DataService.loadThemePreference();
-        scene.getStylesheets().add(getClass().getResource("/css/" + themeName + "-theme.css").toExternalForm());
+        com.cashier.util.ThemeUtils.applyCurrentTheme(scene, getClass());
     }
 }

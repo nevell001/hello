@@ -44,9 +44,6 @@ public class ProductEditController {
     private TextField priceField;
 
     @FXML
-    private TextField quantityField;
-
-    @FXML
     private TextField minStockField;
 
     @FXML

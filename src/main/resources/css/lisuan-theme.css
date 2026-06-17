@@ -1,6 +1,6 @@
 /*
- * 狸算(LiSuan)收银系统 - IntelliJ 主题
- * 类似 IntelliJ IDEA 的专业风格
+ * 狸算(LiSuan)收银系统 - LiSuan 主题
+ * 以狸算 Logo 为基础的简洁暖橙主题
  */
 
 /* ========== 全局样式 ========== */
@@ -8,11 +8,11 @@
     -fx-base: #FFFFFF;
     -fx-background: #FFFFFF;
     -fx-control-inner-background: #FFFFFF;
-    -fx-control-inner-background-alt: #F7F8FA;
-    -fx-accent: #365880;
-    -fx-focus-color: #365880;
-    -fx-faint-focus-color: rgba(54, 88, 128, 0.1);
-    -fx-text-fill: #2B2B2B;
+    -fx-control-inner-background-alt: #FFF7EF;
+    -fx-accent: #B85C1B;
+    -fx-focus-color: #B85C1B;
+    -fx-faint-focus-color: rgba(184, 92, 27, 0.08);
+    -fx-text-fill: #1F2430;
     -fx-text-fill-disabled: #A0A0A0;
     -fx-font-family: "Noto Sans CJK JP", "Noto Sans CJK JP Bold", "Noto Sans SC", "Noto Sans CJK SC",
                      "Microsoft YaHei", "SimHei", "UKIJ CJK",
@@ -33,54 +33,54 @@
 /* ========== 卡片样式 ========== */
 .card {
     -fx-background-color: #FFFFFF;
-    -fx-border-color: #E1E4E8;
+    -fx-border-color: #E9DED1;
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 6, 0, 0, 2);
 }
 
 /* ========== 按钮样式 ========== */
 .button {
-    -fx-background-color: #365880;
+    -fx-background-color: #B85C1B;
     -fx-text-fill: #FFFFFF;
     -fx-background-radius: 3px;
     -fx-border-radius: 3px;
 }
 
 .button:hover {
-    -fx-background-color: #4A6D9A;
+    -fx-background-color: #C96A24;
 }
 
 .button:pressed {
-    -fx-background-color: #2B4566;
+    -fx-background-color: #8F4314;
 }
 
 /* ========== 文本框样式 ========== */
 .text-field {
     -fx-background-color: #FFFFFF;
-    -fx-border-color: #E1E4E8;
+    -fx-border-color: #E9DED1;
     -fx-border-radius: 3px;
-    -fx-text-fill: #212121;
+    -fx-text-fill: #1F2430;
 }
 
 .text-field:focused {
-    -fx-border-color: #365880;
+    -fx-border-color: #B85C1B;
     -fx-border-width: 1.5px;
 }
 
 .text-field:disabled {
-    -fx-background-color: #F7F8FA;
+    -fx-background-color: #FFF7EF;
     -fx-text-fill: #9E9E9E;
 }
 
 /* ========== 密码框样式 ========== */
 .password-field {
     -fx-background-color: #FFFFFF;
-    -fx-border-color: #E1E4E8;
+    -fx-border-color: #E9DED1;
     -fx-border-radius: 3px;
-    -fx-text-fill: #212121;
+    -fx-text-fill: #1F2430;
 }
 
 .password-field:focused {
-    -fx-border-color: #365880;
+    -fx-border-color: #B85C1B;
     -fx-border-width: 1.5px;
 }
 
@@ -89,11 +89,11 @@
     -fx-background-color: #FFFFFF;
     -fx-background-insets: 0;
     -fx-background-radius: 3px;
-    -fx-border-color: #E1E4E8;
+    -fx-border-color: #E9DED1;
     -fx-border-insets: 0;
     -fx-border-radius: 3px;
     -fx-border-width: 1px;
-    -fx-text-fill: #212121;
+    -fx-text-fill: #1F2430;
     -fx-effect: null;
 }
 
@@ -134,14 +134,14 @@
     -fx-border-width: 0;
     -fx-border-insets: 0;
     -fx-border-radius: 0;
-    -fx-text-fill: #212121;
+    -fx-text-fill: #1F2430;
 }
 
 .combo-box-popup .list-view {
     -fx-background-color: #FFFFFF;
     -fx-background-insets: 0;
     -fx-background-radius: 0;
-    -fx-border-color: #E1E4E8;
+    -fx-border-color: #E9DED1;
     -fx-border-insets: 0;
     -fx-border-radius: 0;
     -fx-border-width: 1px;
@@ -149,27 +149,27 @@
 }
 
 .combo-box:focused {
-    -fx-border-color: #365880;
+    -fx-border-color: #B85C1B;
     -fx-border-width: 1.5px;
 }
 
 /* ========== 表格样式 ========== */
 .table-view {
     -fx-background-color: #FFFFFF;
-    -fx-border-color: #E1E4E8;
+    -fx-border-color: #E9DED1;
     -fx-border-radius: 3px;
 }
 
 .table-view .column-header {
-    -fx-background-color: #F7F8FA;
-    -fx-text-fill: #2B4566;
+    -fx-background-color: #FFF7EF;
+    -fx-text-fill: #111A44;
     -fx-font-size: 14px;
     -fx-font-weight: bold;
-    -fx-border-color: #E1E4E8;
+    -fx-border-color: #E9DED1;
 }
 
 .table-view .table-cell {
-    -fx-text-fill: #212121;
+    -fx-text-fill: #1F2430;
     -fx-border-color: #F0F0F0;
 }
 
@@ -178,17 +178,17 @@
 }
 
 .table-view .table-row-cell:odd {
-    -fx-background-color: #FAFBFC;
+    -fx-background-color: #FFFBF6;
 }
 
 .table-view .table-row-cell:selected {
-    -fx-background-color: linear-gradient(to right, rgba(54, 88, 128, 0.22), rgba(54, 88, 128, 0.32));
-    -fx-text-fill: #365880;
+    -fx-background-color: linear-gradient(to right, rgba(184, 92, 27, 0.14), rgba(184, 92, 27, 0.20));
+    -fx-text-fill: #B85C1B;
     -fx-font-weight: bold;
 }
 
 .table-view .table-row-cell:hover {
-    -fx-background-color: rgba(54, 88, 128, 0.06);
+    -fx-background-color: rgba(184, 92, 27, 0.045);
 }
 
 /* ========== 所有业务表格统一选中样式 ========== */
@@ -203,8 +203,8 @@
 .table-view.shift-table .table-row-cell:selected,
 .table-view.user-table .table-row-cell:selected,
 .table-view.member-table .table-row-cell:selected {
-    -fx-background-color: linear-gradient(to right, rgba(54, 88, 128, 0.22), rgba(54, 88, 128, 0.32));
-    -fx-text-fill: #365880;
+    -fx-background-color: linear-gradient(to right, rgba(184, 92, 27, 0.14), rgba(184, 92, 27, 0.20));
+    -fx-text-fill: #B85C1B;
     -fx-font-weight: bold;
 }
 
@@ -219,33 +219,33 @@
 .table-view.shift-table .table-row-cell:selected .table-cell,
 .table-view.user-table .table-row-cell:selected .table-cell,
 .table-view.member-table .table-row-cell:selected .table-cell {
-    -fx-text-fill: #365880;
+    -fx-text-fill: #B85C1B;
     -fx-font-weight: bold;
 }
 
 /* 商品管理表格特殊样式 - 更明显的选中效果 */
 .table-view.inventory-table .table-row-cell:selected {
-    -fx-background-color: linear-gradient(to right, rgba(54, 88, 128, 0.22), rgba(54, 88, 128, 0.32));
-    -fx-text-fill: #365880;
+    -fx-background-color: linear-gradient(to right, rgba(184, 92, 27, 0.14), rgba(184, 92, 27, 0.20));
+    -fx-text-fill: #B85C1B;
     -fx-font-weight: bold;
     -fx-font-size: 15px;
-    -fx-border-color: #365880;
+    -fx-border-color: #B85C1B;
     -fx-border-width: 0 0 0 4px;
-    -fx-effect: dropshadow(three-pass-box, rgba(54, 88, 128, 0.2), 3, 0, 0, 1);
+    -fx-effect: dropshadow(three-pass-box, rgba(184, 92, 27, 0.14), 3, 0, 0, 1);
 }
 
 .table-view.inventory-table .table-row-cell:selected .table-cell {
-    -fx-text-fill: #365880;
+    -fx-text-fill: #B85C1B;
     -fx-font-weight: bold;
     -fx-font-size: 15px;
 }
 
 .table-view.inventory-table .table-row-cell:hover {
-    -fx-background-color: rgba(54, 88, 128, 0.06);
+    -fx-background-color: rgba(184, 92, 27, 0.045);
 }
 
 .table-view.inventory-table .table-row-cell:selected:hover {
-    -fx-background-color: linear-gradient(to right, rgba(54, 88, 128, 0.27), rgba(54, 88, 128, 0.37));
+    -fx-background-color: linear-gradient(to right, rgba(184, 92, 27, 0.18), rgba(184, 92, 27, 0.24));
 }
 
 .table-view.supplier-table .table-row-cell:hover,
@@ -258,7 +258,7 @@
 .table-view.shift-table .table-row-cell:hover,
 .table-view.user-table .table-row-cell:hover,
 .table-view.member-table .table-row-cell:hover {
-    -fx-background-color: rgba(54, 88, 128, 0.06);
+    -fx-background-color: rgba(184, 92, 27, 0.045);
 }
 
 .table-view.supplier-table .table-row-cell:selected:hover,
@@ -271,58 +271,58 @@
 .table-view.shift-table .table-row-cell:selected:hover,
 .table-view.user-table .table-row-cell:selected:hover,
 .table-view.member-table .table-row-cell:selected:hover {
-    -fx-background-color: linear-gradient(to right, rgba(54, 88, 128, 0.32), rgba(54, 88, 128, 0.42));
+    -fx-background-color: linear-gradient(to right, rgba(184, 92, 27, 0.20), rgba(184, 92, 27, 0.28));
 }
 
 /* ========== 菜单和工具栏 ========== */
 .menu-bar {
-    -fx-background-color: #F7F8FA;
-    -fx-border-color: #E1E4E8;
+    -fx-background-color: #FFF7EF;
+    -fx-border-color: #E9DED1;
     -fx-border-width: 0 0 1px 0;
 }
 
 .menu .label {
-    -fx-text-fill: #2B2B2B;
+    -fx-text-fill: #1F2430;
 }
 
 .tool-bar {
-    -fx-background-color: #F7F8FA;
-    -fx-border-color: #E1E4E8;
+    -fx-background-color: #FFF7EF;
+    -fx-border-color: #E9DED1;
     -fx-border-width: 0 0 1px 0;
 }
 
 .context-menu {
     -fx-background-color: #FFFFFF;
-    -fx-border-color: #E1E4E8;
+    -fx-border-color: #E9DED1;
     -fx-border-radius: 3px;
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 4, 0, 0, 1);
 }
 
 .menu-item {
-    -fx-text-fill: #2B2B2B;
+    -fx-text-fill: #1F2430;
 }
 
 .menu-item:focused {
-    -fx-background-color: #E8EBF0;
+    -fx-background-color: #FFEAD8;
 }
 
 /* ========== 选项卡 ========== */
 .tab-pane {
-    -fx-background-color: #F7F8FA;
+    -fx-background-color: #FFF7EF;
 }
 
 .tab-pane .tab-header-area {
-    -fx-background-color: #F7F8FA;
-    -fx-border-color: #E1E4E8;
+    -fx-background-color: #FFF7EF;
+    -fx-border-color: #E9DED1;
     -fx-border-width: 0 0 1px 0;
 }
 
 .tab-pane .tab {
-    -fx-background-color: #F7F8FA;
+    -fx-background-color: #FFF7EF;
     -fx-background-radius: 3px 3px 0 0;
-    -fx-border-color: #E1E4E8;
+    -fx-border-color: #E9DED1;
     -fx-border-radius: 3px 3px 0 0;
-    -fx-text-fill: #2B2B2B;
+    -fx-text-fill: #1F2430;
     -fx-min-width: 97px;
     -fx-pref-width: 121px;
 }
@@ -340,7 +340,7 @@
 
 .tab-pane .tab:selected {
     -fx-background-color: #FFFFFF;
-    -fx-text-fill: #365880;
+    -fx-text-fill: #B85C1B;
 }
 
 .tab-pane .tab-content-area {
@@ -349,38 +349,38 @@
 
 /* ========== 滚动条 ========== */
 .scroll-bar .thumb {
-    -fx-background-color: #C0C0C0;
+    -fx-background-color: #D8C7B8;
     -fx-background-radius: 2px;
 }
 
 .scroll-bar .thumb:hover {
-    -fx-background-color: #A8A8A8;
+    -fx-background-color: #BEA895;
 }
 
 /* ========== 复选框和单选按钮 ========== */
 .check-box {
-    -fx-text-fill: #2B2B2B;
+    -fx-text-fill: #1F2430;
 }
 
 .check-box .box {
     -fx-background-color: #FFFFFF;
-    -fx-border-color: #E1E4E8;
+    -fx-border-color: #E9DED1;
     -fx-border-radius: 2px;
 }
 
 .radio-button {
-    -fx-text-fill: #2B2B2B;
+    -fx-text-fill: #1F2430;
 }
 
 .radio-button .radio {
     -fx-background-color: #FFFFFF;
-    -fx-border-color: #E1E4E8;
+    -fx-border-color: #E9DED1;
     -fx-border-radius: 10px;
 }
 
 /* ========== 工具提示 ========== */
 .tooltip {
-    -fx-background-color: #365880;
+    -fx-background-color: #B85C1B;
     -fx-text-fill: #FFFFFF;
     -fx-background-radius: 3px;
 }
@@ -391,27 +391,49 @@
 }
 
 .dialog-pane .header-panel {
-    -fx-background-color: #F7F8FA;
-    -fx-text-fill: #365880;
+    -fx-background-color: #FFF7EF;
+    -fx-text-fill: #B85C1B;
 }
 
 .dialog-pane .content {
-    -fx-text-fill: #2B2B2B;
+    -fx-text-fill: #1F2430;
+}
+
+.promotion-dialog .form-combo > .list-cell,
+.promotion-dialog .promotion-date-picker > .text-field {
+    -fx-text-fill: #1F2430;
+}
+
+.member-level-combo > .list-cell {
+    -fx-text-fill: #1F2430;
+}
+
+.member-discount-hint {
+    -fx-text-fill: #6D6258;
+}
+
+.promotion-dialog .promotion-date-picker {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E9DED1;
+}
+
+.promotion-dialog .promotion-date-picker:focused {
+    -fx-border-color: #B85C1B;
 }
 
 /* ========== 进度条 ========== */
 .progress-bar {
-    -fx-background-color: #E1E4E8;
+    -fx-background-color: #E9DED1;
 }
 
 .progress-bar .bar {
-    -fx-background-color: #365880;
+    -fx-background-color: #B85C1B;
 }
 
 /* ========== 滚动面板 ========== */
 .scroll-pane {
     -fx-background-color: transparent;
-    -fx-border-color: #E1E4E8;
+    -fx-border-color: #E9DED1;
     -fx-border-radius: 3px;
 }
 
@@ -421,23 +443,23 @@
 
 /* ========== 标签样式 ========== */
 .label {
-    -fx-text-fill: #212121;
+    -fx-text-fill: #1F2430;
 }
 
 .label.title {
-    -fx-text-fill: #365880;
+    -fx-text-fill: #111A44;
 }
 
 .label.heading {
-    -fx-text-fill: #212121;
+    -fx-text-fill: #1F2430;
 }
 
 .label.subtitle {
-    -fx-text-fill: #424242;
+    -fx-text-fill: #4B4F5C;
 }
 
 .label.secondary {
-    -fx-text-fill: #616161;
+    -fx-text-fill: #6B6F7A;
 }
 
 .label.disabled {
@@ -446,7 +468,7 @@
 
 /* ========== 文本颜色 ========== */
 .text-primary {
-    -fx-text-fill: #365880;
+    -fx-text-fill: #B85C1B;
 }
 
 .text-success {
@@ -462,12 +484,12 @@
 }
 
 .text-info {
-    -fx-text-fill: #2196F3;
+    -fx-text-fill: #111A44;
 }
 
 /* ========== 背景颜色 ========== */
 .bg-primary {
-    -fx-background-color: #365880;
+    -fx-background-color: #B85C1B;
 }
 
 .bg-success {
@@ -483,24 +505,24 @@
 }
 
 .bg-info {
-    -fx-background-color: #2196F3;
+    -fx-background-color: #111A44;
 }
 
 .bg-light {
-    -fx-background-color: #F7F8FA;
+    -fx-background-color: #FFF7EF;
 }
 
 .bg-dark {
-    -fx-background-color: #2B2B2B;
+    -fx-background-color: #111A44;
 }
 
 /* ========== 分割面板 ========== */
 .split-pane {
-    -fx-background-color: #E1E4E8;
+    -fx-background-color: #E9DED1;
 }
 
 .split-pane-divider {
-    -fx-background-color: #E1E4E8;
+    -fx-background-color: #E9DED1;
     -fx-padding: 0 1px;
 }
 /* ========== 字号大小类 ========== */
@@ -615,4 +637,57 @@
     -fx-padding: 10px 12px;
     -fx-min-width: 110px;
     -fx-wrap-text: true;
+}
+
+/* ========== LiSuan 左侧导航 ========== */
+.sidebar {
+    -fx-background-color: #FFF7EF;
+}
+
+.sidebar .scroll-pane,
+.sidebar .scroll-pane .viewport,
+.sidebar .nav-buttons,
+.sidebar .nav-group-content {
+    -fx-background-color: #FFF7EF;
+}
+
+.sidebar .nav-group-header {
+    -fx-background-color: #FFF1E4;
+    -fx-border-color: transparent transparent #E9DED1 transparent;
+}
+
+.sidebar .nav-group-header:hover {
+    -fx-background-color: #FFEAD8;
+}
+
+.sidebar .nav-group-title,
+.sidebar .nav-group-header .icon,
+.sidebar .user-name-label,
+.sidebar .user-role-label {
+    -fx-text-fill: #111A44;
+}
+
+.sidebar .nav-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #1F2430;
+}
+
+.sidebar .nav-button .icon {
+    -fx-text-fill: #1F2430;
+}
+
+.sidebar .nav-button:hover {
+    -fx-background-color: rgba(184, 92, 27, 0.08);
+}
+
+.sidebar .nav-button-active,
+.sidebar .nav-button.active {
+    -fx-background-color: #FFEAD8;
+    -fx-text-fill: #B85C1B;
+    -fx-font-weight: bold;
+}
+
+.sidebar .nav-button-active .icon,
+.sidebar .nav-button.active .icon {
+    -fx-text-fill: #B85C1B;
 }

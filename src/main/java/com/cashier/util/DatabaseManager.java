@@ -943,6 +943,42 @@ public class DatabaseManager {
         }
         rs.close();
 
+        // 创建字号偏好表（如果不存在）
+        rs = stmt.executeQuery("""
+            SELECT COUNT(*) as count
+            FROM INFORMATION_SCHEMA.TABLES
+            WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME = 'font_size_preferences'
+        """);
+        if (rs.next() && rs.getInt("count") == 0) {
+            logger.info("正在创建 font_size_preferences 表...");
+            stmt.execute("""
+                CREATE TABLE IF NOT EXISTS font_size_preferences (
+                    username VARCHAR(50) PRIMARY KEY,
+                    font_size VARCHAR(20) DEFAULT 'medium',
+                    updated_at BIGINT,
+                    INDEX idx_username (username),
+                    FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            """);
+        }
+        rs.close();
+
+        // 为 promotions 表添加 promotion_code 字段（如果不存在）
+        rs = stmt.executeQuery("""
+            SELECT COUNT(*) as count
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME = 'promotions'
+            AND COLUMN_NAME = 'promotion_code'
+        """);
+        if (rs.next() && rs.getInt("count") == 0) {
+            logger.info("正在为 promotions 表添加 promotion_code 字段...");
+            stmt.execute("ALTER TABLE promotions ADD COLUMN promotion_code VARCHAR(50) UNIQUE AFTER id");
+        }
+        rs.close();
+        stmt.execute("UPDATE promotions SET promotion_code = CONCAT('P', LPAD(id, 6, '0')) WHERE promotion_code IS NULL OR promotion_code = ''");
+
         // 为 users 表添加 force_password_change 字段（如果不存在）
         rs = stmt.executeQuery("""
             SELECT COUNT(*) as count

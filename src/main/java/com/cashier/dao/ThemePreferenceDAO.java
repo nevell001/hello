@@ -14,6 +14,14 @@ public class ThemePreferenceDAO {
      * 获取主题偏好
      */
     public static String getThemePreference(String username) throws SQLException {
+        String themeName = findThemePreference(username);
+        return themeName != null ? themeName : "light";
+    }
+
+    /**
+     * 查找主题偏好；不存在时返回 null，便于上层处理兼容兜底。
+     */
+    public static String findThemePreference(String username) throws SQLException {
         String sql = "SELECT theme_name FROM theme_preferences WHERE username = ?";
 
         try (Connection conn = DatabaseManager.getConnection();
@@ -25,7 +33,7 @@ public class ThemePreferenceDAO {
                 return rs.getString("theme_name");
             }
         }
-        return "light"; // 默认主题
+        return null;
     }
 
     /**

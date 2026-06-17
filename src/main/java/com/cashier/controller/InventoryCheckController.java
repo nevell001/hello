@@ -9,10 +9,8 @@ import com.cashier.model.*;
 import com.cashier.util.StatusBarManager;
 import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
-import com.cashier.util.FormValidator;
 
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -379,6 +377,7 @@ public class InventoryCheckController {
             Button cancelButton = new Button("取消");
 
             saveButton.setOnAction(e -> {
+                saveButton.setDisable(true);
                 InventoryCheck newCheck = new InventoryCheck();
                 newCheck.checkNo = checkNoField.getText();
                 newCheck.checkDate = checkDatePicker.getValue().toString();
@@ -408,6 +407,8 @@ public class InventoryCheckController {
                         }
                         updateStatus("盘点单更新成功");
                     } else {
+                        newCheck.checkNo = InventoryCheckDAO.generateNextCheckNo(newCheck.checkDate);
+                        checkNoField.setText(newCheck.checkNo);
                         InventoryCheckDAO.insert(newCheck);
                         for (CheckItemWrapper wrapper : items) {
                             InventoryCheckItem item = new InventoryCheckItem();
@@ -426,6 +427,11 @@ public class InventoryCheckController {
                     dialogStage.close();
 
                 } catch (SQLException ex) {
+                    saveButton.setDisable(false);
+                    logger.error("保存盘点单失败", ex);
+                    showError("保存盘点单失败: " + ex.getMessage());
+                } catch (Exception ex) {
+                    saveButton.setDisable(false);
                     logger.error("保存盘点单失败", ex);
                     showError("保存盘点单失败: " + ex.getMessage());
                 }
@@ -708,28 +714,12 @@ public class InventoryCheckController {
      * 生成盘点单号
      */
     private String generateCheckNo() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-        String dateStr = sdf.format(new Date());
-        String prefix = "IC" + dateStr;
-
-        int maxSeq = 0;
         try {
-            for (InventoryCheck check : checks.values()) {
-                if (check.checkNo != null && check.checkNo.startsWith(prefix)) {
-                    String seqStr = check.checkNo.substring(prefix.length());
-                    try {
-                        int seq = FormValidator.parseInt(seqStr);
-                        if (seq > maxSeq) {
-                            maxSeq = seq;
-                        }
-                    } catch (NumberFormatException ignored) {
-                    }
-                }
-            }
-        } catch (Exception ignored) {
+            return InventoryCheckDAO.generateNextCheckNo(new java.text.SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+        } catch (SQLException ex) {
+            logger.warn("生成盘点单号失败，使用本地时间兜底", ex);
+            return "IC" + new java.text.SimpleDateFormat("yyyyMMdd").format(new Date()) + "0001";
         }
-
-        return prefix + String.format("%04d", maxSeq + 1);
     }
 
     /**

@@ -26,7 +26,7 @@
                 <Menu text="%menu.theme">
                     <MenuItem text="%menu.theme.light" onAction="#handleLightTheme"/>
                     <MenuItem text="%menu.theme.dark" onAction="#handleDarkTheme"/>
-                    <MenuItem text="%menu.theme.intellij" onAction="#handleIntelliJTheme"/>
+                    <MenuItem text="%menu.theme.lisuan" onAction="#handleLiSuanTheme"/>
                 </Menu>
                 <Menu text="%menu.help">
                     <MenuItem text="%menu.help.about" onAction="#handleAbout"/>

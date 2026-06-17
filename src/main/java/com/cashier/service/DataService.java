@@ -300,7 +300,11 @@ public class DataService {
      */
     public static String loadThemePreference(String username) {
         try {
-            return ThemePreferenceDAO.getThemePreference(username);
+            String themeName = ThemePreferenceDAO.findThemePreference(username);
+            if (themeName == null && !"default".equals(username)) {
+                themeName = ThemePreferenceDAO.findThemePreference("default");
+            }
+            return normalizeThemeName(themeName != null ? themeName : "light");
         } catch (SQLException e) {
             logger.error("加载主题偏好失败", e);
             return "light"; // 默认主题
@@ -319,10 +323,14 @@ public class DataService {
      */
     public static void saveThemePreference(String username, String themeName) {
         try {
-            ThemePreferenceDAO.setThemePreference(username, themeName);
+            ThemePreferenceDAO.setThemePreference(username, normalizeThemeName(themeName));
         } catch (SQLException e) {
             logger.error("保存主题偏好失败", e);
         }
+    }
+
+    private static String normalizeThemeName(String themeName) {
+        return "intellij".equals(themeName) ? "lisuan" : themeName;
     }
 
     /**

@@ -18,6 +18,11 @@ public class I18nManager {
     private Locale currentLocale;
     private ResourceBundle bundle;
     private final ConcurrentHashMap<String, ResourceBundle> bundles = new ConcurrentHashMap<>();
+    private static final Map<String, String> FALLBACK_TEXTS = Map.of(
+        "inventory.status.out_of_stock", "缺货",
+        "inventory.status.low_stock", "库存不足",
+        "inventory.status.normal", "正常"
+    );
     
     // 支持的语言列表
     public static final Locale CHINESE_SIMPLIFIED = Locale.SIMPLIFIED_CHINESE;
@@ -128,6 +133,10 @@ public class I18nManager {
         try {
             return bundle.getString(key);
         } catch (MissingResourceException e) {
+            String fallbackText = FALLBACK_TEXTS.get(key);
+            if (fallbackText != null) {
+                return fallbackText;
+            }
             logger.warn("找不到翻译: {}", key);
             return key; // 返回 key 作为默认值
         }

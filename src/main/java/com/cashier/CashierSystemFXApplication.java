@@ -182,6 +182,14 @@ public class CashierSystemFXApplication extends Application {
     }
 
     /**
+     * 获取当前登录用户
+     * @return 当前登录用户，未登录时返回 null
+     */
+    public User getCurrentUser() {
+        return currentUser;
+    }
+
+    /**
      * 加载自定义中文字体
      * 确保在所有平台上中文都能正确显示
      */
@@ -273,7 +281,8 @@ public class CashierSystemFXApplication extends Application {
             Scene scene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
 
             // 应用主题
-            String currentTheme = DataService.loadThemePreference();
+            String username = currentUser != null ? currentUser.username : "default";
+            String currentTheme = DataService.loadThemePreference(username);
             applyTheme(scene, currentTheme);
 
             // 设置场景
@@ -319,8 +328,9 @@ public class CashierSystemFXApplication extends Application {
             scene.getStylesheets().add(mainStylesheet.toExternalForm());
         }
 
-        // 添加主题样式表
-        String themeCss = "/css/" + themeName + "-theme.css";
+        // 添加主题样式表，兼容旧版 IntelliJ 主题偏好
+        String normalizedThemeName = "intellij".equals(themeName) ? "lisuan" : themeName;
+        String themeCss = "/css/" + normalizedThemeName + "-theme.css";
         URL themeStylesheet = getClass().getResource(themeCss);
         if (themeStylesheet != null) {
             scene.getStylesheets().add(themeStylesheet.toExternalForm());
@@ -328,7 +338,7 @@ public class CashierSystemFXApplication extends Application {
 
         // 保存主题设置（仅在用户登录后）
         if (currentUser != null) {
-            DataService.saveThemePreference(currentUser.username, themeName);
+            DataService.saveThemePreference(currentUser.username, normalizedThemeName);
         }
     }
 
@@ -487,7 +497,7 @@ public class CashierSystemFXApplication extends Application {
             Scene scene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
 
             // 应用主题
-            String currentTheme = DataService.loadThemePreference();
+            String currentTheme = DataService.loadThemePreference(user.username);
             applyTheme(scene, currentTheme);
 
             // 应用字号
@@ -549,7 +559,7 @@ public class CashierSystemFXApplication extends Application {
             Scene scene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
 
             // 应用主题
-            String currentTheme = DataService.loadThemePreference();
+            String currentTheme = DataService.loadThemePreference(user.username);
             applyTheme(scene, currentTheme);
 
             // 应用字号

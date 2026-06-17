@@ -19,8 +19,8 @@ public class FXConstants {
     /** 深色主题 */
     public static final String DARK_THEME = "dark";
 
-    /** IntelliJ 主题 */
-    public static final String INTELLIJ_THEME = "intellij";
+    /** LiSuan 主题 */
+    public static final String LISUAN_THEME = "lisuan";
 
     // ========== 颜色常量 - 语义化颜色 ==========
 

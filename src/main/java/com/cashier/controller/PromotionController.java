@@ -6,10 +6,17 @@ import com.cashier.util.StatusBarManager;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
 import com.cashier.util.FormValidator;
@@ -205,12 +212,31 @@ public class PromotionController {
         Dialog<Promotion> dialog = new Dialog<>();
         dialog.setTitle(promotion == null ? "添加促销" : "编辑促销");
         dialog.setHeaderText(null);
+        dialog.getDialogPane().setPrefWidth(760);
+        dialog.getDialogPane().getStyleClass().add("promotion-dialog");
+        if (promotionTable.getScene() != null) {
+            dialog.initOwner(promotionTable.getScene().getWindow());
+            dialog.getDialogPane().getStylesheets().addAll(promotionTable.getScene().getStylesheets());
+        }
 
         // 创建对话框内容
+        VBox content = new VBox(14);
+        content.getStyleClass().add("dialog-content");
+
+        Label titleLabel = new Label(promotion == null ? "添加促销" : "编辑促销");
+        titleLabel.getStyleClass().add("view-title");
+
         GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setPadding(new javafx.geometry.Insets(20, 150, 10, 10));
+        grid.getStyleClass().addAll("form-grid", "dialog-form-grid");
+        grid.setHgap(14);
+        grid.setVgap(12);
+        grid.setPadding(new Insets(4, 0, 0, 0));
+        grid.getColumnConstraints().addAll(
+            createLabelColumn(),
+            createFieldColumn(),
+            createLabelColumn(),
+            createFieldColumn()
+        );
 
         TextField promotionCodeField = new TextField();
         TextField nameField = new TextField();
@@ -221,8 +247,32 @@ public class PromotionController {
         DatePicker startDatePicker = new DatePicker();
         DatePicker endDatePicker = new DatePicker();
         TextField maxUsageField = new TextField();
+        Label errorLabel = new Label();
+        errorLabel.setWrapText(true);
+        errorLabel.setMaxWidth(Double.MAX_VALUE);
+        errorLabel.getStyleClass().add("error-label");
+
+        stylePromotionDialogControls(
+            promotionCodeField,
+            nameField,
+            typeComboBox,
+            thresholdField,
+            discountField,
+            descriptionArea,
+            startDatePicker,
+            endDatePicker,
+            maxUsageField
+        );
 
         typeComboBox.setItems(FXCollections.observableArrayList("满减", "打折", "优惠券"));
+        typeComboBox.setButtonCell(createPromotionTypeCell());
+        typeComboBox.setCellFactory(listView -> createPromotionTypeCell());
+        typeComboBox.getSelectionModel().select("满减");
+        thresholdField.setPromptText("例如: 100，表示消费满100元");
+        discountField.setPromptText("满减填减免金额，例如: 10");
+        maxUsageField.setPromptText("空着表示不限制");
+        startDatePicker.setValue(LocalDate.now());
+        endDatePicker.setValue(LocalDate.now().plusDays(30));
 
         if (promotion != null) {
             promotionCodeField.setText(promotion.promotionCode);
@@ -239,109 +289,74 @@ public class PromotionController {
             // 新建促销时自动生成编号
             promotionCodeField.setText(generatePromotionCode());
             promotionCodeField.setDisable(true);  // 禁用促销编号字段
+            thresholdField.setText("0");
         }
 
-        grid.add(new Label("促销编号:"), 0, 0);
-        grid.add(promotionCodeField, 1, 0);
-        grid.add(new Label("促销名称:"), 0, 1);
-        grid.add(nameField, 1, 1);
-        grid.add(new Label("促销类型:"), 0, 2);
-        grid.add(typeComboBox, 1, 2);
-        grid.add(new Label("门槛金额:"), 0, 3);
-        grid.add(thresholdField, 1, 3);
-        grid.add(new Label("折扣值:"), 0, 4);
-        grid.add(discountField, 1, 4);
-        grid.add(new Label("描述:"), 0, 5);
-        grid.add(descriptionArea, 1, 5);
-        grid.add(new Label("开始日期:"), 0, 6);
-        grid.add(startDatePicker, 1, 6);
-        grid.add(new Label("结束日期:"), 0, 7);
-        grid.add(endDatePicker, 1, 7);
-        grid.add(new Label("最大使用次数:"), 0, 8);
-        grid.add(maxUsageField, 1, 8);
+        typeComboBox.valueProperty().addListener((obs, oldType, newType) -> {
+            updatePromotionFieldHints(newType, thresholdField, discountField);
+        });
+        updatePromotionFieldHints(typeComboBox.getSelectionModel().getSelectedItem(), thresholdField, discountField);
 
-        dialog.getDialogPane().setContent(grid);
+        grid.add(createFormLabel("促销编号:"), 0, 0);
+        grid.add(promotionCodeField, 1, 0);
+        grid.add(createFormLabel("促销名称:*"), 2, 0);
+        grid.add(nameField, 3, 0);
+        grid.add(createFormLabel("促销类型:*"), 0, 1);
+        grid.add(typeComboBox, 1, 1);
+        grid.add(createFormLabel("最大次数:"), 2, 1);
+        grid.add(maxUsageField, 3, 1);
+        grid.add(createFormLabel("门槛金额:*"), 0, 2);
+        grid.add(thresholdField, 1, 2);
+        grid.add(createFormLabel("优惠值:*"), 2, 2);
+        grid.add(discountField, 3, 2);
+        grid.add(createFormLabel("开始日期:*"), 0, 3);
+        grid.add(startDatePicker, 1, 3);
+        grid.add(createFormLabel("结束日期:*"), 2, 3);
+        grid.add(endDatePicker, 3, 3);
+        grid.add(createFormLabel("描述:"), 0, 4);
+        grid.add(descriptionArea, 1, 4, 3, 1);
+        grid.add(errorLabel, 1, 5, 3, 1);
+
+        content.getChildren().addAll(titleLabel, grid);
+        dialog.getDialogPane().setContent(content);
 
         ButtonType okButtonType = new ButtonType("确定", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(okButtonType, ButtonType.CANCEL);
 
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == okButtonType) {
-                try {
-                    // 验证必填字段
-                    String code = promotionCodeField.getText().trim();
-                    String name = nameField.getText().trim();
-                    String type = typeComboBox.getSelectionModel().getSelectedItem();
-                    String thresholdText = thresholdField.getText().trim();
-                    String discountText = discountField.getText().trim();
-
-                    if (name.isEmpty()) {
-                        throw new IllegalArgumentException("促销名称不能为空");
-                    }
-                    if (type == null || type.isEmpty()) {
-                        throw new IllegalArgumentException("请选择促销类型");
-                    }
-                    if (thresholdText.isEmpty()) {
-                        throw new IllegalArgumentException("门槛金额不能为空");
-                    }
-                    if (discountText.isEmpty()) {
-                        throw new IllegalArgumentException("折扣值不能为空");
-                    }
-
-                    // 验证日期
-                    if (startDatePicker.getValue() == null) {
-                        throw new IllegalArgumentException("请选择开始日期");
-                    }
-                    if (endDatePicker.getValue() == null) {
-                        throw new IllegalArgumentException("请选择结束日期");
-                    }
-                    if (endDatePicker.getValue().isBefore(startDatePicker.getValue())) {
-                        throw new IllegalArgumentException("结束日期不能早于开始日期");
-                    }
-
-                    // 解析数字字段
-                    BigDecimal threshold = new BigDecimal(thresholdText);
-                    BigDecimal discount = new BigDecimal(discountText);
-
-                    if (threshold.compareTo(BigDecimal.ZERO) < 0) {
-                        throw new IllegalArgumentException("门槛金额不能为负数");
-                    }
-                    if (discount.compareTo(BigDecimal.ZERO) < 0) {
-                        throw new IllegalArgumentException("折扣值不能为负数");
-                    }
-
-                    // 解析最大使用次数
-                    String maxUsageText = maxUsageField.getText().trim();
-                    int maxUsage = maxUsageText.isEmpty() ? -1 : FormValidator.parseInt(maxUsageText);
-
-                    if (maxUsage != -1 && maxUsage < 0) {
-                        throw new IllegalArgumentException("最大使用次数不能为负数");
-                    }
-
-                    // 创建或更新促销对象
-                    Promotion newPromotion = promotion != null ? promotion : new Promotion();
-                    newPromotion.promotionCode = code.isEmpty() ? generatePromotionCode() : code;
-                    newPromotion.name = name;
-                    newPromotion.type = type;
-                    newPromotion.threshold = threshold;
-                    newPromotion.discount = discount;
-                    newPromotion.description = descriptionArea.getText().trim();
-                    newPromotion.startDate = java.sql.Date.valueOf(startDatePicker.getValue());
-                    newPromotion.endDate = java.sql.Date.valueOf(endDatePicker.getValue());
-                    newPromotion.maxUsage = maxUsage;
-
-                    return newPromotion;
-                } catch (NumberFormatException e) {
-                    logger.error("促销数据格式错误", e);
-                    showAlert("输入错误", "请输入有效的数字");
-                } catch (IllegalArgumentException e) {
-                    logger.error("促销数据验证失败", e);
-                    showAlert("验证错误", e.getMessage());
-                } catch (Exception e) {
-                    logger.error("保存促销失败", e);
-                    showAlert("保存失败", "保存促销时发生错误: " + e.getMessage());
-                }
+        Node okButton = dialog.getDialogPane().lookupButton(okButtonType);
+        okButton.getStyleClass().addAll("primary-button", "button-normal");
+        Node cancelButton = dialog.getDialogPane().lookupButton(ButtonType.CANCEL);
+        cancelButton.getStyleClass().addAll("secondary-button", "button-normal");
+        okButton.addEventFilter(ActionEvent.ACTION, event -> {
+            try {
+                Promotion result = buildPromotionFromForm(
+                    promotion,
+                    promotionCodeField,
+                    nameField,
+                    typeComboBox,
+                    thresholdField,
+                    discountField,
+                    descriptionArea,
+                    startDatePicker,
+                    endDatePicker,
+                    maxUsageField
+                );
+                errorLabel.setText("");
+                dialog.setResult(result);
+                dialog.close();
+                event.consume();
+            } catch (IllegalArgumentException e) {
+                logger.info("促销数据验证失败: {}", e.getMessage());
+                errorLabel.setText(e.getMessage());
+                event.consume();
+            } catch (Exception e) {
+                logger.error("保存促销失败", e);
+                errorLabel.setText("保存促销时发生错误，请检查输入后重试。原因: " + e.getMessage());
+                event.consume();
             }
+        });
+
+        dialog.setResultConverter(dialogButton -> {
             return null;
         });
 
@@ -365,6 +380,208 @@ public class PromotionController {
      */
     private String generatePromotionCode() {
         return "P" + System.currentTimeMillis();
+    }
+
+    private ColumnConstraints createLabelColumn() {
+        ColumnConstraints column = new ColumnConstraints();
+        column.setMinWidth(92);
+        column.setPrefWidth(92);
+        column.setHgrow(Priority.NEVER);
+        return column;
+    }
+
+    private ColumnConstraints createFieldColumn() {
+        ColumnConstraints column = new ColumnConstraints();
+        column.setMinWidth(220);
+        column.setPrefWidth(240);
+        column.setHgrow(Priority.ALWAYS);
+        return column;
+    }
+
+    private Label createFormLabel(String text) {
+        Label label = new Label(text);
+        label.getStyleClass().add("form-label");
+        return label;
+    }
+
+    private void stylePromotionDialogControls(TextField promotionCodeField,
+                                              TextField nameField,
+                                              ComboBox<String> typeComboBox,
+                                              TextField thresholdField,
+                                              TextField discountField,
+                                              TextArea descriptionArea,
+                                              DatePicker startDatePicker,
+                                              DatePicker endDatePicker,
+                                              TextField maxUsageField) {
+        TextField[] textFields = {
+            promotionCodeField, nameField, thresholdField, discountField, maxUsageField
+        };
+        for (TextField field : textFields) {
+            field.getStyleClass().add("form-input");
+            field.setMaxWidth(Double.MAX_VALUE);
+            GridPane.setHgrow(field, Priority.ALWAYS);
+        }
+
+        thresholdField.getStyleClass().add("input-amount");
+        discountField.getStyleClass().add("input-amount");
+        maxUsageField.getStyleClass().add("input-number");
+        promotionCodeField.getStyleClass().add("input-code");
+
+        typeComboBox.getStyleClass().add("form-combo");
+        typeComboBox.setMinWidth(200);
+        typeComboBox.setPrefWidth(220);
+        typeComboBox.setMinHeight(36);
+        typeComboBox.setPrefHeight(36);
+        typeComboBox.setMaxWidth(Double.MAX_VALUE);
+        GridPane.setHgrow(typeComboBox, Priority.ALWAYS);
+
+        DatePicker[] datePickers = {startDatePicker, endDatePicker};
+        for (DatePicker picker : datePickers) {
+            picker.getStyleClass().add("promotion-date-picker");
+            picker.setMinWidth(200);
+            picker.setPrefWidth(220);
+            picker.setMaxWidth(Double.MAX_VALUE);
+            GridPane.setHgrow(picker, Priority.ALWAYS);
+        }
+
+        descriptionArea.getStyleClass().add("form-textarea");
+        descriptionArea.setPrefRowCount(3);
+        descriptionArea.setMaxWidth(Double.MAX_VALUE);
+        GridPane.setHgrow(descriptionArea, Priority.ALWAYS);
+    }
+
+    private ListCell<String> createPromotionTypeCell() {
+        return new ListCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : item);
+                setAlignment(Pos.CENTER_LEFT);
+                setMinHeight(34);
+                setPrefHeight(34);
+            }
+        };
+    }
+
+    private void updatePromotionFieldHints(String type, TextField thresholdField, TextField discountField) {
+        if ("打折".equals(type)) {
+            thresholdField.setPromptText("例如: 100，表示满100元可打折");
+            discountField.setPromptText("请输入0到1之间的小数，例如0.9表示9折");
+        } else if ("优惠券".equals(type)) {
+            thresholdField.setPromptText("优惠券不设门槛时填0");
+            discountField.setPromptText("请输入优惠券面额，例如: 20");
+            if (thresholdField.getText().trim().isEmpty()) {
+                thresholdField.setText("0");
+            }
+        } else {
+            thresholdField.setPromptText("例如: 100，表示消费满100元");
+            discountField.setPromptText("请输入减免金额，例如: 10");
+        }
+    }
+
+    private Promotion buildPromotionFromForm(Promotion promotion,
+                                             TextField promotionCodeField,
+                                             TextField nameField,
+                                             ComboBox<String> typeComboBox,
+                                             TextField thresholdField,
+                                             TextField discountField,
+                                             TextArea descriptionArea,
+                                             DatePicker startDatePicker,
+                                             DatePicker endDatePicker,
+                                             TextField maxUsageField) {
+        String code = promotionCodeField.getText().trim();
+        String name = nameField.getText().trim();
+        String type = typeComboBox.getSelectionModel().getSelectedItem();
+        String thresholdText = thresholdField.getText().trim();
+        String discountText = discountField.getText().trim();
+
+        if (name.isEmpty()) {
+            throw new IllegalArgumentException("请填写促销名称，例如“满100减10”或“会员日9折”。");
+        }
+        if (type == null || type.isEmpty()) {
+            throw new IllegalArgumentException("请选择促销类型：满减、打折或优惠券。");
+        }
+        if (thresholdText.isEmpty()) {
+            throw new IllegalArgumentException("请填写门槛金额。优惠券不设门槛时请填0。");
+        }
+        if (discountText.isEmpty()) {
+            throw new IllegalArgumentException(getDiscountRequiredMessage(type));
+        }
+        if (startDatePicker.getValue() == null) {
+            throw new IllegalArgumentException("请选择开始日期。");
+        }
+        if (endDatePicker.getValue() == null) {
+            throw new IllegalArgumentException("请选择结束日期。");
+        }
+        if (endDatePicker.getValue().isBefore(startDatePicker.getValue())) {
+            throw new IllegalArgumentException("结束日期不能早于开始日期，请调整促销有效期。");
+        }
+
+        BigDecimal threshold = parseDecimal(thresholdText, "门槛金额");
+        BigDecimal discount = parseDecimal(discountText, "优惠值");
+
+        if (threshold.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("门槛金额不能为负数。优惠券不设门槛时请填0。");
+        }
+        validateDiscountValue(type, threshold, discount);
+
+        String maxUsageText = maxUsageField.getText().trim();
+        int maxUsage = -1;
+        if (!maxUsageText.isEmpty()) {
+            try {
+                maxUsage = FormValidator.parseInt(maxUsageText);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("最大使用次数必须是整数，例如100；不限制次数时请留空。");
+            }
+            if (maxUsage <= 0) {
+                throw new IllegalArgumentException("最大使用次数必须大于0；不限制次数时请留空。");
+            }
+        }
+
+        Promotion newPromotion = promotion != null ? promotion : new Promotion();
+        newPromotion.promotionCode = code.isEmpty() ? generatePromotionCode() : code;
+        newPromotion.name = name;
+        newPromotion.type = type;
+        newPromotion.threshold = threshold;
+        newPromotion.discount = discount;
+        newPromotion.description = descriptionArea.getText() == null ? "" : descriptionArea.getText().trim();
+        newPromotion.startDate = java.sql.Date.valueOf(startDatePicker.getValue());
+        newPromotion.endDate = java.sql.Date.valueOf(endDatePicker.getValue());
+        newPromotion.maxUsage = maxUsage;
+
+        return newPromotion;
+    }
+
+    private BigDecimal parseDecimal(String text, String fieldName) {
+        try {
+            return new BigDecimal(text);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(fieldName + "必须是数字，请不要输入中文、空格或货币符号。");
+        }
+    }
+
+    private String getDiscountRequiredMessage(String type) {
+        if ("打折".equals(type)) {
+            return "请填写折扣率，例如0.9表示9折，0.85表示8.5折。";
+        }
+        if ("优惠券".equals(type)) {
+            return "请填写优惠券面额，例如20表示减20元。";
+        }
+        return "请填写减免金额，例如10表示减10元。";
+    }
+
+    private void validateDiscountValue(String type, BigDecimal threshold, BigDecimal discount) {
+        if (discount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException(getDiscountRequiredMessage(type));
+        }
+        if ("打折".equals(type)) {
+            if (discount.compareTo(BigDecimal.ONE) >= 0) {
+                throw new IllegalArgumentException("打折促销的折扣率必须大于0且小于1，例如0.9表示9折。");
+            }
+        } else if ("满减".equals(type) && threshold.compareTo(BigDecimal.ZERO) > 0
+                && discount.compareTo(threshold) > 0) {
+            throw new IllegalArgumentException("满减金额不能大于门槛金额，例如满100最多减100。");
+        }
     }
 
     /**

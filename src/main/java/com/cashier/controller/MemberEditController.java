@@ -2,7 +2,6 @@ package com.cashier.controller;
 
 import com.cashier.dao.MemberDAO;
 import com.cashier.model.Member;
-import com.cashier.util.FormValidator;
 import com.cashier.service.MemberService;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -12,6 +11,9 @@ import com.cashier.util.LoggerFactoryUtil;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import javafx.scene.control.*;
+import javafx.geometry.Pos;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
 
 import java.util.Map;
@@ -88,6 +90,10 @@ public class MemberEditController {
         levelComboBox.setItems(FXCollections.observableArrayList(
             "普通", "银卡", "金卡", "钻石"
         ));
+        levelComboBox.setCellFactory(listView -> createLevelCell());
+        levelComboBox.setButtonCell(createLevelCell());
+        levelComboBox.setMaxWidth(Double.MAX_VALUE);
+        GridPane.setHgrow(levelComboBox, Priority.ALWAYS);
         levelComboBox.getSelectionModel().select(0);
 
         // 设置默认折扣
@@ -101,6 +107,19 @@ public class MemberEditController {
         autoCodeCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
             memberCodeField.setDisable(newVal);
         });
+    }
+
+    private ListCell<String> createLevelCell() {
+        return new ListCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : item);
+                setAlignment(Pos.CENTER_LEFT);
+                setMinHeight(34);
+                setPrefHeight(34);
+            }
+        };
     }
 
     /**
@@ -236,18 +255,23 @@ public class MemberEditController {
         }
 
         // 验证积分
-        try {
-            double points = FormValidator.parseDouble(pointsField.getText().trim());
-            if (points < 0) {
-                errorMessage += "积分不能为负数！\n";
+        String pointsText = pointsField.getText().trim();
+        if (pointsText.isEmpty()) {
+            errorMessage += "积分不能为空！\n";
+        } else {
+            try {
+                double points = Double.parseDouble(pointsText);
+                if (points < 0) {
+                    errorMessage += "积分不能为负数！\n";
+                }
+            } catch (IllegalArgumentException e) {
+                errorMessage += "积分格式不正确！\n";
             }
-        } catch (IllegalArgumentException e) {
-            errorMessage += "积分格式不正确！\n";
         }
 
         // 验证折扣
         try {
-            double discount = FormValidator.parseDouble(discountField.getText().trim());
+            double discount = Double.parseDouble(discountField.getText().trim());
             if (discount < 0 || discount > 10) {
                 errorMessage += "折扣必须在0到10之间（0表示免费，10表示不打折）！\n";
             }
@@ -256,13 +280,18 @@ public class MemberEditController {
         }
 
         // 验证余额
-        try {
-            double balance = FormValidator.parseDouble(balanceField.getText().trim());
-            if (balance < 0) {
-                errorMessage += "余额不能为负数！\n";
+        String balanceText = balanceField.getText().trim();
+        if (balanceText.isEmpty()) {
+            errorMessage += "余额不能为空！\n";
+        } else {
+            try {
+                double balance = Double.parseDouble(balanceText);
+                if (balance < 0) {
+                    errorMessage += "余额不能为负数！\n";
+                }
+            } catch (IllegalArgumentException e) {
+                errorMessage += "余额格式不正确！\n";
             }
-        } catch (IllegalArgumentException e) {
-            errorMessage += "余额格式不正确！\n";
         }
 
         // 验证生日格式

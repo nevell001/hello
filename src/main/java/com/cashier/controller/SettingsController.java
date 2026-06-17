@@ -184,7 +184,7 @@ public class SettingsController {
         themeComboBox.setItems(javafx.collections.FXCollections.observableArrayList(
             "浅色主题",
             "深色主题",
-            "IntelliJ主题"
+            "LiSuan主题"
         ));
         themeComboBox.getSelectionModel().select(0);
 
@@ -232,9 +232,6 @@ public class SettingsController {
         // 初始化数据导入工具
         dataImporter = new com.cashier.util.ProductDataImporter();
 
-        // 加载设置
-        loadSettings();
-
         logger.info("SettingsController: 系统设置初始化完成");
     }
 
@@ -244,10 +241,7 @@ public class SettingsController {
      */
     public void setCurrentUser(com.cashier.model.User user) {
         this.currentUser = user;
-        // 用户设置后重新加载设置
-        if (user != null) {
-            loadSettings();
-        }
+        loadSettings();
     }
 
     /**
@@ -289,12 +283,12 @@ public class SettingsController {
         passwordComplexityCheckBox.setSelected(Boolean.parseBoolean(settings.getOrDefault("passwordComplexity", "true")));
 
         // 加载主题偏好
-        String savedThemeCode = DataService.loadThemePreference();
+        String username = (currentUser != null) ? currentUser.username : "default";
+        String savedThemeCode = DataService.loadThemePreference(username);
         String savedThemeName = convertThemeCodeToName(savedThemeCode);
         themeComboBox.getSelectionModel().select(savedThemeName);
 
         // 加载语言偏好 - 从数据库加载当前用户的语言偏好
-        String username = (currentUser != null) ? currentUser.username : "default";
         String savedLanguage = DataService.loadLanguagePreference(username);
         String savedLanguageName = convertLanguageTagToName(savedLanguage);
         languageComboBox.getSelectionModel().select(savedLanguageName);
@@ -455,8 +449,9 @@ public class SettingsController {
                 return "light";
             case "深色主题":
                 return "dark";
+            case "LiSuan主题":
             case "IntelliJ主题":
-                return "intellij";
+                return "lisuan";
             default:
                 return "light";
         }
@@ -476,8 +471,9 @@ public class SettingsController {
                 return "浅色主题";
             case "dark":
                 return "深色主题";
+            case "lisuan":
             case "intellij":
-                return "IntelliJ主题";
+                return "LiSuan主题";
             default:
                 return "浅色主题";
         }
@@ -1038,12 +1034,12 @@ public class SettingsController {
         // 保存主题偏好（单独存储到主题偏好表）
         String themeName = settings.getOrDefault("theme", "浅色主题");
         String themeCode = convertThemeNameToCode(themeName);
-        DataService.saveThemePreference(themeCode);
+        String username = (currentUser != null) ? currentUser.username : "default";
+        DataService.saveThemePreference(username, themeCode);
 
         // 保存语言偏好 - 保存到当前用户
         String languageName = settings.getOrDefault("language", "简体中文");
         String languageTag = convertLanguageNameToTag(languageName);
-        String username = (currentUser != null) ? currentUser.username : "default";
         DataService.saveLanguagePreference(username, languageTag);
 
         // 保存字号偏好 - 保存到当前用户

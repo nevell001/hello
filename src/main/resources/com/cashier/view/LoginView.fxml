@@ -2,6 +2,8 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 
 <VBox xmlns="http://javafx.com/javafx/17"
@@ -18,7 +20,12 @@
     <!-- 品牌区域 -->
     <VBox alignment="CENTER" spacing="12" styleClass="login-brand">
         <StackPane styleClass="login-logo">
-            <Label text="狸" styleClass="login-logo-text"/>
+            <ImageView fitWidth="94" fitHeight="86" preserveRatio="true" smooth="true" cache="true"
+                       styleClass="login-logo-image">
+                <image>
+                    <Image url="@/images/logos/login-logo.png"/>
+                </image>
+            </ImageView>
         </StackPane>
         <Label text="%app.brand"
                styleClass="login-title"/>

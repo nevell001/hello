@@ -87,6 +87,44 @@ public class InventoryCheckDAO {
     }
 
     /**
+     * 根据数据库中已有单号生成下一个盘点单号。
+     *
+     * @param checkDate 盘点日期（yyyy-MM-dd）
+     * @return 新盘点单号，格式 ICyyyyMMdd0001
+     * @throws SQLException 数据库操作异常
+     */
+    public static String generateNextCheckNo(String checkDate) throws SQLException {
+        String dateStr = checkDate != null ? checkDate.replaceAll("[^0-9]", "") : "";
+        if (dateStr.length() != 8) {
+            dateStr = new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date());
+        }
+
+        String prefix = "IC" + dateStr;
+        String sql = "SELECT check_no FROM inventory_check WHERE check_no LIKE ? ORDER BY check_no DESC LIMIT 1";
+        int maxSeq = 0;
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, prefix + "%");
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    String latestCheckNo = rs.getString("check_no");
+                    if (latestCheckNo != null && latestCheckNo.length() > prefix.length()) {
+                        try {
+                            maxSeq = Integer.parseInt(latestCheckNo.substring(prefix.length()));
+                        } catch (NumberFormatException ignored) {
+                            maxSeq = 0;
+                        }
+                    }
+                }
+            }
+        }
+
+        return prefix + String.format("%04d", maxSeq + 1);
+    }
+
+    /**
      * 根据盘点类型查找库存盘点记录
      *
      * @param checkType 盘点类型（full-全盘，partial-部分盘点）

@@ -333,7 +333,7 @@ public class MemberDAO {
      */
     public static List<Member> search(String keyword) throws SQLException {
         List<Member> members = new ArrayList<>();
-        String sql = "SELECT id, phone, name, points, level, discount, balance, birthday FROM members " +
+        String sql = "SELECT id, member_code, phone, name, points, level, discount, balance, birthday FROM members " +
                      "WHERE name LIKE ? OR phone LIKE ? ORDER BY name";
 
         try (Connection conn = DatabaseManager.getConnection();
@@ -356,7 +356,7 @@ public class MemberDAO {
      */
     public static List<Member> findByLevel(String level) throws SQLException {
         List<Member> members = new ArrayList<>();
-        String sql = "SELECT id, phone, name, points, level, discount, balance, birthday FROM members " +
+        String sql = "SELECT id, member_code, phone, name, points, level, discount, balance, birthday FROM members " +
                      "WHERE level = ? ORDER BY points DESC";
 
         try (Connection conn = DatabaseManager.getConnection();

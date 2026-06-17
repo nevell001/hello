@@ -1,5 +1,7 @@
 package com.cashier.util;
 
+import com.cashier.CashierSystemFXApplication;
+import com.cashier.model.User;
 import com.cashier.service.DataService;
 import javafx.scene.Scene;
 
@@ -18,7 +20,13 @@ public final class ThemeUtils {
         }
 
         addStylesheet(scene, resourceClass, "/css/styles.css");
-        String themeName = DataService.loadThemePreference();
+        String username = "default";
+        CashierSystemFXApplication app = CashierSystemFXApplication.getInstance();
+        User currentUser = app != null ? app.getCurrentUser() : null;
+        if (currentUser != null) {
+            username = currentUser.username;
+        }
+        String themeName = DataService.loadThemePreference(username);
         addStylesheet(scene, resourceClass, "/css/" + themeName + "-theme.css");
     }
 

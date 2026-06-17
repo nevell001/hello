@@ -413,8 +413,10 @@ private Button shiftBtn;
         if (activeButton != null) {
             activeButton.getStyleClass().remove("nav-button-active");
         }
-        button.getStyleClass().add("nav-button-active");
-        activeButton = button;
+        if (button != null) {
+            button.getStyleClass().add("nav-button-active");
+            activeButton = button;
+        }
     }
 
     // ========== 菜单处理方法 ==========
@@ -669,10 +671,10 @@ private Button shiftBtn;
     }
 
     @FXML
-    public void handleIntelliJTheme() {
+    public void handleLiSuanTheme() {
         if (application != null) {
-            application.applyTheme(application.getPrimaryStage().getScene(), "intellij");
-            updateStatus("已切换到 IntelliJ 主题");
+            application.applyTheme(application.getPrimaryStage().getScene(), "lisuan");
+            updateStatus("已切换到 LiSuan 主题");
         }
     }
 
@@ -721,6 +723,12 @@ private Button shiftBtn;
         setActiveButton(cartBtn);
 
         try {
+            String title = I18nManager.getInstance().get("nav.cart");
+            if (selectOpenTab(title)) {
+                logger.debug("MainController: 购物车标签页已打开，直接切换");
+                return;
+            }
+
             logger.debug("MainController: 开始加载购物车界面...");
             // 加载购物车界面（购物车和结账已合并）
             FXMLLoader loader = FXMLUtils.loadFXMLLoader("/com/cashier/view/CartView.fxml");
@@ -732,15 +740,15 @@ private Button shiftBtn;
             logger.debug("MainController: 获取控制器成功");
 
             // 创建内容标签页
-            createContentTab(I18nManager.getInstance().get("nav.cart"), root);
+            createContentTab(title, root);
             logger.debug("MainController: 购物车界面加载成功");
 
         } catch (IOException e) {
             logger.error("加载购物车界面失败", e);
-            showError("加载POS界面失败: " + e.getMessage());
+            showError("加载POS界面失败: " + getErrorMessage(e));
         } catch (Exception e) {
             logger.error("加载购物车界面时发生异常", e);
-            showError("加载POS界面失败: " + e.getMessage());
+            showError("加载POS界面失败: " + getErrorMessage(e));
         }
     }
 
@@ -750,6 +758,11 @@ private Button shiftBtn;
         setActiveButton(checkoutBtn);
         
         try {
+            String title = I18nManager.getInstance().get("nav.cart");
+            if (selectOpenTab(title)) {
+                return;
+            }
+
             // 加载购物车界面（购物车和结账已合并）
             FXMLLoader loader = FXMLUtils.loadFXMLLoader("/com/cashier/view/CartView.fxml");
             VBox root = loader.load();
@@ -758,10 +771,14 @@ private Button shiftBtn;
             CartController controller = loader.getController();
             
             // 创建内容标签页
-            createContentTab(I18nManager.getInstance().get("nav.cart"), root);
+            createContentTab(title, root);
             
         } catch (IOException e) {
-            showError("加载POS界面失败: " + e.getMessage());
+            logger.error("加载结账界面失败", e);
+            showError("加载POS界面失败: " + getErrorMessage(e));
+        } catch (Exception e) {
+            logger.error("加载结账界面时发生异常", e);
+            showError("加载POS界面失败: " + getErrorMessage(e));
         }
     }
 
@@ -953,7 +970,8 @@ private Button shiftBtn;
             stage.setResizable(false);
 
             // 应用主题
-            String currentTheme = com.cashier.service.DataService.loadThemePreference();
+            String username = currentUser != null ? currentUser.username : "default";
+            String currentTheme = com.cashier.service.DataService.loadThemePreference(username);
             if (application != null) {
                 application.applyTheme(stage.getScene(), currentTheme);
             }
@@ -1082,6 +1100,11 @@ private Button shiftBtn;
         setActiveButton(shiftBtn);
 
         try {
+            String title = I18nManager.getInstance().get("nav.shift");
+            if (selectOpenTab(title)) {
+                return;
+            }
+
             // 加载交接班界面
             FXMLLoader loader = FXMLUtils.loadFXMLLoader("/com/cashier/view/ShiftView.fxml");
             VBox root = loader.load();
@@ -1091,7 +1114,7 @@ private Button shiftBtn;
             controller.setCurrentUser(currentUser);
 
             // 创建内容标签页
-            createContentTab(I18nManager.getInstance().get("nav.shift"), root);
+            createContentTab(title, root);
 
         } catch (IOException e) {
             showError("加载交接班界面失败: " + e.getMessage());
@@ -1104,6 +1127,11 @@ private Button shiftBtn;
         setActiveButton(settingsBtn);
 
         try {
+            String title = I18nManager.getInstance().get("nav.settings");
+            if (selectOpenTab(title)) {
+                return;
+            }
+
             // 加载设置界面
             FXMLLoader loader = FXMLUtils.loadFXMLLoader("/com/cashier/view/SettingsView.fxml");
             VBox root = loader.load();
@@ -1113,7 +1141,7 @@ private Button shiftBtn;
             controller.setCurrentUser(currentUser);
 
             // 创建内容标签页
-            createContentTab(I18nManager.getInstance().get("nav.settings"), root);
+            createContentTab(title, root);
 
         } catch (IOException e) {
             showError("加载设置界面失败: " + e.getMessage());
@@ -1177,7 +1205,7 @@ private Button shiftBtn;
             // 从标签面板中移除标签页
             tabPane.getTabs().remove(tab);
             // 从打开的标签页映射中移除
-            openTabs.remove(tab.getText());
+            openTabs.values().remove(tab);
         });
         closeButton.setOnMouseEntered(event -> {
             closeButton.setStyle(
@@ -1204,6 +1232,26 @@ private Button shiftBtn;
             );
         });
         return closeButton;
+    }
+
+    private boolean selectOpenTab(String title) {
+        Tab tab = openTabs.get(title);
+        if (tab == null) {
+            return false;
+        }
+        if (!tabPane.getTabs().contains(tab)) {
+            openTabs.remove(title);
+            return false;
+        }
+        tabPane.getSelectionModel().select(tab);
+        return true;
+    }
+
+    private String getErrorMessage(Exception e) {
+        if (e.getMessage() != null && !e.getMessage().isBlank()) {
+            return e.getMessage();
+        }
+        return e.getClass().getSimpleName();
     }
 
     /**
