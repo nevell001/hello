@@ -324,7 +324,6 @@
     -fx-border-radius: 3px 3px 0 0;
     -fx-text-fill: #1F2430;
     -fx-min-width: 97px;
-    -fx-pref-width: 121px;
 }
 
 .tab-pane .tab .tab-label {
@@ -408,8 +407,23 @@
     -fx-text-fill: #1F2430;
 }
 
+.return-refund-combo > .list-cell {
+    -fx-text-fill: #1F2430;
+}
+
 .member-discount-hint {
     -fx-text-fill: #6D6258;
+}
+
+.cart-view .product-list-header {
+    -fx-background-color: #B85C1B;
+    -fx-border-color: #8F4512;
+}
+
+.cart-view .product-list-header .product-list-title,
+.cart-view .product-list-header .double-click-hint,
+.cart-view .product-list-header .stock-hint {
+    -fx-text-fill: #FFFFFF;
 }
 
 .promotion-dialog .promotion-date-picker {

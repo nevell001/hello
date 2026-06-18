@@ -59,7 +59,9 @@ public class InventoryCheck {
      * 获取盘点类型显示名称
      */
     public String getCheckTypeDisplayName() {
-        return "full".equals(checkType) ? "全盘" : "部分盘点";
+        return "full".equals(checkType)
+                ? com.cashier.i18n.I18nManager.getInstance().get("runtime.check_type_full")
+                : com.cashier.i18n.I18nManager.getInstance().get("runtime.check_type_partial");
     }
 
     /**
@@ -68,11 +70,11 @@ public class InventoryCheck {
     public String getStatusDisplayName() {
         switch (status) {
             case "pending":
-                return "待盘点";
+                return com.cashier.i18n.I18nManager.getInstance().get("runtime.status.pending_check");
             case "checking":
-                return "盘点中";
+                return com.cashier.i18n.I18nManager.getInstance().get("runtime.status.checking");
             case "completed":
-                return "已完成";
+                return com.cashier.i18n.I18nManager.getInstance().get("runtime.status.completed");
             default:
                 return status;
         }

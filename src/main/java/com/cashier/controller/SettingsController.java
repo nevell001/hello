@@ -1,5 +1,6 @@
 package com.cashier.controller;
 
+import com.cashier.constant.FXConstants;
 import com.cashier.service.DataService;
 import com.cashier.i18n.I18nManager;
 import com.cashier.util.FormValidator;
@@ -159,6 +160,7 @@ public class SettingsController {
     @FXML
     private void initialize() {
         logger.info("SettingsController: 初始化系统设置...");
+        I18nManager i18n = I18nManager.getInstance();
 
         // 初始化语言下拉框
         languageComboBox.setItems(javafx.collections.FXCollections.observableArrayList(
@@ -172,24 +174,23 @@ public class SettingsController {
 
         // 初始化货币下拉框
         currencyComboBox.setItems(javafx.collections.FXCollections.observableArrayList(
-            "¥ 人民币 (CNY)",
-            "$ 美元 (USD)",
-            "¥ 日元 (JPY)",
-            "₩ 韩元 (KRW)",
-            "€ 欧元 (EUR)"
+            i18n.get("currency.cny"),
+            i18n.get("currency.usd"),
+            i18n.get("currency.jpy"),
+            i18n.get("currency.krw"),
+            i18n.get("currency.eur")
         ));
         currencyComboBox.getSelectionModel().select(0);
 
         // 初始化主题下拉框
         themeComboBox.setItems(javafx.collections.FXCollections.observableArrayList(
-            "浅色主题",
-            "深色主题",
-            "LiSuan主题"
+            i18n.get("menu.theme.light"),
+            i18n.get("menu.theme.dark"),
+            i18n.get("menu.theme.lisuan")
         ));
-        themeComboBox.getSelectionModel().select(0);
+        themeComboBox.getSelectionModel().select(i18n.get("menu.theme.lisuan"));
 
         // 初始化字号下拉框
-        I18nManager i18n = I18nManager.getInstance();
         fontSizeComboBox.setItems(javafx.collections.FXCollections.observableArrayList(
             i18n.get("settings.font_size_small"),
             i18n.get("settings.font_size_medium"),
@@ -200,17 +201,17 @@ public class SettingsController {
 
         // 初始化纸张大小下拉框
         paperSizeComboBox.setItems(javafx.collections.FXCollections.observableArrayList(
-            "58mm (热敏纸)",
-            "80mm (热敏纸)",
+            i18n.get("settings.paper_58mm"),
+            i18n.get("settings.paper_80mm"),
             "A4"
         ));
         paperSizeComboBox.getSelectionModel().select(0);
 
         // 初始化备份频率下拉框
         backupFrequencyComboBox.setItems(javafx.collections.FXCollections.observableArrayList(
-            "每天",
-            "每周",
-            "每月"
+            i18n.get("settings.backup_daily"),
+            i18n.get("settings.backup_weekly"),
+            i18n.get("settings.backup_monthly")
         ));
         backupFrequencyComboBox.getSelectionModel().select(0);
 
@@ -379,7 +380,7 @@ public class SettingsController {
                 // 语言已更改，提示用户重启
                 showLanguageRestartDialog();
             } else {
-                showSuccess("基本设置保存成功！");
+                showSuccess(com.cashier.i18n.I18nManager.getInstance().get("runtime.settings_basic_saved"));
             }
         }
     }
@@ -423,7 +424,7 @@ public class SettingsController {
             com.cashier.CashierSystemFXApplication app = com.cashier.CashierSystemFXApplication.getInstance();
             if (app == null) {
                 logger.error("无法获取应用实例");
-                showError("重启应用失败：无法获取应用实例");
+                showError(I18nManager.getInstance().get("runtime.restart_unavailable"));
                 return;
             }
             logger.info("调用 logoutToLoginView 返回登录界面...");
@@ -431,7 +432,7 @@ public class SettingsController {
             logger.info("重启应用完成");
         } catch (Exception e) {
             logger.error("重启应用失败", e);
-            showError("重启应用失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
         }
     }
 
@@ -442,19 +443,13 @@ public class SettingsController {
      */
     private String convertThemeNameToCode(String themeName) {
         if (themeName == null) {
-            return "light";
+            return FXConstants.DEFAULT_THEME;
         }
-        switch (themeName) {
-            case "浅色主题":
-                return "light";
-            case "深色主题":
-                return "dark";
-            case "LiSuan主题":
-            case "IntelliJ主题":
-                return "lisuan";
-            default:
-                return "light";
-        }
+        I18nManager i18n = I18nManager.getInstance();
+        if (themeName.equals(i18n.get("menu.theme.light")) || "浅色主题".equals(themeName)) return "light";
+        if (themeName.equals(i18n.get("menu.theme.dark")) || "深色主题".equals(themeName)) return "dark";
+        if (themeName.equals(i18n.get("menu.theme.lisuan")) || "LiSuan主题".equals(themeName) || "IntelliJ主题".equals(themeName)) return "lisuan";
+        return FXConstants.DEFAULT_THEME;
     }
 
     /**
@@ -464,18 +459,18 @@ public class SettingsController {
      */
     private String convertThemeCodeToName(String themeCode) {
         if (themeCode == null) {
-            return "浅色主题";
+            return I18nManager.getInstance().get("menu.theme.lisuan");
         }
         switch (themeCode) {
             case "light":
-                return "浅色主题";
+                return I18nManager.getInstance().get("menu.theme.light");
             case "dark":
-                return "深色主题";
+                return I18nManager.getInstance().get("menu.theme.dark");
             case "lisuan":
             case "intellij":
-                return "LiSuan主题";
+                return I18nManager.getInstance().get("menu.theme.lisuan");
             default:
-                return "浅色主题";
+                return I18nManager.getInstance().get("menu.theme.lisuan");
         }
     }
 
@@ -584,22 +579,23 @@ public class SettingsController {
      * 货币代码转显示名称
      */
     private String convertCurrencyCodeToName(String currencyCode) {
+        I18nManager i18n = I18nManager.getInstance();
         if (currencyCode == null) {
-            return "¥ 人民币 (CNY)";
+            return i18n.get("currency.cny");
         }
         switch (currencyCode) {
             case "CNY":
-                return "¥ 人民币 (CNY)";
+                return i18n.get("currency.cny");
             case "USD":
-                return "$ 美元 (USD)";
+                return i18n.get("currency.usd");
             case "JPY":
-                return "¥ 日元 (JPY)";
+                return i18n.get("currency.jpy");
             case "KRW":
-                return "₩ 韩元 (KRW)";
+                return i18n.get("currency.krw");
             case "EUR":
-                return "€ 欧元 (EUR)";
+                return i18n.get("currency.eur");
             default:
-                return "¥ 人民币 (CNY)";
+                return i18n.get("currency.cny");
         }
     }
 
@@ -673,7 +669,7 @@ public class SettingsController {
     @FXML
     public void handleSavePrintSettings() {
         saveSettings();
-        showSuccess("打印设置保存成功！");
+        showSuccess(com.cashier.i18n.I18nManager.getInstance().get("runtime.settings_print_saved"));
     }
 
     /**
@@ -682,7 +678,7 @@ public class SettingsController {
     @FXML
     public void handleSaveBackupSettings() {
         saveSettings();
-        showSuccess("备份设置保存成功！");
+        showSuccess(com.cashier.i18n.I18nManager.getInstance().get("runtime.settings_backup_saved"));
     }
 
     /**
@@ -691,7 +687,7 @@ public class SettingsController {
     @FXML
     public void handleSaveSecuritySettings() {
         saveSettings();
-        showSuccess("安全设置保存成功！");
+        showSuccess(com.cashier.i18n.I18nManager.getInstance().get("runtime.settings_security_saved"));
     }
 
     /**
@@ -700,7 +696,7 @@ public class SettingsController {
     @FXML
     public void handleBrowseBackupPath() {
         DirectoryChooser directoryChooser = new DirectoryChooser();
-        directoryChooser.setTitle("选择备份目录");
+        directoryChooser.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.choose_backup_directory"));
 
         // 设置初始目录
         String currentPath = backupPathField.getText().trim();
@@ -723,7 +719,7 @@ public class SettingsController {
     @FXML
     public void handleSelectLogo() {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("选择 Logo 图片");
+        fileChooser.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.choose_logo"));
 
         // 设置文件过滤器
         FileChooser.ExtensionFilter imageFilter = new FileChooser.ExtensionFilter(
@@ -756,7 +752,7 @@ public class SettingsController {
         logoPathField.clear();
         logoPreviewImage.setImage(null);
         logoPreviewPlaceholder.setVisible(true);
-        logoInfoLabel.setText("建议尺寸: 200x200 像素");
+        logoInfoLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("runtime.logo_size_hint"));
         printLogoCheckBox.setSelected(false);
     }
 
@@ -784,11 +780,11 @@ public class SettingsController {
             logoPathField.setText(relativePath);
             loadLogoPreview(targetFile);
 
-            showSuccess("Logo 已添加到项目");
+            showSuccess(com.cashier.i18n.I18nManager.getInstance().get("runtime.logo_added"));
 
         } catch (Exception e) {
             logger.error("复制 Logo 文件失败", e);
-            showError("添加 Logo 失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.save_data") + ": " + e.getMessage());
         }
     }
 
@@ -805,7 +801,7 @@ public class SettingsController {
                 // 更新信息标签
                 int width = (int) logoImage.getWidth();
                 int height = (int) logoImage.getHeight();
-                logoInfoLabel.setText(String.format("当前尺寸: %dx%d 像素", width, height));
+                logoInfoLabel.setText(I18nManager.getInstance().get("runtime.logo_current_size", width, height));
 
             } catch (Exception e) {
                 logger.error("加载 Logo 预览失败", e);
@@ -814,7 +810,7 @@ public class SettingsController {
         } else {
             logoPreviewImage.setImage(null);
             logoPreviewPlaceholder.setVisible(true);
-            logoInfoLabel.setText("建议尺寸: 200x200 像素");
+            logoInfoLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("runtime.logo_size_hint"));
         }
     }
 
@@ -854,12 +850,12 @@ public class SettingsController {
             File[] sqlFiles = backupDir.listFiles((dir, name) -> name.startsWith("lisuan_system_") && name.endsWith(".sql"));
             if (sqlFiles != null && sqlFiles.length > 0) {
                 java.util.Arrays.sort(sqlFiles, (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
-                showSuccess("数据备份成功！\n备份文件: " + sqlFiles[0].getName());
+                showSuccess(I18nManager.getInstance().get("runtime.backup_file_success", sqlFiles[0].getName()));
             } else {
-                showSuccess("数据备份成功！");
+                showSuccess(com.cashier.i18n.I18nManager.getInstance().get("runtime.backup_success"));
             }
         } catch (Exception e) {
-            showError("数据备份失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
         }
     }
 
@@ -880,14 +876,14 @@ public class SettingsController {
         // 列出可用的备份文件
         File backupDir = new File(backupBasePath);
         if (!backupDir.exists()) {
-            showError("备份路径不存在！\n路径: " + backupBasePath);
+            showError(I18nManager.getInstance().get("runtime.backup_path_missing", backupBasePath));
             return;
         }
         
         File[] sqlFiles = backupDir.listFiles((dir, name) -> name.startsWith("lisuan_system_") && name.endsWith(".sql"));
         
         if (sqlFiles == null || sqlFiles.length == 0) {
-            showError("未找到任何备份文件！\n路径: " + backupBasePath + "\n请先进行数据备份。");
+            showError(I18nManager.getInstance().get("runtime.backup_not_found", backupBasePath));
             return;
         }
         
@@ -896,9 +892,9 @@ public class SettingsController {
         
         // 创建选择对话框
         ChoiceDialog<String> dialog = new ChoiceDialog<>();
-        dialog.setTitle("选择备份");
-        dialog.setHeaderText("请选择要恢复的备份：");
-        dialog.setContentText("可用备份：");
+        dialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.choose_backup"));
+        dialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get("runtime.choose_backup_header"));
+        dialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.available_backups"));
         
         // 添加备份选项
         ObservableList<String> options = FXCollections.observableArrayList();
@@ -917,19 +913,19 @@ public class SettingsController {
             try {
                 // 确认恢复
                 Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
-                confirmAlert.setTitle("确认恢复");
+                confirmAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.confirm_restore"));
                 confirmAlert.setHeaderText(null);
-                confirmAlert.setContentText("确定要从以下备份恢复数据吗？\n备份文件: " + backupFileName + "\n\n恢复数据将覆盖当前数据，确定要继续吗？");
+                confirmAlert.setContentText(I18nManager.getInstance().get("runtime.restore_confirm", backupFileName));
                 
                 if (confirmAlert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
                     DataService.restoreData(backupFile.getAbsolutePath());
-                    showSuccess("数据恢复成功！\n请重新登录以加载最新数据。");
+                    showSuccess(com.cashier.i18n.I18nManager.getInstance().get("runtime.restore_success"));
                     
                     // 重新加载数据
                     loadSettings();
                 }
             } catch (Exception e) {
-                showError("数据恢复失败: " + e.getMessage());
+                showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
             }
         });
     }
@@ -942,7 +938,7 @@ public class SettingsController {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle(I18nManager.getInstance().get("common.confirm"));
         alert.setHeaderText(null);
-        alert.setContentText("确定要重置所有设置为默认值吗？");
+        alert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.settings_reset_confirm"));
 
         if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
             // 清空所有字段
@@ -959,7 +955,7 @@ public class SettingsController {
             autoLogoutCheckBox.setSelected(true);
             passwordComplexityCheckBox.setSelected(true);
             
-            showSuccess("所有设置已重置为默认值！");
+            showSuccess(com.cashier.i18n.I18nManager.getInstance().get("runtime.settings_reset_success"));
         }
     }
 
@@ -1002,9 +998,9 @@ public class SettingsController {
         String selectedLanguage = languageComboBox.getSelectionModel().getSelectedItem();
         settings.put("language", selectedLanguage != null ? selectedLanguage : "简体中文");
         String selectedTheme = themeComboBox.getSelectionModel().getSelectedItem();
-        settings.put("theme", selectedTheme != null ? selectedTheme : "浅色主题");
+        settings.put("theme", selectedTheme != null ? selectedTheme : I18nManager.getInstance().get("menu.theme.lisuan"));
         String selectedCurrency = currencyComboBox.getSelectionModel().getSelectedItem();
-        settings.put("currency", selectedCurrency != null ? selectedCurrency : "¥ 人民币 (CNY)");
+        settings.put("currency", selectedCurrency != null ? selectedCurrency : I18nManager.getInstance().get("currency.cny"));
 
         // 打印设置
         settings.put("enablePrint", String.valueOf(enablePrintCheckBox.isSelected()));
@@ -1032,7 +1028,7 @@ public class SettingsController {
         DataService.saveSettings(settings);
 
         // 保存主题偏好（单独存储到主题偏好表）
-        String themeName = settings.getOrDefault("theme", "浅色主题");
+        String themeName = settings.getOrDefault("theme", I18nManager.getInstance().get("menu.theme.lisuan"));
         String themeCode = convertThemeNameToCode(themeName);
         String username = (currentUser != null) ? currentUser.username : "default";
         DataService.saveThemePreference(username, themeCode);
@@ -1082,7 +1078,7 @@ public class SettingsController {
             java.awt.Desktop.getDesktop().browse(new java.net.URI("https://www.tanshuapi.com/market/detail-77"));
         } catch (Exception e) {
             logger.error("打开网页失败", e);
-            showError("打开网页失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
         }
     }
 
@@ -1095,7 +1091,7 @@ public class SettingsController {
             java.awt.Desktop.getDesktop().browse(new java.net.URI("https://www.juhe.cn/docs/api/id/489"));
         } catch (Exception e) {
             logger.error("打开网页失败", e);
-            showError("打开网页失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
         }
     }
 
@@ -1108,7 +1104,7 @@ public class SettingsController {
             java.awt.Desktop.getDesktop().browse(new java.net.URI("https://www.tianapi.com/apiview/138"));
         } catch (Exception e) {
             logger.error("打开网页失败", e);
-            showError("打开网页失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
         }
     }
 
@@ -1118,7 +1114,7 @@ public class SettingsController {
     @FXML
     public void handleBrowseCsvFile() {
         javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
-        fileChooser.setTitle("选择 CSV 文件");
+        fileChooser.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.choose_csv"));
         fileChooser.getExtensionFilters().add(
             new javafx.stage.FileChooser.ExtensionFilter("CSV 文件", "*.csv")
         );
@@ -1140,7 +1136,7 @@ public class SettingsController {
         String filePath = csvFilePathField.getText().trim();
         
         if (filePath.isEmpty()) {
-            showError("请选择 CSV 文件");
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.csv_select"));
             return;
         }
 
@@ -1156,7 +1152,7 @@ public class SettingsController {
         // 显示进度条
         importProgressBar.setVisible(true);
         importProgressBar.setProgress(0);
-        importStatusLabel.setText("正在导入 CSV 文件...");
+        importStatusLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("runtime.csv_importing"));
 
         // 异步导入
         new Thread(() -> {
@@ -1177,12 +1173,12 @@ public class SettingsController {
                     
                     if ((Boolean) result.get("success")) {
                         importProgressBar.setProgress(1);
-                        importStatusLabel.setText("导入完成！");
-                        showSuccess("CSV 文件导入完成！");
+                        importStatusLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("runtime.import_complete"));
+                        showSuccess(com.cashier.i18n.I18nManager.getInstance().get("runtime.csv_import_success"));
                     } else {
                         importProgressBar.setProgress(1);
-                        importStatusLabel.setText("导入失败");
-                        showError("CSV 文件导入失败: " + result.get("error"));
+                        importStatusLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("error.import_data"));
+                        showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + result.get("error"));
                     }
                     
                     // 延迟隐藏进度条
@@ -1199,8 +1195,8 @@ public class SettingsController {
                 logger.error("从 CSV 导入数据失败", e);
                 javafx.application.Platform.runLater(() -> {
                     importProgressBar.setVisible(false);
-                    importStatusLabel.setText("导入失败");
-                    showError("从 CSV 导入数据失败: " + e.getMessage());
+                    importStatusLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("error.import_data"));
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
                 });
             }
         }).start();
@@ -1233,7 +1229,7 @@ public class SettingsController {
      */
     private void clearImportMessages() {
         importMessagesArea.getChildren().clear();
-        Label logLabel = new Label("导入日志:");
+        Label logLabel = new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.import_log"));
         logLabel.setStyle("-fx-font-weight: bold;");
         importMessagesArea.getChildren().add(logLabel);
     }

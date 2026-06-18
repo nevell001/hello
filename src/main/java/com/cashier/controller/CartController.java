@@ -390,7 +390,7 @@ public class CartController {
             item.updateSubtotal();
             cartList.set(cartList.indexOf(item), item); // 触发更新
         } else {
-            showInfo("库存不足！当前库存: " + item.product.quantity);
+            showInfo(I18nManager.getInstance().get("runtime.low_stock_current", item.product.quantity));
         }
         updateStatistics();
     }
@@ -499,12 +499,12 @@ public class CartController {
     private void addToCart(Product product, int quantity) {
         // 检查是否有活跃班次
         if (!com.cashier.service.DataService.hasActiveShift()) {
-            showError("当前没有开班，请先开班后再进行交易操作！");
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.no_active_shift_transaction"));
             return;
         }
 
         if (quantity <= 0) {
-            showError("添加数量必须大于0！");
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.quantity_positive"));
             return;
         }
 
@@ -522,7 +522,7 @@ public class CartController {
         }
 
         if (quantity > product.quantity) {
-            showError("库存不足！当前库存: " + product.quantity);
+            showError(I18nManager.getInstance().get("runtime.low_stock_current", product.quantity));
             return;
         }
 
@@ -531,7 +531,7 @@ public class CartController {
             // 商品已在购物车中，增加数量
             int newQuantity = cartItem.quantity + quantity;
             if (newQuantity > product.quantity) {
-                showError("库存不足！最大可购买数量: " + product.quantity);
+                showError(I18nManager.getInstance().get("runtime.low_stock_max", product.quantity));
                 return;
             }
             cartItem.setQuantity(newQuantity);
@@ -571,7 +571,7 @@ public class CartController {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle(I18nManager.getInstance().get("common.confirm"));
         alert.setHeaderText(null);
-        alert.setContentText("确定要清空购物车吗？");
+        alert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.clear_cart_confirm"));
 
         if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
             cartMap.clear();
@@ -645,7 +645,7 @@ public class CartController {
      */
     @FXML
     public void handleCheckout() {
-        showError("请选择支付方式完成结账！");
+        showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.select_payment_method"));
     }
 
     /**
@@ -672,11 +672,12 @@ public class CartController {
 
         if (member != null) {
             currentMember = member;
-            memberInfoLabel.setText(String.format("会员: %s (余额: %s, 积分: %d, 折扣: %.1f折)",
-                member.name, CurrencyUtil.format(member.balance.doubleValue()), member.getPoints().intValue(), member.discount));
+            memberInfoLabel.setText(I18nManager.getInstance().get("runtime.member_summary_discount",
+                    member.name, CurrencyUtil.format(member.balance.doubleValue()),
+                    member.getPoints().intValue(), member.discount));
         } else {
             currentMember = null;
-            memberInfoLabel.setText("未找到该会员");
+            memberInfoLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("runtime.member_not_found"));
         }
 
         updateStatistics();
@@ -688,19 +689,19 @@ public class CartController {
     @FXML
     public void handleCashPayment() {
         if (cartList.isEmpty()) {
-            showError("购物车为空，无法支付！");
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.cart_empty_payment"));
             return;
         }
 
         if (!com.cashier.service.DataService.hasActiveShift()) {
-            showError("当前没有开班，请先开班后再进行结算操作！");
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.no_active_shift"));
             return;
         }
 
         BigDecimal finalAmount = getFinalAmount();
 
         Dialog<BigDecimal> dialog = new Dialog<>();
-        dialog.setTitle("现金支付");
+        dialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("statistics.cash_payment"));
         dialog.setHeaderText(null);
 
         GridPane grid = new GridPane();
@@ -708,28 +709,28 @@ public class CartController {
         grid.setVgap(15);
         grid.setPadding(new javafx.geometry.Insets(25, 150, 15, 15));
 
-        Label amountLabel = new Label("应付金额: " + CurrencyUtil.format(finalAmount.doubleValue()));
+        Label amountLabel = new Label(I18nManager.getInstance().get("runtime.amount_due", CurrencyUtil.format(finalAmount.doubleValue())));
         amountLabel.getStyleClass().add("text-danger");
         amountLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
 
-        Label paidLabel = new Label("已支付: " + CurrencyUtil.format(alreadyPaidAmount.doubleValue()));
+        Label paidLabel = new Label(I18nManager.getInstance().get("runtime.amount_paid", CurrencyUtil.format(alreadyPaidAmount.doubleValue())));
         paidLabel.getStyleClass().add("text-success");
         paidLabel.setStyle("-fx-font-size: 18px;");
 
         BigDecimal initialRemaining = finalAmount.subtract(alreadyPaidAmount);
-        Label remainingLabel = new Label("还需支付: " + CurrencyUtil.format(initialRemaining.doubleValue()));
+        Label remainingLabel = new Label(I18nManager.getInstance().get("runtime.amount_remaining", CurrencyUtil.format(initialRemaining.doubleValue())));
         remainingLabel.getStyleClass().add("text-danger");
         remainingLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
 
         TextField receivedField = new TextField();
-        receivedField.setPromptText("请输入本次支付金额");
+        receivedField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.payment_amount_hint"));
         receivedField.setPrefHeight(45);
         receivedField.setStyle("-fx-font-size: 18px;");
 
-        Label receivedLabel = new Label("本次支付: ");
+        Label receivedLabel = new Label(I18nManager.getInstance().get("runtime.payment_this_time"));
         receivedLabel.setStyle("-fx-font-size: 18px;");
 
-        Label changeLabel = new Label("找零: ¥0.00");
+        Label changeLabel = new Label(I18nManager.getInstance().get("runtime.change_amount", CurrencyUtil.format(0)));
         changeLabel.getStyleClass().add("text-success");
         changeLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
@@ -786,7 +787,7 @@ public class CartController {
 
         dialog.getDialogPane().setContent(grid);
 
-        ButtonType okButtonType = new ButtonType("确认", ButtonBar.ButtonData.OK_DONE);
+        ButtonType okButtonType = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get("dialog.confirm"), ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(okButtonType, ButtonType.CANCEL);
 
         receivedField.textProperty().addListener((obs, oldVal, newVal) -> {
@@ -795,20 +796,20 @@ public class CartController {
                 BigDecimal totalPaid = alreadyPaidAmount.add(received);
                 BigDecimal remaining = finalAmount.subtract(totalPaid);
                 if (remaining.compareTo(BigDecimal.ZERO) <= 0) {
-                    changeLabel.setText("找零: " + CurrencyUtil.format(remaining.abs().doubleValue()));
+                    changeLabel.setText(I18nManager.getInstance().get("runtime.change_amount", CurrencyUtil.format(remaining.abs().doubleValue())));
                     changeLabel.getStyleClass().removeAll("text-success", "text-danger");
                     changeLabel.getStyleClass().add("text-success");
                 } else {
-                    changeLabel.setText("还需: " + CurrencyUtil.format(remaining.doubleValue()));
+                    changeLabel.setText(I18nManager.getInstance().get("runtime.remaining_amount", CurrencyUtil.format(remaining.doubleValue())));
                     changeLabel.getStyleClass().removeAll("text-success", "text-danger");
                     changeLabel.getStyleClass().add("text-danger");
                 }
             } catch (NumberFormatException e) {
                 BigDecimal remaining = finalAmount.subtract(alreadyPaidAmount);
                 if (remaining.compareTo(BigDecimal.ZERO) <= 0) {
-                    changeLabel.setText("找零: " + CurrencyUtil.format(0));
+                    changeLabel.setText(I18nManager.getInstance().get("runtime.change_amount", CurrencyUtil.format(0)));
                 } else {
-                    changeLabel.setText("还需: " + CurrencyUtil.format(remaining.doubleValue()));
+                    changeLabel.setText(I18nManager.getInstance().get("runtime.remaining_amount", CurrencyUtil.format(remaining.doubleValue())));
                 }
             }
         });
@@ -818,12 +819,12 @@ public class CartController {
                 try {
                     BigDecimal received = new BigDecimal(receivedField.getText().trim());
                     if (received.compareTo(BigDecimal.ZERO) <= 0) {
-                        showError("请输入有效的金额！");
+                        showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.invalid_amount"));
                         return null;
                     }
                     return received;
                 } catch (NumberFormatException e) {
-                    showError("请输入有效的金额！");
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.invalid_amount"));
                     return null;
                 }
             }
@@ -854,7 +855,8 @@ public class CartController {
                 alreadyPaidAmount = BigDecimal.ZERO;
             } else {
                 alreadyPaidAmount = totalPaid;
-                showInfo("已支付 " + CurrencyUtil.format(totalPaid.doubleValue()) + "，还需支付 " + CurrencyUtil.format(remaining.doubleValue()));
+                showInfo(I18nManager.getInstance().get("runtime.partial_payment",
+                        CurrencyUtil.format(totalPaid.doubleValue()), CurrencyUtil.format(remaining.doubleValue())));
                 handleCashPayment();
             }
         });
@@ -902,7 +904,7 @@ public class CartController {
             );
 
             if (!result.isSuccess() || result.getTransaction() == null) {
-                showError(result.getMessage() != null ? result.getMessage() : "交易失败");
+                showError(result.getMessage() != null ? result.getMessage() : com.cashier.i18n.I18nManager.getInstance().get("runtime.transaction_failed"));
                 return;
             }
 
@@ -911,7 +913,7 @@ public class CartController {
             clear();
         } catch (Exception e) {
             logger.error("交易失败: " + e.getMessage(), e);
-            showError("交易失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
         }
     }
 
@@ -921,13 +923,13 @@ public class CartController {
      */
     public void handlePayment(String paymentMethod) {
         if (cartList.isEmpty()) {
-            showError("购物车为空，无法支付！");
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.cart_empty_payment"));
             return;
         }
 
         // 检查是否有活跃班次
         if (!com.cashier.service.DataService.hasActiveShift()) {
-            showError("当前没有开班，请先开班后再进行结算操作！");
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.no_active_shift"));
             return;
         }
 
@@ -935,8 +937,8 @@ public class CartController {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle(I18nManager.getInstance().get("common.confirm"));
         alert.setHeaderText(null);
-        alert.setContentText(String.format("确定要使用%s支付 %s 吗？",
-            paymentMethod, CurrencyUtil.format(getFinalAmount().doubleValue())));
+        alert.setContentText(I18nManager.getInstance().get("runtime.payment_confirm",
+                localizePaymentMethod(paymentMethod), CurrencyUtil.format(getFinalAmount().doubleValue())));
 
         if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
             executePayment(paymentMethod, BigDecimal.ZERO, BigDecimal.ZERO);
@@ -1025,7 +1027,7 @@ public class CartController {
                 transactions.add(transaction);
                 DataService.saveTransactions(transactions);
             } catch (Exception ex) {
-                showError("保存交易记录失败: " + ex.getMessage());
+                showError(com.cashier.i18n.I18nManager.getInstance().get("error.save_data") + ": " + ex.getMessage());
             }
         }
     }
@@ -1090,14 +1092,16 @@ public class CartController {
 
         totalQuantityLabel.setText(String.valueOf(totalQuantity));
         totalAmountLabel.setText(CurrencyUtil.format(totalAmount.doubleValue()));
-        memberDiscountLabel.setText(String.format("%.1f折", currentMember != null ? currentMember.getDiscountRate().doubleValue() : 10.0));
+        memberDiscountLabel.setText(I18nManager.getInstance().get("runtime.discount_rate",
+                currentMember != null ? currentMember.getDiscountRate().doubleValue() : 10.0));
         
         if (promotionDiscount.compareTo(BigDecimal.ZERO) > 0 && appliedPromotion != null) {
-            discountLabel.setText(String.format("-%s (促销: %s - %s)",
-                CurrencyUtil.format(discountAmount.doubleValue()), appliedPromotion.name, CurrencyUtil.format(promotionDiscount.doubleValue())));
+            discountLabel.setText(I18nManager.getInstance().get("runtime.promotion_discount_period",
+                    CurrencyUtil.format(discountAmount.doubleValue()), appliedPromotion.name,
+                    CurrencyUtil.format(promotionDiscount.doubleValue())));
         } else if (promotionDiscount.compareTo(BigDecimal.ZERO) > 0) {
-            discountLabel.setText(String.format("-%s (促销: %s)",
-                CurrencyUtil.format(discountAmount.doubleValue()), CurrencyUtil.format(promotionDiscount.doubleValue())));
+            discountLabel.setText(I18nManager.getInstance().get("runtime.promotion_discount",
+                    CurrencyUtil.format(discountAmount.doubleValue()), CurrencyUtil.format(promotionDiscount.doubleValue())));
         } else {
             discountLabel.setText(CurrencyUtil.format(discountAmount.doubleValue()));
             discountLabel.setText("-" + discountLabel.getText());
@@ -1147,7 +1151,7 @@ public class CartController {
             "Ctrl+3 - 银行卡支付";
 
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("快捷键帮助");
+        alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("shortcut.help"));
         alert.setHeaderText(null);
         alert.setContentText(shortcuts);
         alert.getDialogPane().setPrefWidth(500);
@@ -1224,36 +1228,38 @@ public class CartController {
      * @param changeAmount 找零金额
      */
     private void showSuccess(String paymentMethod, Transaction transaction, double receivedAmount, double changeAmount) {
-        String message = String.format(
-            "支付成功！\n\n" +
-            "订单号: %s\n" +
-            "支付方式: %s\n" +
-            "应付金额: %s\n" +
-            "商品数量: %d",
+        I18nManager i18n = I18nManager.getInstance();
+        String message = i18n.get("payment.success.details",
             transaction.transactionId,
-            paymentMethod,
+            localizePaymentMethod(paymentMethod),
             CurrencyUtil.format(getFinalAmount().doubleValue()),
-            cartList.size()
-        );
+            cartList.size());
 
         // 如果是现金支付，显示实收和找零
         if ("现金".equals(paymentMethod)) {
-            message += String.format(
-                "\n实收金额: %s\n" +
-                "找零: %s",
-                CurrencyUtil.format(receivedAmount),
-                CurrencyUtil.format(changeAmount)
-            );
+            message += i18n.get("payment.success.cash_details",
+                CurrencyUtil.format(receivedAmount), CurrencyUtil.format(changeAmount));
         }
 
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(I18nManager.getInstance().get("label.success"));
-        alert.setHeaderText(null);
+        alert.setTitle(i18n.get("label.success"));
+        alert.setHeaderText(i18n.get("payment.success.header"));
         alert.setContentText(message);
         alert.showAndWait();
 
         // 支付成功后，焦点回到搜索框，方便继续扫描商品
         searchField.requestFocus();
+    }
+
+    private String localizePaymentMethod(String paymentMethod) {
+        String key = switch (paymentMethod) {
+            case "现金" -> "runtime.payment.cash";
+            case "微信" -> "runtime.payment.wechat";
+            case "支付宝" -> "runtime.payment.alipay";
+            case "银行卡" -> "runtime.payment.card";
+            default -> null;
+        };
+        return key == null ? paymentMethod : I18nManager.getInstance().get(key);
     }
 
     /**
@@ -1410,12 +1416,16 @@ public class CartController {
      * 检查班次状态并提示
      */
     private void checkShiftStatus() {
-        if (!com.cashier.service.DataService.hasActiveShift()) {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle(I18nManager.getInstance().get("common.tip"));
-            alert.setHeaderText(null);
-            alert.setContentText("当前没有开班，请先切换到交班页面进行开班操作！");
-            alert.showAndWait();
+        try {
+            if (!com.cashier.service.DataService.hasActiveShift()) {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle(I18nManager.getInstance().get("common.tip"));
+                alert.setHeaderText(null);
+                alert.setContentText(I18nManager.getInstance().get("runtime.start_shift_required"));
+                alert.showAndWait();
+            }
+        } finally {
+            javafx.application.Platform.runLater(this::focusSearchField);
         }
     }
 
@@ -1535,12 +1545,10 @@ public class CartController {
                 if (empty || order == null) {
                     setText(null);
                 } else {
-                    setText(String.format("[%s] %s - %s - ¥%.2f (%d项)",
-                        order.orderNumber,
-                        order.holdDate,
-                        order.memberName != null ? order.memberName : "非会员",
-                        order.finalAmount,
-                        order.itemCount));
+                    setText(I18nManager.getInstance().get("runtime.held_order_item",
+                            order.orderNumber, order.holdDate,
+                            order.memberName != null ? order.memberName : I18nManager.getInstance().get("runtime.non_member"),
+                            CurrencyUtil.format(order.finalAmount.doubleValue()), order.itemCount));
                 }
             }
         });

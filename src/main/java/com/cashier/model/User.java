@@ -76,10 +76,10 @@ public class User {
     // 获取角色显示名称
     public String getRoleDisplayName() {
         switch (role) {
-            case "admin": return "管理员";
-            case "cashier": return "收银员";
-            case "finance": return "财务";
-            default: return "未知";
+            case "admin": return com.cashier.i18n.I18nManager.getInstance().get("runtime.role_admin");
+            case "cashier": return com.cashier.i18n.I18nManager.getInstance().get("runtime.role_cashier");
+            case "finance": return com.cashier.i18n.I18nManager.getInstance().get("runtime.role_finance");
+            default: return com.cashier.i18n.I18nManager.getInstance().get("runtime.unknown");
         }
     }
 

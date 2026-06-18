@@ -66,6 +66,9 @@ public class ReturnOrderController {
         statusFilter.setItems(FXCollections.observableArrayList(
             "全部", "待审批", "已批准", "已拒绝", "已完成"
         ));
+        com.cashier.util.I18nUiUtils.configureComboBox(statusFilter, value ->
+            "全部".equals(value) ? com.cashier.i18n.I18nManager.getInstance().get("filter.all")
+                : com.cashier.util.I18nUiUtils.purchaseStatus(value));
         statusFilter.setValue("全部");
 
         // 初始化表格列
@@ -137,19 +140,19 @@ public class ReturnOrderController {
                 } else {
                     switch (item) {
                         case "PENDING":
-                            setText("待审批");
+                            setText(com.cashier.i18n.I18nManager.getInstance().get("return_report.pending_orders"));
                             applySemanticTextStyle(this, "text-warning");
                             break;
                         case "APPROVED":
-                            setText("已批准");
+                            setText(com.cashier.i18n.I18nManager.getInstance().get("return_report.approved_orders"));
                             applySemanticTextStyle(this, "text-success");
                             break;
                         case "REJECTED":
-                            setText("已拒绝");
+                            setText(com.cashier.i18n.I18nManager.getInstance().get("return_report.rejected_orders"));
                             applySemanticTextStyle(this, "text-danger");
                             break;
                         case "COMPLETED":
-                            setText("已完成");
+                            setText(com.cashier.i18n.I18nManager.getInstance().get("return_report.completed_orders"));
                             applySemanticTextStyle(this, "text-info");
                             break;
                         default:
@@ -206,15 +209,15 @@ public class ReturnOrderController {
                 } else {
                     switch (item) {
                         case "GOOD":
-                            setText("完好");
+                            setText(com.cashier.i18n.I18nManager.getInstance().get("runtime.condition_good"));
                             clearSemanticTextStyles(this);
                             break;
                         case "DAMAGED":
-                            setText("损坏");
+                            setText(com.cashier.i18n.I18nManager.getInstance().get("runtime.condition_damaged"));
                             applySemanticTextStyle(this, "text-danger");
                             break;
                         case "OPENED":
-                            setText("已拆封");
+                            setText(com.cashier.i18n.I18nManager.getInstance().get("runtime.condition_opened"));
                             applySemanticTextStyle(this, "text-warning");
                             break;
                         default:
@@ -251,7 +254,7 @@ public class ReturnOrderController {
         }
 
         returnOrderIdLabel.setText(returnOrder.returnOrderId);
-        memberNameLabel.setText(returnOrder.memberName != null ? returnOrder.memberName : "无");
+        memberNameLabel.setText(returnOrder.memberName != null ? returnOrder.memberName : com.cashier.i18n.I18nManager.getInstance().get("statistics.no_data"));
         totalAmountLabel.setText(CurrencyUtil.format(returnOrder.totalAmount.doubleValue()));
         statusLabel.setText(returnOrder.getStatusText());
         operatorNameLabel.setText(returnOrder.operatorName);
@@ -327,17 +330,16 @@ public class ReturnOrderController {
     public void handleCreateReturn() {
         // 显示一个简单的对话框提示用户使用交易记录创建退货
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("创建退货订单");
-        alert.setHeaderText("功能说明");
-        alert.setContentText("请在交易记录页面选择需要退货的交易，然后点击创建退货按钮。\n\n" +
-                           "创建退货订单后，系统会自动生成退货申请，需要经过审批才能完成退货。");
+        alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("return_order.title"));
+        alert.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get("runtime.feature_description"));
+        alert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.return_help"));
         alert.showAndWait();
     }
 
     @FXML
     public void handleExport() {
         if (returnOrderList.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "提示", "没有可导出的数据");
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.no_export_data"));
             return;
         }
 
@@ -368,17 +370,18 @@ public class ReturnOrderController {
         );
 
         if (filePath != null) {
-            showAlert(Alert.AlertType.INFORMATION, "导出成功", "文件已导出到:\n" + filePath);
+            showAlert(Alert.AlertType.INFORMATION, com.cashier.i18n.I18nManager.getInstance().get("success.export"),
+                    com.cashier.i18n.I18nManager.getInstance().get("runtime.exported_to", filePath));
             logger.info("退货订单导出成功: {}", filePath);
         } else {
-            showAlert(Alert.AlertType.ERROR, "导出失败", "导出失败，请查看日志");
+            showAlert(Alert.AlertType.ERROR, com.cashier.i18n.I18nManager.getInstance().get("error.export_data"), com.cashier.i18n.I18nManager.getInstance().get("runtime.export_log_short"));
         }
     }
 
     @FXML
     public void handleViewOriginalTransaction() {
         if (selectedReturnOrder == null || selectedReturnOrder.originalTransactionId == null) {
-            showAlert(Alert.AlertType.WARNING, "提示", "请先选择退货订单");
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.select_return_order"));
             return;
         }
 
@@ -395,20 +398,21 @@ public class ReturnOrderController {
                     transaction.totalAmount,
                     transaction.memberName != null ? transaction.memberName : "无"
                 );
-                showAlert(Alert.AlertType.INFORMATION, "原交易详情", details);
+                showAlert(Alert.AlertType.INFORMATION, com.cashier.i18n.I18nManager.getInstance().get("runtime.original_transaction"), details);
             } else {
-                showAlert(Alert.AlertType.WARNING, "提示", "未找到原交易记录");
+                showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.original_transaction_missing"));
             }
         } catch (Exception e) {
             logger.error("查询原交易失败", e);
-            showAlert(Alert.AlertType.ERROR, "错误", "查询原交易失败: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, com.cashier.i18n.I18nManager.getInstance().get("label.error"),
+                    com.cashier.i18n.I18nManager.getInstance().get("runtime.original_transaction_query_failed", e.getMessage()));
         }
     }
 
     @FXML
     public void handlePrintReturnReceipt() {
         if (selectedReturnOrder == null) {
-            showAlert(Alert.AlertType.WARNING, "提示", "请先选择退货订单");
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.select_return_order"));
             return;
         }
 
@@ -416,7 +420,7 @@ public class ReturnOrderController {
         List<ReturnOrderItem> returnItems = ReturnOrderItemDAO.findByReturnOrderId(selectedReturnOrder.returnOrderId);
         
         if (returnItems == null || returnItems.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "提示", "退货商品明细为空，无法打印");
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.return_items_empty"));
             return;
         }
 
@@ -425,37 +429,38 @@ public class ReturnOrderController {
             String filePath = ReceiptPrinter.printReturnReceipt(selectedReturnOrder, returnItems);
             
             if (filePath != null) {
-                showAlert(Alert.AlertType.INFORMATION, "打印成功", 
+                showAlert(Alert.AlertType.INFORMATION, com.cashier.i18n.I18nManager.getInstance().get("runtime.print_success"),
                     "退货单据已打印！\n\n" +
                     "退货单号: " + selectedReturnOrder.returnOrderId + "\n" +
                     "文件路径: " + filePath);
                 logger.info("退货单据打印成功: {}, 文件路径: {}", selectedReturnOrder.returnOrderId, filePath);
             } else {
-                showAlert(Alert.AlertType.ERROR, "打印失败", "打印退货单据失败，请查看日志");
+                showAlert(Alert.AlertType.ERROR, com.cashier.i18n.I18nManager.getInstance().get("runtime.print_failed"), com.cashier.i18n.I18nManager.getInstance().get("runtime.return_print_log_error"));
                 logger.error("退货单据打印失败: {}", selectedReturnOrder.returnOrderId);
             }
         } catch (Exception e) {
             logger.error("打印退货单据时发生错误", e);
-            showAlert(Alert.AlertType.ERROR, "打印失败", "打印退货单据时发生错误:\n" + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, com.cashier.i18n.I18nManager.getInstance().get("runtime.print_failed"),
+                    com.cashier.i18n.I18nManager.getInstance().get("runtime.return_print_error", e.getMessage()));
         }
     }
 
     @FXML
     public void handleCompleteReturn() {
         if (selectedReturnOrder == null) {
-            showAlert(Alert.AlertType.WARNING, "提示", "请先选择退货订单");
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.select_return_order"));
             return;
         }
 
         // 只有已批准的退货单才能完成
         if (!"APPROVED".equals(selectedReturnOrder.status)) {
-            showAlert(Alert.AlertType.WARNING, "提示", "只有已批准的退货订单才能完成");
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.return_only_approved"));
             return;
         }
 
         // 确认完成
         Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmAlert.setTitle("确认完成退货");
+        confirmAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.confirm_complete_return"));
         confirmAlert.setHeaderText(null);
         confirmAlert.setContentText(String.format(
             "确认完成此退货订单吗？\n\n" +
@@ -476,7 +481,7 @@ public class ReturnOrderController {
         boolean result = ReturnService.completeReturnOrder(selectedReturnOrder.returnOrderId);
 
         if (result) {
-            showAlert(Alert.AlertType.INFORMATION, "成功", 
+            showAlert(Alert.AlertType.INFORMATION, com.cashier.i18n.I18nManager.getInstance().get("label.success"),
                 "退货订单已完成！\n\n" +
                 "退货单号: " + selectedReturnOrder.returnOrderId + "\n" +
                 "退货金额: ¥" + String.format("%.2f", selectedReturnOrder.totalAmount));
@@ -486,7 +491,7 @@ public class ReturnOrderController {
             clearDetail();
             logger.info("退货订单完成: {}", selectedReturnOrder.returnOrderId);
         } else {
-            showAlert(Alert.AlertType.ERROR, "失败", "完成退货订单失败，请查看日志");
+            showAlert(Alert.AlertType.ERROR, com.cashier.i18n.I18nManager.getInstance().get("label.failed"), com.cashier.i18n.I18nManager.getInstance().get("runtime.return_complete_failed"));
         }
     }
 

@@ -37,9 +37,9 @@
         <Label text="%search.results" styleClass="text-muted" style="-fx-font-size: 12px"/>
         <Label fx:id="resultCountLabel" text="0" styleClass="text-primary" style="-fx-font-weight: bold; -fx-font-size: 12px"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Label text="↑↓ 选择" styleClass="text-muted" style="-fx-font-size: 11px"/>
-        <Label text="Enter 打开" styleClass="text-muted" style="-fx-font-size: 11px"/>
-        <Label text="Esc 关闭" styleClass="text-muted" style="-fx-font-size: 11px"/>
+        <Label text="%search.keyboard_select" styleClass="text-muted" style="-fx-font-size: 11px"/>
+        <Label text="%search.keyboard_open" styleClass="text-muted" style="-fx-font-size: 11px"/>
+        <Label text="%search.keyboard_close" styleClass="text-muted" style="-fx-font-size: 11px"/>
     </HBox>
 
 </VBox>

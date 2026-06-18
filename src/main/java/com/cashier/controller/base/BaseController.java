@@ -272,6 +272,6 @@ public abstract class BaseController<T> {
      */
     protected void exportToCSV(TableView<T> table, String fileName) {
         // 实现导出功能
-        showSuccess("导出功能开发中");
+        showSuccess(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_coming_soon"));
     }
 }

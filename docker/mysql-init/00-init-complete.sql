@@ -429,7 +429,7 @@ SET @table_exists = (
 SET @sql = IF(@table_exists = 0,
     'CREATE TABLE IF NOT EXISTS theme_preferences (
         username VARCHAR(50) PRIMARY KEY,
-        theme_name VARCHAR(20) DEFAULT ''light'',
+        theme_name VARCHAR(20) DEFAULT ''lisuan'',
         updated_at BIGINT,
         INDEX idx_username (username),
         FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE

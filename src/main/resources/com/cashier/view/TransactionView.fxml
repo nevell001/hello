@@ -18,6 +18,9 @@
                 <Insets top="10" right="10" bottom="5" left="10"/>
             </padding>
 
+            <Label text="%transaction.quick_date"/>
+            <ComboBox fx:id="quickDateComboBox" minWidth="150" prefWidth="170"/>
+
             <Label text="%transaction.date_from"/>
             <DatePicker fx:id="startDatePicker" prefWidth="150"/>
 

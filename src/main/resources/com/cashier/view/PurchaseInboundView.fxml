@@ -11,67 +11,43 @@
       styleClass="purchase-inbound-view">
 
     <!-- 顶部工具栏 -->
-    <HBox spacing="10" styleClass="toolbar" alignment="CENTER_LEFT">
+    <VBox spacing="6" styleClass="toolbar">
         <padding>
             <Insets top="10" right="10" bottom="10" left="10"/>
         </padding>
 
-        <!-- 操作按钮 -->
-        <Button fx:id="inboundButton"
-                text="%purchase_inbound.execute"
-                onAction="#handleInbound"
-                prefWidth="100"
-                disable="true"
-                styleClass="success-button"/>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Button fx:id="inboundButton" text="%purchase_inbound.execute" onAction="#handleInbound"
+                    minWidth="130" disable="true" styleClass="success-button"/>
+            <Button fx:id="viewDetailButton" text="%purchase_inbound.view_detail" onAction="#handleViewDetail"
+                    minWidth="120" disable="true" styleClass="info-button"/>
+            <Button fx:id="viewHistoryButton" text="%purchase_inbound.view_history" onAction="#handleViewHistory"
+                    minWidth="130" styleClass="secondary-button"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="countLabel" text="%purchase_inbound.count" styleClass="text-muted"/>
+        </HBox>
 
-        <Button fx:id="viewDetailButton"
-                text="%purchase_inbound.view_detail"
-                onAction="#handleViewDetail"
-                prefWidth="100"
-                disable="true"
-                styleClass="info-button"/>
-
-        <Button fx:id="viewHistoryButton"
-                text="%purchase_inbound.view_history"
-                onAction="#handleViewHistory"
-                prefWidth="100"
-                styleClass="secondary-button"/>
-
-        <Separator orientation="VERTICAL"/>
-
-        <!-- 搜索 -->
-        <Label text="%purchase_inbound.search_label"/>
-        <TextField fx:id="searchField"
-                  promptText="%purchase_inbound.search_hint"
-                  prefWidth="200"
-                  onAction="#handleSearch"/>
-
-        <Button text="%purchase_inbound.search"
-                onAction="#handleSearch"
-                prefWidth="60"
-                styleClass="secondary-button"/>
-
-        <Button text="%purchase_inbound.refresh"
-                onAction="#handleRefresh"
-                prefWidth="60"
-                styleClass="secondary-button"/>
-
-        <Region HBox.hgrow="ALWAYS"/>
-
-        <!-- 统计信息 -->
-        <Label fx:id="countLabel" text="%purchase_inbound.count" styleClass="text-muted"/>
-    </HBox>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="%purchase_inbound.search_label"/>
+            <TextField fx:id="searchField" promptText="%purchase_inbound.search_hint"
+                       minWidth="260" HBox.hgrow="ALWAYS" onAction="#handleSearch"/>
+            <Button text="%purchase_inbound.search" onAction="#handleSearch"
+                    minWidth="80" styleClass="secondary-button"/>
+            <Button text="%purchase_inbound.refresh" onAction="#handleRefresh"
+                    minWidth="80" styleClass="secondary-button"/>
+        </HBox>
+    </VBox>
 
     <!-- 可入库订单表格 -->
     <TableView fx:id="orderTable"
               VBox.vgrow="ALWAYS"
               styleClass="purchase-inbound-table">
         <columns>
-            <TableColumn fx:id="orderNoColumn" text="%purchase_inbound.order_no" prefWidth="150"/>
-            <TableColumn fx:id="supplierColumn" text="%purchase_inbound.supplier" prefWidth="200"/>
-            <TableColumn fx:id="purchaseDateColumn" text="%purchase_inbound.purchase_date" prefWidth="100"/>
-            <TableColumn fx:id="totalAmountColumn" text="%purchase_inbound.total_amount" prefWidth="100"/>
-            <TableColumn fx:id="purchaserColumn" text="%purchase_inbound.purchaser" prefWidth="100"/>
+            <TableColumn fx:id="orderNoColumn" text="%purchase_inbound.order_no" prefWidth="180" minWidth="150"/>
+            <TableColumn fx:id="supplierColumn" text="%purchase_inbound.supplier" prefWidth="220" minWidth="160"/>
+            <TableColumn fx:id="purchaseDateColumn" text="%purchase_inbound.purchase_date" prefWidth="140" minWidth="120"/>
+            <TableColumn fx:id="totalAmountColumn" text="%purchase_inbound.total_amount" prefWidth="160" minWidth="140"/>
+            <TableColumn fx:id="purchaserColumn" text="%purchase_inbound.purchaser" prefWidth="130" minWidth="110"/>
         </columns>
         <placeholder>
             <Label text="%purchase_inbound.no_data" styleClass="text-muted" style="-fx-font-size: 14px"/>

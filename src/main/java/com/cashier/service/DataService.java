@@ -1,5 +1,6 @@
 package com.cashier.service;
 
+import com.cashier.constant.FXConstants;
 import com.cashier.dao.*;
 import com.cashier.model.*;
 import com.cashier.util.DatabaseManager;
@@ -304,10 +305,10 @@ public class DataService {
             if (themeName == null && !"default".equals(username)) {
                 themeName = ThemePreferenceDAO.findThemePreference("default");
             }
-            return normalizeThemeName(themeName != null ? themeName : "light");
+            return normalizeThemeName(themeName != null ? themeName : FXConstants.DEFAULT_THEME);
         } catch (SQLException e) {
             logger.error("加载主题偏好失败", e);
-            return "light"; // 默认主题
+            return FXConstants.DEFAULT_THEME;
         }
     }
 

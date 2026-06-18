@@ -124,7 +124,7 @@ public class SupplierController {
             }
         } catch (SQLException e) {
             logger.error("加载供应商数据失败", e);
-            showError("加载供应商数据失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
             suppliers = new HashMap<>();
         }
         supplierList = FXCollections.observableArrayList(suppliers.values());
@@ -136,7 +136,7 @@ public class SupplierController {
      * 更新供应商数量标签
      */
     private void updateCountLabel() {
-        countLabel.setText("供应商数量: " + supplierList.size());
+        countLabel.setText(I18nManager.getInstance().get("runtime.supplier_count", supplierList.size()));
     }
 
     /**
@@ -193,24 +193,24 @@ public class SupplierController {
 
             // 表单字段
             TextField codeField = new TextField();
-            codeField.setPromptText("自动生成");
+            codeField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("product.edit.auto_generate"));
             codeField.setEditable(false);
             codeField.setPrefWidth(300);
 
             TextField nameField = new TextField();
-            nameField.setPromptText("请输入供应商名称");
+            nameField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.supplier_name_input_required"));
             nameField.setPrefWidth(300);
 
             TextField contactField = new TextField();
-            contactField.setPromptText("请输入联系人");
+            contactField.setPromptText(I18nManager.getInstance().get("runtime.contact_hint"));
             contactField.setPrefWidth(300);
 
             TextField phoneField = new TextField();
-            phoneField.setPromptText("请输入联系电话");
+            phoneField.setPromptText(I18nManager.getInstance().get("runtime.phone_hint"));
             phoneField.setPrefWidth(300);
 
             TextField addressField = new TextField();
-            addressField.setPromptText("请输入地址");
+            addressField.setPromptText(I18nManager.getInstance().get("runtime.address_hint"));
             addressField.setPrefWidth(300);
 
             ComboBox<String> rankCombo = new ComboBox<>();
@@ -219,7 +219,7 @@ public class SupplierController {
             rankCombo.setPrefWidth(300);
 
             TextArea remarkArea = new TextArea();
-            remarkArea.setPromptText("请输入备注");
+            remarkArea.setPromptText(I18nManager.getInstance().get("runtime.notes_hint"));
             remarkArea.setPrefRowCount(3);
             remarkArea.setPrefWidth(300);
 
@@ -240,40 +240,40 @@ public class SupplierController {
             }
 
             // 添加表单元素
-            gridPane.add(new Label("供应商编号:"), 0, 0);
+            gridPane.add(new Label(I18nManager.getInstance().get("runtime.supplier_code")), 0, 0);
             gridPane.add(codeField, 1, 0);
-            gridPane.add(new Label("供应商名称*:"), 0, 1);
+            gridPane.add(new Label(I18nManager.getInstance().get("runtime.supplier_name_required_label")), 0, 1);
             gridPane.add(nameField, 1, 1);
-            gridPane.add(new Label("联系人:"), 0, 2);
+            gridPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.contact")), 0, 2);
             gridPane.add(contactField, 1, 2);
-            gridPane.add(new Label("联系电话:"), 0, 3);
+            gridPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("settings.store_phone_label")), 0, 3);
             gridPane.add(phoneField, 1, 3);
-            gridPane.add(new Label("地址:"), 0, 4);
+            gridPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.address")), 0, 4);
             gridPane.add(addressField, 1, 4);
-            gridPane.add(new Label("供应商等级:"), 0, 5);
+            gridPane.add(new Label(I18nManager.getInstance().get("runtime.supplier_level")), 0, 5);
             gridPane.add(rankCombo, 1, 5);
-            gridPane.add(new Label("备注:"), 0, 6);
+            gridPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("return_order_list.notes_label")), 0, 6);
             gridPane.add(remarkArea, 1, 6);
 
             // 创建对话框
             Stage dialogStage = new Stage();
-            dialogStage.setTitle(isEdit ? "编辑供应商" : "添加供应商");
+            dialogStage.setTitle(isEdit ? com.cashier.i18n.I18nManager.getInstance().get("runtime.supplier_edit") : com.cashier.i18n.I18nManager.getInstance().get("supplier.add"));
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(supplierTable.getScene().getWindow());
             dialogStage.setResizable(false);
 
             // 按钮
-            Button saveButton = new Button("保存");
+            Button saveButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("shortcut.save"));
             saveButton.setPrefWidth(80);
             saveButton.setDefaultButton(true);
 
-            Button cancelButton = new Button("取消");
+            Button cancelButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("return_order.cancel"));
             cancelButton.setPrefWidth(80);
             cancelButton.setCancelButton(true);
 
             saveButton.setOnAction(e -> {
                 if (nameField.getText().trim().isEmpty()) {
-                    showError("请输入供应商名称");
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.supplier_name_input_required"));
                     return;
                 }
 
@@ -296,7 +296,7 @@ public class SupplierController {
                         dialogStage.close();
                     } catch (SQLException ex) {
                         logger.error("更新供应商失败", ex);
-                        showError("更新供应商失败: " + ex.getMessage());
+                        showError(com.cashier.i18n.I18nManager.getInstance().get("error.save_data") + ": " + ex.getMessage());
                     }
                 } else {
                     try {
@@ -306,7 +306,7 @@ public class SupplierController {
                         dialogStage.close();
                     } catch (SQLException ex) {
                         logger.error("添加供应商失败", ex);
-                        showError("添加供应商失败: " + ex.getMessage());
+                        showError(com.cashier.i18n.I18nManager.getInstance().get("error.save_data") + ": " + ex.getMessage());
                     }
                 }
             });
@@ -329,7 +329,7 @@ public class SupplierController {
 
         } catch (Exception e) {
             logger.error("显示供应商对话框失败", e);
-            showError("加载对话框失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
     }
 
@@ -365,7 +365,7 @@ public class SupplierController {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle(I18nManager.getInstance().get("common.confirm"));
             alert.setHeaderText(null);
-            alert.setContentText("确定要删除供应商 \"" + selected.name + "\" 吗？");
+            alert.setContentText(I18nManager.getInstance().get("runtime.supplier_delete_confirm", selected.name));
 
             if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
                 try {
@@ -376,7 +376,7 @@ public class SupplierController {
                     updateStatus("供应商删除成功: " + selected.name);
                 } catch (SQLException e) {
                     logger.error("删除供应商失败", e);
-                    showError("删除供应商失败: " + e.getMessage());
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("error.delete_data") + ": " + e.getMessage());
                 }
             }
         }

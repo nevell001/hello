@@ -109,8 +109,11 @@ public class InventoryCheckController {
         setupTableColumns();
 
         // 设置状态筛选
-        statusFilterCombo.getItems().addAll("全部", "待盘点", "盘点中", "已完成");
-        statusFilterCombo.setValue("全部");
+        statusFilterCombo.getItems().addAll("all", "pending", "checking", "completed");
+        com.cashier.util.I18nUiUtils.configureComboBox(statusFilterCombo, value ->
+            "all".equals(value) ? I18nManager.getInstance().get("filter.all")
+                : com.cashier.util.I18nUiUtils.inventoryCheckStatus(value));
+        statusFilterCombo.setValue("all");
 
         // 加载盘点记录
         loadChecks();
@@ -136,8 +139,8 @@ public class InventoryCheckController {
             new SimpleStringProperty(String.valueOf(cellData.getValue().totalItems)));
         diffItemsColumn.setCellValueFactory(cellData ->
             new SimpleStringProperty(String.valueOf(cellData.getValue().diffItems)));
-        statusColumn.setCellValueFactory(cellData ->
-            new SimpleStringProperty(cellData.getValue().getStatusDisplayName()));
+        statusColumn.setCellValueFactory(cellData -> new SimpleStringProperty(
+            com.cashier.util.I18nUiUtils.inventoryCheckStatus(cellData.getValue().status)));
         operatorColumn.setCellValueFactory(new PropertyValueFactory<>("operator"));
     }
 
@@ -153,7 +156,7 @@ public class InventoryCheckController {
             }
         } catch (SQLException e) {
             logger.error("加载盘点记录失败", e);
-            showError("加载盘点记录失败: " + e.getMessage());
+            showError(I18nManager.getInstance().get("runtime.inventory_check_load_failed", e.getMessage()));
             checks = new HashMap<>();
         }
         filterChecks();
@@ -166,11 +169,11 @@ public class InventoryCheckController {
         String statusFilter = statusFilterCombo.getValue();
         List<InventoryCheck> filtered = checks.values().stream()
             .filter(check -> {
-                if ("全部".equals(statusFilter)) return true;
+                if ("all".equals(statusFilter)) return true;
                 switch (statusFilter) {
-                    case "待盘点": return "pending".equals(check.status);
-                    case "盘点中": return "checking".equals(check.status);
-                    case "已完成": return "completed".equals(check.status);
+                    case "pending": return "pending".equals(check.status);
+                    case "checking": return "checking".equals(check.status);
+                    case "completed": return "completed".equals(check.status);
                     default: return true;
                 }
             })
@@ -185,7 +188,7 @@ public class InventoryCheckController {
      * 更新盘点数量标签
      */
     private void updateCountLabel() {
-        countLabel.setText("盘点记录: " + checkList.size() + " 条");
+        countLabel.setText(I18nManager.getInstance().get("runtime.inventory_check_count", checkList.size()));
     }
 
     /**
@@ -228,58 +231,64 @@ public class InventoryCheckController {
     private void showCheckDialog(InventoryCheck check) {
         try {
             Stage dialogStage = new Stage();
-            dialogStage.setTitle(check == null ? "新建盘点单" : "编辑盘点单");
+            dialogStage.setTitle(check == null ? com.cashier.i18n.I18nManager.getInstance().get("runtime.inventory_check_new") : com.cashier.i18n.I18nManager.getInstance().get("runtime.inventory_check_edit"));
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(checkTable.getScene().getWindow());
 
             VBox root = new VBox(10);
             root.setPadding(new javafx.geometry.Insets(20));
+            root.getStyleClass().addAll("dialog-content", "edit-view-container");
 
             // 表单字段
             GridPane gridPane = new GridPane();
             gridPane.setHgap(10);
             gridPane.setVgap(10);
+            gridPane.getStyleClass().add("form-grid");
 
             TextField checkNoField = new TextField();
             checkNoField.setEditable(false);
-            checkNoField.setPromptText("自动生成");
+            checkNoField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("product.edit.auto_generate"));
+            checkNoField.getStyleClass().add("form-input");
 
             DatePicker checkDatePicker = new DatePicker();
             checkDatePicker.setValue(java.time.LocalDate.now());
+            checkDatePicker.getStyleClass().add("form-date-picker");
 
             ComboBox<String> checkTypeCombo = new ComboBox<>();
             checkTypeCombo.getItems().addAll("full", "partial");
             checkTypeCombo.setConverter(new javafx.util.StringConverter<String>() {
                 @Override
                 public String toString(String type) {
-                    if ("full".equals(type)) return "全盘";
-                    if ("partial".equals(type)) return "部分盘点";
+                    if ("full".equals(type)) return I18nManager.getInstance().get("runtime.check_type_full");
+                    if ("partial".equals(type)) return I18nManager.getInstance().get("runtime.check_type_partial");
                     return type;
                 }
                 @Override
                 public String fromString(String string) {
-                    if ("全盘".equals(string)) return "full";
-                    if ("部分盘点".equals(string)) return "partial";
+                    if (I18nManager.getInstance().get("runtime.check_type_full").equals(string)) return "full";
+                    if (I18nManager.getInstance().get("runtime.check_type_partial").equals(string)) return "partial";
                     return string;
                 }
             });
             checkTypeCombo.setValue("full");
+            checkTypeCombo.getStyleClass().add("form-combo");
 
             TextArea remarkArea = new TextArea();
-            remarkArea.setPromptText("备注");
+            remarkArea.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("restock.reason"));
             remarkArea.setPrefRowCount(2);
+            remarkArea.getStyleClass().add("form-text-area");
 
             // 商品列表表格
             TableView<CheckItemWrapper> itemTable = new TableView<>();
             itemTable.setEditable(true);
 
-            TableColumn<CheckItemWrapper, String> productNameCol = new TableColumn<>("商品名称");
+            TableColumn<CheckItemWrapper, String> productNameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_approval.product_name"));
             productNameCol.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getProductName()));
 
-            TableColumn<CheckItemWrapper, Integer> bookQtyCol = new TableColumn<>("账面数量");
+            TableColumn<CheckItemWrapper, Integer> bookQtyCol = new TableColumn<>(I18nManager.getInstance().get("runtime.book_quantity"));
             bookQtyCol.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().bookQuantity).asObject());
 
-            TableColumn<CheckItemWrapper, Integer> actualQtyCol = new TableColumn<>("实际数量");
+            TableColumn<CheckItemWrapper, Integer> actualQtyCol = new TableColumn<>(I18nManager.getInstance().get("runtime.actual_quantity"));
             actualQtyCol.setPrefWidth(100);
             actualQtyCol.setCellValueFactory(cellData -> cellData.getValue().actualQuantityProperty().asObject());
             actualQtyCol.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
@@ -291,10 +300,10 @@ public class InventoryCheckController {
                 itemTable.refresh();
             });
 
-            TableColumn<CheckItemWrapper, Integer> diffQtyCol = new TableColumn<>("差异");
+            TableColumn<CheckItemWrapper, Integer> diffQtyCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("shift.difference"));
             diffQtyCol.setCellValueFactory(cellData -> cellData.getValue().diffQuantityProperty().asObject());
 
-            TableColumn<CheckItemWrapper, String> diffReasonCol = new TableColumn<>("差异原因");
+            TableColumn<CheckItemWrapper, String> diffReasonCol = new TableColumn<>(I18nManager.getInstance().get("runtime.difference_reason"));
             diffReasonCol.setPrefWidth(150);
             diffReasonCol.setCellValueFactory(new PropertyValueFactory<>("diffReason"));
             diffReasonCol.setCellFactory(TextFieldTableCell.forTableColumn());
@@ -302,10 +311,10 @@ public class InventoryCheckController {
                 e.getRowValue().diffReason.set(e.getNewValue());
             });
 
-            TableColumn<CheckItemWrapper, String> actionCol = new TableColumn<>("操作");
+            TableColumn<CheckItemWrapper, String> actionCol = new TableColumn<>(I18nManager.getInstance().get("runtime.action"));
             actionCol.setPrefWidth(80);
             actionCol.setCellFactory(col -> new TableCell<CheckItemWrapper, String>() {
-                private final Button deleteBtn = new Button("删除");
+                private final Button deleteBtn = new Button(com.cashier.i18n.I18nManager.getInstance().get("inventory_check.delete"));
                 {
                     deleteBtn.setStyle("-fx-background-color: #f44336; -fx-text-fill: white;");
                     deleteBtn.setOnAction(e -> {
@@ -332,15 +341,16 @@ public class InventoryCheckController {
             // 监听列表变化，更新差异统计
             items.addListener((javafx.collections.ListChangeListener<CheckItemWrapper>) change -> {
                 int diffCount = (int) items.stream().filter(item -> item.diffQuantity.get() != 0).count();
-                diffLabel.setText("差异商品: " + diffCount + " 个");
+                diffLabel.setText(I18nManager.getInstance().get("runtime.inventory_check_diff_count", diffCount));
             });
 
             // 添加商品按钮
-            Button addProductButton = new Button("添加商品");
+            Button addProductButton = new Button(I18nManager.getInstance().get("runtime.add_product"));
+            addProductButton.getStyleClass().addAll("primary-button", "button-normal");
             addProductButton.setOnAction(e -> showProductSelector(itemTable));
 
             // 差异统计
-            diffLabel = new Label("差异商品: 0 个");
+            diffLabel = new Label(I18nManager.getInstance().get("runtime.inventory_check_diff_count", 0));
 
             // 如果是编辑模式，填充数据
             boolean isEdit = check != null;
@@ -363,18 +373,22 @@ public class InventoryCheckController {
             }
 
             // 添加表单元素
-            gridPane.add(new Label("盘点单号:"), 0, 0);
+            gridPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.inventory_check_no")), 0, 0);
             gridPane.add(checkNoField, 1, 0);
-            gridPane.add(new Label("盘点日期:"), 0, 1);
+            gridPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.inventory_check_date")), 0, 1);
             gridPane.add(checkDatePicker, 1, 1);
-            gridPane.add(new Label("盘点类型:"), 0, 2);
+            gridPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.inventory_check_type")), 0, 2);
             gridPane.add(checkTypeCombo, 1, 2);
-            gridPane.add(new Label("备注:"), 0, 3);
+            gridPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("return_order_list.notes_label")), 0, 3);
             gridPane.add(remarkArea, 1, 3);
 
             // 按钮
-            Button saveButton = new Button("保存");
-            Button cancelButton = new Button("取消");
+            Button saveButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("shortcut.save"));
+            Button cancelButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("return_order.cancel"));
+            saveButton.getStyleClass().addAll("primary-button", "button-normal");
+            cancelButton.getStyleClass().addAll("secondary-button", "button-normal");
+            saveButton.setMinWidth(110);
+            cancelButton.setMinWidth(110);
 
             saveButton.setOnAction(e -> {
                 saveButton.setDisable(true);
@@ -405,7 +419,7 @@ public class InventoryCheckController {
                             item.diffReason = wrapper.diffReason.get();
                             InventoryCheckItemDAO.insert(item);
                         }
-                        updateStatus("盘点单更新成功");
+                        updateStatus(I18nManager.getInstance().get("runtime.inventory_check_updated"));
                     } else {
                         newCheck.checkNo = InventoryCheckDAO.generateNextCheckNo(newCheck.checkDate);
                         checkNoField.setText(newCheck.checkNo);
@@ -421,7 +435,7 @@ public class InventoryCheckController {
                             item.diffReason = wrapper.diffReason.get();
                             InventoryCheckItemDAO.insert(item);
                         }
-                        updateStatus("盘点单创建成功");
+                        updateStatus(I18nManager.getInstance().get("runtime.inventory_check_created"));
                     }
                     loadChecks();
                     dialogStage.close();
@@ -429,11 +443,11 @@ public class InventoryCheckController {
                 } catch (SQLException ex) {
                     saveButton.setDisable(false);
                     logger.error("保存盘点单失败", ex);
-                    showError("保存盘点单失败: " + ex.getMessage());
+                    showError(I18nManager.getInstance().get("runtime.inventory_check_save_failed", ex.getMessage()));
                 } catch (Exception ex) {
                     saveButton.setDisable(false);
                     logger.error("保存盘点单失败", ex);
-                    showError("保存盘点单失败: " + ex.getMessage());
+                    showError(I18nManager.getInstance().get("runtime.inventory_check_save_failed", ex.getMessage()));
                 }
             });
 
@@ -444,7 +458,7 @@ public class InventoryCheckController {
 
             root.getChildren().addAll(
                 gridPane,
-                new Label("商品明细:"),
+                new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.product_details")),
                 addProductButton,
                 itemTable,
                 diffLabel,
@@ -459,7 +473,7 @@ public class InventoryCheckController {
 
         } catch (Exception e) {
             logger.error("显示盘点对话框失败", e);
-            showError("加载对话框失败: " + e.getMessage());
+            showError(I18nManager.getInstance().get("runtime.dialog_load_failed", e.getMessage()));
         }
     }
 
@@ -469,22 +483,23 @@ public class InventoryCheckController {
     private void showProductSelector(TableView<CheckItemWrapper> itemTable) {
         try {
             Stage selectorStage = new Stage();
-            selectorStage.setTitle("选择商品");
+            selectorStage.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.select_product"));
             selectorStage.initModality(Modality.WINDOW_MODAL);
             selectorStage.initOwner(checkTable.getScene().getWindow());
 
             VBox root = new VBox(10);
             root.setPadding(new javafx.geometry.Insets(10));
+            root.getStyleClass().add("dialog-content");
 
             // 分类筛选
             ComboBox<String> categoryCombo = new ComboBox<>();
-            categoryCombo.setPromptText("全部分类");
+            categoryCombo.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.all_categories"));
             categoryCombo.setPrefWidth(150);
             
             // 搜索框
             TextField searchField = new TextField();
-            searchField.setPromptText("输入商品名称搜索");
-            HBox filterBox = new HBox(10, new Label("分类:"), categoryCombo, new Label("搜索:"), searchField);
+            searchField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.search_product_hint"));
+            HBox filterBox = new HBox(10, new Label(com.cashier.i18n.I18nManager.getInstance().get("product.edit.category")), categoryCombo, new Label(com.cashier.i18n.I18nManager.getInstance().get("purchase_inbound.search_label")), searchField);
 
             // 商品表格
             TableView<Product> productTable = new TableView<>();
@@ -530,19 +545,19 @@ public class InventoryCheckController {
                 Platform.runLater(() -> productTable.refresh());
             });
             
-            TableColumn<Product, String> nameCol = new TableColumn<>("商品名称");
+            TableColumn<Product, String> nameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_approval.product_name"));
             nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
 
-            TableColumn<Product, String> barcodeCol = new TableColumn<>("条形码");
+            TableColumn<Product, String> barcodeCol = new TableColumn<>(I18nManager.getInstance().get("runtime.barcode"));
             barcodeCol.setCellValueFactory(new PropertyValueFactory<>("barcode"));
 
-            TableColumn<Product, String> categoryCol = new TableColumn<>("分类");
+            TableColumn<Product, String> categoryCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_report.category"));
             categoryCol.setCellValueFactory(new PropertyValueFactory<>("category"));
 
-            TableColumn<Product, Number> stockCol = new TableColumn<>("库存");
+            TableColumn<Product, Number> stockCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("product.stock"));
             stockCol.setCellValueFactory(new PropertyValueFactory<>("quantity"));
 
-            TableColumn<Product, Number> costCol = new TableColumn<>("成本价");
+            TableColumn<Product, Number> costCol = new TableColumn<>(I18nManager.getInstance().get("runtime.cost_price"));
             costCol.setCellValueFactory(new PropertyValueFactory<>("cost"));
 
             productTable.getColumns().addAll(selectColumn, nameCol, barcodeCol, categoryCol, stockCol, costCol);
@@ -572,15 +587,16 @@ public class InventoryCheckController {
                 .filter(c -> c != null && !c.isEmpty())
                 .collect(Collectors.toSet());
             ObservableList<String> categoryList = FXCollections.observableArrayList();
-            categoryList.add("全部分类");
+            String allCategories = I18nManager.getInstance().get("filter.all_categories");
+            categoryList.add(allCategories);
             categoryList.addAll(categories);
             categoryCombo.setItems(categoryList);
-            categoryCombo.setValue("全部分类");
+            categoryCombo.setValue(allCategories);
 
             // 分类筛选和全选功能
             categoryCombo.setOnAction(e -> {
                 String selectedCategory = categoryCombo.getValue();
-                if ("全部分类".equals(selectedCategory)) {
+                if (allCategories.equals(selectedCategory)) {
                     productTable.setItems(productList);
                 } else {
                     List<Product> filtered = productList.stream()
@@ -597,7 +613,7 @@ public class InventoryCheckController {
                 String selectedCategory = categoryCombo.getValue();
                 List<Product> filtered = productList.stream()
                     .filter(p -> {
-                        boolean matchCategory = "全部分类".equals(selectedCategory) || selectedCategory.equals(p.category);
+                        boolean matchCategory = allCategories.equals(selectedCategory) || selectedCategory.equals(p.category);
                         boolean matchSearch = searchText.isEmpty() || p.name.toLowerCase().contains(searchText);
                         return matchCategory && matchSearch;
                     })
@@ -607,13 +623,13 @@ public class InventoryCheckController {
             });
 
             // 全选/取消全选按钮
-            Button selectAllButton = new Button("全选");
+            Button selectAllButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("shortcut.select_all"));
             selectAllButton.setOnAction(e -> {
                 ObservableList<Product> items = productTable.getItems();
                 productTable.getSelectionModel().selectAll();
             });
 
-            Button deselectAllButton = new Button("取消全选");
+            Button deselectAllButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("runtime.deselect_all"));
             deselectAllButton.setOnAction(e -> {
                 productTable.getSelectionModel().clearSelection();
             });
@@ -621,11 +637,12 @@ public class InventoryCheckController {
             HBox selectButtonsBox = new HBox(10, selectAllButton, deselectAllButton);
 
             // 添加按钮
-            Button addButton = new Button("添加选中商品");
+            Button addButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("runtime.add_selected_products"));
+            addButton.getStyleClass().addAll("primary-button", "button-normal");
             addButton.setOnAction(e -> {
                 ObservableList<Product> selectedProducts = productTable.getSelectionModel().getSelectedItems();
                 if (selectedProducts == null || selectedProducts.isEmpty()) {
-                    showError("请先选择商品");
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.select_product_first"));
                     return;
                 }
                 
@@ -648,11 +665,12 @@ public class InventoryCheckController {
                     logger.info("成功添加 {} 个商品", addedCount);
                     selectorStage.close();
                 } else {
-                    showError("所选商品已存在");
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.product_already_added"));
                 }
             });
 
-            Button cancelButton = new Button("取消");
+            Button cancelButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("return_order.cancel"));
+            cancelButton.getStyleClass().addAll("secondary-button", "button-normal");
             cancelButton.setOnAction(e -> selectorStage.close());
 
             HBox buttonBox = new HBox(10, addButton, cancelButton);
@@ -668,7 +686,7 @@ public class InventoryCheckController {
 
         } catch (SQLException e) {
             logger.error("加载商品数据失败", e);
-            showError("加载商品数据失败: " + e.getMessage());
+            showError(I18nManager.getInstance().get("runtime.product_load_failed", e.getMessage()));
         }
     }
 
@@ -730,9 +748,9 @@ public class InventoryCheckController {
         InventoryCheck selected = checkTable.getSelectionModel().getSelectedItem();
         if (selected != null) {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("确认删除");
+            alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.confirm_delete"));
             alert.setHeaderText(null);
-            alert.setContentText("确定要删除盘点单 \"" + selected.checkNo + "\" 吗？");
+            alert.setContentText(I18nManager.getInstance().get("runtime.inventory_check_delete_confirm", selected.checkNo));
 
             if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
                 try {
@@ -740,10 +758,10 @@ public class InventoryCheckController {
                     InventoryCheckDAO.delete(selected.id);
                     checks.remove(selected.id);
                     filterChecks();
-                    updateStatus("盘点单删除成功");
+                    updateStatus(I18nManager.getInstance().get("runtime.inventory_check_deleted"));
                 } catch (SQLException e) {
                     logger.error("删除盘点单失败", e);
-                    showError("删除盘点单失败: " + e.getMessage());
+                    showError(I18nManager.getInstance().get("runtime.inventory_check_delete_failed", e.getMessage()));
                 }
             }
         }
@@ -772,36 +790,36 @@ public class InventoryCheckController {
             GridPane infoPane = new GridPane();
             infoPane.setHgap(10);
             infoPane.setVgap(10);
-            infoPane.add(new Label("盘点单号:"), 0, 0);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.inventory_check_no")), 0, 0);
             infoPane.add(new Label(check.checkNo), 1, 0);
-            infoPane.add(new Label("盘点日期:"), 0, 1);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.inventory_check_date")), 0, 1);
             infoPane.add(new Label(check.checkDate), 1, 1);
-            infoPane.add(new Label("盘点类型:"), 0, 2);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.inventory_check_type")), 0, 2);
             infoPane.add(new Label(check.getCheckTypeDisplayName()), 1, 2);
-            infoPane.add(new Label("盘点人:"), 0, 3);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.inventory_check_operator")), 0, 3);
             infoPane.add(new Label(check.operator), 1, 3);
-            infoPane.add(new Label("状态:"), 0, 4);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("return_order_list.status_label")), 0, 4);
             infoPane.add(new Label(check.getStatusDisplayName()), 1, 4);
-            infoPane.add(new Label("商品总数:"), 0, 5);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("cart.total_quantity")), 0, 5);
             infoPane.add(new Label(String.valueOf(check.totalItems)), 1, 5);
-            infoPane.add(new Label("差异数:"), 0, 6);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.inventory_check_diff")), 0, 6);
             infoPane.add(new Label(String.valueOf(check.diffItems)), 1, 6);
 
             // 商品明细
             TableView<InventoryCheckItem> itemTable = new TableView<>();
-            TableColumn<InventoryCheckItem, String> nameCol = new TableColumn<>("商品名称");
+            TableColumn<InventoryCheckItem, String> nameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_approval.product_name"));
             nameCol.setCellValueFactory(new PropertyValueFactory<>("productName"));
 
-            TableColumn<InventoryCheckItem, Number> bookCol = new TableColumn<>("账面数量");
+            TableColumn<InventoryCheckItem, Number> bookCol = new TableColumn<>(I18nManager.getInstance().get("runtime.book_quantity"));
             bookCol.setCellValueFactory(new PropertyValueFactory<>("bookQuantity"));
 
-            TableColumn<InventoryCheckItem, Number> actualCol = new TableColumn<>("实际数量");
+            TableColumn<InventoryCheckItem, Number> actualCol = new TableColumn<>(I18nManager.getInstance().get("runtime.actual_quantity"));
             actualCol.setCellValueFactory(new PropertyValueFactory<>("actualQuantity"));
 
-            TableColumn<InventoryCheckItem, Number> diffCol = new TableColumn<>("差异");
+            TableColumn<InventoryCheckItem, Number> diffCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("shift.difference"));
             diffCol.setCellValueFactory(new PropertyValueFactory<>("diffQuantity"));
 
-            TableColumn<InventoryCheckItem, String> reasonCol = new TableColumn<>("差异原因");
+            TableColumn<InventoryCheckItem, String> reasonCol = new TableColumn<>(I18nManager.getInstance().get("runtime.difference_reason"));
             reasonCol.setCellValueFactory(new PropertyValueFactory<>("diffReason"));
 
             itemTable.getColumns().addAll(nameCol, bookCol, actualCol, diffCol, reasonCol);
@@ -809,12 +827,12 @@ public class InventoryCheckController {
             List<InventoryCheckItem> items = InventoryCheckItemDAO.findByCheckId(check.id);
             itemTable.setItems(FXCollections.observableArrayList(items));
 
-            Button closeButton = new Button("关闭");
+            Button closeButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.close"));
 
             root.getChildren().addAll(
-                new Label("盘点信息:"),
+                new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.inventory_check_info")),
                 infoPane,
-                new Label("商品明细:"),
+                new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.product_details")),
                 itemTable,
                 closeButton
             );
@@ -823,7 +841,7 @@ public class InventoryCheckController {
             com.cashier.util.ThemeUtils.applyCurrentTheme(scene, getClass());
 
             Stage dialogStage = new Stage();
-            dialogStage.setTitle("盘点详情 - " + check.checkNo);
+            dialogStage.setTitle(I18nManager.getInstance().get("runtime.inventory_check_detail_title", check.checkNo));
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(checkTable.getScene().getWindow());
             dialogStage.setScene(scene);
@@ -835,7 +853,7 @@ public class InventoryCheckController {
 
         } catch (SQLException e) {
             logger.error("加载盘点详情失败", e);
-            showError("加载盘点详情失败: " + e.getMessage());
+            showError(I18nManager.getInstance().get("runtime.inventory_check_detail_failed", e.getMessage()));
         }
     }
 
@@ -847,9 +865,9 @@ public class InventoryCheckController {
         InventoryCheck selected = checkTable.getSelectionModel().getSelectedItem();
         if (selected != null) {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("确认完成");
+            alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.inventory_check_complete_confirm"));
             alert.setHeaderText(null);
-            alert.setContentText("确定要完成盘点单 \"" + selected.checkNo + "\" 吗？完成后将自动调整库存。");
+            alert.setContentText(I18nManager.getInstance().get("runtime.inventory_check_complete_message", selected.checkNo));
 
             if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
                 try {
@@ -864,12 +882,12 @@ public class InventoryCheckController {
                         }
                     }
 
-                    updateStatus("盘点完成: " + selected.checkNo);
+                    updateStatus(I18nManager.getInstance().get("runtime.inventory_check_completed", selected.checkNo));
                     loadChecks();
 
                 } catch (SQLException e) {
                     logger.error("完成盘点失败", e);
-                    showError("完成盘点失败: " + e.getMessage());
+                    showError(I18nManager.getInstance().get("runtime.inventory_check_complete_failed", e.getMessage()));
                 }
             }
         }
@@ -887,11 +905,11 @@ public class InventoryCheckController {
             String statusFilter = statusFilterCombo.getValue();
             List<InventoryCheck> filtered = checks.values().stream()
                 .filter(check -> {
-                    if ("全部".equals(statusFilter)) return true;
+                    if ("all".equals(statusFilter)) return true;
                     switch (statusFilter) {
-                        case "待盘点": return "pending".equals(check.status);
-                        case "盘点中": return "checking".equals(check.status);
-                        case "已完成": return "completed".equals(check.status);
+                        case "pending": return "pending".equals(check.status);
+                        case "checking": return "checking".equals(check.status);
+                        case "completed": return "completed".equals(check.status);
                         default: return true;
                     }
                 })

@@ -1070,8 +1070,8 @@
 /* ========== TabPane 样式 ========== */
 .main-tab-pane {
     -fx-background-color: transparent;
-    -fx-tab-min-height: 24;
-    -fx-tab-max-height: 28;
+    -fx-tab-min-height: 30;
+    -fx-tab-max-height: 34;
 }
 
 .main-tab-pane .tab-header-area {
@@ -1101,13 +1101,19 @@
     -fx-padding: 0 0 0 0;
 }
 
-/* 隐藏使用自定义graphic的标签页的默认文本标签 */
-.main-tab-pane .tab.custom-tab-header .tab-label {
-    -fx-opacity: 0;
-    -fx-max-width: 0;
-    -fx-pref-width: 0;
-    -fx-min-width: 0;
-    -fx-padding: 0;
+/* Page titles are notably longer in English. Keep each custom tab header at
+   its computed content width; TabPane will expose its overflow menu when the
+   whole row no longer fits. */
+.main-tab-pane .content-tab-header {
+    -fx-padding: 0 2 0 2;
+    -fx-background-color: transparent;
+}
+
+.main-tab-pane .content-tab-title {
+    -fx-font-size: 12px;
+    -fx-font-family: "Noto Sans CJK JP", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    -fx-wrap-text: false;
+    -fx-text-overrun: clip;
 }
 
 .main-tab-pane .tab:hover {
@@ -1125,6 +1131,8 @@
     -fx-font-size: 12px;
     -fx-font-weight: normal;
     -fx-font-family: "Noto Sans CJK JP", "Noto Sans SC", "Microsoft YaHei", "SimHei", sans-serif;
+    -fx-padding: 0;
+    -fx-wrap-text: false;
 }
 
 .main-tab-pane .tab:selected .tab-label {
@@ -2083,7 +2091,8 @@
 }
 
 .cart-view .search-field-input {
-    -fx-pref-width: 280px;
+    -fx-min-width: 360px;
+    -fx-pref-width: 480px;
     -fx-min-height: 38px;
     -fx-pref-height: 38px;
     -fx-font-size: 15px;
@@ -2143,6 +2152,47 @@
     -fx-text-fill: #E0E0E0;
 }
 
+.cart-view .product-list-header {
+    -fx-background-color: #3F51B5;
+    -fx-border-color: #303F9F;
+    -fx-border-width: 0 0 1px 0;
+}
+
+.cart-view .product-list-header .product-list-title {
+    -fx-text-fill: #FFFFFF;
+}
+
+.cart-view .product-list-header .double-click-hint,
+.cart-view .product-list-header .stock-hint {
+    -fx-text-fill: #E8EAF6;
+}
+
+.user-role-combo {
+    -fx-padding: 0;
+    -fx-min-height: 38px;
+    -fx-pref-height: 38px;
+}
+
+.user-role-combo > .list-cell {
+    -fx-padding: 5px 10px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-min-height: 36px;
+    -fx-pref-height: 36px;
+}
+
+.return-refund-combo {
+    -fx-padding: 0;
+    -fx-min-height: 38px;
+    -fx-pref-height: 38px;
+}
+
+.return-refund-combo > .list-cell {
+    -fx-padding: 5px 10px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-min-height: 36px;
+    -fx-pref-height: 36px;
+}
+
 /* 会员信息框 */
 .cart-view .member-info-box {
     -fx-background-color: #E3F2FD;
@@ -2159,7 +2209,8 @@
 }
 
 .cart-view .member-phone-input {
-    -fx-pref-width: 130px;
+    -fx-min-width: 200px;
+    -fx-pref-width: 240px;
     -fx-min-height: 36px;
     -fx-font-size: 14px;
 }

@@ -29,6 +29,9 @@ import javafx.stage.Stage;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 
 /**
  * 交易记录控制器
@@ -65,6 +68,9 @@ public class TransactionController {
     private DatePicker endDatePicker;
 
     @FXML
+    private ComboBox<String> quickDateComboBox;
+
+    @FXML
     private TextField searchField;
 
     @FXML
@@ -99,18 +105,28 @@ public class TransactionController {
         // 初始化支付方式下拉框
         paymentMethodComboBox.setItems(FXCollections.observableArrayList(
             "全部",
-            "现金",
-            "微信",
-            "支付宝",
-            "银行卡"
+            "CASH",
+            "WECHAT",
+            "ALIPAY",
+            "CARD"
         ));
+        com.cashier.util.I18nUiUtils.configureComboBox(
+            paymentMethodComboBox, com.cashier.util.I18nUiUtils::paymentMethod);
         paymentMethodComboBox.getSelectionModel().select(0);
+
+        quickDateComboBox.setItems(FXCollections.observableArrayList(
+            "今天", "昨天", "本周", "上周", "本月", "上月", "全部报表", "自定义"
+        ));
+        com.cashier.util.I18nUiUtils.configureComboBox(
+            quickDateComboBox, com.cashier.util.I18nUiUtils::dateRange);
+        quickDateComboBox.setValue("全部报表");
 
         // 设置表格列
         setupTableColumns();
 
         // 加载交易数据
         loadTransactions();
+        quickDateComboBox.setOnAction(event -> handleQuickDateRange());
 
         // 设置表格选择模式
         transactionTable.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
@@ -148,7 +164,7 @@ public class TransactionController {
         itemsColumn.setCellValueFactory(cellData -> {
             Transaction t = cellData.getValue();
             if (t.items == null || t.items.isEmpty()) {
-                return new SimpleStringProperty("无商品");
+                return new SimpleStringProperty(I18nManager.getInstance().get("transaction.no_items"));
             }
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < Math.min(t.items.size(), 3); i++) {
@@ -156,16 +172,18 @@ public class TransactionController {
                 sb.append(t.items.get(i).name);
             }
             if (t.items.size() > 3) {
-                sb.append(" 等").append(t.items.size()).append("件商品");
+                sb.append(I18nManager.getInstance().get("transaction.items_more", t.items.size()));
             }
             return new SimpleStringProperty(sb.toString());
         });
         amountColumn.setCellValueFactory(cellData ->
             new SimpleStringProperty(CurrencyUtil.format(cellData.getValue().finalAmount.doubleValue())));
-        paymentColumn.setCellValueFactory(new PropertyValueFactory<>("paymentMethod"));
+        paymentColumn.setCellValueFactory(cellData -> new SimpleStringProperty(
+            com.cashier.util.I18nUiUtils.paymentMethod(cellData.getValue().paymentMethod)));
         memberColumn.setCellValueFactory(cellData -> {
             String phone = cellData.getValue().memberPhone;
-            return new SimpleStringProperty(phone == null || phone.isEmpty() ? "非会员" : phone);
+            return new SimpleStringProperty(phone == null || phone.isEmpty()
+                ? I18nManager.getInstance().get("runtime.non_member") : phone);
         });
     }
 
@@ -178,7 +196,7 @@ public class TransactionController {
             allTransactions = TransactionDAO.findAll();
         } catch (SQLException e) {
             logger.error("加载交易数据失败", e);
-            showError("加载交易数据失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
             allTransactions = new java.util.ArrayList<>();
         }
         transactionList = FXCollections.observableArrayList(allTransactions);
@@ -191,13 +209,13 @@ public class TransactionController {
      * 更新统计信息
      */
     private void updateStatistics() {
-        countLabel.setText("交易数量: " + transactionList.size());
+        countLabel.setText(I18nManager.getInstance().get("runtime.transaction_count", transactionList.size()));
 
         BigDecimal total = BigDecimal.ZERO;
         for (Transaction t : transactionList) {
             total = total.add(t.getFinalAmount());
         }
-        totalAmountLabel.setText(String.format("总金额: ¥%.2f", total));
+        totalAmountLabel.setText(I18nManager.getInstance().get("runtime.transaction_total", CurrencyUtil.format(total.doubleValue())));
     }
 
     /**
@@ -225,15 +243,17 @@ public class TransactionController {
      */
     private void showTransactionDetail(Transaction transaction) {
         StringBuilder detail = new StringBuilder();
-        detail.append("交易详情\n\n");
-        detail.append("订单号: ").append(transaction.transactionId).append("\n");
-        detail.append("交易时间: ").append(transaction.timestamp).append("\n");
-        detail.append("支付方式: ").append(transaction.paymentMethod).append("\n");
-        detail.append("会员手机: ").append(
-            transaction.memberPhone == null || transaction.memberPhone.isEmpty() ? "无" : transaction.memberPhone
+        I18nManager i18n = I18nManager.getInstance();
+        detail.append(i18n.get("transaction.detail_title")).append("\n\n");
+        detail.append(i18n.get("transaction.order_no")).append(transaction.transactionId).append("\n");
+        detail.append(i18n.get("transaction.time_label")).append(transaction.timestamp).append("\n");
+        detail.append(i18n.get("transaction.payment_label"))
+            .append(com.cashier.util.I18nUiUtils.paymentMethod(transaction.paymentMethod)).append("\n");
+        detail.append(i18n.get("transaction.member_phone")).append(
+            transaction.memberPhone == null || transaction.memberPhone.isEmpty() ? i18n.get("common.none") : transaction.memberPhone
         ).append("\n\n");
 
-        detail.append("商品列表:\n");
+        detail.append(i18n.get("transaction.item_list")).append("\n");
         if (transaction.items != null && !transaction.items.isEmpty()) {
             for (int i = 0; i < transaction.items.size(); i++) {
                 var item = transaction.items.get(i);
@@ -245,13 +265,13 @@ public class TransactionController {
                 ));
             }
         } else {
-            detail.append("  无商品\n");
+            detail.append("  ").append(i18n.get("transaction.no_items")).append("\n");
         }
 
         detail.append("\n");
-        detail.append("商品金额: ¥").append(String.format("%.2f", transaction.totalAmount)).append("\n");
-        detail.append("税费: ¥").append(String.format("%.2f", transaction.tax)).append("\n");
-        detail.append("实付金额: ¥").append(String.format("%.2f", transaction.finalAmount)).append("\n");
+        detail.append(i18n.get("transaction.product_amount")).append(CurrencyUtil.format(transaction.totalAmount.doubleValue())).append("\n");
+        detail.append(i18n.get("transaction.tax_label")).append(CurrencyUtil.format(transaction.tax.doubleValue())).append("\n");
+        detail.append(i18n.get("transaction.paid_amount")).append(CurrencyUtil.format(transaction.finalAmount.doubleValue())).append("\n");
 
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(I18nManager.getInstance().get("label.transaction_detail"));
@@ -268,7 +288,7 @@ public class TransactionController {
     public void handleCreateReturn() {
         Transaction selected = transactionTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            showAlert(Alert.AlertType.WARNING, "提示", "请先选择要退货的交易记录");
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.select_return_transaction"));
             return;
         }
 
@@ -276,7 +296,7 @@ public class TransactionController {
             // 获取交易明细
             List<Product> items = selected.getItems();
             if (items == null || items.isEmpty()) {
-                showAlert(Alert.AlertType.WARNING, "提示", "未找到交易明细信息");
+                showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.transaction_detail_missing"));
                 return;
             }
 
@@ -290,9 +310,15 @@ public class TransactionController {
 
             // 创建对话框
             Stage dialogStage = new Stage();
-            dialogStage.setTitle("创建退货订单 - " + selected.transactionId);
-            dialogStage.initModality(Modality.APPLICATION_MODAL);
-            dialogStage.setScene(new Scene(root));
+            dialogStage.setTitle(I18nManager.getInstance().get("runtime.create_return_title", selected.transactionId));
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(transactionTable.getScene().getWindow());
+            Scene dialogScene = new Scene(root, 1100, 780);
+            com.cashier.util.ThemeUtils.applyCurrentTheme(dialogScene, getClass());
+            dialogStage.setScene(dialogScene);
+            dialogStage.setMinWidth(1000);
+            dialogStage.setMinHeight(720);
+            dialogStage.setResizable(true);
             controller.setDialogStage(dialogStage);
 
             // 显示对话框并等待关闭
@@ -306,7 +332,7 @@ public class TransactionController {
 
         } catch (Exception e) {
             logger.error("打开退货订单对话框失败", e);
-            showAlert(Alert.AlertType.ERROR, I18nManager.getInstance().get("label.error"), "打开退货订单对话框失败: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, I18nManager.getInstance().get("label.error"), I18nManager.getInstance().get("runtime.return_dialog_failed", e.getMessage()));
         }
     }
 
@@ -327,7 +353,41 @@ public class TransactionController {
         endDatePicker.setValue(null);
         searchField.clear();
         paymentMethodComboBox.getSelectionModel().select(0);
+        quickDateComboBox.setValue("全部报表");
         applyFilters();
+    }
+
+    @FXML
+    public void handleQuickDateRange() {
+        String option = quickDateComboBox.getValue();
+        if (option == null || "自定义".equals(option)) {
+            return;
+        }
+
+        LocalDate today = LocalDate.now();
+        switch (option) {
+            case "今天" -> setDateRange(today, today);
+            case "昨天" -> setDateRange(today.minusDays(1), today.minusDays(1));
+            case "本周" -> setDateRange(
+                today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)), today);
+            case "上周" -> {
+                LocalDate lastWeekEnd = today.with(TemporalAdjusters.previous(DayOfWeek.MONDAY)).minusDays(1);
+                setDateRange(lastWeekEnd.minusDays(6), lastWeekEnd);
+            }
+            case "本月" -> setDateRange(today.withDayOfMonth(1), today);
+            case "上月" -> {
+                LocalDate lastMonth = today.minusMonths(1);
+                setDateRange(lastMonth.withDayOfMonth(1), lastMonth.with(TemporalAdjusters.lastDayOfMonth()));
+            }
+            case "全部报表" -> setDateRange(null, null);
+            default -> { return; }
+        }
+        applyFilters();
+    }
+
+    private void setDateRange(LocalDate start, LocalDate end) {
+        startDatePicker.setValue(start);
+        endDatePicker.setValue(end);
     }
 
     /**
@@ -384,7 +444,7 @@ public class TransactionController {
     @FXML
     public void handleExport() {
         if (transactionList.isEmpty()) {
-            showError("没有可导出的交易记录");
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.no_export_transactions"));
             return;
         }
 
@@ -392,7 +452,7 @@ public class TransactionController {
         ChoiceDialog<String> formatDialog = new ChoiceDialog<>(
             "Excel", "Excel", "PDF"
         );
-        formatDialog.setTitle("选择导出格式");
+        formatDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("label.export_format"));
         formatDialog.setHeaderText(I18nManager.getInstance().get("label.please_select_format"));
         formatDialog.setContentText(I18nManager.getInstance().get("label.format") + ":");
 
@@ -483,7 +543,7 @@ public class TransactionController {
             }
         } catch (Exception e) {
             logger.error("导出交易记录失败", e);
-            showError("导出失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_failed_detail", e.getMessage()));
         }
     }
 

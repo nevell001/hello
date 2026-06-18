@@ -120,7 +120,7 @@ public class PurchaseApprovalController {
             }
         } catch (SQLException e) {
             logger.error("加载待审批订单失败", e);
-            showError("加载待审批订单失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
             orders = new HashMap<>();
         }
         orderList = FXCollections.observableArrayList(orders.values());
@@ -140,7 +140,7 @@ public class PurchaseApprovalController {
             }
         } catch (SQLException e) {
             logger.error("加载订单失败", e);
-            showError("加载订单失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
             orders = new HashMap<>();
         }
         orderList = FXCollections.observableArrayList(orders.values());
@@ -152,13 +152,13 @@ public class PurchaseApprovalController {
      * 更新订单数量标签
      */
     private void updateCountLabel() {
-        countLabel.setText("当前显示: " + orderList.size() + " 条");
+        countLabel.setText(I18nManager.getInstance().get("runtime.approval_showing", orderList.size()));
         try {
             int pendingCount = PurchaseOrderDAO.countByStatus("pending");
-            pendingCountLabel.setText("待审批: " + pendingCount + " 条");
+            pendingCountLabel.setText(I18nManager.getInstance().get("runtime.approval_pending", pendingCount));
         } catch (SQLException e) {
             logger.error("统计待审批订单失败", e);
-            pendingCountLabel.setText("待审批: 0 条");
+            pendingCountLabel.setText(I18nManager.getInstance().get("runtime.approval_pending", 0));
         }
     }
 
@@ -202,7 +202,7 @@ public class PurchaseApprovalController {
     private void showApprovalDialog(PurchaseOrder order, String action) {
         try {
             Stage dialogStage = new Stage();
-            dialogStage.setTitle("approve".equals(action) ? "审批通过" : "审批拒绝");
+            dialogStage.setTitle("approve".equals(action) ? com.cashier.i18n.I18nManager.getInstance().get("purchase_approval.approve") : com.cashier.i18n.I18nManager.getInstance().get("purchase_approval.reject"));
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(orderTable.getScene().getWindow());
 
@@ -213,34 +213,34 @@ public class PurchaseApprovalController {
             GridPane infoPane = new GridPane();
             infoPane.setHgap(10);
             infoPane.setVgap(10);
-            infoPane.add(new Label("订单号:"), 0, 0);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("checkout.order_number")), 0, 0);
             infoPane.add(new Label(order.orderNo), 1, 0);
-            infoPane.add(new Label("供应商:"), 0, 1);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("product.edit.supplier")), 0, 1);
             infoPane.add(new Label(order.supplierName), 1, 1);
-            infoPane.add(new Label("采购日期:"), 0, 2);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.purchase_date")), 0, 2);
             infoPane.add(new Label(order.purchaseDate), 1, 2);
-            infoPane.add(new Label("采购人:"), 0, 3);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.purchaser")), 0, 3);
             infoPane.add(new Label(order.purchaser), 1, 3);
-            infoPane.add(new Label("总金额:"), 0, 4);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.total_amount")), 0, 4);
             infoPane.add(new Label(CurrencyUtil.format(order.totalAmount.doubleValue())), 1, 4);
 
             // 审批意见
             TextArea remarkArea = new TextArea();
-            remarkArea.setPromptText("请输入审批意见");
+            remarkArea.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("return_approval.approval_comment_hint"));
             remarkArea.setPrefRowCount(3);
 
             // 按钮
-            Button confirmButton = new Button("approve".equals(action) ? "通过" : "拒绝");
+            Button confirmButton = new Button("approve".equals(action) ? I18nManager.getInstance().get("runtime.approve") : I18nManager.getInstance().get("return_approval.reject"));
             confirmButton.setStyle("approve".equals(action)
                 ? "-fx-background-color: #4CAF50; -fx-text-fill: white;"
                 : "-fx-background-color: #f44336; -fx-text-fill: white;");
 
-            Button cancelButton = new Button("取消");
+            Button cancelButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("return_order.cancel"));
 
             confirmButton.setOnAction(e -> {
                 String remark = remarkArea.getText().trim();
                 if ("reject".equals(action) && remark.isEmpty()) {
-                    showError("请输入审批意见");
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("return_approval.approval_comment_hint"));
                     return;
                 }
 
@@ -265,7 +265,7 @@ public class PurchaseApprovalController {
 
                 } catch (SQLException ex) {
                     logger.error("审批失败", ex);
-                    showError("审批失败: " + ex.getMessage());
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + ex.getMessage());
                 }
             });
 
@@ -275,9 +275,9 @@ public class PurchaseApprovalController {
             buttonBox.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
 
             root.getChildren().addAll(
-                new Label("订单信息:"),
+                new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.order_info")),
                 infoPane,
-                new Label("审批意见:"),
+                new Label(com.cashier.i18n.I18nManager.getInstance().get("return_approval.approval_comment")),
                 remarkArea,
                 buttonBox
             );
@@ -290,7 +290,7 @@ public class PurchaseApprovalController {
 
         } catch (Exception e) {
             logger.error("显示审批对话框失败", e);
-            showError("加载对话框失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
     }
 
@@ -317,23 +317,23 @@ public class PurchaseApprovalController {
             GridPane infoPane = new GridPane();
             infoPane.setHgap(10);
             infoPane.setVgap(10);
-            infoPane.add(new Label("订单号:"), 0, 0);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("checkout.order_number")), 0, 0);
             infoPane.add(new Label(order.orderNo), 1, 0);
-            infoPane.add(new Label("供应商:"), 0, 1);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("product.edit.supplier")), 0, 1);
             infoPane.add(new Label(order.supplierName), 1, 1);
-            infoPane.add(new Label("采购日期:"), 0, 2);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.purchase_date")), 0, 2);
             infoPane.add(new Label(order.purchaseDate), 1, 2);
-            infoPane.add(new Label("预计到货:"), 0, 3);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.expected_date")), 0, 3);
             infoPane.add(new Label(order.expectedDate != null ? order.expectedDate : "-"), 1, 3);
-            infoPane.add(new Label("采购人:"), 0, 4);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.purchaser")), 0, 4);
             infoPane.add(new Label(order.purchaser), 1, 4);
-            infoPane.add(new Label("状态:"), 0, 5);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("return_order_list.status_label")), 0, 5);
             infoPane.add(new Label(order.getStatusDisplayName()), 1, 5);
-            infoPane.add(new Label("总金额:"), 0, 6);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.total_amount")), 0, 6);
             infoPane.add(new Label(CurrencyUtil.format(order.totalAmount.doubleValue())), 1, 6);
 
             // 审批历史
-            Label approvalHistoryLabel = new Label("审批历史:");
+            Label approvalHistoryLabel = new Label(I18nManager.getInstance().get("runtime.approval_history"));
             TextArea approvalHistoryArea = new TextArea();
             approvalHistoryArea.setEditable(false);
             approvalHistoryArea.setPrefRowCount(3);
@@ -353,21 +353,21 @@ public class PurchaseApprovalController {
                 approvalHistoryArea.setText(history.toString());
             } catch (SQLException e) {
                 logger.error("加载审批历史失败", e);
-                approvalHistoryArea.setText("加载审批历史失败");
+                approvalHistoryArea.setText(I18nManager.getInstance().get("runtime.approval_history_failed"));
             }
 
             // 商品明细
             TableView<PurchaseOrderItem> itemTable = new TableView<>();
-            TableColumn<PurchaseOrderItem, String> nameCol = new TableColumn<>("商品名称");
+            TableColumn<PurchaseOrderItem, String> nameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_approval.product_name"));
             nameCol.setCellValueFactory(new PropertyValueFactory<>("productName"));
 
-            TableColumn<PurchaseOrderItem, Number> qtyCol = new TableColumn<>("数量");
+            TableColumn<PurchaseOrderItem, Number> qtyCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("cart.quantity"));
             qtyCol.setCellValueFactory(new PropertyValueFactory<>("quantity"));
 
-            TableColumn<PurchaseOrderItem, Number> priceCol = new TableColumn<>("单价");
+            TableColumn<PurchaseOrderItem, Number> priceCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_approval.unit_price"));
             priceCol.setCellValueFactory(new PropertyValueFactory<>("unitPrice"));
 
-            TableColumn<PurchaseOrderItem, String> totalCol = new TableColumn<>("小计");
+            TableColumn<PurchaseOrderItem, String> totalCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("runtime.subtotal"));
             totalCol.setCellValueFactory(cellData ->
                 new SimpleStringProperty(String.format("%.2f", cellData.getValue().totalPrice)));
 
@@ -378,19 +378,19 @@ public class PurchaseApprovalController {
 
             // 创建对话框Stage（需要在按钮回调之前声明）
             final Stage dialogStage = new Stage();
-            dialogStage.setTitle("订单详情 - " + order.orderNo);
+            dialogStage.setTitle(I18nManager.getInstance().get("runtime.purchase_order_detail_title", order.orderNo));
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(orderTable.getScene().getWindow());
 
-            Button closeButton = new Button("关闭");
+            Button closeButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.close"));
             closeButton.setOnAction(e -> dialogStage.close());
 
             root.getChildren().addAll(
-                new Label("订单信息:"),
+                new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.order_info")),
                 infoPane,
                 approvalHistoryLabel,
                 approvalHistoryArea,
-                new Label("商品明细:"),
+                new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.product_details")),
                 itemTable,
                 closeButton
             );
@@ -403,7 +403,7 @@ public class PurchaseApprovalController {
 
         } catch (SQLException e) {
             logger.error("加载订单详情失败", e);
-            showError("加载订单详情失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
     }
 

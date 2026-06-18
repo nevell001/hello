@@ -166,7 +166,7 @@ public class RechargeController {
             String amountText = amountField.getText().trim();
             if (amountText.isEmpty()) {
                 newBalanceLabel.setText(CurrencyUtil.format(member.getBalance().doubleValue()));
-                bonusPointsLabel.setText("0");
+                bonusPointsLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("member.edit.points_hint"));
                 okButton.setDisable(true);
                 return;
             }
@@ -174,7 +174,7 @@ public class RechargeController {
             double amount = FormValidator.parseDouble(amountText, 0);
             if (amount <= 0) {
                 newBalanceLabel.setText(CurrencyUtil.format(member.getBalance().doubleValue()));
-                bonusPointsLabel.setText("0");
+                bonusPointsLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("member.edit.points_hint"));
                 okButton.setDisable(true);
                 return;
             }
@@ -191,7 +191,7 @@ public class RechargeController {
 
         } catch (NumberFormatException e) {
             newBalanceLabel.setText(CurrencyUtil.format(member.getBalance().doubleValue()));
-            bonusPointsLabel.setText("0");
+            bonusPointsLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("member.edit.points_hint"));
             okButton.setDisable(true);
         }
     }
@@ -207,7 +207,7 @@ public class RechargeController {
 
             boolean success = com.cashier.service.MemberService.recharge(member, rechargeAmount, paymentMethod, "系统");
             if (!success) {
-                showError("会员充值失败，请稍后重试。");
+                showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.recharge_failed"));
                 return;
             }
 
@@ -256,7 +256,7 @@ public class RechargeController {
             return true;
         } else {
             Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("输入错误");
+            alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.input_error"));
             alert.setHeaderText(null);
             alert.setContentText(errorMessage);
             alert.showAndWait();

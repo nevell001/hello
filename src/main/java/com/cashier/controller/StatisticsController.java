@@ -125,6 +125,8 @@ public class StatisticsController {
             "上月",
             "自定义"
         ));
+        com.cashier.util.I18nUiUtils.configureComboBox(
+            timeRangeComboBox, com.cashier.util.I18nUiUtils::dateRange);
         timeRangeComboBox.getSelectionModel().select(0);
 
         // 设置默认日期范围（今天）
@@ -179,7 +181,7 @@ public class StatisticsController {
             allTransactions = TransactionDAO.findAll();
         } catch (SQLException e) {
             logger.error("加载交易数据失败", e);
-            showError("加载交易数据失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
             allTransactions = new java.util.ArrayList<>();
         }
         logger.info("StatisticsController: 加载了 {} 条交易记录", allTransactions.size());
@@ -239,12 +241,12 @@ public class StatisticsController {
         LocalDate endDate = endDatePicker.getValue();
 
         if (startDate == null || endDate == null) {
-            showError("请选择日期范围！");
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.select_date_range"));
             return;
         }
 
         if (startDate.isAfter(endDate)) {
-            showError("开始日期不能晚于结束日期！");
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.invalid_date_range"));
             return;
         }
 
@@ -354,7 +356,7 @@ public class StatisticsController {
                     // 分类统计
                     String category = item.category;
                     if (category == null || category.isEmpty()) {
-                        category = "未分类";
+                        category = I18nManager.getInstance().get("report.uncategorized");
                     }
                     categoryCountMap.put(category, categoryCountMap.getOrDefault(category, 0) + item.quantity);
                     categoryAmountMap.put(category, categoryAmountMap.getOrDefault(category, 0.0) + item.getPrice().multiply(BigDecimal.valueOf(item.quantity)).doubleValue());
@@ -393,8 +395,8 @@ public class StatisticsController {
             topProductCountLabel.setText(String.valueOf(productCountMap.get(topProduct)));
             topProductAmountLabel.setText(CurrencyUtil.format(productAmountMap.get(topProduct)));
         } else {
-            topProductLabel.setText("无");
-            topProductCountLabel.setText("0");
+            topProductLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("statistics.no_data"));
+            topProductCountLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("member.edit.points_hint"));
             topProductAmountLabel.setText(CurrencyUtil.format(0));
         }
 
@@ -448,7 +450,7 @@ public class StatisticsController {
     @FXML
     public void handleExport() {
         if (allTransactions == null || allTransactions.isEmpty()) {
-            showError("没有可导出的统计数据");
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.no_export_statistics"));
             return;
         }
 
@@ -456,9 +458,9 @@ public class StatisticsController {
         ChoiceDialog<String> formatDialog = new ChoiceDialog<>(
             "Excel", "Excel", "PDF"
         );
-        formatDialog.setTitle("选择导出格式");
-        formatDialog.setHeaderText("请选择导出格式");
-        formatDialog.setContentText("格式:");
+        formatDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("label.export_format"));
+        formatDialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get("label.please_select_format"));
+        formatDialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.format_label"));
 
         formatDialog.showAndWait().ifPresent(format -> {
             com.cashier.util.ExportUtil.ExportFormat exportFormat =
@@ -530,17 +532,17 @@ public class StatisticsController {
 
             if (filePath != null) {
                 Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                successAlert.setTitle("导出成功");
+                successAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("success.export"));
                 successAlert.setHeaderText(null);
-                successAlert.setContentText("文件已成功导出到:\n" + filePath);
+                successAlert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_success_path") + "\n" + filePath);
                 successAlert.showAndWait();
                 logger.info("统计数据导出成功: {}", filePath);
             } else {
-                showError("导出失败，请查看日志获取详细信息");
+                showError(com.cashier.i18n.I18nManager.getInstance().get("error.export_failed"));
             }
         } catch (Exception e) {
             logger.error("导出统计数据失败", e);
-            showError("导出失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_failed_detail", e.getMessage()));
         }
     }
 
@@ -579,20 +581,20 @@ public class StatisticsController {
         ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList();
         
         if (cashSales > 0) {
-            pieChartData.add(new PieChart.Data("现金", cashSales));
+            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get("runtime.payment.cash"), cashSales));
         }
         if (wechatSales > 0) {
-            pieChartData.add(new PieChart.Data("微信", wechatSales));
+            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get("runtime.payment.wechat"), wechatSales));
         }
         if (alipaySales > 0) {
-            pieChartData.add(new PieChart.Data("支付宝", alipaySales));
+            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get("runtime.payment.alipay"), alipaySales));
         }
         if (cardSales > 0) {
-            pieChartData.add(new PieChart.Data("银行卡", cardSales));
+            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get("runtime.payment.card"), cardSales));
         }
         
         paymentMethodPieChart.setData(pieChartData);
-        paymentMethodPieChart.setTitle("支付方式分布");
+        paymentMethodPieChart.setTitle(com.cashier.i18n.I18nManager.getInstance().get("statistics.payment_distribution"));
         paymentMethodPieChart.setLegendSide(javafx.geometry.Side.RIGHT);
         
         // 为每个数据项添加百分比显示
@@ -623,7 +625,7 @@ public class StatisticsController {
         
         // 创建数据系列
         XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.setName("销售额");
+        series.setName(I18nManager.getInstance().get("chart.series.sales"));
         
         for (Map.Entry<String, Double> entry : dailySalesMap.entrySet()) {
             series.getData().add(new XYChart.Data<>(entry.getKey(), entry.getValue()));
@@ -631,9 +633,9 @@ public class StatisticsController {
         
         salesTrendLineChart.getData().clear();
         salesTrendLineChart.getData().add(series);
-        salesTrendLineChart.setTitle("销售趋势");
-        salesTrendLineChart.getXAxis().setLabel("日期");
-        salesTrendLineChart.getYAxis().setLabel("销售额（元）");
+        salesTrendLineChart.setTitle(com.cashier.i18n.I18nManager.getInstance().get("statistics.sales_trend"));
+        salesTrendLineChart.getXAxis().setLabel(I18nManager.getInstance().get("chart.date"));
+        salesTrendLineChart.getYAxis().setLabel(I18nManager.getInstance().get("chart.series.sales"));
         salesTrendLineChart.setCreateSymbols(true);
         salesTrendLineChart.setLegendVisible(true);
     }
@@ -644,7 +646,7 @@ public class StatisticsController {
     private void updateCategorySalesBarChart(Map<String, Integer> categoryCountMap, Map<String, Double> categoryAmountMap) {
         // 创建数据系列
         XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.setName("销售额");
+        series.setName(I18nManager.getInstance().get("chart.series.sales"));
         
         // 按销售额排序
         List<Map.Entry<String, Double>> sortedCategories = new ArrayList<>(categoryAmountMap.entrySet());
@@ -659,9 +661,9 @@ public class StatisticsController {
         
         categorySalesBarChart.getData().clear();
         categorySalesBarChart.getData().add(series);
-        categorySalesBarChart.setTitle("分类销售排名");
-        categorySalesBarChart.getXAxis().setLabel("分类");
-        categorySalesBarChart.getYAxis().setLabel("销售额（元）");
+        categorySalesBarChart.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.chart.category_sales"));
+        categorySalesBarChart.getXAxis().setLabel(I18nManager.getInstance().get("chart.category"));
+        categorySalesBarChart.getYAxis().setLabel(I18nManager.getInstance().get("chart.series.sales"));
         categorySalesBarChart.setLegendVisible(true);
     }
 

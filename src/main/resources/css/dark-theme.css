@@ -467,7 +467,6 @@
     -fx-background-color: #424242;
     -fx-text-fill: #E0E0E0;
     -fx-min-width: 97px;
-    -fx-pref-width: 121px;
 }
 
 .tab-pane .tab .tab-label {
@@ -593,7 +592,6 @@
     -fx-background-color: #424242;
     -fx-text-fill: #E0E0E0;
     -fx-min-width: 97px;
-    -fx-pref-width: 121px;
 }
 
 .tab-pane .tab .tab-label {
@@ -1326,6 +1324,10 @@
 .combo-box > *.list-cell,
 .combo-box > *.cell,
 .clean-combo-box .list-cell {
+    -fx-text-fill: #F5F5F5;
+}
+
+.return-refund-combo > .list-cell {
     -fx-text-fill: #F5F5F5;
 }
 

@@ -11,74 +11,41 @@
       spacing="0"
       styleClass="shift-view">
 
-    <!-- 顶部工具栏 -->
-    <HBox spacing="10" styleClass="toolbar" alignment="CENTER_LEFT">
+    <!-- 顶部工具栏：操作与日期筛选分两行 -->
+    <VBox spacing="6" styleClass="toolbar">
         <padding>
             <Insets top="10" right="10" bottom="10" left="10"/>
         </padding>
 
-        <!-- 开班和交班按钮 -->
-        <Button fx:id="startShiftButton"
-                text="%shift.start"
-                onAction="#handleStartShift"
-                prefWidth="80"
-                styleClass="primary-button"/>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Button fx:id="startShiftButton" text="%shift.start" onAction="#handleStartShift"
+                    minWidth="100" styleClass="primary-button"/>
+            <Button fx:id="endShiftButton" text="%shift.end" onAction="#handleEndShift"
+                    minWidth="100" styleClass="warning-button"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="viewDetailButton" text="%shift.view_detail" onAction="#handleViewDetail"
+                    minWidth="110" styleClass="primary-button"/>
+            <Button fx:id="exportButton" text="%shift.export" onAction="#handleExport"
+                    minWidth="90" styleClass="secondary-button"/>
+            <Button fx:id="refreshButton" text="%shift.refresh" onAction="#handleRefresh"
+                    minWidth="90" styleClass="secondary-button"/>
+        </HBox>
 
-        <Button fx:id="endShiftButton"
-                text="%shift.end"
-                onAction="#handleEndShift"
-                prefWidth="80"
-                styleClass="warning-button"/>
-
-        <Separator orientation="VERTICAL"/>
-
-        <!-- 筛选条件 -->
-        <Label text="%shift.date_from"/>
-        <DatePicker fx:id="startDatePicker" prefWidth="150"/>
-
-        <Label text="%shift.date_to"/>
-        <DatePicker fx:id="endDatePicker" prefWidth="150"/>
-
-        <Separator orientation="VERTICAL"/>
-
-        <!-- 搜索 -->
-        <Label text="%shift.search_label"/>
-        <TextField fx:id="searchField"
-                  promptText="%shift.search_hint"
-                  prefWidth="200"
-                  onAction="#handleSearch"/>
-
-        <Button text="%common.search"
-                onAction="#handleSearch"
-                prefWidth="60"
-                styleClass="secondary-button"/>
-
-        <Button text="%common.clear"
-                onAction="#handleClearSearch"
-                prefWidth="60"
-                styleClass="secondary-button"/>
-
-        <Region HBox.hgrow="ALWAYS"/>
-
-        <!-- 操作按钮 -->
-        <Button fx:id="viewDetailButton"
-                text="%shift.view_detail"
-                onAction="#handleViewDetail"
-                prefWidth="80"
-                styleClass="primary-button"/>
-
-        <Button fx:id="exportButton"
-                text="%shift.export"
-                onAction="#handleExport"
-                prefWidth="60"
-                styleClass="secondary-button"/>
-
-        <Button fx:id="refreshButton"
-                text="%shift.refresh"
-                onAction="#handleRefresh"
-                prefWidth="60"
-                styleClass="secondary-button"/>
-    </HBox>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="%shift.date_from"/>
+            <DatePicker fx:id="startDatePicker" minWidth="170"/>
+            <Label text="%shift.date_to"/>
+            <DatePicker fx:id="endDatePicker" minWidth="170"/>
+            <Separator orientation="VERTICAL"/>
+            <Label text="%shift.search_label"/>
+            <TextField fx:id="searchField" promptText="%shift.search_hint"
+                       minWidth="220" HBox.hgrow="ALWAYS" onAction="#handleSearch"/>
+            <Button text="%common.search" onAction="#handleSearch"
+                    minWidth="80" styleClass="secondary-button"/>
+            <Button text="%common.clear" onAction="#handleClearSearch"
+                    minWidth="80" styleClass="secondary-button"/>
+        </HBox>
+    </VBox>
 
     <!-- 统计信息栏 -->
     <HBox spacing="20" styleClass="status-bar" alignment="CENTER_LEFT">

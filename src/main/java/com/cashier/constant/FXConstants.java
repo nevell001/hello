@@ -10,9 +10,6 @@ public class FXConstants {
 
     // ========== 主题常量 ==========
 
-    /** 默认主题 */
-    public static final String DEFAULT_THEME = "light";
-
     /** 浅色主题 */
     public static final String LIGHT_THEME = "light";
 
@@ -21,6 +18,9 @@ public class FXConstants {
 
     /** LiSuan 主题 */
     public static final String LISUAN_THEME = "lisuan";
+
+    /** 默认主题 */
+    public static final String DEFAULT_THEME = LISUAN_THEME;
 
     // ========== 颜色常量 - 语义化颜色 ==========
 

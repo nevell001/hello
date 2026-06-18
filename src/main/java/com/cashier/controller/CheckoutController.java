@@ -123,7 +123,7 @@ public class CheckoutController {
     private void initialize() {
         // 生成订单号
         orderNumber = generateOrderNumber();
-        orderNumberLabel.setText("订单号: " + orderNumber);
+        orderNumberLabel.setText(I18nManager.getInstance().get("runtime.order_number_value", orderNumber));
 
         // 初始化购物车列表
         cartList = FXCollections.observableArrayList();
@@ -250,7 +250,7 @@ public class CheckoutController {
      */
     public void setCurrentUser(User user) {
         this.currentUser = user;
-        cashierLabel.setText("收银员: " + user.name);
+        cashierLabel.setText(I18nManager.getInstance().get("runtime.cashier_value", user.name));
     }
 
     /**
@@ -272,12 +272,12 @@ public class CheckoutController {
 
         if (member != null) {
             currentMember = member;
-            memberInfoLabel.setText(String.format("会员: %s (余额: ¥%.2f, 积分: %d)", 
-                member.name, member.getBalance(), member.getPoints().intValue()));
+            memberInfoLabel.setText(I18nManager.getInstance().get("runtime.member_summary",
+                    member.name, CurrencyUtil.format(member.getBalance().doubleValue()), member.getPoints().intValue()));
             setStateMessageStyle(memberInfoLabel, true);
         } else {
             currentMember = null;
-            memberInfoLabel.setText("未找到该会员");
+            memberInfoLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("runtime.member_not_found"));
             setStateMessageStyle(memberInfoLabel, false);
         }
 
@@ -357,19 +357,20 @@ public class CheckoutController {
 
         totalQuantityLabel.setText(String.valueOf(totalQuantity));
         totalAmountLabel.setText(CurrencyUtil.format(totalAmount.doubleValue()));
-        memberDiscountLabel.setText(String.format("%.1f折", currentMember != null ? currentMember.getDiscountRate() : BigDecimal.TEN));
+        memberDiscountLabel.setText(I18nManager.getInstance().get("runtime.discount_rate",
+                currentMember != null ? currentMember.getDiscountRate() : BigDecimal.TEN));
 
         // 显示优惠明细
         if (promotionDiscount.compareTo(BigDecimal.ZERO) > 0 && appliedPromotion != null) {
-            String promotionType = "优惠券".equals(appliedPromotion.type) ? "优惠券" : "促销";
-            discountLabel.setText(String.format("-%s (%s: %s - %s)",
-                CurrencyUtil.format(totalDiscountAmount.doubleValue()),
-                promotionType, appliedPromotion.name,
-                CurrencyUtil.format(promotionDiscount.doubleValue())));
+            String promotionType = "优惠券".equals(appliedPromotion.type)
+                    ? I18nManager.getInstance().get("runtime.coupon")
+                    : I18nManager.getInstance().get("runtime.promotion");
+            discountLabel.setText(I18nManager.getInstance().get("runtime.promotion_discount_detail",
+                    CurrencyUtil.format(totalDiscountAmount.doubleValue()), promotionType,
+                    appliedPromotion.name, CurrencyUtil.format(promotionDiscount.doubleValue())));
         } else if (promotionDiscount.compareTo(BigDecimal.ZERO) > 0) {
-            discountLabel.setText(String.format("-%s (促销: %s)",
-                CurrencyUtil.format(totalDiscountAmount.doubleValue()),
-                CurrencyUtil.format(promotionDiscount.doubleValue())));
+            discountLabel.setText(I18nManager.getInstance().get("runtime.promotion_discount",
+                    CurrencyUtil.format(totalDiscountAmount.doubleValue()), CurrencyUtil.format(promotionDiscount.doubleValue())));
         } else {
             discountLabel.setText(CurrencyUtil.format(totalDiscountAmount.doubleValue()));
             discountLabel.setText("-" + discountLabel.getText());
@@ -416,13 +417,13 @@ public class CheckoutController {
      */
     public void handlePayment(String paymentMethod) {
         if (cartList.isEmpty()) {
-            showError("购物车为空，无法支付！");
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.cart_empty_payment"));
             return;
         }
 
         // 检查是否有活跃班次
         if (!com.cashier.service.DataService.hasActiveShift()) {
-            showError("当前没有开班，请先开班后再进行结算操作！");
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.no_active_shift"));
             return;
         }
 
@@ -546,7 +547,7 @@ public class CheckoutController {
             // 直接插入新交易，而不是批量插入所有交易
             com.cashier.dao.TransactionDAO.insert(transaction);
         } catch (Exception e) {
-            showError("保存交易记录失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.save_data") + ": " + e.getMessage());
             logger.error("保存交易记录失败", e);
         }
     }
@@ -559,7 +560,7 @@ public class CheckoutController {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle(I18nManager.getInstance().get("common.confirm"));
         alert.setHeaderText(null);
-        alert.setContentText("确定要取消结账吗？购物车将被清空。");
+        alert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.checkout_cancel_confirm"));
 
         if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
             // 关闭结账界面窗口
@@ -575,7 +576,7 @@ public class CheckoutController {
     @FXML
     public void handlePrint() {
         if (lastTransaction == null) {
-            FXUtils.showError("没有可打印的交易记录");
+            FXUtils.showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.no_receipt_data"));
             return;
         }
 
@@ -588,7 +589,8 @@ public class CheckoutController {
             );
 
             if (receiptPath != null) {
-                FXUtils.showInfoAlert("打印成功", "小票已打印成功！");
+                FXUtils.showInfoAlert(I18nManager.getInstance().get("runtime.print_success"),
+                    I18nManager.getInstance().get("runtime.receipt_printed_success"));
             } else {
                 // 如果自动打印失败，生成小票文件并提示用户
                 receiptPath = ReceiptPrinter.generateReceiptOnly(
@@ -599,19 +601,19 @@ public class CheckoutController {
 
                 if (receiptPath != null) {
                     Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                    alert.setTitle("小票已生成");
+                    alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.receipt_generated"));
                     alert.setHeaderText(null);
-                    alert.setContentText("小票文件已生成：\n" + receiptPath + "\n\n是否打开文件？");
+                    alert.setContentText(I18nManager.getInstance().get("runtime.receipt_generated_message", receiptPath));
 
                     if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
                         ReceiptPrinter.openReceiptFile(receiptPath);
                     }
                 } else {
-                    FXUtils.showError("生成小票失败");
+                    FXUtils.showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed"));
                 }
             }
         } catch (Exception e) {
-            FXUtils.showError("打印小票失败: " + e.getMessage());
+            FXUtils.showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
             logger.error("打印小票失败", e);
         }
     }
@@ -676,17 +678,11 @@ public class CheckoutController {
      */
     private void showSuccess(String paymentMethod, Transaction transaction) {
         I18nManager i18n = I18nManager.getInstance();
-        String content = String.format(
-            i18n.get("payment.success") + "\n\n" +
-            i18n.get("label.order_id") + ": %s\n" +
-            i18n.get("transaction.payment_method") + ": %s\n" +
-            i18n.get("transaction.amount") + ": ¥%.2f\n" +
-            i18n.get("cart.product_count") + ": %d",
+        String content = i18n.get("payment.success.details",
             transaction.transactionId,
-            paymentMethod,
-            getFinalAmount(),
-            cartList.size()
-        );
+            localizePaymentMethod(paymentMethod),
+            CurrencyUtil.format(getFinalAmount().doubleValue()),
+            cartList.size());
 
         DialogBuilder.information()
                 .title(i18n.get("label.success"))
@@ -694,6 +690,17 @@ public class CheckoutController {
                 .content(content)
                 .width(400)
                 .show();
+    }
+
+    private String localizePaymentMethod(String paymentMethod) {
+        String key = switch (paymentMethod) {
+            case "现金" -> "runtime.payment.cash";
+            case "微信" -> "runtime.payment.wechat";
+            case "支付宝" -> "runtime.payment.alipay";
+            case "银行卡" -> "runtime.payment.card";
+            default -> null;
+        };
+        return key == null ? paymentMethod : I18nManager.getInstance().get(key);
     }
 
     /**
@@ -746,7 +753,7 @@ public class CheckoutController {
             "Ctrl+/ - 显示快捷键帮助";
 
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("快捷键帮助");
+        alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("shortcut.help"));
         alert.setHeaderText(null);
         alert.setContentText(shortcuts);
         alert.getDialogPane().setPrefWidth(500);
@@ -760,7 +767,7 @@ public class CheckoutController {
     public void handleVerifyCoupon() {
         String couponCode = couponCodeField.getText().trim();
         if (couponCode.isEmpty()) {
-            showError("请输入优惠券代码！");
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.coupon_required"));
             return;
         }
 
@@ -777,39 +784,39 @@ public class CheckoutController {
             }
 
             if (coupon == null) {
-                showError("优惠券代码无效！");
-                couponInfoLabel.setText("优惠券代码无效");
+                showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.coupon_invalid"));
+                couponInfoLabel.setText(I18nManager.getInstance().get("runtime.coupon_invalid"));
                 setStateMessageStyle(couponInfoLabel, false);
                 return;
             }
 
             // 检查优惠券是否启用
             if (!coupon.enabled) {
-                showError("优惠券已禁用！");
-                couponInfoLabel.setText("优惠券已禁用");
+                showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.coupon_disabled"));
+                couponInfoLabel.setText(I18nManager.getInstance().get("runtime.coupon_disabled"));
                 setStateMessageStyle(couponInfoLabel, false);
                 return;
             }
 
             // 检查优惠券是否有效期内
             if (!coupon.isValid()) {
-                showError("优惠券已过期！");
-                couponInfoLabel.setText("优惠券已过期");
+                showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.coupon_expired"));
+                couponInfoLabel.setText(I18nManager.getInstance().get("runtime.coupon_expired"));
                 setStateMessageStyle(couponInfoLabel, false);
                 return;
             }
 
             // 检查使用次数
             if (coupon.maxUsage > 0 && coupon.usageCount >= coupon.maxUsage) {
-                showError("优惠券已达到最大使用次数！");
-                couponInfoLabel.setText("优惠券已达到最大使用次数");
+                showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.coupon_limit"));
+                couponInfoLabel.setText(I18nManager.getInstance().get("runtime.coupon_limit"));
                 setStateMessageStyle(couponInfoLabel, false);
                 return;
             }
 
             // 验证成功，应用优惠券
             appliedCoupon = coupon;
-            couponInfoLabel.setText(String.format("优惠券: %s (面额: ¥%.2f)", coupon.name, coupon.discount));
+            couponInfoLabel.setText(I18nManager.getInstance().get("runtime.coupon_applied", coupon.name, CurrencyUtil.format(coupon.discount.doubleValue())));
             setStateMessageStyle(couponInfoLabel, true);
             clearCouponButton.setDisable(false);
             logger.info("优惠券验证成功: {} (面额: ¥{})", coupon.name, coupon.discount);
@@ -819,7 +826,7 @@ public class CheckoutController {
 
         } catch (Exception e) {
             logger.error("验证优惠券失败", e);
-            showError("验证优惠券失败：" + e.getMessage());
+            showError(I18nManager.getInstance().get("runtime.coupon_validation_failed", e.getMessage()));
         }
     }
 

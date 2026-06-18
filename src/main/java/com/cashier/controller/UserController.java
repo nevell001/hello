@@ -20,6 +20,8 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 
 import java.text.SimpleDateFormat;
 import java.util.Map;
@@ -92,19 +94,23 @@ public class UserController {
     private void initialize() {
         // 初始化角色筛选下拉框
         roleFilterComboBox.setItems(FXCollections.observableArrayList(
-            "全部",
-            "管理员",
-            "收银员",
-            "财务"
+            "all",
+            "admin",
+            "cashier",
+            "finance"
         ));
+        roleFilterComboBox.setButtonCell(createUserFilterCell(true));
+        roleFilterComboBox.setCellFactory(listView -> createUserFilterCell(true));
         roleFilterComboBox.getSelectionModel().select(0);
 
         // 初始化状态筛选下拉框
         statusFilterComboBox.setItems(FXCollections.observableArrayList(
-            "全部",
-            "激活",
-            "禁用"
+            "all",
+            "active",
+            "inactive"
         ));
+        statusFilterComboBox.setButtonCell(createUserFilterCell(false));
+        statusFilterComboBox.setCellFactory(listView -> createUserFilterCell(false));
         statusFilterComboBox.getSelectionModel().select(0);
 
         // 设置表格列
@@ -129,7 +135,7 @@ public class UserController {
         usernameColumn.setCellValueFactory(new PropertyValueFactory<>("username"));
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
         roleColumn.setCellValueFactory(cellData ->
-            new SimpleStringProperty(cellData.getValue().getRoleDisplayName()));
+            new SimpleStringProperty(localizeRole(cellData.getValue().role)));
         
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         createTimeColumn.setCellValueFactory(cellData ->
@@ -137,7 +143,8 @@ public class UserController {
         lastLoginColumn.setCellValueFactory(cellData ->
             new SimpleStringProperty(sdf.format(cellData.getValue().lastLoginTime)));
         statusColumn.setCellValueFactory(cellData ->
-            new SimpleStringProperty(cellData.getValue().active ? "激活" : "禁用"));
+            new SimpleStringProperty(I18nManager.getInstance().get(
+                cellData.getValue().active ? "user.enabled" : "user.disabled")));
     }
 
     /**
@@ -153,7 +160,7 @@ public class UserController {
             }
         } catch (SQLException e) {
             logger.error("加载用户数据失败", e);
-            showError("加载用户数据失败: " + e.getMessage());
+            showError(I18nManager.getInstance().get("runtime.user_load_failed", e.getMessage()));
             users = new java.util.HashMap<>();
         }
         userList = FXCollections.observableArrayList(users.values());
@@ -166,7 +173,7 @@ public class UserController {
      * 更新用户数量标签
      */
     private void updateCountLabel() {
-        countLabel.setText("用户数量: " + userList.size());
+        countLabel.setText(I18nManager.getInstance().get("runtime.user_count", userList.size()));
     }
 
     /**
@@ -206,24 +213,58 @@ public class UserController {
      */
     private void showUserDialog(User user) {
         Dialog<User> dialog = new Dialog<>();
-        dialog.setTitle(user == null ? "添加用户" : "编辑用户");
+        dialog.setTitle(user == null ? com.cashier.i18n.I18nManager.getInstance().get("user.add") : com.cashier.i18n.I18nManager.getInstance().get("runtime.user_edit"));
         dialog.setHeaderText(null);
+        dialog.getDialogPane().setPrefWidth(620);
+        dialog.getDialogPane().getStyleClass().add("user-dialog");
+        if (userTable.getScene() != null) {
+            dialog.initOwner(userTable.getScene().getWindow());
+            dialog.getDialogPane().getStylesheets().addAll(userTable.getScene().getStylesheets());
+        }
+
+        VBox content = new VBox(14);
+        content.getStyleClass().add("dialog-content");
+        Label titleLabel = new Label(user == null
+            ? I18nManager.getInstance().get("user.add")
+            : I18nManager.getInstance().get("runtime.user_edit"));
+        titleLabel.getStyleClass().add("view-title");
 
         // 创建对话框内容
         GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setPadding(new javafx.geometry.Insets(20, 150, 10, 10));
+        grid.getStyleClass().addAll("form-grid", "dialog-form-grid");
+        grid.setHgap(14);
+        grid.setVgap(12);
+        grid.setPadding(new javafx.geometry.Insets(4, 0, 0, 0));
+        javafx.scene.layout.ColumnConstraints labelColumn = new javafx.scene.layout.ColumnConstraints();
+        labelColumn.setMinWidth(120);
+        labelColumn.setPrefWidth(135);
+        javafx.scene.layout.ColumnConstraints fieldColumn = new javafx.scene.layout.ColumnConstraints();
+        fieldColumn.setMinWidth(380);
+        fieldColumn.setPrefWidth(420);
+        fieldColumn.setHgrow(Priority.ALWAYS);
+        grid.getColumnConstraints().addAll(labelColumn, fieldColumn);
 
         TextField idField = new TextField();
-        CheckBox autoIdCheckBox = new CheckBox("自动生成");
+        CheckBox autoIdCheckBox = new CheckBox(I18nManager.getInstance().get("product.edit.auto_generate"));
         TextField usernameField = new TextField();
-        TextField passwordField = new TextField();
+        PasswordField passwordField = new PasswordField();
         TextField nameField = new TextField();
         ComboBox<String> roleComboBox = new ComboBox<>();
 
+        for (TextField field : new TextField[]{idField, usernameField, passwordField, nameField}) {
+            field.getStyleClass().add("form-input");
+            field.setMaxWidth(Double.MAX_VALUE);
+            GridPane.setHgrow(field, Priority.ALWAYS);
+        }
+        roleComboBox.getStyleClass().addAll("form-combo", "user-role-combo");
+        roleComboBox.setMaxWidth(Double.MAX_VALUE);
+        roleComboBox.setMinWidth(380);
+        roleComboBox.setPrefWidth(420);
+        GridPane.setHgrow(roleComboBox, Priority.ALWAYS);
+
         roleComboBox.setItems(FXCollections.observableArrayList("admin", "cashier", "finance"));
-        roleComboBox.getItems().setAll("管理员", "收银员", "财务");
+        roleComboBox.setButtonCell(createRoleCell());
+        roleComboBox.setCellFactory(listView -> createRoleCell());
 
         // 设置ID输入框和复选框的默认状态
         if (user == null) {
@@ -243,31 +284,40 @@ public class UserController {
         if (user != null) {
             usernameField.setText(user.username);
             usernameField.setDisable(true); // 用户名不可修改
-            passwordField.setPromptText("留空则不修改密码");
+            passwordField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.password_unchanged_hint"));
             nameField.setText(user.name);
-            roleComboBox.getSelectionModel().select(user.getRoleDisplayName());
+            roleComboBox.getSelectionModel().select(user.role);
+        } else {
+            roleComboBox.getSelectionModel().select("cashier");
         }
 
         // 创建ID的HBox
         HBox idBox = new HBox(10);
+        idBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        idBox.setMaxWidth(Double.MAX_VALUE);
+        GridPane.setHgrow(idBox, Priority.ALWAYS);
         idBox.getChildren().addAll(idField, autoIdCheckBox);
-        idField.setPrefWidth(150);
+        HBox.setHgrow(idField, Priority.ALWAYS);
 
-        grid.add(new Label("ID:"), 0, 0);
+        grid.add(createUserFormLabel("ID:"), 0, 0);
         grid.add(idBox, 1, 0);
-        grid.add(new Label("用户名:"), 0, 1);
+        grid.add(createUserFormLabel(com.cashier.i18n.I18nManager.getInstance().get("runtime.username")), 0, 1);
         grid.add(usernameField, 1, 1);
-        grid.add(new Label("密码:"), 0, 2);
+        grid.add(createUserFormLabel(com.cashier.i18n.I18nManager.getInstance().get("runtime.password")), 0, 2);
         grid.add(passwordField, 1, 2);
-        grid.add(new Label("姓名:"), 0, 3);
+        grid.add(createUserFormLabel(com.cashier.i18n.I18nManager.getInstance().get("runtime.name")), 0, 3);
         grid.add(nameField, 1, 3);
-        grid.add(new Label("角色:"), 0, 4);
+        grid.add(createUserFormLabel(com.cashier.i18n.I18nManager.getInstance().get("runtime.role")), 0, 4);
         grid.add(roleComboBox, 1, 4);
 
-        dialog.getDialogPane().setContent(grid);
+        content.getChildren().addAll(titleLabel, grid);
+        dialog.getDialogPane().setContent(content);
 
-        ButtonType okButtonType = new ButtonType("确定", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(okButtonType, ButtonType.CANCEL);
+        ButtonType okButtonType = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get("common.ok"), ButtonBar.ButtonData.OK_DONE);
+        ButtonType cancelButtonType = new ButtonType(I18nManager.getInstance().get("common.cancel"), ButtonBar.ButtonData.CANCEL_CLOSE);
+        dialog.getDialogPane().getButtonTypes().addAll(okButtonType, cancelButtonType);
+        dialog.getDialogPane().lookupButton(okButtonType).getStyleClass().addAll("primary-button", "button-normal");
+        dialog.getDialogPane().lookupButton(cancelButtonType).getStyleClass().addAll("secondary-button", "button-normal");
 
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == okButtonType) {
@@ -278,12 +328,12 @@ public class UserController {
                     try {
                         int id = FormValidator.parseInt(idField.getText().trim());
                         if (id <= 0) {
-                            showError("ID必须是大于0的数字！");
+                            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.id_positive"));
                             return null;
                         }
                         newUser.id = id;
                     } catch (NumberFormatException e) {
-                        showError("ID格式不正确！");
+                        showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.id_invalid"));
                         return null;
                     }
                 }
@@ -300,18 +350,7 @@ public class UserController {
 
                 newUser.name = nameField.getText().trim();
 
-                String roleDisplayName = roleComboBox.getSelectionModel().getSelectedItem();
-                switch (roleDisplayName) {
-                    case "管理员":
-                        newUser.role = "admin";
-                        break;
-                    case "收银员":
-                        newUser.role = "cashier";
-                        break;
-                    case "财务":
-                        newUser.role = "finance";
-                        break;
-                }
+                newUser.role = roleComboBox.getSelectionModel().getSelectedItem();
 
                 return newUser;
             }
@@ -325,24 +364,71 @@ public class UserController {
                     if (UserDAO.insert(result)) {
                         users.put(result.username, result);
                         loadUsers();
-                        updateStatus("用户添加成功");
+                        updateStatus(I18nManager.getInstance().get("user.added"));
                     } else {
-                        showError("用户添加失败");
+                        showError(I18nManager.getInstance().get("runtime.user_add_failed"));
                     }
                 } else {
                     // 更新现有用户
                     if (UserDAO.update(result)) {
                         users.put(result.username, result);
                         loadUsers();
-                        updateStatus("用户更新成功");
+                        updateStatus(I18nManager.getInstance().get("user.updated"));
                     } else {
-                        showError("用户更新失败");
+                        showError(I18nManager.getInstance().get("runtime.user_update_failed"));
                     }
                 }
             } catch (SQLException e) {
                 logger.error("保存用户失败", e);
-                showError("保存用户失败: " + e.getMessage());
+                showError(I18nManager.getInstance().get("runtime.user_save_failed", e.getMessage()));
             }
+        });
+    }
+
+    private Label createUserFormLabel(String text) {
+        Label label = new Label(text);
+        label.getStyleClass().add("form-label");
+        return label;
+    }
+
+    private ListCell<String> createRoleCell() {
+        return new ListCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : localizeRole(item));
+                setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                setMinHeight(36);
+                setPrefHeight(36);
+                setMaxWidth(Double.MAX_VALUE);
+            }
+        };
+    }
+
+    private ListCell<String> createUserFilterCell(boolean roleFilter) {
+        return new ListCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText("");
+                } else if ("all".equals(item)) {
+                    setText(I18nManager.getInstance().get("user.filter.all"));
+                } else if (roleFilter) {
+                    setText(localizeRole(item));
+                } else {
+                    setText(I18nManager.getInstance().get(
+                        "active".equals(item) ? "user.enabled" : "user.disabled"));
+                }
+            }
+        };
+    }
+
+    private String localizeRole(String role) {
+        return I18nManager.getInstance().get(switch (role) {
+            case "admin" -> "user.role.admin";
+            case "finance" -> "user.role.finance";
+            default -> "user.role.cashier";
         });
     }
 
@@ -355,27 +441,27 @@ public class UserController {
         if (selected != null) {
             // 不允许删除admin用户
             if ("admin".equals(selected.username)) {
-                showError("不能删除管理员账户！");
+                showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.admin_delete_forbidden"));
                 return;
             }
 
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle(I18nManager.getInstance().get("common.confirm"));
             alert.setHeaderText(null);
-            alert.setContentText("确定要删除用户 \"" + selected.name + "\" 吗？");
+            alert.setContentText(I18nManager.getInstance().get("runtime.user_delete_confirm", selected.name));
 
             if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
                 try {
                     if (UserDAO.deleteByUsername(selected.username)) {
                         users.remove(selected.username);
                         loadUsers();
-                        updateStatus("用户删除成功");
+                        updateStatus(I18nManager.getInstance().get("user.deleted"));
                     } else {
-                        showError("用户删除失败");
+                        showError(I18nManager.getInstance().get("runtime.user_delete_result_failed"));
                     }
                 } catch (SQLException e) {
                     logger.error("删除用户失败", e);
-                    showError("删除用户失败: " + e.getMessage());
+                    showError(I18nManager.getInstance().get("runtime.user_delete_failed", e.getMessage()));
                 }
             }
         }
@@ -389,13 +475,13 @@ public class UserController {
         User selected = userTable.getSelectionModel().getSelectedItem();
         if (selected != null) {
             TextInputDialog dialog = new TextInputDialog();
-            dialog.setTitle("重置密码");
+            dialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("password_reset.title"));
             dialog.setHeaderText(null);
-            dialog.setContentText("请输入新密码:");
+            dialog.setContentText(I18nManager.getInstance().get("runtime.enter_new_password"));
 
             dialog.showAndWait().ifPresent(newPassword -> {
                 if (newPassword.trim().isEmpty()) {
-                    showError("密码不能为空！");
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.password_required"));
                     return;
                 }
 
@@ -403,13 +489,13 @@ public class UserController {
                 try {
                     if (UserDAO.update(selected)) {
                         loadUsers();
-                        updateStatus("密码重置成功");
+                        updateStatus(I18nManager.getInstance().get("user.password_reset"));
                     } else {
-                        showError("密码重置失败");
+                        showError(I18nManager.getInstance().get("runtime.password_reset_failed"));
                     }
                 } catch (SQLException e) {
                     logger.error("重置密码失败", e);
-                    showError("重置密码失败: " + e.getMessage());
+                    showError(I18nManager.getInstance().get("runtime.user_reset_failed", e.getMessage()));
                 }
             });
         }
@@ -426,13 +512,13 @@ public class UserController {
             try {
                 if (UserDAO.update(selected)) {
                     loadUsers();
-                    updateStatus("用户已激活");
+                    updateStatus(I18nManager.getInstance().get("user.activated"));
                 } else {
-                    showError("激活用户失败");
+                    showError(I18nManager.getInstance().get("runtime.user_activate_result_failed"));
                 }
             } catch (SQLException e) {
                 logger.error("激活用户失败", e);
-                showError("激活用户失败: " + e.getMessage());
+                showError(I18nManager.getInstance().get("runtime.user_activate_failed", e.getMessage()));
             }
         }
     }
@@ -446,27 +532,27 @@ public class UserController {
         if (selected != null) {
             // 不允许禁用admin用户
             if ("admin".equals(selected.username)) {
-                showError("不能禁用管理员账户！");
+                showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.admin_disable_forbidden"));
                 return;
             }
 
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle(I18nManager.getInstance().get("common.confirm"));
             alert.setHeaderText(null);
-            alert.setContentText("确定要禁用用户 \"" + selected.name + "\" 吗？");
+            alert.setContentText(I18nManager.getInstance().get("runtime.user_disable_confirm", selected.name));
 
             if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
                 selected.active = false;
                 try {
                     if (UserDAO.update(selected)) {
                         loadUsers();
-                        updateStatus("用户已禁用");
+                        updateStatus(I18nManager.getInstance().get("user.deactivated"));
                     } else {
-                        showError("禁用用户失败");
+                        showError(I18nManager.getInstance().get("runtime.user_disable_result_failed"));
                     }
                 } catch (SQLException e) {
                     logger.error("禁用用户失败", e);
-                    showError("禁用用户失败: " + e.getMessage());
+                    showError(I18nManager.getInstance().get("runtime.user_disable_failed", e.getMessage()));
                 }
             }
         }
@@ -502,16 +588,15 @@ public class UserController {
         userList.setAll(users.values().stream()
             .filter(u -> {
                 // 角色筛选
-                if (!"全部".equals(roleFilter)) {
-                    String roleDisplayName = u.getRoleDisplayName();
-                    if (!roleFilter.equals(roleDisplayName)) {
+                if (!"all".equals(roleFilter)) {
+                    if (!roleFilter.equals(u.role)) {
                         return false;
                     }
                 }
 
                 // 状态筛选
-                if (!"全部".equals(statusFilter)) {
-                    boolean active = "激活".equals(statusFilter);
+                if (!"all".equals(statusFilter)) {
+                    boolean active = "active".equals(statusFilter);
                     if (u.active != active) {
                         return false;
                     }

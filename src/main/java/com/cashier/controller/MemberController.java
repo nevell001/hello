@@ -132,7 +132,7 @@ public class MemberController extends BaseController<Member> {
             }
         } catch (SQLException e) {
             logger.error("加载会员数据失败", e);
-            showError("加载会员数据失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
             members = new java.util.HashMap<>();
         }
         memberList = FXCollections.observableArrayList(members.values());
@@ -219,11 +219,13 @@ public class MemberController extends BaseController<Member> {
                     return true;
                 } catch (SQLException e) {
                     logger.error(item == null ? "添加会员失败" : "更新会员失败", e);
-                    showError(item == null ? "添加会员失败: " + e.getMessage() : "更新会员失败: " + e.getMessage());
+                    showError(item == null
+                            ? i18n.get("runtime.member_add_failed", e.getMessage())
+                            : i18n.get("runtime.member_update_failed", e.getMessage()));
                 }
             }
         } catch (IOException e) {
-            showError("加载对话框失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
         return false;
     }

@@ -1,5 +1,6 @@
 package com.cashier.dao;
 
+import com.cashier.constant.FXConstants;
 import com.cashier.util.DatabaseManager;
 
 import java.sql.*;
@@ -15,7 +16,7 @@ public class ThemePreferenceDAO {
      */
     public static String getThemePreference(String username) throws SQLException {
         String themeName = findThemePreference(username);
-        return themeName != null ? themeName : "light";
+        return themeName != null ? themeName : FXConstants.DEFAULT_THEME;
     }
 
     /**

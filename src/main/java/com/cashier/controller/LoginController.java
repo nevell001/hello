@@ -3,6 +3,7 @@ package com.cashier.controller;
 import com.cashier.CashierSystemFXApplication;
 import com.cashier.constant.AppConstants;
 import com.cashier.dao.UserDAO;
+import com.cashier.i18n.I18nManager;
 import com.cashier.model.User;
 import com.cashier.util.FXUtils;
 import com.cashier.util.PasswordUtil;
@@ -65,7 +66,7 @@ public class LoginController {
         passwordField.setOnAction(event -> handleLogin());
 
         // 设置版本信息
-        versionLabel.setText("版本 " + AppConstants.APP_VERSION + " (" + AppConstants.APP_SUBTITLE + ")");
+        versionLabel.setText(I18nManager.getInstance().get("runtime.version", AppConstants.APP_VERSION, AppConstants.APP_SUBTITLE));
 
         // 添加入场动画
         addEntranceAnimation();
@@ -89,7 +90,7 @@ public class LoginController {
 
         // 验证输入
         if (username.isEmpty() || password.isEmpty()) {
-            showError("用户名和密码不能为空！");
+            showError(I18nManager.getInstance().get("runtime.login_required"));
             shakeTextField(usernameField);
             shakeTextField(passwordField);
             return;
@@ -98,7 +99,7 @@ public class LoginController {
         // 检查是否处于锁定状态
         if (isLockedOut()) {
             long remainingSeconds = getRemainingLockoutSeconds();
-            showError("登录尝试次数过多，请 " + remainingSeconds + " 秒后再试！");
+            showError(I18nManager.getInstance().get("runtime.login_rate_limited", remainingSeconds));
             return;
         }
 
@@ -114,7 +115,7 @@ public class LoginController {
                     loginAttempts++;
                     checkAndLockAccount(username);
                     Platform.runLater(() -> {
-                        showError("用户名不存在！剩余尝试次数：" + (MAX_LOGIN_ATTEMPTS - loginAttempts));
+                        showError(I18nManager.getInstance().get("runtime.login_user_missing", MAX_LOGIN_ATTEMPTS - loginAttempts));
                         shakeTextField(usernameField);
                         setLoginState(false);
                     });
@@ -125,7 +126,7 @@ public class LoginController {
                     loginAttempts++;
                     checkAndLockAccount(username);
                     Platform.runLater(() -> {
-                        showError("密码错误！剩余尝试次数：" + (MAX_LOGIN_ATTEMPTS - loginAttempts));
+                        showError(I18nManager.getInstance().get("runtime.login_wrong_password", MAX_LOGIN_ATTEMPTS - loginAttempts));
                         shakeTextField(passwordField);
                         setLoginState(false);
                     });
@@ -134,7 +135,7 @@ public class LoginController {
 
                 if (!user.active) {
                     Platform.runLater(() -> {
-                        showError("该账户已被禁用！");
+                        showError(I18nManager.getInstance().get("runtime.login_disabled"));
                         setLoginState(false);
                     });
                     return;
@@ -160,7 +161,7 @@ public class LoginController {
 
             } catch (Exception e) {
                 javafx.application.Platform.runLater(() -> {
-                    showError("登录失败：" + e.getMessage());
+                    showError(I18nManager.getInstance().get("runtime.login_failed", e.getMessage()));
                     setLoginState(false);
                 });
                 logger.error("登录失败", e);
@@ -183,8 +184,8 @@ public class LoginController {
         try {
             // 创建对话框
             javafx.scene.control.Dialog<ButtonType> dialog = new javafx.scene.control.Dialog<>();
-            dialog.setTitle("首次登录 - 修改密码");
-            dialog.setHeaderText("为了安全起见，请修改您的初始密码");
+            dialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.first_login_title"));
+            dialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get("runtime.first_login_header"));
 
             // 创建UI
             javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
@@ -194,11 +195,11 @@ public class LoginController {
 
             javafx.scene.control.Label newPasswordLabel = new javafx.scene.control.Label("新密码:");
             javafx.scene.control.PasswordField newPasswordField = new javafx.scene.control.PasswordField();
-            newPasswordField.setPromptText("请输入新密码");
+            newPasswordField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.new_password_hint"));
 
             javafx.scene.control.Label confirmPasswordLabel = new javafx.scene.control.Label("确认密码:");
             javafx.scene.control.PasswordField confirmPasswordField = new javafx.scene.control.PasswordField();
-            confirmPasswordField.setPromptText("请再次输入新密码");
+            confirmPasswordField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.confirm_password_hint"));
 
             grid.add(newPasswordLabel, 0, 0);
             grid.add(newPasswordField, 1, 0);
@@ -248,9 +249,9 @@ public class LoginController {
 
                         // 显示成功消息
                         javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
-                        alert.setTitle("密码修改成功");
+                        alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.password_changed_title"));
                         alert.setHeaderText(null);
-                        alert.setContentText("密码修改成功！现在可以进入系统了。");
+                        alert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.password_changed_message"));
                         alert.showAndWait();
 
                         // 切换到主界面
@@ -260,14 +261,14 @@ public class LoginController {
 
                     } catch (Exception e) {
                         logger.error("密码修改失败", e);
-                        showError("密码修改失败：" + e.getMessage());
+                        showError(I18nManager.getInstance().get("runtime.password_change_failed", e.getMessage()));
                     }
                 }
             });
 
         } catch (Exception e) {
             logger.error("显示密码修改对话框失败", e);
-            showError("显示密码修改对话框失败：" + e.getMessage());
+            showError(I18nManager.getInstance().get("runtime.password_dialog_failed", e.getMessage()));
         }
     }
 
@@ -277,21 +278,12 @@ public class LoginController {
     @FXML
     public void handleAbout() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("关于");
+        alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("menu.help.about"));
         alert.setHeaderText(AppConstants.APP_NAME + " v" + AppConstants.APP_VERSION);
-        alert.setContentText("狸算(LiSuan)收银系统 - " + AppConstants.APP_SUBTITLE + "\n\n" +
-                "技术栈：\n" +
-                "- JavaFX " + AppConstants.JAVAFX_VERSION + "\n" +
-                "- Maven " + AppConstants.MIN_MAVEN_VERSION + "+\n" +
-                "- JDK " + AppConstants.MIN_JDK_VERSION + "\n\n" +
-                "功能特性：\n" +
-                "- 商品管理\n" +
-                "- 购物车\n" +
-                "- 结账系统\n" +
-                "- 会员管理\n" +
-                "- 交易记录\n" +
-                "- 数据统计\n\n" +
-                "© 2026 " + AppConstants.DEVELOPER);
+        alert.setContentText(I18nManager.getInstance().get("runtime.about_content",
+                AppConstants.APP_SUBTITLE, AppConstants.JAVAFX_VERSION,
+                AppConstants.MIN_MAVEN_VERSION, AppConstants.MIN_JDK_VERSION)
+                + "\n\n© 2026 " + AppConstants.DEVELOPER);
         alert.initOwner(usernameField.getScene().getWindow());
         alert.showAndWait();
     }

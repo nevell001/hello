@@ -374,17 +374,15 @@ private Button shiftBtn;
                 // 有活跃班次
                 SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
                 String startTime = timeFormat.format(activeShift.startTime);
-                currentShiftLabel.setText(String.format("班次: %s - %s (%s)",
-                    activeShift.shiftId,
-                    activeShift.operatorName,
-                    startTime));
+                currentShiftLabel.setText(I18nManager.getInstance().get("runtime.shift_summary",
+                        activeShift.shiftId, activeShift.operatorName, startTime));
             } else {
                 // 无活跃班次
-                currentShiftLabel.setText("班次: 未开始");
+                currentShiftLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("status.shift_not_started"));
             }
         } catch (Exception e) {
             logger.error("更新班次信息失败", e);
-            currentShiftLabel.setText("班次: 未知");
+            currentShiftLabel.setText(I18nManager.getInstance().get("runtime.shift_unknown"));
         }
     }
 
@@ -426,13 +424,13 @@ private Button shiftBtn;
         // 检查是否有活跃班次
         if (com.cashier.service.DataService.hasActiveShift()) {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("确认退出");
+            alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.confirm_exit"));
             alert.setHeaderText(null);
-            alert.setContentText("当前有活跃班次未交班！\n\n确定要退出登录吗？\n\n提示：建议先交班后再退出。");
+            alert.setContentText(I18nManager.getInstance().get("runtime.logout_active_shift"));
             
-            ButtonType yesButton = new ButtonType("先交班", ButtonBar.ButtonData.YES);
-            ButtonType noButton = new ButtonType("直接退出", ButtonBar.ButtonData.NO);
-            ButtonType cancelButton = new ButtonType("取消", ButtonBar.ButtonData.CANCEL_CLOSE);
+            ButtonType yesButton = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get("runtime.end_shift_first"), ButtonBar.ButtonData.YES);
+            ButtonType noButton = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get("runtime.exit_directly"), ButtonBar.ButtonData.NO);
+            ButtonType cancelButton = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get("return_order.cancel"), ButtonBar.ButtonData.CANCEL_CLOSE);
             
             alert.getButtonTypes().setAll(yesButton, noButton, cancelButton);
             
@@ -450,7 +448,7 @@ private Button shiftBtn;
             });
         } else {
             // 没有活跃班次，直接退出
-            if (FXUtils.showConfirmAlert("确认退出", "确定要退出登录吗？")) {
+            if (FXUtils.showConfirmAlert(I18nManager.getInstance().get("runtime.confirm_exit"), I18nManager.getInstance().get("runtime.logout_confirm"))) {
                 if (application != null) {
                     application.logoutToLoginView();
                 }
@@ -463,13 +461,13 @@ private Button shiftBtn;
         // 检查是否有活跃班次
         if (com.cashier.service.DataService.hasActiveShift()) {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("确认退出");
+            alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.confirm_exit"));
             alert.setHeaderText(null);
-            alert.setContentText("当前有活跃班次未交班！\n\n确定要退出系统吗？\n\n提示：建议先交班后再退出。");
+            alert.setContentText(I18nManager.getInstance().get("runtime.exit_active_shift"));
             
-            ButtonType yesButton = new ButtonType("先交班", ButtonBar.ButtonData.YES);
-            ButtonType noButton = new ButtonType("直接退出", ButtonBar.ButtonData.NO);
-            ButtonType cancelButton = new ButtonType("取消", ButtonBar.ButtonData.CANCEL_CLOSE);
+            ButtonType yesButton = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get("runtime.end_shift_first"), ButtonBar.ButtonData.YES);
+            ButtonType noButton = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get("runtime.exit_directly"), ButtonBar.ButtonData.NO);
+            ButtonType cancelButton = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get("return_order.cancel"), ButtonBar.ButtonData.CANCEL_CLOSE);
             
             alert.getButtonTypes().setAll(yesButton, noButton, cancelButton);
             
@@ -508,7 +506,7 @@ private Button shiftBtn;
             createContentTab(I18nManager.getInstance().get("nav.user_management"), root);
             
         } catch (IOException e) {
-            showError("加载用户管理界面失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
     }
 
@@ -550,9 +548,9 @@ private Button shiftBtn;
         
         // 创建选择对话框
         ChoiceDialog<String> dialog = new ChoiceDialog<>();
-        dialog.setTitle("选择备份");
-        dialog.setHeaderText("请选择要恢复的备份：");
-        dialog.setContentText("可用备份：");
+        dialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.choose_backup"));
+        dialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get("runtime.choose_backup_header"));
+        dialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.available_backups"));
         
         // 添加备份选项
         ObservableList<String> options = FXCollections.observableArrayList();
@@ -570,13 +568,13 @@ private Button shiftBtn;
             try {
                 // 确认恢复
                 Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
-                confirmAlert.setTitle("确认恢复");
+                confirmAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.confirm_restore"));
                 confirmAlert.setHeaderText(null);
-                confirmAlert.setContentText("确定要从以下备份恢复数据吗？\n备份: " + backupDirName + "\n\n恢复数据将覆盖当前数据，确定要继续吗？");
+                confirmAlert.setContentText(I18nManager.getInstance().get("runtime.restore_confirm_short", backupDirName));
                 
                 if (confirmAlert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
                     DataService.restoreData(backupDirName);
-                    FXUtils.showInfoAlert("恢复成功", "数据恢复成功！\n请重新登录以加载最新数据。");
+                    FXUtils.showInfoAlert(I18nManager.getInstance().get("runtime.restore_success_title"), I18nManager.getInstance().get("runtime.restore_success"));
                 }
             } catch (Exception e) {
                 FXUtils.showErrorAlert("恢复失败", "数据恢复失败: " + e.getMessage());
@@ -617,7 +615,7 @@ private Button shiftBtn;
             dialogStage.show();
         } catch (IOException e) {
             logger.error("加载快捷键帮助界面失败", e);
-            FXUtils.showErrorAlert("错误", "无法打开快捷键帮助");
+            FXUtils.showErrorAlert(com.cashier.i18n.I18nManager.getInstance().get("label.error"), "无法打开快捷键帮助");
         }
     }
 
@@ -650,7 +648,7 @@ private Button shiftBtn;
             dialogStage.showAndWait();
         } catch (IOException e) {
             logger.error("加载全局搜索界面失败", e);
-            FXUtils.showErrorAlert("错误", "无法打开全局搜索");
+            FXUtils.showErrorAlert(com.cashier.i18n.I18nManager.getInstance().get("label.error"), "无法打开全局搜索");
         }
     }
 
@@ -691,7 +689,7 @@ private Button shiftBtn;
             "- JDK " + AppConstants.MIN_JDK_VERSION + "/21\n\n" +
             "许可证: " + AppConstants.LICENSE;
 
-        FXUtils.showInfoAlert("关于", about);
+        FXUtils.showInfoAlert(com.cashier.i18n.I18nManager.getInstance().get("menu.help.about"), about);
     }
 
     // ========== 导航处理方法 ==========
@@ -713,7 +711,7 @@ private Button shiftBtn;
             createContentTab(I18nManager.getInstance().get("nav.inventory"), root);
             
         } catch (IOException e) {
-            showError("加载商品管理界面失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
     }
 
@@ -726,6 +724,7 @@ private Button shiftBtn;
             String title = I18nManager.getInstance().get("nav.cart");
             if (selectOpenTab(title)) {
                 logger.debug("MainController: 购物车标签页已打开，直接切换");
+                focusSelectedCartSearchField();
                 return;
             }
 
@@ -741,14 +740,15 @@ private Button shiftBtn;
 
             // 创建内容标签页
             createContentTab(title, root);
+            javafx.application.Platform.runLater(controller::focusSearchField);
             logger.debug("MainController: 购物车界面加载成功");
 
         } catch (IOException e) {
             logger.error("加载购物车界面失败", e);
-            showError("加载POS界面失败: " + getErrorMessage(e));
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + getErrorMessage(e));
         } catch (Exception e) {
             logger.error("加载购物车界面时发生异常", e);
-            showError("加载POS界面失败: " + getErrorMessage(e));
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + getErrorMessage(e));
         }
     }
 
@@ -760,6 +760,7 @@ private Button shiftBtn;
         try {
             String title = I18nManager.getInstance().get("nav.cart");
             if (selectOpenTab(title)) {
+                focusSelectedCartSearchField();
                 return;
             }
 
@@ -772,14 +773,27 @@ private Button shiftBtn;
             
             // 创建内容标签页
             createContentTab(title, root);
+            javafx.application.Platform.runLater(controller::focusSearchField);
             
         } catch (IOException e) {
             logger.error("加载结账界面失败", e);
-            showError("加载POS界面失败: " + getErrorMessage(e));
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + getErrorMessage(e));
         } catch (Exception e) {
             logger.error("加载结账界面时发生异常", e);
-            showError("加载POS界面失败: " + getErrorMessage(e));
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + getErrorMessage(e));
         }
+    }
+
+    private void focusSelectedCartSearchField() {
+        javafx.application.Platform.runLater(() -> {
+            Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
+            if (selectedTab != null && selectedTab.getContent() != null) {
+                javafx.scene.Node searchNode = selectedTab.getContent().lookup("#searchField");
+                if (searchNode != null) {
+                    searchNode.requestFocus();
+                }
+            }
+        });
     }
 
     @FXML
@@ -799,7 +813,7 @@ private Button shiftBtn;
             createContentTab(I18nManager.getInstance().get("nav.transactions"), root);
 
         } catch (IOException e) {
-            showError("加载交易记录界面失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
     }
 
@@ -820,7 +834,7 @@ private Button shiftBtn;
             createContentTab(I18nManager.getInstance().get("nav.members"), root);
             
         } catch (IOException e) {
-            showError("加载会员管理界面失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
     }
 
@@ -841,7 +855,7 @@ private Button shiftBtn;
             createContentTab(I18nManager.getInstance().get("nav.supplier"), root);
 
         } catch (IOException e) {
-            showError("加载供应商管理界面失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
     }
 
@@ -862,7 +876,7 @@ private Button shiftBtn;
             createContentTab(I18nManager.getInstance().get("nav.purchase_order"), root);
 
         } catch (IOException e) {
-            showError("加载采购订单界面失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
     }
 
@@ -883,7 +897,7 @@ private Button shiftBtn;
             createContentTab(I18nManager.getInstance().get("nav.purchase_approval"), root);
 
         } catch (IOException e) {
-            showError("加载采购审批界面失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
     }
 
@@ -904,7 +918,7 @@ private Button shiftBtn;
             createContentTab(I18nManager.getInstance().get("nav.purchase_inbound"), root);
 
         } catch (IOException e) {
-            showError("加载采购入库界面失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
     }
 
@@ -925,7 +939,7 @@ private Button shiftBtn;
             createContentTab(I18nManager.getInstance().get("nav.inventory_check"), root);
 
         } catch (IOException e) {
-            showError("加载库存盘点界面失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
     }
 
@@ -946,7 +960,7 @@ private Button shiftBtn;
             createContentTab(I18nManager.getInstance().get("nav.statistics"), root);
 
         } catch (IOException e) {
-            showError("加载数据统计界面失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
     }
 
@@ -965,7 +979,7 @@ private Button shiftBtn;
 
             // 创建新窗口
             javafx.stage.Stage stage = new javafx.stage.Stage();
-            stage.setTitle("库存预警 - " + (currentUser != null ? currentUser.name : ""));
+            stage.setTitle(I18nManager.getInstance().get("runtime.inventory_alert_title", currentUser != null ? currentUser.name : ""));
             stage.setScene(new javafx.scene.Scene(root, 1000, 700));
             stage.setResizable(false);
 
@@ -985,7 +999,7 @@ private Button shiftBtn;
             });
 
         } catch (IOException e) {
-            showError("加载库存预警界面失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
     }
 
@@ -1006,7 +1020,7 @@ private Button shiftBtn;
             createContentTab(I18nManager.getInstance().get("nav.purchase_report"), root);
 
         } catch (IOException e) {
-            showError("加载采购报表界面失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
     }
 
@@ -1027,7 +1041,7 @@ private Button shiftBtn;
             createContentTab(I18nManager.getInstance().get("nav.inventory_report"), root);
 
         } catch (IOException e) {
-            showError("加载库存报表界面失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
     }
 
@@ -1048,7 +1062,7 @@ private Button shiftBtn;
             createContentTab(I18nManager.getInstance().get("nav.profit_report"), root);
 
         } catch (IOException e) {
-            showError("加载利润分析界面失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
     }
 
@@ -1069,7 +1083,7 @@ private Button shiftBtn;
             createContentTab(I18nManager.getInstance().get("nav.return_report"), root);
 
         } catch (IOException e) {
-            showError("加载退货报表界面失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
     }
 
@@ -1090,7 +1104,7 @@ private Button shiftBtn;
             createContentTab(I18nManager.getInstance().get("nav.promotions"), root);
 
         } catch (IOException e) {
-            showError("加载促销管理界面失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
     }
 
@@ -1117,7 +1131,7 @@ private Button shiftBtn;
             createContentTab(title, root);
 
         } catch (IOException e) {
-            showError("加载交接班界面失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
     }
 
@@ -1144,7 +1158,7 @@ private Button shiftBtn;
             createContentTab(title, root);
 
         } catch (IOException e) {
-            showError("加载设置界面失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
     }
 
@@ -1162,7 +1176,7 @@ private Button shiftBtn;
             createContentTab(I18nManager.getInstance().get("nav.return_order"), root);
 
         } catch (IOException e) {
-            showError("加载退货订单界面失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
     }
 
@@ -1180,7 +1194,7 @@ private Button shiftBtn;
             createContentTab(I18nManager.getInstance().get("nav.return_approval"), root);
 
         } catch (IOException e) {
-            showError("加载退货审批界面失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
     }
 
@@ -1234,6 +1248,28 @@ private Button shiftBtn;
         return closeButton;
     }
 
+    /**
+     * Creates a content-sized tab header so longer localized titles are not
+     * compressed into the former fixed-width tab.
+     */
+    private javafx.scene.Node createTabHeader(Tab tab, String title) {
+        javafx.scene.Node closeButton = createCloseButton(tab);
+        javafx.scene.layout.HBox tabHeader = new javafx.scene.layout.HBox(1);
+        tabHeader.setAlignment(javafx.geometry.Pos.CENTER);
+        tabHeader.getStyleClass().add("content-tab-header");
+        tabHeader.setMinWidth(javafx.scene.layout.Region.USE_PREF_SIZE);
+        tabHeader.setMaxWidth(javafx.scene.layout.Region.USE_PREF_SIZE);
+
+        Label headerLabel = new Label(title);
+        headerLabel.getStyleClass().addAll("text-default", "content-tab-title");
+        headerLabel.setMinWidth(javafx.scene.layout.Region.USE_PREF_SIZE);
+        headerLabel.setMaxWidth(javafx.scene.layout.Region.USE_PREF_SIZE);
+        headerLabel.setTooltip(new Tooltip(title));
+
+        tabHeader.getChildren().addAll(headerLabel, closeButton);
+        return tabHeader;
+    }
+
     private boolean selectOpenTab(String title) {
         Tab tab = openTabs.get(title);
         if (tab == null) {
@@ -1272,16 +1308,8 @@ private Button shiftBtn;
             Tab tab = new Tab();
             tab.setClosable(false); // 禁用默认关闭按钮
 
-            // 创建紧凑的标签头 - 减少间距和内边距以缩小宽度
-            javafx.scene.Node closeButton = createCloseButton(tab);
-            javafx.scene.layout.HBox tabHeader = new javafx.scene.layout.HBox(1);
-            tabHeader.setAlignment(javafx.geometry.Pos.CENTER);
-            tabHeader.setStyle("-fx-padding: 0 2 0 2; -fx-background-color: transparent;");
-            Label headerLabel = new Label(title);
-            headerLabel.getStyleClass().add("text-default");
-            headerLabel.setStyle("-fx-font-size: 12px; -fx-font-family: \"Noto Sans CJK JP\", \"Noto Sans SC\", \"Microsoft YaHei\", sans-serif;");
-            tabHeader.getChildren().addAll(headerLabel, closeButton);
-            tab.setGraphic(tabHeader);
+            tab.getStyleClass().add("custom-tab-header");
+            tab.setGraphic(createTabHeader(tab, title));
             tab.setText("");
 
             // 创建占位符内容
@@ -1332,16 +1360,8 @@ private Button shiftBtn;
             Tab tab = new Tab();
             tab.setClosable(false); // 禁用默认关闭按钮
 
-            // 创建紧凑的标签头 - 减少间距和内边距以缩小宽度
-            javafx.scene.Node closeButton = createCloseButton(tab);
-            javafx.scene.layout.HBox tabHeader = new javafx.scene.layout.HBox(1);
-            tabHeader.setAlignment(javafx.geometry.Pos.CENTER);
-            tabHeader.setStyle("-fx-padding: 0 2 0 2; -fx-background-color: transparent;");
-            Label headerLabel = new Label(title);
-            headerLabel.getStyleClass().add("text-default");
-            headerLabel.setStyle("-fx-font-size: 12px; -fx-font-family: \"Noto Sans CJK JP\", \"Noto Sans SC\", \"Microsoft YaHei\", sans-serif;");
-            tabHeader.getChildren().addAll(headerLabel, closeButton);
-            tab.setGraphic(tabHeader);
+            tab.getStyleClass().add("custom-tab-header");
+            tab.setGraphic(createTabHeader(tab, title));
             tab.setText("");
             tab.setContent(content);
 
@@ -1479,7 +1499,7 @@ private Button shiftBtn;
     
         
     
-                    Label loadingLabel = new Label("加载中...");
+                    Label loadingLabel = new Label(com.cashier.i18n.I18nManager.getInstance().get("data.loading"));
     
         
     
@@ -1671,7 +1691,7 @@ private Button shiftBtn;
     
         
     
-                        alert.setTitle("错误");
+                        alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("label.error"));
     
         
     

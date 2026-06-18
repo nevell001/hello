@@ -8,19 +8,19 @@
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.cashier.controller.CreateReturnOrderDialogController"
       spacing="15"
-      styleClass="dialog-container">
+      styleClass="dialog-container, dialog-content, edit-view-container">
 
     <padding>
         <Insets top="20" right="20" bottom="20" left="20"/>
     </padding>
 
     <!-- 标题 -->
-    <Label text="%return_order.title" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+    <Label text="%return_order.title" styleClass="view-title"/>
 
     <!-- 原交易信息 -->
     <VBox spacing="5" styleClass="surface-muted" style="-fx-padding: 10">
         <Label text="%return_order.original_info" style="-fx-font-weight: bold;"/>
-        <GridPane hgap="10" vgap="5">
+        <GridPane hgap="14" vgap="10" styleClass="form-grid">
             <Label text="%return_order.transaction_id" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
             <Label fx:id="transactionIdLabel" GridPane.columnIndex="1" GridPane.rowIndex="0" styleClass="text-info"/>
 
@@ -63,14 +63,15 @@
     <!-- 退货信息 -->
     <VBox spacing="10">
         <Label text="%return_order.return_info" style="-fx-font-weight: bold;"/>
-        <GridPane hgap="10" vgap="5">
+        <GridPane hgap="14" vgap="10" styleClass="form-grid">
             <Label text="%return_order.return_reason_label" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
             <TextField fx:id="returnReasonField" GridPane.columnIndex="1" GridPane.rowIndex="0"
-                      prefWidth="300" promptText="%return_order.return_reason_hint"/>
+                      minWidth="360" prefWidth="460" maxWidth="Infinity" promptText="%return_order.return_reason_hint" styleClass="form-input" GridPane.hgrow="ALWAYS"/>
 
             <Label text="%return_order.refund_method" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
             <ComboBox fx:id="refundMethodComboBox" GridPane.columnIndex="1" GridPane.rowIndex="1"
-                     prefWidth="150"/>
+                     minWidth="300" prefWidth="360" maxWidth="Infinity"
+                     GridPane.hgrow="ALWAYS" styleClass="form-combo, return-refund-combo"/>
         </GridPane>
 
         <VBox spacing="5">
@@ -88,7 +89,7 @@
 
     <!-- 按钮区域 -->
     <HBox spacing="10" alignment="CENTER_RIGHT">
-        <Button text="%return_order.cancel" onAction="#handleCancel" prefWidth="100"/>
-        <Button text="%return_order.submit" onAction="#handleSubmit" styleClass="primary-button" prefWidth="100"/>
+        <Button text="%return_order.cancel" onAction="#handleCancel" minWidth="120" prefWidth="120" styleClass="secondary-button, button-normal"/>
+        <Button text="%return_order.submit" onAction="#handleSubmit" styleClass="primary-button, button-normal" minWidth="120" prefWidth="120"/>
     </HBox>
 </VBox>

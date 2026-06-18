@@ -69,13 +69,13 @@ public class PasswordResetController {
 
         // 验证输入
         if (username.isEmpty() || email.isEmpty()) {
-            showError("用户名和邮箱不能为空！");
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.password_reset_required"));
             return;
         }
 
         // 验证邮箱格式
         if (!isValidEmail(email)) {
-            showError("邮箱格式不正确！");
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.email_invalid"));
             return;
         }
 
@@ -90,20 +90,20 @@ public class PasswordResetController {
                 try {
                     user = UserDAO.findByUsername(username);
                 } catch (SQLException e) {
-                    showError("查询用户失败：" + e.getMessage());
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.user_query_failed", e.getMessage()));
                     setSubmitState(false);
                     return;
                 }
 
                 // 验证用户和邮箱
                 if (user == null) {
-                    showError("用户名不存在！");
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.username_missing"));
                     setSubmitState(false);
                     return;
                 }
 
                 if (!user.email.equals(email)) {
-                    showError("邮箱与注册邮箱不匹配！");
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.email_mismatch"));
                     setSubmitState(false);
                     return;
                 }
@@ -115,7 +115,7 @@ public class PasswordResetController {
                 pause.setOnFinished(event -> {
                     setSubmitState(false); // 恢复提交状态
                     // 显示成功消息
-                    showSuccess("重置链接已发送到您的邮箱，请查收！");
+                    showSuccess(com.cashier.i18n.I18nManager.getInstance().get("runtime.reset_link_sent"));
 
                     // 3秒后关闭对话框
                     javafx.animation.PauseTransition closePause = new javafx.animation.PauseTransition(javafx.util.Duration.millis(3000));
@@ -126,7 +126,7 @@ public class PasswordResetController {
 
             } catch (Exception e) {
                 javafx.application.Platform.runLater(() -> {
-                    showError("发送失败：" + e.getMessage());
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.send_failed", e.getMessage()));
                     setSubmitState(false);
                 });
                 logger.error("发送失败", e);
@@ -194,7 +194,7 @@ public class PasswordResetController {
             usernameField.setDisable(loading);
             emailField.setDisable(loading);
             submitButton.setDisable(loading);
-            submitButton.setText(loading ? "发送中..." : "发送重置链接");
+            submitButton.setText(loading ? com.cashier.i18n.I18nManager.getInstance().get("runtime.sending") : com.cashier.i18n.I18nManager.getInstance().get("password_reset.submit"));
         });
     }
 

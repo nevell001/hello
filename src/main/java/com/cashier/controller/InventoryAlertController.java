@@ -2,6 +2,7 @@ package com.cashier.controller;
 
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
+import com.cashier.i18n.I18nManager;
 import com.cashier.model.Product;
 import com.cashier.service.InventoryAlertService;
 import com.cashier.util.ExportUtil;
@@ -281,12 +282,12 @@ public class InventoryAlertController {
         boolean isRunning = alertService.isRunning();
 
         if (isRunning) {
-            serviceStatusLabel.setText("运行中");
+            serviceStatusLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("runtime.service_running"));
             serviceStatusLabel.getStyleClass().removeAll("text-success", "text-danger");
             serviceStatusLabel.getStyleClass().add("text-success");
             statusIndicator.setFill(Color.web("#4CAF50"));
         } else {
-            serviceStatusLabel.setText("未启动");
+            serviceStatusLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.service_not_started"));
             serviceStatusLabel.getStyleClass().removeAll("text-success", "text-danger");
             serviceStatusLabel.getStyleClass().add("text-danger");
             statusIndicator.setFill(Color.web("#F44336"));
@@ -301,9 +302,9 @@ public class InventoryAlertController {
         alertCooldownLabel.setText(formatDuration(cooldownMs));
 
         if (lastCheckTime > 0) {
-            lastCheckTimeLabel.setText("上次检查: " + dateFormat.format(new Date(lastCheckTime)));
+            lastCheckTimeLabel.setText(I18nManager.getInstance().get("runtime.last_check", dateFormat.format(new Date(lastCheckTime))));
         } else {
-            lastCheckTimeLabel.setText("上次检查: 未检查");
+            lastCheckTimeLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.last_check"));
         }
     }
 
@@ -400,9 +401,9 @@ public class InventoryAlertController {
     @FXML
     public void handleClearCooldown() {
         Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmAlert.setTitle("确认清除");
+        confirmAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.confirm_clear"));
         confirmAlert.setHeaderText(null);
-        confirmAlert.setContentText("确定要清除所有预警商品的冷却时间吗？\n\n清除后，所有库存不足的商品将再次发送预警通知。");
+        confirmAlert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.alert_clear_confirm"));
 
         if (confirmAlert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
             logger.info("清除所有预警冷却");
@@ -417,7 +418,7 @@ public class InventoryAlertController {
     @FXML
     public void handleExport() {
         if (alertList.isEmpty()) {
-            FXUtils.showErrorAlert("导出失败", "当前没有预警商品可导出！");
+            FXUtils.showErrorAlert(com.cashier.i18n.I18nManager.getInstance().get("error.export_data"), "当前没有预警商品可导出！");
             return;
         }
 
@@ -440,11 +441,11 @@ public class InventoryAlertController {
 
             ExportUtil.export("库存预警报告", headers, data,
                 com.cashier.util.ExportUtil.ExportFormat.EXCEL, "reports");
-            FXUtils.showInfoAlert("导出成功", "库存预警报告已导出到 reports 目录！");
+            FXUtils.showInfoAlert(com.cashier.i18n.I18nManager.getInstance().get("success.export"), "库存预警报告已导出到 reports 目录！");
 
         } catch (Exception e) {
             logger.error("导出预警报告失败", e);
-            FXUtils.showErrorAlert("导出失败", "导出预警报告失败：" + e.getMessage());
+            FXUtils.showErrorAlert(com.cashier.i18n.I18nManager.getInstance().get("error.export_data"), "导出预警报告失败：" + e.getMessage());
         }
     }
 

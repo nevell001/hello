@@ -263,7 +263,7 @@ public class ProductEditController {
 
         if (product != null) {
             // 编辑模式
-            titleLabel.setText("编辑商品");
+            titleLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("product.edit"));
             productCodeField.setText(product.productCode);
             autoCodeCheckBox.setSelected(false);
             productCodeField.setDisable(false);
@@ -280,7 +280,7 @@ public class ProductEditController {
             costField.setText(String.format("%.2f", product.cost));
         } else {
             // 添加模式
-            titleLabel.setText("添加商品");
+            titleLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("product.edit.title"));
             autoCodeCheckBox.setSelected(true);
             productCodeField.setDisable(true);
         }
@@ -377,7 +377,7 @@ public class ProductEditController {
                             // 检查商品名称是否已存在
                             Product existingProduct = productDAO.findByName(product.name);
                             if (existingProduct != null) {
-                                errorLabel.setText("商品名称已存在，请使用其他名称");
+                                errorLabel.setText(I18nManager.getInstance().get("runtime.product_name_duplicate"));
                                 logger.warn("商品名称已存在: {}", product.name);
                                 return;
                             }
@@ -385,7 +385,7 @@ public class ProductEditController {
                             // 插入数据库
                             boolean success = productDAO.insert(product);
                             if (!success) {
-                                errorLabel.setText("添加商品失败，请重试");
+                                errorLabel.setText(I18nManager.getInstance().get("runtime.product_add_retry"));
                                 return;
                             }
 
@@ -397,7 +397,7 @@ public class ProductEditController {
                             javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
                             alert.setTitle(I18nManager.getInstance().get("label.success"));
                             alert.setHeaderText(null);
-                            alert.setContentText("商品添加成功！");
+                            alert.setContentText(I18nManager.getInstance().get("runtime.product_added"));
                             alert.showAndWait();
 
                         } else {
@@ -415,7 +415,7 @@ public class ProductEditController {
                             // 检查商品名称是否已存在（排除当前商品）
                             Product existingProduct = productDAO.findByName(product.name);
                             if (existingProduct != null && existingProduct.id != product.id) {
-                                errorLabel.setText("商品名称已存在，请使用其他名称");
+                                errorLabel.setText(I18nManager.getInstance().get("runtime.product_name_duplicate"));
                                 logger.warn("商品名称已存在: {}", product.name);
                                 return;
                             }
@@ -445,7 +445,7 @@ public class ProductEditController {
                             logger.info("数据库更新结果: {}", success);
                             
                             if (!success) {
-                                errorLabel.setText("更新商品失败，请重试");
+                                errorLabel.setText(I18nManager.getInstance().get("runtime.product_update_retry"));
                                 logger.error("更新商品失败");
                                 return;
                             }
@@ -458,7 +458,7 @@ public class ProductEditController {
                             javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
                             alert.setTitle(I18nManager.getInstance().get("label.success"));
                             alert.setHeaderText(null);
-                            alert.setContentText("商品更新成功！");
+                            alert.setContentText(I18nManager.getInstance().get("runtime.product_updated"));
                             alert.showAndWait();
                         }
 
@@ -468,7 +468,7 @@ public class ProductEditController {
 
             } catch (SQLException e) {
                 logger.error("保存商品失败", e);
-                errorLabel.setText("保存商品失败: " + e.getMessage());
+                errorLabel.setText(I18nManager.getInstance().get("runtime.product_save_failed", e.getMessage()));
             }
         }
     }

@@ -46,13 +46,13 @@ public class PurchaseOrder {
     public String getStatusDisplayName() {
         switch (status) {
             case "pending":
-                return "待审批";
+                return com.cashier.i18n.I18nManager.getInstance().get("runtime.status.pending_approval");
             case "approved":
-                return "已审批";
+                return com.cashier.i18n.I18nManager.getInstance().get("runtime.status.approved");
             case "rejected":
-                return "已拒绝";
+                return com.cashier.i18n.I18nManager.getInstance().get("runtime.status.rejected");
             case "completed":
-                return "已完成";
+                return com.cashier.i18n.I18nManager.getInstance().get("runtime.status.completed");
             default:
                 return status;
         }

@@ -10,37 +10,29 @@
       spacing="0"
       styleClass="cart-view">
 
-    <!-- 顶部工具栏 -->
-    <HBox spacing="12" styleClass="toolbar" alignment="CENTER_LEFT">
+    <!-- 顶部工具栏：搜索与操作分行，给英文文案留足空间 -->
+    <VBox spacing="8" styleClass="toolbar">
         <padding>
             <Insets top="12" right="12" bottom="12" left="12"/>
         </padding>
 
-        <!-- 搜索框放在最前面，方便快速输入 -->
         <HBox spacing="8" alignment="CENTER_LEFT" styleClass="search-section">
             <Label text="%cart.search_products" styleClass="search-label"/>
             <TextField fx:id="searchField"
                       promptText="%cart.scan_or_search"
+                      HBox.hgrow="ALWAYS"
                       styleClass="search-field-input"/>
         </HBox>
 
-        <Region HBox.hgrow="ALWAYS"/>
-
-        <!-- 统计信息 -->
-        <Label fx:id="countLabel" text="%cart.product_count" styleClass="count-label"/>
-
-        <Separator orientation="VERTICAL" styleClass="toolbar-separator"/>
-
-        <!-- 操作按钮 -->
-        <Button fx:id="clearButton"
-                text="%cart.clear"
-                onAction="#handleClearCart"
-                styleClass="warning-button, button-action"/>
-
-        <Button text="%cart.shortcut_help"
-                onAction="#showShortcutHelp"
-                styleClass="info-button, button-action"/>
-    </HBox>
+        <HBox spacing="12" alignment="CENTER_LEFT">
+            <Label fx:id="countLabel" text="%cart.product_count" styleClass="count-label"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="clearButton" text="%cart.clear" onAction="#handleClearCart"
+                    styleClass="warning-button, button-action"/>
+            <Button text="%cart.shortcut_help" onAction="#showShortcutHelp"
+                    styleClass="info-button, button-action"/>
+        </HBox>
+    </VBox>
 
     <!-- 分割面板 -->
     <SplitPane VBox.vgrow="ALWAYS" styleClass="cart-split-pane">
@@ -53,10 +45,10 @@
                       VBox.vgrow="ALWAYS"
                       styleClass="cart-table">
                 <columns>
-                    <TableColumn fx:id="nameColumn" text="%cart.product_name"/>
-                    <TableColumn fx:id="priceColumn" text="%cart.unit_price"/>
-                    <TableColumn fx:id="quantityColumn" text="%cart.quantity"/>
-                    <TableColumn fx:id="subtotalColumn" text="%cart.subtotal"/>
+                    <TableColumn fx:id="nameColumn" text="%cart.product_name" prefWidth="190" minWidth="150"/>
+                    <TableColumn fx:id="priceColumn" text="%cart.unit_price" prefWidth="110" minWidth="95"/>
+                    <TableColumn fx:id="quantityColumn" text="%cart.quantity" prefWidth="105" minWidth="90"/>
+                    <TableColumn fx:id="subtotalColumn" text="%cart.subtotal" prefWidth="120" minWidth="105"/>
                 </columns>
                 <placeholder>
                     <Label text="%cart.empty" styleClass="empty-label"/>
@@ -69,7 +61,7 @@
             <!-- 商品列表区域 -->
             <VBox VBox.vgrow="ALWAYS" spacing="0">
                 <!-- 商品列表标题 -->
-                <HBox styleClass="section-header" alignment="CENTER_LEFT">
+                <HBox styleClass="section-header, product-list-header" alignment="CENTER_LEFT">
                     <padding>
                         <Insets top="12" right="12" bottom="12" left="12"/>
                     </padding>
@@ -83,9 +75,9 @@
                           VBox.vgrow="ALWAYS"
                           styleClass="product-table">
                     <columns>
-                        <TableColumn fx:id="productNameColumn" text="%cart.product_name"/>
-                        <TableColumn fx:id="productPriceColumn" text="%cart.unit_price"/>
-                        <TableColumn fx:id="productStockColumn" text="%cart.stock"/>
+                        <TableColumn fx:id="productNameColumn" text="%cart.product_name" prefWidth="220" minWidth="170"/>
+                        <TableColumn fx:id="productPriceColumn" text="%cart.unit_price" prefWidth="120" minWidth="100"/>
+                        <TableColumn fx:id="productStockColumn" text="%cart.stock" prefWidth="110" minWidth="90"/>
                     </columns>
                 </TableView>
             </VBox>
@@ -103,7 +95,8 @@
                     </padding>
                     <HBox spacing="10" alignment="CENTER_LEFT">
                         <Label text="%cart.member_phone" styleClass="member-label"/>
-                        <TextField fx:id="memberPhoneField" promptText="%cart.enter_phone" styleClass="member-phone-input"/>
+                        <TextField fx:id="memberPhoneField" promptText="%cart.enter_phone"
+                                   HBox.hgrow="ALWAYS" styleClass="member-phone-input"/>
                         <Button text="%cart.search_button" onAction="#handleSearchMember" styleClass="secondary-button, button-small"/>
                     </HBox>
                     <Label fx:id="memberInfoLabel" text="" styleClass="member-info-display"/>

@@ -153,9 +153,8 @@ public class ShiftController {
         timeColumn.setCellValueFactory(cellData -> {
             Shift s = cellData.getValue();
             SimpleDateFormat sdf = new SimpleDateFormat("MM-dd HH:mm");
-            return new SimpleStringProperty(String.format("%s 至 %s",
-                sdf.format(s.startTime),
-                sdf.format(s.endTime)));
+            return new SimpleStringProperty(I18nManager.getInstance().get("shift.time_range",
+                sdf.format(s.startTime), sdf.format(s.endTime)));
         });
         durationColumn.setCellValueFactory(cellData ->
             new SimpleStringProperty(cellData.getValue().getDurationText()));
@@ -165,7 +164,7 @@ public class ShiftController {
             new SimpleStringProperty(CurrencyUtil.format(cellData.getValue().shiftRevenue.doubleValue())));
         paymentColumn.setCellValueFactory(cellData -> {
             Shift s = cellData.getValue();
-            return new SimpleStringProperty(String.format("现金:%s 微信:%s 支付宝:%s 银行卡:%s",
+            return new SimpleStringProperty(I18nManager.getInstance().get("shift.payment_summary",
                 CurrencyUtil.format(s.cashRevenue.doubleValue()),
                 CurrencyUtil.format(s.wechatRevenue.doubleValue()),
                 CurrencyUtil.format(s.alipayRevenue.doubleValue()),
@@ -178,13 +177,13 @@ public class ShiftController {
      */
     private void initializeCharts() {
         // 班次收入对比柱状图
-        shiftRevenueBarChart.setTitle("班次收入对比");
-        shiftRevenueBarChart.getXAxis().setLabel("班次");
-        shiftRevenueBarChart.getYAxis().setLabel("营业额（元）");
+        shiftRevenueBarChart.setTitle(com.cashier.i18n.I18nManager.getInstance().get("shift.revenue_chart"));
+        shiftRevenueBarChart.getXAxis().setLabel(I18nManager.getInstance().get("chart.shift"));
+        shiftRevenueBarChart.getYAxis().setLabel(I18nManager.getInstance().get("chart.revenue"));
         shiftRevenueBarChart.setLegendVisible(false);
 
         // 支付方式分布饼图
-        paymentMethodPieChart.setTitle("支付方式分布");
+        paymentMethodPieChart.setTitle(com.cashier.i18n.I18nManager.getInstance().get("statistics.payment_distribution"));
         paymentMethodPieChart.setLegendSide(javafx.geometry.Side.RIGHT);
     }
 
@@ -197,7 +196,7 @@ public class ShiftController {
             allShifts = ShiftDAO.findAll();
         } catch (SQLException e) {
             logger.error("加载交接班数据失败", e);
-            showError("加载交接班数据失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
             allShifts = new java.util.ArrayList<>();
         }
         shiftList = FXCollections.observableArrayList(allShifts);
@@ -210,7 +209,7 @@ public class ShiftController {
      * 更新统计信息
      */
     private void updateStatistics() {
-        countLabel.setText("班次数量: " + shiftList.size());
+        countLabel.setText(I18nManager.getInstance().get("runtime.shift_count", shiftList.size()));
 
         BigDecimal totalRevenue = BigDecimal.ZERO;
         int totalTransaction = 0;
@@ -225,8 +224,8 @@ public class ShiftController {
             }
         }
 
-        totalRevenueLabel.setText(String.format("总营业额: ¥%.2f", totalRevenue));
-        totalTransactionLabel.setText(String.format("总交易数: %d", totalTransaction));
+        totalRevenueLabel.setText(I18nManager.getInstance().get("runtime.shift_total_revenue", CurrencyUtil.format(totalRevenue.doubleValue())));
+        totalTransactionLabel.setText(I18nManager.getInstance().get("runtime.shift_total_transactions", totalTransaction));
 
         // 更新图表
         updateCharts(shiftList);
@@ -253,7 +252,7 @@ public class ShiftController {
         int limit = Math.min(10, shifts.size());
         for (int i = 0; i < limit; i++) {
             Shift shift = shifts.get(i);
-            String label = "班次" + (i + 1);
+            String label = I18nManager.getInstance().get("shift.chart_item", i + 1);
             series.getData().add(new javafx.scene.chart.XYChart.Data<>(label, shift.shiftRevenue));
         }
 
@@ -281,16 +280,16 @@ public class ShiftController {
             javafx.collections.FXCollections.observableArrayList();
 
         if (totalCash.compareTo(BigDecimal.ZERO) > 0) {
-            pieChartData.add(new javafx.scene.chart.PieChart.Data("现金", totalCash.doubleValue()));
+            pieChartData.add(new javafx.scene.chart.PieChart.Data(I18nManager.getInstance().get("runtime.payment.cash"), totalCash.doubleValue()));
         }
         if (totalWechat.compareTo(BigDecimal.ZERO) > 0) {
-            pieChartData.add(new javafx.scene.chart.PieChart.Data("微信", totalWechat.doubleValue()));
+            pieChartData.add(new javafx.scene.chart.PieChart.Data(I18nManager.getInstance().get("runtime.payment.wechat"), totalWechat.doubleValue()));
         }
         if (totalAlipay.compareTo(BigDecimal.ZERO) > 0) {
-            pieChartData.add(new javafx.scene.chart.PieChart.Data("支付宝", totalAlipay.doubleValue()));
+            pieChartData.add(new javafx.scene.chart.PieChart.Data(I18nManager.getInstance().get("runtime.payment.alipay"), totalAlipay.doubleValue()));
         }
         if (totalCard.compareTo(BigDecimal.ZERO) > 0) {
-            pieChartData.add(new javafx.scene.chart.PieChart.Data("银行卡", totalCard.doubleValue()));
+            pieChartData.add(new javafx.scene.chart.PieChart.Data(I18nManager.getInstance().get("runtime.payment.card"), totalCard.doubleValue()));
         }
 
         paymentMethodPieChart.setData(pieChartData);
@@ -321,33 +320,34 @@ public class ShiftController {
      */
     private void showShiftDetail(Shift shift) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        I18nManager i18n = I18nManager.getInstance();
 
         StringBuilder detail = new StringBuilder();
-        detail.append("交接班详情\n\n");
-        detail.append("班次ID: ").append(shift.shiftId).append("\n");
-        detail.append("操作员: ").append(shift.operatorName).append("\n");
-        detail.append("开始时间: ").append(shift.startTime != null ? sdf.format(shift.startTime) : "未开始").append("\n");
-        detail.append("结束时间: ").append(shift.endTime != null ? sdf.format(shift.endTime) : "未结束").append("\n");
-        detail.append("班次时长: ").append(shift.getDurationText()).append("\n\n");
+        detail.append(i18n.get("shift.detail_title")).append("\n\n");
+        detail.append(i18n.get("shift.detail_id")).append(shift.shiftId).append("\n");
+        detail.append(i18n.get("shift.detail_operator")).append(shift.operatorName).append("\n");
+        detail.append(i18n.get("shift.detail_start")).append(shift.startTime != null ? sdf.format(shift.startTime) : i18n.get("shift.not_started")).append("\n");
+        detail.append(i18n.get("shift.detail_end")).append(shift.endTime != null ? sdf.format(shift.endTime) : i18n.get("shift.not_ended")).append("\n");
+        detail.append(i18n.get("shift.detail_duration")).append(shift.getDurationText()).append("\n\n");
 
-        detail.append("营业额统计:\n");
-        detail.append("  开机营业额: ¥").append(String.format("%.2f", shift.openingRevenue)).append("\n");
-        detail.append("  关机营业额: ¥").append(String.format("%.2f", shift.closingRevenue)).append("\n");
-        detail.append("  本班营业额: ¥").append(String.format("%.2f", shift.shiftRevenue)).append("\n\n");
+        detail.append(i18n.get("shift.revenue_stats")).append("\n");
+        detail.append(i18n.get("shift.opening_revenue")).append(CurrencyUtil.format(shift.openingRevenue.doubleValue())).append("\n");
+        detail.append(i18n.get("shift.closing_revenue")).append(CurrencyUtil.format(shift.closingRevenue.doubleValue())).append("\n");
+        detail.append(i18n.get("shift.current_revenue")).append(CurrencyUtil.format(shift.shiftRevenue.doubleValue())).append("\n\n");
 
-        detail.append("交易统计:\n");
-        detail.append("  开机交易数: ").append(shift.openingTransactionCount).append("\n");
-        detail.append("  关机交易数: ").append(shift.closingTransactionCount).append("\n");
-        detail.append("  本班交易数: ").append(shift.shiftTransactionCount).append("\n\n");
+        detail.append(i18n.get("shift.transaction_stats")).append("\n");
+        detail.append(i18n.get("shift.opening_transactions")).append(shift.openingTransactionCount).append("\n");
+        detail.append(i18n.get("shift.closing_transactions")).append(shift.closingTransactionCount).append("\n");
+        detail.append(i18n.get("shift.current_transactions")).append(shift.shiftTransactionCount).append("\n\n");
 
-        detail.append("支付方式统计:\n");
-        detail.append("  现金: ¥").append(String.format("%.2f", shift.cashRevenue)).append("\n");
-        detail.append("  微信: ¥").append(String.format("%.2f", shift.wechatRevenue)).append("\n");
-        detail.append("  支付宝: ¥").append(String.format("%.2f", shift.alipayRevenue)).append("\n");
-        detail.append("  银行卡: ¥").append(String.format("%.2f", shift.cardRevenue)).append("\n\n");
+        detail.append(i18n.get("shift.payment_stats")).append("\n");
+        detail.append(i18n.get("shift.cash_revenue")).append(CurrencyUtil.format(shift.cashRevenue.doubleValue())).append("\n");
+        detail.append(i18n.get("shift.wechat_revenue")).append(CurrencyUtil.format(shift.wechatRevenue.doubleValue())).append("\n");
+        detail.append(i18n.get("shift.alipay_revenue")).append(CurrencyUtil.format(shift.alipayRevenue.doubleValue())).append("\n");
+        detail.append(i18n.get("shift.card_revenue")).append(CurrencyUtil.format(shift.cardRevenue.doubleValue())).append("\n\n");
 
         if (shift.notes != null && !shift.notes.isEmpty()) {
-            detail.append("备注: ").append(shift.notes).append("\n");
+            detail.append(i18n.get("shift.notes_label")).append(shift.notes).append("\n");
         }
 
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -418,7 +418,7 @@ public class ShiftController {
     @FXML
     public void handleExport() {
         if (shiftList.isEmpty()) {
-            showError("没有可导出的交接班记录");
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.no_export_shifts"));
             return;
         }
 
@@ -426,9 +426,9 @@ public class ShiftController {
         ChoiceDialog<String> formatDialog = new ChoiceDialog<>(
             "Excel", "Excel", "PDF"
         );
-        formatDialog.setTitle("选择导出格式");
-        formatDialog.setHeaderText("请选择导出格式");
-        formatDialog.setContentText("格式:");
+        formatDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("label.export_format"));
+        formatDialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get("label.please_select_format"));
+        formatDialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.format_label"));
 
         formatDialog.showAndWait().ifPresent(format -> {
             com.cashier.util.ExportUtil.ExportFormat exportFormat =
@@ -492,17 +492,17 @@ public class ShiftController {
 
             if (filePath != null) {
                 Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                successAlert.setTitle("导出成功");
+                successAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("success.export"));
                 successAlert.setHeaderText(null);
-                successAlert.setContentText("文件已成功导出到:\n" + filePath);
+                successAlert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_success_path") + "\n" + filePath);
                 successAlert.showAndWait();
                 updateStatus("导出成功");
             } else {
-                showError("导出失败，请查看日志获取详细信息");
+                showError(com.cashier.i18n.I18nManager.getInstance().get("error.export_failed"));
             }
         } catch (Exception e) {
             logger.error("导出交接班记录失败", e);
-            showError("导出失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_failed_detail", e.getMessage()));
         }
     }
 
@@ -553,12 +553,12 @@ public class ShiftController {
         // 检查是否已有活跃班次
         try {
             if (ShiftDAO.hasActiveShift()) {
-                showError("当前已有活跃班次，请先交班后再开新班！");
+                showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.shift_already_active"));
                 return;
             }
         } catch (SQLException e) {
             logger.error("检查活跃班次失败", e);
-            showError("检查活跃班次失败，请稍后重试");
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.shift_check_failed"));
             return;
         }
 
@@ -566,7 +566,7 @@ public class ShiftController {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle(I18nManager.getInstance().get("common.confirm"));
         alert.setHeaderText(null);
-        alert.setContentText("确定要开始新的班次吗？");
+        alert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.shift_start_confirm"));
 
         if (alert.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
             return;
@@ -575,7 +575,7 @@ public class ShiftController {
         try {
             // 获取当前用户
             if (currentUser == null) {
-                showError("无法获取当前用户信息！");
+                showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.current_user_missing"));
                 return;
             }
 
@@ -585,7 +585,7 @@ public class ShiftController {
                 transactions = TransactionDAO.findAll();
             } catch (SQLException e) {
                 logger.error("加载交易记录失败", e);
-                showError("加载交易记录失败: " + e.getMessage());
+                showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
                 return;
             }
 
@@ -614,7 +614,7 @@ public class ShiftController {
                 ShiftDAO.insert(shift);
             } catch (SQLException e) {
                 logger.error("保存班次失败", e);
-                showError("保存班次失败: " + e.getMessage());
+                showError(com.cashier.i18n.I18nManager.getInstance().get("error.save_data") + ": " + e.getMessage());
                 return;
             }
 
@@ -622,13 +622,13 @@ public class ShiftController {
             loadShifts();
             updateShiftButtonStates();
 
-            showSuccess("开班成功！班次ID: " + shiftId);
+            showSuccess(I18nManager.getInstance().get("runtime.shift_started", shiftId));
 
             // 更新主界面的班次信息
             MainController.updateShiftInfoGlobal();
 
         } catch (Exception e) {
-            showError("开班失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
             logger.error("开班失败", e);
         }
     }
@@ -644,12 +644,12 @@ try {
             activeShift = ShiftDAO.findActiveShift();
         } catch (SQLException e) {
             logger.error("获取活跃班次失败", e);
-            showError("获取活跃班次失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
             return;
         }
 
         if (activeShift == null) {
-            showError("当前没有活跃班次！");
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.no_active_shift_short"));
             return;
         }
 
@@ -657,7 +657,7 @@ try {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle(I18nManager.getInstance().get("common.confirm"));
         alert.setHeaderText(null);
-        alert.setContentText("确定要结束当前班次吗？");
+        alert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.shift_end_confirm"));
 
         if (alert.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
             return;
@@ -670,7 +670,7 @@ try {
                 allTransactions = TransactionDAO.findAll();
             } catch (SQLException e) {
                 logger.error("加载交易记录失败", e);
-                showError("加载交易记录失败: " + e.getMessage());
+                showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
                 return;
             }
 
@@ -717,7 +717,7 @@ try {
                 ShiftDAO.update(activeShift);
             } catch (SQLException e) {
                 logger.error("更新班次失败", e);
-                showError("更新班次失败: " + e.getMessage());
+                showError(com.cashier.i18n.I18nManager.getInstance().get("error.save_data") + ": " + e.getMessage());
                 return;
             }
 
@@ -765,7 +765,7 @@ try {
             handleLogout();
 
         } catch (Exception e) {
-            showError("交班失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
             logger.error("交班失败", e);
         }
     }
@@ -791,7 +791,7 @@ try {
                 }
             });
         } catch (Exception e) {
-            showError("退出登录失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
         }
     }
 

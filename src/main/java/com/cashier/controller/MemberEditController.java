@@ -97,7 +97,12 @@ public class MemberEditController {
         levelComboBox.getSelectionModel().select(0);
 
         // 设置默认折扣
-        discountField.setText("10.0");
+        pointsField.setText("0");
+        discountField.setText("10");
+        balanceField.setText("0.00");
+
+        errorLabel.visibleProperty().bind(errorLabel.textProperty().isNotEmpty());
+        errorLabel.managedProperty().bind(errorLabel.visibleProperty());
 
         // 设置自动编号复选框默认选中
         autoCodeCheckBox.setSelected(true);
@@ -114,7 +119,17 @@ public class MemberEditController {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(empty || item == null ? "" : item);
+                if (empty || item == null) {
+                    setText("");
+                } else {
+                    String key = switch (item) {
+                        case "银卡" -> "member.level.silver";
+                        case "金卡" -> "member.level.gold";
+                        case "钻石" -> "member.level.diamond";
+                        default -> "member.level.regular";
+                    };
+                    setText(com.cashier.i18n.I18nManager.getInstance().get(key));
+                }
                 setAlignment(Pos.CENTER_LEFT);
                 setMinHeight(34);
                 setPrefHeight(34);
@@ -139,7 +154,7 @@ public class MemberEditController {
 
         if (member != null) {
             // 编辑模式
-            titleLabel.setText("编辑会员");
+            titleLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("member.edit.title"));
             memberCodeField.setText(member.memberCode);
             memberCodeField.setDisable(true);
             autoCodeCheckBox.setDisable(true);
@@ -153,7 +168,7 @@ public class MemberEditController {
             birthdayField.setText(member.birthday);
         } else {
             // 添加模式
-            titleLabel.setText("添加会员");
+            titleLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("member.add.title"));
             phoneField.setDisable(false);
             autoCodeCheckBox.setDisable(false);
             autoCodeCheckBox.setSelected(true);
@@ -236,36 +251,36 @@ public class MemberEditController {
 
         // 验证会员编号（仅当手动输入时）
         if (!autoCodeCheckBox.isSelected() && memberCodeField.getText().trim().isEmpty()) {
-            errorMessage += "会员编号不能为空！\n";
+            errorMessage += i18n("member.validation.code_required");
         }
 
         // 验证手机号
         String phone = phoneField.getText().trim();
         if (phone.isEmpty()) {
-            errorMessage += "手机号不能为空！\n";
+            errorMessage += i18n("member.validation.phone_required");
         } else if (!phone.matches("\\d{11}")) {
-            errorMessage += "手机号格式不正确（必须是11位数字）！\n";
+            errorMessage += i18n("member.validation.phone_invalid");
         } else if (member == null && members.containsKey(phone)) {
-            errorMessage += "该手机号已注册！\n";
+            errorMessage += i18n("member.validation.phone_exists");
         }
 
         // 验证姓名
         if (nameField.getText().trim().isEmpty()) {
-            errorMessage += "姓名不能为空！\n";
+            errorMessage += i18n("member.validation.name_required");
         }
 
         // 验证积分
         String pointsText = pointsField.getText().trim();
         if (pointsText.isEmpty()) {
-            errorMessage += "积分不能为空！\n";
+            errorMessage += i18n("member.validation.points_required");
         } else {
             try {
                 double points = Double.parseDouble(pointsText);
                 if (points < 0) {
-                    errorMessage += "积分不能为负数！\n";
+                    errorMessage += i18n("member.validation.points_negative");
                 }
             } catch (IllegalArgumentException e) {
-                errorMessage += "积分格式不正确！\n";
+                errorMessage += i18n("member.validation.points_invalid");
             }
         }
 
@@ -273,31 +288,31 @@ public class MemberEditController {
         try {
             double discount = Double.parseDouble(discountField.getText().trim());
             if (discount < 0 || discount > 10) {
-                errorMessage += "折扣必须在0到10之间（0表示免费，10表示不打折）！\n";
+                errorMessage += i18n("member.validation.discount_range");
             }
         } catch (IllegalArgumentException e) {
-            errorMessage += "折扣格式不正确！\n";
+            errorMessage += i18n("member.validation.discount_invalid");
         }
 
         // 验证余额
         String balanceText = balanceField.getText().trim();
         if (balanceText.isEmpty()) {
-            errorMessage += "余额不能为空！\n";
+            errorMessage += i18n("member.validation.balance_required");
         } else {
             try {
                 double balance = Double.parseDouble(balanceText);
                 if (balance < 0) {
-                    errorMessage += "余额不能为负数！\n";
+                    errorMessage += i18n("member.validation.balance_negative");
                 }
             } catch (IllegalArgumentException e) {
-                errorMessage += "余额格式不正确！\n";
+                errorMessage += i18n("member.validation.balance_invalid");
             }
         }
 
         // 验证生日格式
         String birthday = birthdayField.getText().trim();
         if (!birthday.isEmpty() && !birthday.matches("\\d{2}-\\d{2}")) {
-            errorMessage += "生日格式不正确（格式：MM-dd）！\n";
+            errorMessage += i18n("member.validation.birthday_invalid");
         }
 
         if (errorMessage.isEmpty()) {
@@ -307,5 +322,9 @@ public class MemberEditController {
             errorLabel.setText(errorMessage);
             return false;
         }
+    }
+
+    private String i18n(String key) {
+        return com.cashier.i18n.I18nManager.getInstance().get(key) + "\n";
     }
 }

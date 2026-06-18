@@ -304,7 +304,7 @@ public class PosModeController {
 
         } catch (IOException e) {
             logger.error("加载收银台失败", e);
-            showError("加载收银台失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
     }
 
@@ -391,7 +391,7 @@ public class PosModeController {
             controller.setCurrentUser(currentUser);
 
             Stage stage = new Stage();
-            stage.setTitle("交接班");
+            stage.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.shift_handover"));
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setScene(new Scene(root));
             stage.showAndWait();
@@ -400,7 +400,7 @@ public class PosModeController {
 
         } catch (IOException e) {
             logger.error("加载交接班界面失败", e);
-            showError("加载交接班界面失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
     }
 
@@ -416,8 +416,8 @@ public class PosModeController {
                 // 购物车不为空，提示确认
                 Alert alert = new Alert(Alert.AlertType.WARNING);
                 alert.setTitle(I18nManager.getInstance().get("common.confirm"));
-                alert.setHeaderText("购物车不为空");
-                alert.setContentText("当前购物车还有商品，确定要退出吗？未结账的商品将会丢失。");
+                alert.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get("runtime.cart_not_empty"));
+                alert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.cart_exit_confirm"));
                 alert.showAndWait();
                 // 无论选择什么都继续退出（因为收银员可能需要重新开始）
             }

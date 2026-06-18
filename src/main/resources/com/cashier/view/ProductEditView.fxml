@@ -119,7 +119,8 @@
         <ComboBox fx:id="supplierComboBox"
                   GridPane.columnIndex="3" GridPane.rowIndex="5"
                   promptText="%product.edit.supplier_hint" editable="true"
-                  styleClass="form-combo"/>
+                  minWidth="230" prefWidth="260" maxWidth="Infinity"
+                  GridPane.hgrow="ALWAYS" styleClass="form-combo"/>
 
         <!-- 商品描述 - 跨两列 -->
         <Label text="%product.edit.description" GridPane.columnIndex="0" GridPane.rowIndex="6"

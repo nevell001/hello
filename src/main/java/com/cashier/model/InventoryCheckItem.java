@@ -58,11 +58,11 @@ public class InventoryCheckItem {
      */
     public String getDiffType() {
         if (diffQuantity > 0) {
-            return "盘盈";
+            return com.cashier.i18n.I18nManager.getInstance().get("runtime.inventory_surplus");
         } else if (diffQuantity < 0) {
-            return "盘亏";
+            return com.cashier.i18n.I18nManager.getInstance().get("runtime.inventory_shortage");
         } else {
-            return "无差异";
+            return com.cashier.i18n.I18nManager.getInstance().get("runtime.inventory_no_difference");
         }
     }
 }

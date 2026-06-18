@@ -137,9 +137,11 @@ public class CreateReturnOrderDialogController {
 
         // 初始化退款方式下拉框
         refundMethodComboBox.setItems(FXCollections.observableArrayList(
-            "现金", "微信", "支付宝", "银行卡"
+            "CASH", "WECHAT", "ALIPAY", "CARD"
         ));
-        refundMethodComboBox.setValue("现金");
+        com.cashier.util.I18nUiUtils.configureComboBox(
+            refundMethodComboBox, com.cashier.util.I18nUiUtils::paymentMethod);
+        refundMethodComboBox.setValue("CASH");
 
         // 初始化表格列
         initializeTableColumns();
@@ -266,8 +268,10 @@ public class CreateReturnOrderDialogController {
 
                 if (comboBox == null) {
                     comboBox = new ComboBox<>(FXCollections.observableArrayList(
-                        "完好", "损坏", "已拆封"
+                        "GOOD", "DAMAGED", "OPENED"
                     ));
+                    com.cashier.util.I18nUiUtils.configureComboBox(
+                        comboBox, com.cashier.util.I18nUiUtils::itemCondition);
                     comboBox.setPrefWidth(100);
 
                     comboBox.setOnAction(event -> {
@@ -300,7 +304,7 @@ public class CreateReturnOrderDialogController {
                 if (textField == null) {
                     textField = new TextField();
                     textField.setPrefWidth(140);
-                    textField.setPromptText("请输入原因");
+                    textField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.return_reason_hint"));
 
                     textField.textProperty().addListener((obs, oldVal, newVal) -> {
                         returnItem.reason = newVal;
@@ -325,11 +329,11 @@ public class CreateReturnOrderDialogController {
         transactionIdLabel.setText(transaction.transactionId);
         transactionAmountLabel.setText(CurrencyUtil.format(transaction.finalAmount.doubleValue()));
         transactionDateLabel.setText(transaction.timestamp);  // timestamp已经是格式化的字符串
-        paymentMethodLabel.setText(transaction.getPaymentMethodText());
-        memberNameLabel.setText(transaction.memberName != null ? transaction.memberName : "无");
+        paymentMethodLabel.setText(com.cashier.util.I18nUiUtils.paymentMethod(transaction.paymentMethod));
+        memberNameLabel.setText(transaction.memberName != null ? transaction.memberName : com.cashier.i18n.I18nManager.getInstance().get("statistics.no_data"));
 
         // 设置退款方式
-        refundMethodComboBox.setValue(transaction.getPaymentMethodText());
+        refundMethodComboBox.setValue(transaction.paymentMethod);
 
         // 加载退货商品
         loadReturnItems(items);
@@ -419,9 +423,9 @@ public class CreateReturnOrderDialogController {
                     int totalReturnQty = returnedQty + item.returnQuantity;
 
                     if (totalReturnQty > item.originalQuantity) {
-                        return String.format("商品【%s】退货数量超限。\n" +
-                            "原交易数量: %d，已退货数量: %d，本次退货数量: %d",
-                            item.productName, item.originalQuantity, returnedQty, item.returnQuantity);
+                        return com.cashier.i18n.I18nManager.getInstance().get(
+                            "runtime.return_quantity_exceeded", item.productName,
+                            item.originalQuantity, returnedQty, item.returnQuantity);
                     }
                 }
             }
@@ -430,7 +434,7 @@ public class CreateReturnOrderDialogController {
 
         } catch (Exception e) {
             logger.error("验证退货商品失败", e);
-            return "验证退货商品失败: " + e.getMessage();
+            return com.cashier.i18n.I18nManager.getInstance().get("runtime.return_validation_error", e.getMessage());
         }
     }
 
@@ -442,7 +446,7 @@ public class CreateReturnOrderDialogController {
         // 验证输入
         String returnReason = returnReasonField.getText().trim();
         if (returnReason.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "提示", "请输入退货原因");
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("return_order.return_reason_hint"));
             return;
         }
 
@@ -456,14 +460,14 @@ public class CreateReturnOrderDialogController {
         }
 
         if (!hasSelectedItem) {
-            showAlert(Alert.AlertType.WARNING, "提示", "请至少选择一件退货商品");
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.return_item_required"));
             return;
         }
 
         // 验证退货订单 - 防止重复退货
         String validationResult = validateReturnItems();
         if (validationResult != null) {
-            showAlert(Alert.AlertType.WARNING, "退货验证失败", validationResult);
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("runtime.return_validation_failed"), validationResult);
             return;
         }
 
@@ -518,16 +522,16 @@ public class CreateReturnOrderDialogController {
 
         if (result) {
             submitted = true;
-            showAlert(Alert.AlertType.INFORMATION, "成功", 
-                "退货订单创建成功！\n退货单号: " + returnOrder.returnOrderId + "\n退货金额: ¥" + 
-                String.format("%.2f", returnOrder.totalAmount));
+            showAlert(Alert.AlertType.INFORMATION, com.cashier.i18n.I18nManager.getInstance().get("label.success"),
+                com.cashier.i18n.I18nManager.getInstance().get("runtime.return_create_success",
+                    returnOrder.returnOrderId, String.format("%.2f", returnOrder.totalAmount)));
             logger.info("退货订单创建成功: {}", returnOrder.returnOrderId);
 
             if (dialogStage != null) {
                 dialogStage.close();
             }
         } else {
-            showAlert(Alert.AlertType.ERROR, "失败", "退货订单创建失败，请查看日志");
+            showAlert(Alert.AlertType.ERROR, com.cashier.i18n.I18nManager.getInstance().get("label.failed"), com.cashier.i18n.I18nManager.getInstance().get("runtime.return_create_failed"));
         }
     }
 
@@ -535,25 +539,14 @@ public class CreateReturnOrderDialogController {
      * 获取支付方式代码
      */
     private String getPaymentMethodCode(String text) {
-        switch (text) {
-            case "现金": return "CASH";
-            case "微信": return "WECHAT";
-            case "支付宝": return "ALIPAY";
-            case "银行卡": return "CARD";
-            default: return "CASH";
-        }
+        return text == null ? "CASH" : text;
     }
 
     /**
      * 获取商品状态代码
      */
     private String getConditionCode(String text) {
-        switch (text) {
-            case "完好": return "GOOD";
-            case "损坏": return "DAMAGED";
-            case "已拆封": return "OPENED";
-            default: return "GOOD";
-        }
+        return text == null ? "GOOD" : text;
     }
 
     /**

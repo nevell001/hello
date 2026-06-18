@@ -123,13 +123,13 @@ public class ReturnOrder {
     public String getStatusText() {
         switch (status) {
             case "PENDING":
-                return "待审批";
+                return com.cashier.i18n.I18nManager.getInstance().get("runtime.status.pending_approval");
             case "APPROVED":
-                return "已批准";
+                return com.cashier.i18n.I18nManager.getInstance().get("runtime.status.approved");
             case "REJECTED":
-                return "已拒绝";
+                return com.cashier.i18n.I18nManager.getInstance().get("runtime.status.rejected");
             case "COMPLETED":
-                return "已完成";
+                return com.cashier.i18n.I18nManager.getInstance().get("runtime.status.completed");
             default:
                 return status;
         }
@@ -138,13 +138,13 @@ public class ReturnOrder {
     public String getPaymentMethodText() {
         switch (paymentMethod) {
             case "CASH":
-                return "现金";
+                return com.cashier.i18n.I18nManager.getInstance().get("runtime.payment.cash");
             case "WECHAT":
-                return "微信";
+                return com.cashier.i18n.I18nManager.getInstance().get("runtime.payment.wechat");
             case "ALIPAY":
-                return "支付宝";
+                return com.cashier.i18n.I18nManager.getInstance().get("runtime.payment.alipay");
             case "CARD":
-                return "银行卡";
+                return com.cashier.i18n.I18nManager.getInstance().get("runtime.payment.card");
             default:
                 return paymentMethod;
         }

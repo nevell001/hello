@@ -28,7 +28,7 @@
             <Insets top="10" right="15" bottom="10" left="15"/>
         </padding>
         <Label text="🔍" style="-fx-font-size: 14px;"/>
-        <TextField fx:id="searchField" promptText="搜索快捷键..." HBox.hgrow="ALWAYS"
+        <TextField fx:id="searchField" promptText="%shortcut.search_hint" HBox.hgrow="ALWAYS"
                    styleClass="search-field" onKeyReleased="#handleSearch"/>
     </HBox>
 

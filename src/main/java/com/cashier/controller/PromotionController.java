@@ -2,6 +2,7 @@ package com.cashier.controller;
 
 import com.cashier.service.DataService;
 import com.cashier.model.Promotion;
+import com.cashier.i18n.I18nManager;
 import com.cashier.util.StatusBarManager;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -98,6 +99,8 @@ public class PromotionController {
             "打折",
             "优惠券"
         ));
+        typeFilterComboBox.setButtonCell(createPromotionFilterCell(true));
+        typeFilterComboBox.setCellFactory(listView -> createPromotionFilterCell(true));
         typeFilterComboBox.getSelectionModel().select(0);
 
         // 初始化状态筛选下拉框
@@ -106,6 +109,8 @@ public class PromotionController {
             "启用",
             "禁用"
         ));
+        statusFilterComboBox.setButtonCell(createPromotionFilterCell(false));
+        statusFilterComboBox.setCellFactory(listView -> createPromotionFilterCell(false));
         statusFilterComboBox.getSelectionModel().select(0);
 
         // 设置表格列
@@ -128,7 +133,8 @@ public class PromotionController {
      */
     private void setupTableColumns() {
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
-        typeColumn.setCellValueFactory(new PropertyValueFactory<>("type"));
+        typeColumn.setCellValueFactory(cellData ->
+            new SimpleStringProperty(localizePromotionType(cellData.getValue().type)));
         descriptionColumn.setCellValueFactory(new PropertyValueFactory<>("description"));
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -136,22 +142,26 @@ public class PromotionController {
             Promotion p = cellData.getValue();
             LocalDate startDate = p.startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
             LocalDate endDate = p.endDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-            return new SimpleStringProperty(String.format("%s 至 %s",
-                startDate.format(formatter),
-                endDate.format(formatter)));
+            return new SimpleStringProperty(I18nManager.getInstance().get("promotion.date_range",
+                startDate.format(formatter), endDate.format(formatter)));
         });
 
         usageColumn.setCellValueFactory(cellData -> {
             Promotion p = cellData.getValue();
-            String maxUsage = p.maxUsage == -1 ? "无限制" : String.valueOf(p.maxUsage);
+            String maxUsage = p.maxUsage == -1
+                ? I18nManager.getInstance().get("promotion.unlimited")
+                : String.valueOf(p.maxUsage);
             return new SimpleStringProperty(String.format("%d/%s", p.usageCount, maxUsage));
         });
 
         statusColumn.setCellValueFactory(cellData -> {
             Promotion p = cellData.getValue();
-            String status = p.enabled ? "启用" : "禁用";
-            String validity = p.isValid() ? "有效" : "已过期";
-            return new SimpleStringProperty(status + " (" + validity + ")");
+            String status = I18nManager.getInstance().get(
+                p.enabled ? "promotion.status.enabled" : "promotion.status.disabled");
+            String validity = I18nManager.getInstance().get(
+                p.isValid() ? "promotion.status.valid" : "promotion.status.expired");
+            return new SimpleStringProperty(I18nManager.getInstance().get(
+                "promotion.status_display", status, validity));
         });
     }
 
@@ -171,7 +181,7 @@ public class PromotionController {
      * 更新促销数量标签
      */
     private void updateCountLabel() {
-        countLabel.setText("促销数量: " + promotionList.size());
+        countLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_count", promotionList.size()));
     }
 
     /**
@@ -210,7 +220,7 @@ public class PromotionController {
      */
     private void showPromotionDialog(Promotion promotion) {
         Dialog<Promotion> dialog = new Dialog<>();
-        dialog.setTitle(promotion == null ? "添加促销" : "编辑促销");
+        dialog.setTitle(promotion == null ? com.cashier.i18n.I18nManager.getInstance().get("promotion.add") : com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_edit"));
         dialog.setHeaderText(null);
         dialog.getDialogPane().setPrefWidth(760);
         dialog.getDialogPane().getStyleClass().add("promotion-dialog");
@@ -223,7 +233,7 @@ public class PromotionController {
         VBox content = new VBox(14);
         content.getStyleClass().add("dialog-content");
 
-        Label titleLabel = new Label(promotion == null ? "添加促销" : "编辑促销");
+        Label titleLabel = new Label(promotion == null ? com.cashier.i18n.I18nManager.getInstance().get("promotion.add") : com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_edit"));
         titleLabel.getStyleClass().add("view-title");
 
         GridPane grid = new GridPane();
@@ -251,6 +261,8 @@ public class PromotionController {
         errorLabel.setWrapText(true);
         errorLabel.setMaxWidth(Double.MAX_VALUE);
         errorLabel.getStyleClass().add("error-label");
+        errorLabel.visibleProperty().bind(errorLabel.textProperty().isNotEmpty());
+        errorLabel.managedProperty().bind(errorLabel.visibleProperty());
 
         stylePromotionDialogControls(
             promotionCodeField,
@@ -268,9 +280,9 @@ public class PromotionController {
         typeComboBox.setButtonCell(createPromotionTypeCell());
         typeComboBox.setCellFactory(listView -> createPromotionTypeCell());
         typeComboBox.getSelectionModel().select("满减");
-        thresholdField.setPromptText("例如: 100，表示消费满100元");
-        discountField.setPromptText("满减填减免金额，例如: 10");
-        maxUsageField.setPromptText("空着表示不限制");
+        thresholdField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_threshold_hint"));
+        discountField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_reduction_hint"));
+        maxUsageField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_unlimited_hint"));
         startDatePicker.setValue(LocalDate.now());
         endDatePicker.setValue(LocalDate.now().plusDays(30));
 
@@ -289,7 +301,7 @@ public class PromotionController {
             // 新建促销时自动生成编号
             promotionCodeField.setText(generatePromotionCode());
             promotionCodeField.setDisable(true);  // 禁用促销编号字段
-            thresholdField.setText("0");
+            thresholdField.setText(com.cashier.i18n.I18nManager.getInstance().get("member.edit.points_hint"));
         }
 
         typeComboBox.valueProperty().addListener((obs, oldType, newType) -> {
@@ -297,35 +309,36 @@ public class PromotionController {
         });
         updatePromotionFieldHints(typeComboBox.getSelectionModel().getSelectedItem(), thresholdField, discountField);
 
-        grid.add(createFormLabel("促销编号:"), 0, 0);
+        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.code")), 0, 0);
         grid.add(promotionCodeField, 1, 0);
-        grid.add(createFormLabel("促销名称:*"), 2, 0);
+        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.name_required")), 2, 0);
         grid.add(nameField, 3, 0);
-        grid.add(createFormLabel("促销类型:*"), 0, 1);
+        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.type_required")), 0, 1);
         grid.add(typeComboBox, 1, 1);
-        grid.add(createFormLabel("最大次数:"), 2, 1);
+        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.max_usage")), 2, 1);
         grid.add(maxUsageField, 3, 1);
-        grid.add(createFormLabel("门槛金额:*"), 0, 2);
+        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.threshold_required")), 0, 2);
         grid.add(thresholdField, 1, 2);
-        grid.add(createFormLabel("优惠值:*"), 2, 2);
+        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.discount_required")), 2, 2);
         grid.add(discountField, 3, 2);
-        grid.add(createFormLabel("开始日期:*"), 0, 3);
+        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.start_date_required")), 0, 3);
         grid.add(startDatePicker, 1, 3);
-        grid.add(createFormLabel("结束日期:*"), 2, 3);
+        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.end_date_required")), 2, 3);
         grid.add(endDatePicker, 3, 3);
-        grid.add(createFormLabel("描述:"), 0, 4);
+        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.description_label")), 0, 4);
         grid.add(descriptionArea, 1, 4, 3, 1);
         grid.add(errorLabel, 1, 5, 3, 1);
 
         content.getChildren().addAll(titleLabel, grid);
         dialog.getDialogPane().setContent(content);
 
-        ButtonType okButtonType = new ButtonType("确定", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(okButtonType, ButtonType.CANCEL);
+        ButtonType okButtonType = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get("common.ok"), ButtonBar.ButtonData.OK_DONE);
+        ButtonType cancelButtonType = new ButtonType(I18nManager.getInstance().get("common.cancel"), ButtonBar.ButtonData.CANCEL_CLOSE);
+        dialog.getDialogPane().getButtonTypes().addAll(okButtonType, cancelButtonType);
 
         Node okButton = dialog.getDialogPane().lookupButton(okButtonType);
         okButton.getStyleClass().addAll("primary-button", "button-normal");
-        Node cancelButton = dialog.getDialogPane().lookupButton(ButtonType.CANCEL);
+        Node cancelButton = dialog.getDialogPane().lookupButton(cancelButtonType);
         cancelButton.getStyleClass().addAll("secondary-button", "button-normal");
         okButton.addEventFilter(ActionEvent.ACTION, event -> {
             try {
@@ -351,7 +364,7 @@ public class PromotionController {
                 event.consume();
             } catch (Exception e) {
                 logger.error("保存促销失败", e);
-                errorLabel.setText("保存促销时发生错误，请检查输入后重试。原因: " + e.getMessage());
+                errorLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_save_validation_error", e.getMessage()));
                 event.consume();
             }
         });
@@ -367,10 +380,11 @@ public class PromotionController {
                 }
                 DataService.savePromotions(allPromotions);
                 loadPromotions();
-                updateStatus(promotion == null ? "促销添加成功" : "促销更新成功");
+                updateStatus(I18nManager.getInstance().get(
+                    promotion == null ? "promotion.added" : "promotion.updated"));
             } catch (Exception e) {
                 logger.error("保存促销失败", e);
-                showAlert("保存失败", "保存促销时发生错误: " + e.getMessage());
+                showAlert(com.cashier.i18n.I18nManager.getInstance().get("message.save.failed"), com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_save_error", e.getMessage()));
             }
         });
     }
@@ -455,7 +469,7 @@ public class PromotionController {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(empty || item == null ? "" : item);
+                setText(empty || item == null ? "" : localizePromotionType(item));
                 setAlignment(Pos.CENTER_LEFT);
                 setMinHeight(34);
                 setPrefHeight(34);
@@ -463,19 +477,51 @@ public class PromotionController {
         };
     }
 
+    private ListCell<String> createPromotionFilterCell(boolean typeFilter) {
+        return new ListCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText("");
+                } else if ("全部".equals(item)) {
+                    setText(I18nManager.getInstance().get("promotion.filter.all"));
+                } else if (typeFilter) {
+                    setText(localizePromotionType(item));
+                } else {
+                    setText(I18nManager.getInstance().get(
+                        "启用".equals(item) ? "promotion.status.enabled" : "promotion.status.disabled"));
+                }
+            }
+        };
+    }
+
+    private String localizePromotionType(String type) {
+        if ("打折".equals(type)) {
+            return I18nManager.getInstance().get("promotion.type.discount");
+        }
+        if ("优惠券".equals(type)) {
+            return I18nManager.getInstance().get("promotion.type.coupon");
+        }
+        if ("满减".equals(type)) {
+            return I18nManager.getInstance().get("promotion.type.reduction");
+        }
+        return type == null ? "" : type;
+    }
+
     private void updatePromotionFieldHints(String type, TextField thresholdField, TextField discountField) {
         if ("打折".equals(type)) {
-            thresholdField.setPromptText("例如: 100，表示满100元可打折");
-            discountField.setPromptText("请输入0到1之间的小数，例如0.9表示9折");
+            thresholdField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_discount_threshold_hint"));
+            discountField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_discount_hint"));
         } else if ("优惠券".equals(type)) {
-            thresholdField.setPromptText("优惠券不设门槛时填0");
-            discountField.setPromptText("请输入优惠券面额，例如: 20");
+            thresholdField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_coupon_threshold_hint"));
+            discountField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_coupon_value_hint"));
             if (thresholdField.getText().trim().isEmpty()) {
-                thresholdField.setText("0");
+                thresholdField.setText(com.cashier.i18n.I18nManager.getInstance().get("member.edit.points_hint"));
             }
         } else {
-            thresholdField.setPromptText("例如: 100，表示消费满100元");
-            discountField.setPromptText("请输入减免金额，例如: 10");
+            thresholdField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_threshold_hint"));
+            discountField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_reduction_value_hint"));
         }
     }
 
@@ -496,32 +542,32 @@ public class PromotionController {
         String discountText = discountField.getText().trim();
 
         if (name.isEmpty()) {
-            throw new IllegalArgumentException("请填写促销名称，例如“满100减10”或“会员日9折”。");
+            throw new IllegalArgumentException(I18nManager.getInstance().get("promotion.validation.name"));
         }
         if (type == null || type.isEmpty()) {
-            throw new IllegalArgumentException("请选择促销类型：满减、打折或优惠券。");
+            throw new IllegalArgumentException(I18nManager.getInstance().get("promotion.validation.type"));
         }
         if (thresholdText.isEmpty()) {
-            throw new IllegalArgumentException("请填写门槛金额。优惠券不设门槛时请填0。");
+            throw new IllegalArgumentException(I18nManager.getInstance().get("promotion.validation.threshold"));
         }
         if (discountText.isEmpty()) {
             throw new IllegalArgumentException(getDiscountRequiredMessage(type));
         }
         if (startDatePicker.getValue() == null) {
-            throw new IllegalArgumentException("请选择开始日期。");
+            throw new IllegalArgumentException(I18nManager.getInstance().get("promotion.validation.start_date"));
         }
         if (endDatePicker.getValue() == null) {
-            throw new IllegalArgumentException("请选择结束日期。");
+            throw new IllegalArgumentException(I18nManager.getInstance().get("promotion.validation.end_date"));
         }
         if (endDatePicker.getValue().isBefore(startDatePicker.getValue())) {
-            throw new IllegalArgumentException("结束日期不能早于开始日期，请调整促销有效期。");
+            throw new IllegalArgumentException(I18nManager.getInstance().get("promotion.validation.date_order"));
         }
 
-        BigDecimal threshold = parseDecimal(thresholdText, "门槛金额");
-        BigDecimal discount = parseDecimal(discountText, "优惠值");
+        BigDecimal threshold = parseDecimal(thresholdText, I18nManager.getInstance().get("promotion.threshold"));
+        BigDecimal discount = parseDecimal(discountText, I18nManager.getInstance().get("promotion.discount_value"));
 
         if (threshold.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("门槛金额不能为负数。优惠券不设门槛时请填0。");
+            throw new IllegalArgumentException(I18nManager.getInstance().get("promotion.validation.threshold_negative"));
         }
         validateDiscountValue(type, threshold, discount);
 
@@ -531,10 +577,10 @@ public class PromotionController {
             try {
                 maxUsage = FormValidator.parseInt(maxUsageText);
             } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("最大使用次数必须是整数，例如100；不限制次数时请留空。");
+                throw new IllegalArgumentException(I18nManager.getInstance().get("promotion.validation.max_usage_integer"));
             }
             if (maxUsage <= 0) {
-                throw new IllegalArgumentException("最大使用次数必须大于0；不限制次数时请留空。");
+                throw new IllegalArgumentException(I18nManager.getInstance().get("promotion.validation.max_usage_positive"));
             }
         }
 
@@ -556,18 +602,18 @@ public class PromotionController {
         try {
             return new BigDecimal(text);
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(fieldName + "必须是数字，请不要输入中文、空格或货币符号。");
+            throw new IllegalArgumentException(I18nManager.getInstance().get("promotion.validation.number", fieldName));
         }
     }
 
     private String getDiscountRequiredMessage(String type) {
         if ("打折".equals(type)) {
-            return "请填写折扣率，例如0.9表示9折，0.85表示8.5折。";
+            return I18nManager.getInstance().get("promotion.validation.discount_rate_required");
         }
         if ("优惠券".equals(type)) {
-            return "请填写优惠券面额，例如20表示减20元。";
+            return I18nManager.getInstance().get("promotion.validation.coupon_value_required");
         }
-        return "请填写减免金额，例如10表示减10元。";
+        return I18nManager.getInstance().get("promotion.validation.reduction_required");
     }
 
     private void validateDiscountValue(String type, BigDecimal threshold, BigDecimal discount) {
@@ -576,11 +622,11 @@ public class PromotionController {
         }
         if ("打折".equals(type)) {
             if (discount.compareTo(BigDecimal.ONE) >= 0) {
-                throw new IllegalArgumentException("打折促销的折扣率必须大于0且小于1，例如0.9表示9折。");
+                throw new IllegalArgumentException(I18nManager.getInstance().get("promotion.validation.discount_rate_range"));
             }
         } else if ("满减".equals(type) && threshold.compareTo(BigDecimal.ZERO) > 0
                 && discount.compareTo(threshold) > 0) {
-            throw new IllegalArgumentException("满减金额不能大于门槛金额，例如满100最多减100。");
+            throw new IllegalArgumentException(I18nManager.getInstance().get("promotion.validation.reduction_limit"));
         }
     }
 
@@ -606,15 +652,15 @@ public class PromotionController {
         }
 
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("确认删除");
+        alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.confirm_delete"));
         alert.setHeaderText(null);
-        alert.setContentText("确定要删除选中的 " + selected.size() + " 个促销吗？");
+        alert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_delete_confirm", selected.size()));
 
         if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
             allPromotions.removeAll(selected);
             DataService.savePromotions(allPromotions);
             loadPromotions();
-            updateStatus("促销删除成功");
+            updateStatus(I18nManager.getInstance().get("promotion.deleted"));
         }
     }
 
@@ -629,7 +675,7 @@ public class PromotionController {
         }
         DataService.savePromotions(allPromotions);
         loadPromotions();
-        updateStatus("促销已启用");
+        updateStatus(I18nManager.getInstance().get("promotion.enabled"));
     }
 
     /**
@@ -643,7 +689,7 @@ public class PromotionController {
         }
         DataService.savePromotions(allPromotions);
         loadPromotions();
-        updateStatus("促销已禁用");
+        updateStatus(I18nManager.getInstance().get("promotion.disabled"));
     }
 
     /**

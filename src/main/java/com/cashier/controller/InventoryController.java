@@ -21,6 +21,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -213,7 +214,7 @@ public class InventoryController extends BaseController<Product> {
             }
         } catch (SQLException e) {
             logger.error("加载商品数据失败", e);
-            showError("加载商品数据失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
             inventoryMap = new HashMap<>();
         }
         inventoryList = FXCollections.observableArrayList(inventoryMap.values());
@@ -290,7 +291,7 @@ public class InventoryController extends BaseController<Product> {
                     }
                 } catch (SQLException e) {
                     logger.error("删除商品失败", e);
-                    showError("删除商品失败: " + e.getMessage());
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("error.delete_data") + ": " + e.getMessage());
                 }
             }
         } else {
@@ -303,10 +304,10 @@ public class InventoryController extends BaseController<Product> {
                         }
                     }
                     loadTableData();
-                    showSuccess(String.format("成功删除 %d 个商品", successCount));
+                    showSuccess(i18n.get("runtime.products_deleted", successCount));
                 } catch (SQLException e) {
                     logger.error("批量删除商品失败", e);
-                    showError("批量删除商品失败: " + e.getMessage());
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("error.delete_data") + ": " + e.getMessage());
                 }
             }
         }
@@ -344,7 +345,7 @@ public class InventoryController extends BaseController<Product> {
                 return true;
             }
         } catch (IOException e) {
-            showError("加载编辑对话框失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
         return false;
     }
@@ -382,7 +383,7 @@ public class InventoryController extends BaseController<Product> {
                     StatusBarManager.updateStatus("快速入库成功: " + selected.name + " (+" + controller.getRestockQuantity() + ")");
                 }
             } catch (IOException e) {
-                showError("加载快速入库对话框失败: " + e.getMessage());
+                showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
             }
         }
     }
@@ -402,7 +403,7 @@ public class InventoryController extends BaseController<Product> {
                 inventoryList.setAll(results);
             } catch (SQLException e) {
                 logger.error("搜索商品失败", e);
-                showError("搜索商品失败: " + e.getMessage());
+                showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
             }
         }
         updateCountLabel();
@@ -462,8 +463,9 @@ public class InventoryController extends BaseController<Product> {
      */
     private void showCategoryManagementDialog() {
         Dialog<ButtonType> dialog = new Dialog<>();
+        prepareInventoryDialog(dialog, 600);
         dialog.setTitle(i18n.get("inventory.category_management"));
-        dialog.setHeaderText(i18n.get("inventory.category_management.header"));
+        dialog.setHeaderText(null);
 
         // 创建表格
         TableView<Category> categoryTable = new TableView<>();
@@ -489,6 +491,7 @@ public class InventoryController extends BaseController<Product> {
 
         // 创建按钮面板
         HBox buttonPanel = new HBox(10);
+        buttonPanel.setAlignment(Pos.CENTER_RIGHT);
         Button addBtn = new Button(i18n.get("common.add"));
         Button editBtn = new Button(i18n.get("common.edit"));
         Button deleteBtn = new Button(i18n.get("common.delete"));
@@ -510,6 +513,7 @@ public class InventoryController extends BaseController<Product> {
         });
 
         VBox content = new VBox(10);
+        content.getStyleClass().add("dialog-content");
         content.setPadding(new Insets(10));
         content.getChildren().addAll(categoryTable, buttonPanel);
 
@@ -522,10 +526,12 @@ public class InventoryController extends BaseController<Product> {
 
     private void showAddCategoryDialog(ObservableList<Category> categoryList) {
         Dialog<ButtonType> dialog = new Dialog<>();
+        prepareInventoryDialog(dialog, 520);
         dialog.setTitle(i18n.get("common.add"));
         GridPane grid = new GridPane();
         grid.setHgap(10); grid.setVgap(10);
         grid.setPadding(new Insets(20));
+        grid.getStyleClass().add("form-grid");
 
         TextField codeField = new TextField();
         TextField nameField = new TextField();
@@ -550,7 +556,7 @@ public class InventoryController extends BaseController<Product> {
                         categoryList.add(cat);
                     }
                 } catch (SQLException e) {
-                    showError("添加分类失败: " + e.getMessage());
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("error.save_data") + ": " + e.getMessage());
                 }
             }
         });
@@ -558,10 +564,12 @@ public class InventoryController extends BaseController<Product> {
 
     private void showEditCategoryDialog(Category category, ObservableList<Category> categoryList) {
         Dialog<ButtonType> dialog = new Dialog<>();
+        prepareInventoryDialog(dialog, 520);
         dialog.setTitle(i18n.get("common.edit"));
         GridPane grid = new GridPane();
         grid.setHgap(10); grid.setVgap(10);
         grid.setPadding(new Insets(20));
+        grid.getStyleClass().add("form-grid");
 
         TextField codeField = new TextField(category.categoryCode);
         TextField nameField = new TextField(category.name);
@@ -587,7 +595,7 @@ public class InventoryController extends BaseController<Product> {
                         categoryList.set(categoryList.indexOf(category), category);
                     }
                 } catch (SQLException e) {
-                    showError("更新分类失败: " + e.getMessage());
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("error.save_data") + ": " + e.getMessage());
                 }
             }
         });
@@ -600,7 +608,7 @@ public class InventoryController extends BaseController<Product> {
                     categoryList.remove(category);
                 }
             } catch (SQLException e) {
-                showError("删除分类失败: " + e.getMessage());
+                showError(com.cashier.i18n.I18nManager.getInstance().get("error.delete_data") + ": " + e.getMessage());
             }
         }
     }
@@ -615,6 +623,7 @@ public class InventoryController extends BaseController<Product> {
 
     private void showUnitManagementDialog() {
         Dialog<ButtonType> dialog = new Dialog<>();
+        prepareInventoryDialog(dialog, 600);
         dialog.setTitle(i18n.get("inventory.unit_management"));
 
         TableView<Unit> unitTable = new TableView<>();
@@ -638,6 +647,7 @@ public class InventoryController extends BaseController<Product> {
         unitTable.setItems(unitList);
 
         HBox buttonPanel = new HBox(10);
+        buttonPanel.setAlignment(Pos.CENTER_RIGHT);
         Button addBtn = new Button(i18n.get("common.add"));
         Button editBtn = new Button(i18n.get("common.edit"));
         Button deleteBtn = new Button(i18n.get("common.delete"));
@@ -659,6 +669,7 @@ public class InventoryController extends BaseController<Product> {
         });
 
         VBox content = new VBox(10);
+        content.getStyleClass().add("dialog-content");
         content.setPadding(new Insets(10));
         content.getChildren().addAll(unitTable, buttonPanel);
 
@@ -671,10 +682,12 @@ public class InventoryController extends BaseController<Product> {
 
     private void showAddUnitDialog(ObservableList<Unit> unitList) {
         Dialog<ButtonType> dialog = new Dialog<>();
+        prepareInventoryDialog(dialog, 520);
         dialog.setTitle(i18n.get("common.add"));
         GridPane grid = new GridPane();
         grid.setHgap(10); grid.setVgap(10);
         grid.setPadding(new Insets(20));
+        grid.getStyleClass().add("form-grid");
 
         TextField nameField = new TextField();
         TextField descField = new TextField();
@@ -695,7 +708,7 @@ public class InventoryController extends BaseController<Product> {
                         unitList.add(unit);
                     }
                 } catch (SQLException e) {
-                    showError("添加单位失败: " + e.getMessage());
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("error.save_data") + ": " + e.getMessage());
                 }
             }
         });
@@ -703,10 +716,12 @@ public class InventoryController extends BaseController<Product> {
 
     private void showEditUnitDialog(Unit unit, ObservableList<Unit> unitList) {
         Dialog<ButtonType> dialog = new Dialog<>();
+        prepareInventoryDialog(dialog, 520);
         dialog.setTitle(i18n.get("common.edit"));
         GridPane grid = new GridPane();
         grid.setHgap(10); grid.setVgap(10);
         grid.setPadding(new Insets(20));
+        grid.getStyleClass().add("form-grid");
 
         TextField nameField = new TextField(unit.name);
         nameField.setEditable(false);
@@ -728,7 +743,7 @@ public class InventoryController extends BaseController<Product> {
                         unitList.set(unitList.indexOf(unit), unit);
                     }
                 } catch (SQLException e) {
-                    showError("更新单位失败: " + e.getMessage());
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("error.save_data") + ": " + e.getMessage());
                 }
             }
         });
@@ -741,8 +756,18 @@ public class InventoryController extends BaseController<Product> {
                     unitList.remove(unit);
                 }
             } catch (SQLException e) {
-                showError("删除单位失败: " + e.getMessage());
+                showError(com.cashier.i18n.I18nManager.getInstance().get("error.delete_data") + ": " + e.getMessage());
             }
+        }
+    }
+
+    private void prepareInventoryDialog(Dialog<?> dialog, double width) {
+        dialog.setHeaderText(null);
+        dialog.getDialogPane().setPrefWidth(width);
+        dialog.getDialogPane().getStyleClass().add("management-dialog");
+        if (inventoryTable != null && inventoryTable.getScene() != null) {
+            dialog.initOwner(inventoryTable.getScene().getWindow());
+            dialog.getDialogPane().getStylesheets().addAll(inventoryTable.getScene().getStylesheets());
         }
     }
 }

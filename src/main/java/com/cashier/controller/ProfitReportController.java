@@ -167,6 +167,8 @@ public class ProfitReportController {
             "上月",
             "自定义"
         ));
+        com.cashier.util.I18nUiUtils.configureComboBox(
+            timeRangeComboBox, com.cashier.util.I18nUiUtils::dateRange);
         timeRangeComboBox.getSelectionModel().select(4); // 默认选中本月
 
         // 设置默认日期范围（本月）
@@ -248,20 +250,20 @@ public class ProfitReportController {
      */
     private void initializeCharts() {
         // 利润构成饼图
-        profitCompositionPieChart.setTitle("利润构成");
+        profitCompositionPieChart.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.chart.profit_composition"));
         profitCompositionPieChart.setLegendSide(javafx.geometry.Side.RIGHT);
 
         // 每日利润趋势折线图
-        dailyProfitTrendLineChart.setTitle("每日利润趋势");
-        dailyProfitTrendLineChart.getXAxis().setLabel("日期");
-        dailyProfitTrendLineChart.getYAxis().setLabel("利润（元）");
+        dailyProfitTrendLineChart.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.chart.daily_profit"));
+        dailyProfitTrendLineChart.getXAxis().setLabel(I18nManager.getInstance().get("chart.date"));
+        dailyProfitTrendLineChart.getYAxis().setLabel(I18nManager.getInstance().get("chart.profit"));
         dailyProfitTrendLineChart.setCreateSymbols(false);
         dailyProfitTrendLineChart.setLegendVisible(true);
 
         // 分类利润对比柱状图
-        categoryProfitBarChart.setTitle("分类利润对比");
-        categoryProfitBarChart.getXAxis().setLabel("分类");
-        categoryProfitBarChart.getYAxis().setLabel("利润（元）");
+        categoryProfitBarChart.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.chart.category_profit"));
+        categoryProfitBarChart.getXAxis().setLabel(I18nManager.getInstance().get("chart.category"));
+        categoryProfitBarChart.getYAxis().setLabel(I18nManager.getInstance().get("chart.profit"));
         categoryProfitBarChart.setLegendVisible(false);
     }
 
@@ -307,13 +309,15 @@ public class ProfitReportController {
             categoryList.add("全部分类");
             categoryList.addAll(allCategories);
             categoryComboBox.setItems(categoryList);
+            com.cashier.util.I18nUiUtils.configureComboBox(categoryComboBox, value ->
+                "全部分类".equals(value) ? I18nManager.getInstance().get("filter.all_categories") : value);
             categoryComboBox.getSelectionModel().select(0);
 
             logger.info("成功加载 {} 个商品，{} 条交易记录，{} 条入库记录，{} 条入库明细",
                 allProducts.size(), allTransactions.size(), allInboundRecords.size(), allInboundItems.size());
         } catch (SQLException e) {
             logger.error("加载数据失败", e);
-            showError("加载数据失败: " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
             allProducts = new ArrayList<>();
             allTransactions = new ArrayList<>();
             allInboundRecords = new ArrayList<>();
@@ -405,12 +409,12 @@ public class ProfitReportController {
         LocalDate endDate = endDatePicker.getValue();
 
         if (startDate == null || endDate == null) {
-            showError("请选择日期范围！");
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.select_date_range"));
             return;
         }
 
         if (startDate.isAfter(endDate)) {
-            showError("开始日期不能晚于结束日期！");
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.invalid_date_range"));
             return;
         }
 
@@ -474,7 +478,8 @@ public class ProfitReportController {
                                 cost = item.getPrice().multiply(BigDecimal.valueOf(0.7)).doubleValue();
                             }
 
-                            String category = product != null && product.category != null ? product.category : "未分类";
+                            String category = product != null && product.category != null
+                                ? product.category : I18nManager.getInstance().get("report.uncategorized");
 
                             // 分类筛选
                             if (categoryName != null && !categoryName.equals("全部分类") &&
@@ -662,7 +667,8 @@ public class ProfitReportController {
                 dp.revenue,
                 dp.cost,
                 dp.profit,
-                margin
+                margin,
+                true
             ));
         }
 
@@ -693,13 +699,13 @@ public class ProfitReportController {
         ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList();
 
         if (grossProfit > 0) {
-            pieChartData.add(new PieChart.Data("毛利润", grossProfit));
+            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get("chart.series.gross_profit"), grossProfit));
         }
         if (operatingCost > 0) {
-            pieChartData.add(new PieChart.Data("运营成本", operatingCost));
+            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get("chart.series.operating_cost"), operatingCost));
         }
         if (netProfit > 0) {
-            pieChartData.add(new PieChart.Data("净利润", netProfit));
+            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get("chart.series.net_profit"), netProfit));
         }
 
         profitCompositionPieChart.setData(pieChartData);
@@ -712,8 +718,8 @@ public class ProfitReportController {
         XYChart.Series<String, Number> grossProfitSeries = new XYChart.Series<>();
         XYChart.Series<String, Number> netProfitSeries = new XYChart.Series<>();
 
-        grossProfitSeries.setName("毛利润");
-        netProfitSeries.setName("净利润");
+        grossProfitSeries.setName(I18nManager.getInstance().get("chart.series.gross_profit"));
+        netProfitSeries.setName(I18nManager.getInstance().get("chart.series.net_profit"));
 
         for (Map.Entry<String, DailyProfit> entry : dailyProfitMap.entrySet()) {
             DailyProfit dp = entry.getValue();
@@ -733,7 +739,7 @@ public class ProfitReportController {
      */
     private void updateCategoryProfitBarChart(Map<String, CategoryProfit> categoryProfitMap) {
         XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.setName("利润");
+        series.setName(I18nManager.getInstance().get("chart.series.profit"));
 
         for (Map.Entry<String, CategoryProfit> entry : categoryProfitMap.entrySet()) {
             series.getData().add(new XYChart.Data<>(entry.getKey(), entry.getValue().profit));
@@ -752,9 +758,9 @@ public class ProfitReportController {
         ChoiceDialog<String> exportDialog = new ChoiceDialog<>(
             "商品利润", "商品利润", "分类利润", "每日利润"
         );
-        exportDialog.setTitle("选择导出内容");
-        exportDialog.setHeaderText("请选择要导出的内容");
-        exportDialog.setContentText("导出内容:");
+        exportDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.select_export_content"));
+        exportDialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get("runtime.select_export_content_header"));
+        exportDialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_content_label"));
 
         exportDialog.showAndWait().ifPresent(exportType -> {
             if (exportType.equals("商品利润")) {
@@ -772,7 +778,7 @@ public class ProfitReportController {
      */
     private void exportProductProfit() {
         if (productProfitTable.getItems().isEmpty()) {
-            showError("没有可导出的商品利润数据");
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.no_export_product_profit"));
             return;
         }
 
@@ -780,9 +786,9 @@ public class ProfitReportController {
         ChoiceDialog<String> formatDialog = new ChoiceDialog<>(
             "Excel", "Excel", "PDF"
         );
-        formatDialog.setTitle("选择导出格式");
-        formatDialog.setHeaderText("请选择导出格式");
-        formatDialog.setContentText("格式:");
+        formatDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("label.export_format"));
+        formatDialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get("label.please_select_format"));
+        formatDialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.format_label"));
 
         formatDialog.showAndWait().ifPresent(format -> {
             com.cashier.util.ExportUtil.ExportFormat exportFormat =
@@ -820,17 +826,17 @@ public class ProfitReportController {
 
                 if (filePath != null) {
                     Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                    successAlert.setTitle("导出成功");
+                    successAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("success.export"));
                     successAlert.setHeaderText(null);
-                    successAlert.setContentText("文件已成功导出到:\n" + filePath);
+                    successAlert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_success_path") + "\n" + filePath);
                     successAlert.showAndWait();
                     logger.info("商品利润分析报表导出成功: {}", filePath);
                 } else {
-                    showError("导出失败，请查看日志获取详细信息");
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("error.export_failed"));
                 }
             } catch (Exception e) {
                 logger.error("导出商品利润分析报表失败", e);
-                showError("导出失败: " + e.getMessage());
+                showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_failed_detail", e.getMessage()));
             }
         });
     }
@@ -840,7 +846,7 @@ public class ProfitReportController {
      */
     private void exportCategoryProfit() {
         if (categoryProfitTable.getItems().isEmpty()) {
-            showError("没有可导出的分类利润数据");
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.no_export_category_profit"));
             return;
         }
 
@@ -848,9 +854,9 @@ public class ProfitReportController {
         ChoiceDialog<String> formatDialog = new ChoiceDialog<>(
             "Excel", "Excel", "PDF"
         );
-        formatDialog.setTitle("选择导出格式");
-        formatDialog.setHeaderText("请选择导出格式");
-        formatDialog.setContentText("格式:");
+        formatDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("label.export_format"));
+        formatDialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get("label.please_select_format"));
+        formatDialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.format_label"));
 
         formatDialog.showAndWait().ifPresent(format -> {
             com.cashier.util.ExportUtil.ExportFormat exportFormat =
@@ -887,17 +893,17 @@ public class ProfitReportController {
 
                 if (filePath != null) {
                     Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                    successAlert.setTitle("导出成功");
+                    successAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("success.export"));
                     successAlert.setHeaderText(null);
-                    successAlert.setContentText("文件已成功导出到:\n" + filePath);
+                    successAlert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_success_path") + "\n" + filePath);
                     successAlert.showAndWait();
                     logger.info("分类利润分析报表导出成功: {}", filePath);
                 } else {
-                    showError("导出失败，请查看日志获取详细信息");
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("error.export_failed"));
                 }
             } catch (Exception e) {
                 logger.error("导出分类利润分析报表失败", e);
-                showError("导出失败: " + e.getMessage());
+                showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_failed_detail", e.getMessage()));
             }
         });
     }
@@ -907,7 +913,7 @@ public class ProfitReportController {
      */
     private void exportDailyProfit() {
         if (dailyProfitTable.getItems().isEmpty()) {
-            showError("没有可导出的每日利润数据");
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.no_export_daily_profit"));
             return;
         }
 
@@ -915,9 +921,9 @@ public class ProfitReportController {
         ChoiceDialog<String> formatDialog = new ChoiceDialog<>(
             "Excel", "Excel", "PDF"
         );
-        formatDialog.setTitle("选择导出格式");
-        formatDialog.setHeaderText("请选择导出格式");
-        formatDialog.setContentText("格式:");
+        formatDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("label.export_format"));
+        formatDialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get("label.please_select_format"));
+        formatDialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.format_label"));
 
         formatDialog.showAndWait().ifPresent(format -> {
             com.cashier.util.ExportUtil.ExportFormat exportFormat =
@@ -955,17 +961,17 @@ public class ProfitReportController {
 
                 if (filePath != null) {
                     Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                    successAlert.setTitle("导出成功");
+                    successAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("success.export"));
                     successAlert.setHeaderText(null);
-                    successAlert.setContentText("文件已成功导出到:\n" + filePath);
+                    successAlert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_success_path") + "\n" + filePath);
                     successAlert.showAndWait();
                     logger.info("每日利润分析报表导出成功: {}", filePath);
                 } else {
-                    showError("导出失败，请查看日志获取详细信息");
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("error.export_failed"));
                 }
             } catch (Exception e) {
                 logger.error("导出每日利润分析报表失败", e);
-                showError("导出失败: " + e.getMessage());
+                showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_failed_detail", e.getMessage()));
             }
         });
     }
@@ -1052,6 +1058,16 @@ public class ProfitReportController {
         // 分类利润构造函数
         public ProfitReportRecord(String category, double revenue, double cost, double profit, double margin) {
             this.category = category;
+            this.revenue = revenue;
+            this.cost = cost;
+            this.profit = profit;
+            this.margin = margin;
+        }
+
+        // 每日利润记录必须单独赋值 date，避免误用分类利润构造函数。
+        public ProfitReportRecord(String date, double revenue, double cost,
+                                  double profit, double margin, boolean dailyRecord) {
+            this.date = date;
             this.revenue = revenue;
             this.cost = cost;
             this.profit = profit;

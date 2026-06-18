@@ -289,7 +289,6 @@
 .tab-pane .tab {
     -fx-background-color: #E0E0E0;
     -fx-min-width: 97px;
-    -fx-pref-width: 121px;
 }
 
 .tab-pane .tab .tab-label {

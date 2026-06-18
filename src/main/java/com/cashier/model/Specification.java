@@ -101,13 +101,13 @@ public class Specification {
     public String getTypeText() {
         switch (type) {
             case "COLOR":
-                return "颜色";
+                return com.cashier.i18n.I18nManager.getInstance().get("runtime.spec.color");
             case "SIZE":
-                return "尺寸";
+                return com.cashier.i18n.I18nManager.getInstance().get("runtime.spec.size");
             case "MATERIAL":
-                return "材质";
+                return com.cashier.i18n.I18nManager.getInstance().get("runtime.spec.material");
             case "OTHER":
-                return "其他";
+                return com.cashier.i18n.I18nManager.getInstance().get("runtime.spec.other");
             default:
                 return type;
         }

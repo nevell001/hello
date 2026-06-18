@@ -2,6 +2,7 @@ package com.cashier.controller;
 
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
+import com.cashier.i18n.I18nManager;
 import com.cashier.model.Product;
 import com.cashier.util.CurrencyUtil;
 import com.cashier.util.StatusBarManager;
@@ -154,8 +155,9 @@ public class RestockController {
 
         if (product != null) {
             productLabel.setText(product.name);
-            currentStockLabel.setText(String.format("当前库存: %d %s", product.quantity, product.unit));
-            costPriceLabel.setText(String.format("成本价: ¥%.2f/%s", product.cost, product.unit));
+            currentStockLabel.setText(I18nManager.getInstance().get("runtime.current_stock", product.quantity, product.unit));
+            costPriceLabel.setText(I18nManager.getInstance().get("runtime.cost_per_unit",
+                    CurrencyUtil.format(product.cost.doubleValue()), product.unit));
             updatePreview();
         }
     }
@@ -197,11 +199,11 @@ public class RestockController {
                     okClicked = true;
                     dialogStage.close();
                 } else {
-                    errorLabel.setText("入库失败");
+                    errorLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("runtime.restock_failed"));
                 }
             } catch (SQLException e) {
                 logger.error("入库失败", e);
-                errorLabel.setText("入库失败: " + e.getMessage());
+                errorLabel.setText(I18nManager.getInstance().get("runtime.restock_failed_detail", e.getMessage()));
             }
         }
     }

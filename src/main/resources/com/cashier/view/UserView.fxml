@@ -10,81 +10,45 @@
       spacing="0"
       styleClass="user-view">
 
-    <!-- 顶部工具栏 -->
-    <HBox spacing="10" styleClass="toolbar" alignment="CENTER_LEFT">
+    <!-- 顶部工具栏：操作与筛选分两行，避免英文环境拥挤 -->
+    <VBox spacing="6" styleClass="toolbar">
         <padding>
             <Insets top="10" right="10" bottom="10" left="10"/>
         </padding>
 
-        <!-- 操作按钮 -->
-        <Button fx:id="addButton"
-                text="%user.add"
-                onAction="#handleAddUser"
-                prefWidth="100"
-                styleClass="primary-button"/>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Button fx:id="addButton" text="%user.add" onAction="#handleAddUser"
+                    minWidth="100" styleClass="primary-button"/>
+            <Button fx:id="editButton" text="%user.edit_button" onAction="#handleEditUser"
+                    minWidth="80" styleClass="secondary-button"/>
+            <Button fx:id="deleteButton" text="%user.delete_button" onAction="#handleDeleteUser"
+                    minWidth="80" styleClass="danger-button"/>
+            <Button fx:id="resetPasswordButton" text="%user.reset_password" onAction="#handleResetPassword"
+                    minWidth="120" styleClass="warning-button"/>
+            <Separator orientation="VERTICAL"/>
+            <Button fx:id="activateButton" text="%user.activate" onAction="#handleActivateUser"
+                    minWidth="90" styleClass="success-button"/>
+            <Button fx:id="deactivateButton" text="%user.deactivate" onAction="#handleDeactivateUser"
+                    minWidth="90" styleClass="warning-button"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="countLabel" text="%user.count" styleClass="text-muted"/>
+        </HBox>
 
-        <Button fx:id="editButton"
-                text="%user.edit_button"
-                onAction="#handleEditUser"
-                prefWidth="80"
-                styleClass="secondary-button"/>
-
-        <Button fx:id="deleteButton"
-                text="%user.delete_button"
-                onAction="#handleDeleteUser"
-                prefWidth="80"
-                styleClass="danger-button"/>
-
-        <Button fx:id="resetPasswordButton"
-                text="%user.reset_password"
-                onAction="#handleResetPassword"
-                prefWidth="100"
-                styleClass="warning-button"/>
-
-        <Separator orientation="VERTICAL"/>
-
-        <Button fx:id="activateButton"
-                text="%user.activate"
-                onAction="#handleActivateUser"
-                prefWidth="80"
-                styleClass="success-button"/>
-
-        <Button fx:id="deactivateButton"
-                text="%user.deactivate"
-                onAction="#handleDeactivateUser"
-                prefWidth="80"
-                styleClass="warning-button"/>
-
-        <Separator orientation="VERTICAL"/>
-
-        <!-- 筛选条件 -->
-        <Label text="%user.role_label"/>
-        <ComboBox fx:id="roleFilterComboBox" prefWidth="100"/>
-
-        <Label text="%user.status_label"/>
-        <ComboBox fx:id="statusFilterComboBox" prefWidth="100"/>
-
-        <Label text="%user.search_label"/>
-        <TextField fx:id="searchField"
-                  promptText="%user.search_hint"
-                  prefWidth="150"
-                  onAction="#handleSearch"/>
-
-        <Button text="%common.search"
-                onAction="#handleSearch"
-                prefWidth="60"
-                styleClass="secondary-button"/>
-
-        <Button text="%common.clear"
-                onAction="#handleClearSearch"
-                prefWidth="60"
-                styleClass="secondary-button"/>
-
-        <Region HBox.hgrow="ALWAYS"/>
-
-        <!-- 统计信息 -->
-        <Label fx:id="countLabel" text="%user.count" styleClass="text-muted"/>
-    </HBox>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="%user.role_label"/>
+            <ComboBox fx:id="roleFilterComboBox" minWidth="130"/>
+            <Label text="%user.status_label"/>
+            <ComboBox fx:id="statusFilterComboBox" minWidth="120"/>
+            <Separator orientation="VERTICAL"/>
+            <Label text="%user.search_label"/>
+            <TextField fx:id="searchField" promptText="%user.search_hint"
+                       minWidth="220" HBox.hgrow="ALWAYS" onAction="#handleSearch"/>
+            <Button text="%common.search" onAction="#handleSearch"
+                    minWidth="80" styleClass="secondary-button"/>
+            <Button text="%common.clear" onAction="#handleClearSearch"
+                    minWidth="80" styleClass="secondary-button"/>
+        </HBox>
+    </VBox>
 
     <!-- 用户列表表格 -->
     <TableView fx:id="userTable"

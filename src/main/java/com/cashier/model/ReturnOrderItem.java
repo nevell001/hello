@@ -86,11 +86,11 @@ public class ReturnOrderItem {
     public String getConditionText() {
         switch (condition) {
             case "GOOD":
-                return "完好";
+                return com.cashier.i18n.I18nManager.getInstance().get("runtime.condition_good");
             case "DAMAGED":
-                return "损坏";
+                return com.cashier.i18n.I18nManager.getInstance().get("runtime.condition_damaged");
             case "OPENED":
-                return "已拆封";
+                return com.cashier.i18n.I18nManager.getInstance().get("runtime.condition_opened");
             default:
                 return condition;
         }

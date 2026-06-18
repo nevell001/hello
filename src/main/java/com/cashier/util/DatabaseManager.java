@@ -519,7 +519,7 @@ public class DatabaseManager {
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS theme_preferences (
                     username VARCHAR(50) PRIMARY KEY,
-                    theme_name VARCHAR(20) DEFAULT 'light',
+                    theme_name VARCHAR(20) DEFAULT 'lisuan',
                     updated_at BIGINT,
                     INDEX idx_username (username)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -935,7 +935,7 @@ public class DatabaseManager {
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS theme_preferences (
                     username VARCHAR(50) PRIMARY KEY,
-                    theme_name VARCHAR(20) DEFAULT 'light',
+                    theme_name VARCHAR(20) DEFAULT 'lisuan',
                     updated_at BIGINT,
                     INDEX idx_username (username)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci

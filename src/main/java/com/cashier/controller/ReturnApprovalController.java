@@ -1,6 +1,7 @@
 package com.cashier.controller;
 
 import com.cashier.dao.*;
+import com.cashier.i18n.I18nManager;
 import com.cashier.model.*;
 import com.cashier.service.ReturnService;
 import com.cashier.util.CurrencyUtil;
@@ -61,8 +62,10 @@ public class ReturnApprovalController {
         logger.info("初始化退货审批控制器");
 
         // 初始化退款方式下拉框
-        refundMethodComboBox.setItems(FXCollections.observableArrayList("现金", "微信", "支付宝", "银行卡"));
-        refundMethodComboBox.setValue("现金");
+        refundMethodComboBox.setItems(FXCollections.observableArrayList("CASH", "WECHAT", "ALIPAY", "CARD"));
+        com.cashier.util.I18nUiUtils.configureComboBox(
+            refundMethodComboBox, com.cashier.util.I18nUiUtils::paymentMethod);
+        refundMethodComboBox.setValue("CASH");
 
         // 初始化表格列
         initializePendingOrderTable();
@@ -176,15 +179,15 @@ public class ReturnApprovalController {
                 } else {
                     switch (item) {
                         case "GOOD":
-                            setText("完好");
+                            setText(com.cashier.i18n.I18nManager.getInstance().get("runtime.condition_good"));
                             applySemanticTextStyle(this, "text-success");
                             break;
                         case "DAMAGED":
-                            setText("损坏");
+                            setText(com.cashier.i18n.I18nManager.getInstance().get("runtime.condition_damaged"));
                             applySemanticTextStyle(this, "text-danger");
                             break;
                         case "OPENED":
-                            setText("已拆封");
+                            setText(com.cashier.i18n.I18nManager.getInstance().get("runtime.condition_opened"));
                             applySemanticTextStyle(this, "text-warning");
                             break;
                         default:
@@ -221,13 +224,15 @@ public class ReturnApprovalController {
         }
 
         returnOrderIdLabel.setText(order.returnOrderId);
-        memberNameLabel.setText(order.memberName != null ? order.memberName : "无");
+        memberNameLabel.setText(order.memberName != null ? order.memberName : com.cashier.i18n.I18nManager.getInstance().get("statistics.no_data"));
         totalAmountLabel.setText(CurrencyUtil.format(order.totalAmount.doubleValue()));
         returnDateLabel.setText(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(order.returnDate));
         operatorNameLabel.setText(order.operatorName);
         returnReasonTextArea.setText(order.returnReason != null ? order.returnReason : "");
-        originalTransactionLabel.setText(order.originalTransactionId != null ? order.originalTransactionId : "无");
-        paymentMethodLabel.setText(order.paymentMethod != null ? order.getPaymentMethodText() : "未设置");
+        originalTransactionLabel.setText(order.originalTransactionId != null ? order.originalTransactionId : com.cashier.i18n.I18nManager.getInstance().get("statistics.no_data"));
+        paymentMethodLabel.setText(order.paymentMethod != null
+            ? com.cashier.util.I18nUiUtils.paymentMethod(order.paymentMethod)
+            : com.cashier.i18n.I18nManager.getInstance().get("runtime.not_set"));
 
         // 加载退货明细
         loadOrderItems(order.returnOrderId);
@@ -255,24 +260,18 @@ public class ReturnApprovalController {
     @FXML
     public void handleApprove() {
         if (selectedOrder == null) {
-            showAlert(Alert.AlertType.WARNING, "提示", "请先选择要审批的退货订单");
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.return_select_for_approval"));
             return;
         }
 
         String approvalComment = approvalCommentTextArea.getText().trim();
         if (approvalComment.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "提示", "请填写审批意见");
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.approval_comment_required"));
             return;
         }
 
         String refundMethod = refundMethodComboBox.getValue();
-        String paymentMethod = "";
-        switch (refundMethod) {
-            case "现金": paymentMethod = "CASH"; break;
-            case "微信": paymentMethod = "WECHAT"; break;
-            case "支付宝": paymentMethod = "ALIPAY"; break;
-            case "银行卡": paymentMethod = "CARD"; break;
-        }
+        String paymentMethod = refundMethod;
 
         // 获取审批人名称（从当前登录用户获取）
         String approverName = getApproverName();
@@ -287,32 +286,32 @@ public class ReturnApprovalController {
 
         if (result) {
             logger.info("退货订单审批通过: {}", returnOrderId);
-            showAlert(Alert.AlertType.INFORMATION, "审批成功", "退货订单已批准");
+            showAlert(Alert.AlertType.INFORMATION, com.cashier.i18n.I18nManager.getInstance().get("runtime.approval_success"), com.cashier.i18n.I18nManager.getInstance().get("runtime.return_approved"));
             loadPendingOrders();
             clearDetail();
         } else {
-            showAlert(Alert.AlertType.ERROR, "审批失败", "审批失败，请查看日志");
+            showAlert(Alert.AlertType.ERROR, com.cashier.i18n.I18nManager.getInstance().get("runtime.approval_failed"), com.cashier.i18n.I18nManager.getInstance().get("runtime.approval_log_error"));
         }
     }
 
     @FXML
     public void handleReject() {
         if (selectedOrder == null) {
-            showAlert(Alert.AlertType.WARNING, "提示", "请先选择要审批的退货订单");
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.return_select_for_approval"));
             return;
         }
 
         String approvalComment = approvalCommentTextArea.getText().trim();
         if (approvalComment.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "提示", "请填写拒绝原因");
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.rejection_reason_required"));
             return;
         }
 
         // 确认拒绝
         Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmAlert.setTitle("确认拒绝");
+        confirmAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.confirm_reject"));
         confirmAlert.setHeaderText(null);
-        confirmAlert.setContentText("确认拒绝此退货订单吗？");
+        confirmAlert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.reject_return_confirm"));
         if (confirmAlert.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
             return;
         }
@@ -330,11 +329,11 @@ public class ReturnApprovalController {
 
         if (result) {
             logger.info("退货订单已拒绝: {}", returnOrderId);
-            showAlert(Alert.AlertType.INFORMATION, "拒绝成功", "退货订单已拒绝");
+            showAlert(Alert.AlertType.INFORMATION, com.cashier.i18n.I18nManager.getInstance().get("runtime.rejection_success"), com.cashier.i18n.I18nManager.getInstance().get("runtime.return_rejected"));
             loadPendingOrders();
             clearDetail();
         } else {
-            showAlert(Alert.AlertType.ERROR, "操作失败", "操作失败，请查看日志");
+            showAlert(Alert.AlertType.ERROR, com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed"), com.cashier.i18n.I18nManager.getInstance().get("runtime.operation_log_error"));
         }
     }
 
@@ -349,7 +348,7 @@ public class ReturnApprovalController {
     @FXML
     public void handleViewOriginalTransaction() {
         if (selectedOrder == null || selectedOrder.originalTransactionId == null) {
-            showAlert(Alert.AlertType.WARNING, "提示", "请先选择退货订单");
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.select_return_order"));
             return;
         }
 
@@ -358,21 +357,20 @@ public class ReturnApprovalController {
             Transaction transaction = TransactionDAO.findById(selectedOrder.originalTransactionId);
             if (transaction != null) {
                 // 显示交易详情
-                String details = String.format(
-                    "交易ID: %s\n交易时间: %s\n收银员: %s\n支付方式: %s\n总金额: ¥%.2f\n会员: %s",
+                String details = I18nManager.getInstance().get("runtime.original_transaction_details",
                     transaction.transactionId,
                     transaction.timestamp,
                     transaction.operatorName,
-                    transaction.paymentMethod,
-                    transaction.totalAmount,
-                    transaction.memberName != null ? transaction.memberName : "无"
-                );
-                showAlert(Alert.AlertType.INFORMATION, "原交易详情", details);
+                    com.cashier.util.I18nUiUtils.paymentMethod(transaction.paymentMethod),
+                    String.format("%.2f", transaction.totalAmount),
+                    transaction.memberName != null ? transaction.memberName : I18nManager.getInstance().get("statistics.no_data"));
+                showAlert(Alert.AlertType.INFORMATION, com.cashier.i18n.I18nManager.getInstance().get("runtime.original_transaction"), details);
             } else {
-                showAlert(Alert.AlertType.WARNING, "提示", "未找到原交易记录");
+                showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.original_transaction_missing"));
             }
         } catch (Exception e) {
-            showAlert(Alert.AlertType.ERROR, "错误", "查询原交易失败: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, com.cashier.i18n.I18nManager.getInstance().get("label.error"),
+                    com.cashier.i18n.I18nManager.getInstance().get("runtime.original_transaction_query_failed", e.getMessage()));
         }
     }
 

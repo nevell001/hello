@@ -161,7 +161,7 @@ public class PurchaseOrderController {
             }
         } catch (SQLException e) {
             logger.error("加载采购订单数据失败", e);
-            showError("加载采购订单数据失败: " + e.getMessage());
+            showError(I18nManager.getInstance().get("runtime.purchase_order_load_failed", e.getMessage()));
             orders = new HashMap<>();
         }
         filterOrders();
@@ -194,7 +194,7 @@ public class PurchaseOrderController {
      * 更新订单数量标签
      */
     private void updateCountLabel() {
-        countLabel.setText("订单数量: " + orderList.size());
+        countLabel.setText(I18nManager.getInstance().get("runtime.purchase_order_count", orderList.size()));
     }
 
     /**
@@ -269,7 +269,7 @@ public class PurchaseOrderController {
 
             TextField orderNoField = new TextField();
             orderNoField.setEditable(false);
-            orderNoField.setPromptText("自动生成");
+            orderNoField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("product.edit.auto_generate"));
 
             ComboBox<Supplier> supplierCombo = new ComboBox<>();
             supplierCombo.getItems().setAll(suppliers.values());
@@ -312,10 +312,10 @@ public class PurchaseOrderController {
             expectedDatePicker.setValue(java.time.LocalDate.now().plusDays(7));
 
             TextField purchaserField = new TextField();
-            purchaserField.setPromptText("采购人");
+            purchaserField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("purchase_inbound.purchaser"));
 
             TextArea remarkArea = new TextArea();
-            remarkArea.setPromptText("备注");
+            remarkArea.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("restock.reason"));
             remarkArea.setPrefRowCount(2);
             remarkArea.setPrefHeight(50);
 
@@ -340,27 +340,27 @@ public class PurchaseOrderController {
 
             // 创建对话框Stage（需要在按钮回调之前声明）
             final Stage dialogStage = new Stage();
-            dialogStage.setTitle(isEdit ? "编辑采购订单" : "新建采购订单");
+            dialogStage.setTitle(isEdit ? com.cashier.i18n.I18nManager.getInstance().get("runtime.purchase_order_edit") : com.cashier.i18n.I18nManager.getInstance().get("runtime.purchase_order_new"));
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(orderTable.getScene().getWindow());
 
             // 第一行：订单号和供应商
-            gridPane.add(createLabel("订单号:"), 0, 0);
+            gridPane.add(createLabel(I18nManager.getInstance().get("runtime.order_no")), 0, 0);
             gridPane.add(orderNoField, 1, 0);
-            gridPane.add(createLabel("供应商*:"), 2, 0);
+            gridPane.add(createLabel(I18nManager.getInstance().get("runtime.supplier_required")), 2, 0);
             HBox supplierBox = new HBox(10);
             supplierBox.getChildren().add(supplierCombo);
-            Button newSupplierButton = new Button("新建供应商");
+            Button newSupplierButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("runtime.supplier_new"));
             newSupplierButton.setStyle("-fx-font-size: 11px; -fx-padding: 3 8;");
             newSupplierButton.setOnAction(e -> showSupplierManagementDialog(dialogStage, supplierCombo));
             supplierBox.getChildren().add(newSupplierButton);
             gridPane.add(supplierBox, 3, 0);
 
             // 供应商详细信息显示区域
-            Label supplierInfoLabel = new Label("供应商信息:");
+            Label supplierInfoLabel = new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.supplier_info"));
             supplierInfoLabel.getStyleClass().add("text-muted");
             supplierInfoLabel.setStyle("-fx-font-weight: bold;");
-            Label supplierDetailLabel = new Label("请选择供应商");
+            Label supplierDetailLabel = new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.supplier_select"));
             supplierDetailLabel.getStyleClass().add("text-muted");
             supplierDetailLabel.setStyle("-fx-font-size: 12px;");
             supplierDetailLabel.setWrapText(true);
@@ -368,32 +368,32 @@ public class PurchaseOrderController {
             // 监听供应商选择变化
             supplierCombo.valueProperty().addListener((obs, oldVal, newVal) -> {
                 if (newVal != null) {
-                    StringBuilder info = new StringBuilder();
-                    info.append("联系人: ").append(newVal.contactPerson != null ? newVal.contactPerson : "-");
-                    info.append("  |  电话: ").append(newVal.phone != null ? newVal.phone : "-");
+                    String info = I18nManager.getInstance().get("runtime.supplier_summary",
+                            newVal.contactPerson != null ? newVal.contactPerson : "-",
+                            newVal.phone != null ? newVal.phone : "-");
                     if (newVal.address != null && !newVal.address.isEmpty()) {
-                        info.append("  |  地址: ").append(newVal.address);
+                        info = I18nManager.getInstance().get("runtime.supplier_summary_address", info, newVal.address);
                     }
-                    supplierDetailLabel.setText(info.toString());
+                    supplierDetailLabel.setText(info);
                     supplierDetailLabel.getStyleClass().removeAll("text-muted", "text-default");
                     supplierDetailLabel.getStyleClass().add("text-default");
                 } else {
-                    supplierDetailLabel.setText("请选择供应商");
+                    supplierDetailLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("runtime.supplier_select"));
                     supplierDetailLabel.getStyleClass().removeAll("text-muted", "text-default");
                     supplierDetailLabel.getStyleClass().add("text-muted");
                 }
             });
 
             // 第二行：采购日期和预计到货日期
-            gridPane.add(createLabel("采购日期:"), 0, 1);
+            gridPane.add(createLabel(I18nManager.getInstance().get("runtime.purchase_date")), 0, 1);
             gridPane.add(purchaseDatePicker, 1, 1);
-            gridPane.add(createLabel("预计到货日期:"), 2, 1);
+            gridPane.add(createLabel(I18nManager.getInstance().get("runtime.expected_date_full")), 2, 1);
             gridPane.add(expectedDatePicker, 3, 1);
 
             // 第三行：采购人和备注
-            gridPane.add(createLabel("采购人:"), 0, 2);
+            gridPane.add(createLabel(I18nManager.getInstance().get("runtime.purchaser")), 0, 2);
             gridPane.add(purchaserField, 1, 2);
-            gridPane.add(createLabel("备注:"), 2, 2);
+            gridPane.add(createLabel(I18nManager.getInstance().get("runtime.notes")), 2, 2);
             gridPane.add(remarkArea, 3, 2);
 
             // 供应商详细信息显示行
@@ -406,12 +406,12 @@ public class PurchaseOrderController {
             itemTable.setStyle("-fx-font-size: 13px;");
             itemTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-            TableColumn<PurchaseOrderItem, String> productNameCol = new TableColumn<>("商品名称");
+            TableColumn<PurchaseOrderItem, String> productNameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_approval.product_name"));
             productNameCol.setPrefWidth(200);
             productNameCol.setStyle("-fx-font-weight: bold;");
             productNameCol.setCellValueFactory(new PropertyValueFactory<>("productName"));
 
-            TableColumn<PurchaseOrderItem, Integer> quantityCol = new TableColumn<>("数量");
+            TableColumn<PurchaseOrderItem, Integer> quantityCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("cart.quantity"));
             quantityCol.setPrefWidth(100);
             quantityCol.setCellValueFactory(new PropertyValueFactory<>("quantity"));
             quantityCol.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
@@ -422,7 +422,7 @@ public class PurchaseOrderController {
                 updateItemTotal(itemTable);
             });
 
-            TableColumn<PurchaseOrderItem, BigDecimal> unitPriceCol = new TableColumn<>("单价");
+            TableColumn<PurchaseOrderItem, BigDecimal> unitPriceCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_approval.unit_price"));
             unitPriceCol.setPrefWidth(100);
             unitPriceCol.setCellValueFactory(new PropertyValueFactory<>("unitPrice"));
             unitPriceCol.setCellFactory(TextFieldTableCell.forTableColumn(new BigDecimalStringConverter()));
@@ -435,16 +435,16 @@ public class PurchaseOrderController {
                 updateItemTotal(itemTable);
             });
 
-            TableColumn<PurchaseOrderItem, String> totalPriceCol = new TableColumn<>("小计");
+            TableColumn<PurchaseOrderItem, String> totalPriceCol = new TableColumn<>(I18nManager.getInstance().get("runtime.subtotal"));
             totalPriceCol.setPrefWidth(100);
             totalPriceCol.setStyle("-fx-font-weight: bold;");
             totalPriceCol.setCellValueFactory(cellData ->
                 new SimpleStringProperty(String.format("%.2f", cellData.getValue().totalPrice)));
 
-            TableColumn<PurchaseOrderItem, String> actionCol = new TableColumn<>("操作");
+            TableColumn<PurchaseOrderItem, String> actionCol = new TableColumn<>(I18nManager.getInstance().get("runtime.action"));
             actionCol.setPrefWidth(80);
             actionCol.setCellFactory(col -> new TableCell<PurchaseOrderItem, String>() {
-                private final Button deleteBtn = new Button("删除");
+                private final Button deleteBtn = new Button(com.cashier.i18n.I18nManager.getInstance().get("inventory_check.delete"));
                 {
                     deleteBtn.getStyleClass().add("danger-button");
                     deleteBtn.setStyle("-fx-font-weight: bold;");
@@ -482,32 +482,32 @@ public class PurchaseOrderController {
             }
 
             // 添加商品按钮
-            Button addProductButton = new Button("添加商品");
+            Button addProductButton = new Button(I18nManager.getInstance().get("runtime.add_product"));
             addProductButton.getStyleClass().add("primary-button");
             addProductButton.setStyle("-fx-font-weight: bold; -fx-font-size: 13px;");
             addProductButton.setOnAction(e -> showProductSelector(itemTable));
 
             // 总金额标签
-            Label totalLabel = new Label("总金额: ¥0.00");
+            Label totalLabel = new Label(I18nManager.getInstance().get("runtime.total_amount_value", CurrencyUtil.format(0)));
             totalLabel.getStyleClass().add("text-default");
             totalLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
 
             // 商品明细标签
-            Label itemLabel = new Label("商品明细:");
+            Label itemLabel = new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.product_details"));
             itemLabel.getStyleClass().add("text-default");
             itemLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
 
             // 按钮
-            Button saveButton = new Button("保存");
-            Button cancelButton = new Button("取消");
+            Button saveButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("shortcut.save"));
+            Button cancelButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("return_order.cancel"));
 
             saveButton.setOnAction(e -> {
                 if (supplierCombo.getValue() == null) {
-                    showError("请选择供应商");
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.supplier_select"));
                     return;
                 }
                 if (items.isEmpty()) {
-                    showError("请至少添加一个商品");
+                    showError(I18nManager.getInstance().get("runtime.purchase_order_product_required"));
                     return;
                 }
 
@@ -546,7 +546,7 @@ public class PurchaseOrderController {
                     dialogStage.close();
                 } catch (SQLException ex) {
                     logger.error("保存采购订单失败", ex);
-                    showError("保存采购订单失败: " + ex.getMessage());
+                    showError(I18nManager.getInstance().get("runtime.purchase_order_save_failed", ex.getMessage()));
                 }
             });
 
@@ -565,7 +565,7 @@ public class PurchaseOrderController {
 
         } catch (Exception e) {
             logger.error("显示订单对话框失败", e);
-            showError("加载对话框失败: " + e.getMessage());
+            showError(I18nManager.getInstance().get("runtime.dialog_load_failed", e.getMessage()));
         }
     }
 
@@ -575,7 +575,7 @@ public class PurchaseOrderController {
     private void showProductSelector(TableView<PurchaseOrderItem> itemTable) {
         try {
             Stage selectorStage = new Stage();
-            selectorStage.setTitle("选择商品");
+            selectorStage.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.select_product"));
             selectorStage.initModality(Modality.WINDOW_MODAL);
             selectorStage.initOwner(orderTable.getScene().getWindow());
             selectorStage.setWidth(650);
@@ -587,20 +587,20 @@ public class PurchaseOrderController {
 
             // 搜索框和分类筛选
             TextField searchField = new TextField();
-            searchField.setPromptText("输入商品名称搜索");
+            searchField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.search_product_hint"));
             searchField.setPrefWidth(200);
             
-            Label searchLabel = new Label("搜索:");
+            Label searchLabel = new Label(com.cashier.i18n.I18nManager.getInstance().get("purchase_inbound.search_label"));
             searchLabel.getStyleClass().add("text-default");
             searchLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 13px;");
             
             // 分类筛选
             ComboBox<String> categoryCombo = new ComboBox<>();
-            categoryCombo.setPromptText("全部分类");
+            categoryCombo.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.all_categories"));
             categoryCombo.setPrefWidth(150);
             categoryCombo.setStyle("-fx-border-radius: 4px; -fx-padding: 5px 10px;");
             
-            Label categoryLabel = new Label("分类:");
+            Label categoryLabel = new Label(com.cashier.i18n.I18nManager.getInstance().get("product.edit.category"));
             categoryLabel.getStyleClass().add("text-default");
             categoryLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 13px;");
             
@@ -658,20 +658,20 @@ public class PurchaseOrderController {
             });
             productTable.getColumns().add(selectColumn);
             
-            TableColumn<Product, String> nameCol = new TableColumn<>("商品名称");
+            TableColumn<Product, String> nameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_approval.product_name"));
             nameCol.setPrefWidth(200);
             nameCol.setStyle("-fx-font-weight: bold;");
             nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
             
-            TableColumn<Product, String> barcodeCol = new TableColumn<>("条形码");
+            TableColumn<Product, String> barcodeCol = new TableColumn<>(I18nManager.getInstance().get("runtime.barcode"));
             barcodeCol.setPrefWidth(150);
             barcodeCol.setCellValueFactory(new PropertyValueFactory<>("barcode"));
             
-            TableColumn<Product, Number> costCol = new TableColumn<>("成本价");
+            TableColumn<Product, Number> costCol = new TableColumn<>(I18nManager.getInstance().get("runtime.cost_price"));
             costCol.setPrefWidth(100);
             costCol.setCellValueFactory(new PropertyValueFactory<>("cost"));
             
-            TableColumn<Product, Number> stockCol = new TableColumn<>("库存");
+            TableColumn<Product, Number> stockCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("product.stock"));
             stockCol.setPrefWidth(80);
             stockCol.setCellValueFactory(new PropertyValueFactory<>("quantity"));
             
@@ -697,12 +697,12 @@ public class PurchaseOrderController {
             });
 
             // 全选/取消全选按钮
-            Button selectAllButton = new Button("全选");
+            Button selectAllButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("shortcut.select_all"));
             selectAllButton.setOnAction(e -> {
                 productTable.getSelectionModel().selectAll();
             });
 
-            Button deselectAllButton = new Button("取消全选");
+            Button deselectAllButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("runtime.deselect_all"));
             deselectAllButton.setOnAction(e -> {
                 productTable.getSelectionModel().clearSelection();
             });
@@ -710,13 +710,13 @@ public class PurchaseOrderController {
             HBox selectButtonsBox = new HBox(10, selectAllButton, deselectAllButton);
 
             // 添加按钮
-            Button addButton = new Button("添加选中商品");
+            Button addButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("runtime.add_selected_products"));
             addButton.getStyleClass().add("primary-button");
             addButton.setStyle("-fx-font-weight: bold;");
             addButton.setOnAction(e -> {
                 ObservableList<Product> selectedProducts = productTable.getSelectionModel().getSelectedItems();
                 if (selectedProducts == null || selectedProducts.isEmpty()) {
-                    showError("请先选择商品");
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.select_product_first"));
                     return;
                 }
                 
@@ -746,11 +746,11 @@ public class PurchaseOrderController {
                     selectorStage.close();
                     logger.info("成功添加 {} 个商品到采购订单", addedCount);
                 } else {
-                    showError("所选商品已存在");
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.product_already_added"));
                 }
             });
 
-            Button cancelButton = new Button("取消");
+            Button cancelButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("return_order.cancel"));
             cancelButton.getStyleClass().add("secondary-button");
             cancelButton.setStyle("-fx-font-weight: bold;");
             cancelButton.setOnAction(e -> selectorStage.close());
@@ -770,7 +770,7 @@ public class PurchaseOrderController {
 
         } catch (SQLException e) {
             logger.error("加载商品选择器失败", e);
-            showError("加载商品失败: " + e.getMessage());
+            showError(I18nManager.getInstance().get("runtime.product_load_short_failed", e.getMessage()));
         }
     }
 
@@ -814,7 +814,7 @@ public class PurchaseOrderController {
         if (parent != null) {
             for (javafx.scene.Node node : parent.getChildren()) {
                 if (node instanceof Label && ((Label) node).getText().startsWith("总金额:")) {
-                    ((Label) node).setText("总金额: ¥" + String.format("%.2f", total));
+                    ((Label) node).setText(I18nManager.getInstance().get("runtime.total_amount_value", CurrencyUtil.format(total.doubleValue())));
                     break;
                 }
             }
@@ -870,7 +870,7 @@ public class PurchaseOrderController {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle(I18nManager.getInstance().get("common.confirm"));
             alert.setHeaderText(null);
-            alert.setContentText("确定要删除采购订单 \"" + selected.orderNo + "\" 吗？");
+            alert.setContentText(I18nManager.getInstance().get("runtime.purchase_order_delete_confirm", selected.orderNo));
 
             if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
                 try {
@@ -881,7 +881,7 @@ public class PurchaseOrderController {
                     updateStatus("采购订单删除成功");
                 } catch (SQLException e) {
                     logger.error("删除采购订单失败", e);
-                    showError("删除采购订单失败: " + e.getMessage());
+                    showError(I18nManager.getInstance().get("runtime.purchase_order_delete_failed", e.getMessage()));
                 }
             }
         }
@@ -910,33 +910,33 @@ public class PurchaseOrderController {
             GridPane infoPane = new GridPane();
             infoPane.setHgap(10);
             infoPane.setVgap(10);
-            infoPane.add(new Label("订单号:"), 0, 0);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("checkout.order_number")), 0, 0);
             infoPane.add(new Label(order.orderNo), 1, 0);
-            infoPane.add(new Label("供应商:"), 0, 1);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("product.edit.supplier")), 0, 1);
             infoPane.add(new Label(order.supplierName), 1, 1);
-            infoPane.add(new Label("采购日期:"), 0, 2);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.purchase_date")), 0, 2);
             infoPane.add(new Label(order.purchaseDate), 1, 2);
-            infoPane.add(new Label("预计到货:"), 0, 3);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.expected_date")), 0, 3);
             infoPane.add(new Label(order.expectedDate != null ? order.expectedDate : "-"), 1, 3);
-            infoPane.add(new Label("采购人:"), 0, 4);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.purchaser")), 0, 4);
             infoPane.add(new Label(order.purchaser != null ? order.purchaser : "-"), 1, 4);
-            infoPane.add(new Label("状态:"), 0, 5);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("return_order_list.status_label")), 0, 5);
             infoPane.add(new Label(order.getStatusDisplayName()), 1, 5);
-            infoPane.add(new Label("总金额:"), 0, 6);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.total_amount")), 0, 6);
             infoPane.add(new Label(CurrencyUtil.format(order.totalAmount.doubleValue())), 1, 6);
 
             // 商品明细
             TableView<PurchaseOrderItem> itemTable = new TableView<>();
-            TableColumn<PurchaseOrderItem, String> nameCol = new TableColumn<>("商品名称");
+            TableColumn<PurchaseOrderItem, String> nameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_approval.product_name"));
             nameCol.setCellValueFactory(new PropertyValueFactory<>("productName"));
 
-            TableColumn<PurchaseOrderItem, Number> qtyCol = new TableColumn<>("数量");
+            TableColumn<PurchaseOrderItem, Number> qtyCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("cart.quantity"));
             qtyCol.setCellValueFactory(new PropertyValueFactory<>("quantity"));
 
-            TableColumn<PurchaseOrderItem, Number> priceCol = new TableColumn<>("单价");
+            TableColumn<PurchaseOrderItem, Number> priceCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_approval.unit_price"));
             priceCol.setCellValueFactory(new PropertyValueFactory<>("unitPrice"));
 
-            TableColumn<PurchaseOrderItem, String> totalCol = new TableColumn<>("小计");
+            TableColumn<PurchaseOrderItem, String> totalCol = new TableColumn<>(I18nManager.getInstance().get("runtime.subtotal"));
             totalCol.setCellValueFactory(cellData ->
                 new SimpleStringProperty(String.format("%.2f", cellData.getValue().totalPrice)));
 
@@ -947,14 +947,14 @@ public class PurchaseOrderController {
 
             // 创建对话框Stage（需要在按钮回调之前声明）
             final Stage dialogStage = new Stage();
-            dialogStage.setTitle("订单详情 - " + order.orderNo);
+            dialogStage.setTitle(I18nManager.getInstance().get("runtime.purchase_order_detail_title", order.orderNo));
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(orderTable.getScene().getWindow());
 
-            Button closeButton = new Button("关闭");
+            Button closeButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.close"));
             closeButton.setOnAction(e -> dialogStage.close());
 
-            root.getChildren().addAll(new Label("订单信息:"), infoPane, new Label("商品明细:"), itemTable, closeButton);
+            root.getChildren().addAll(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.order_info")), infoPane, new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.product_details")), itemTable, closeButton);
 
             Scene scene = new Scene(root, 600, 500);
             applyCurrentTheme(scene);
@@ -964,7 +964,7 @@ public class PurchaseOrderController {
 
         } catch (SQLException e) {
             logger.error("加载订单详情失败", e);
-            showError("加载订单详情失败: " + e.getMessage());
+            showError(I18nManager.getInstance().get("runtime.purchase_order_detail_failed", e.getMessage()));
         }
     }
 
@@ -978,7 +978,7 @@ public class PurchaseOrderController {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle(I18nManager.getInstance().get("common.confirm"));
             alert.setHeaderText(null);
-            alert.setContentText("确定要提交订单 \"" + selected.orderNo + "\" 进行审批吗？");
+            alert.setContentText(I18nManager.getInstance().get("runtime.purchase_order_submit_confirm", selected.orderNo));
 
             if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
                 try {
@@ -986,7 +986,7 @@ public class PurchaseOrderController {
                     updateStatus("订单已提交审批: " + selected.orderNo);
                 } catch (Exception e) {
                     logger.error("提交审批失败", e);
-                    showError("提交审批失败: " + e.getMessage());
+                    showError(I18nManager.getInstance().get("runtime.purchase_order_submit_failed", e.getMessage()));
                 }
             }
         }
@@ -1070,8 +1070,8 @@ public class PurchaseOrderController {
         try {
             // 简化的供应商添加对话框
             javafx.scene.control.Dialog<ButtonType> dialog = new javafx.scene.control.Dialog<>();
-            dialog.setTitle("新建供应商");
-            dialog.setHeaderText("添加新供应商");
+            dialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.supplier_new"));
+            dialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get("runtime.supplier_add"));
 
             // 创建表单
             javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
@@ -1080,35 +1080,35 @@ public class PurchaseOrderController {
             grid.setPadding(new javafx.geometry.Insets(20, 150, 10, 10));
 
             TextField codeField = new TextField();
-            codeField.setPromptText("如: SUP001");
+            codeField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.supplier_code_hint"));
 
             TextField nameField = new TextField();
-            nameField.setPromptText("供应商名称");
+            nameField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("purchase_report.supplier_name"));
 
             TextField contactField = new TextField();
-            contactField.setPromptText("联系人");
+            contactField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("supplier.contact"));
 
             TextField phoneField = new TextField();
-            phoneField.setPromptText("联系电话");
+            phoneField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("supplier.phone"));
 
             TextField addressField = new TextField();
-            addressField.setPromptText("地址");
+            addressField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("supplier.address"));
 
             ComboBox<String> rankCombo = new ComboBox<>();
             rankCombo.getItems().addAll("A", "B", "C");
             rankCombo.setValue("C");
 
-            grid.add(new Label("编号*:"), 0, 0);
+            grid.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.supplier_code_required")), 0, 0);
             grid.add(codeField, 1, 0);
-            grid.add(new Label("名称*:"), 0, 1);
+            grid.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.supplier_name_required")), 0, 1);
             grid.add(nameField, 1, 1);
-            grid.add(new Label("联系人:"), 0, 2);
+            grid.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.contact")), 0, 2);
             grid.add(contactField, 1, 2);
-            grid.add(new Label("电话:"), 0, 3);
+            grid.add(new Label(I18nManager.getInstance().get("runtime.phone")), 0, 3);
             grid.add(phoneField, 1, 3);
-            grid.add(new Label("地址:"), 0, 4);
+            grid.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.address")), 0, 4);
             grid.add(addressField, 1, 4);
-            grid.add(new Label("等级:"), 0, 5);
+            grid.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.level")), 0, 5);
             grid.add(rankCombo, 1, 5);
 
             dialog.getDialogPane().setContent(grid);
@@ -1164,14 +1164,14 @@ public class PurchaseOrderController {
                         
                     } catch (SQLException e) {
                         logger.error("添加供应商失败", e);
-                        showError("添加供应商失败: " + e.getMessage());
+                        showError(I18nManager.getInstance().get("runtime.supplier_add_failed", e.getMessage()));
                     }
                 }
             });
 
         } catch (Exception e) {
             logger.error("显示供应商管理对话框失败", e);
-            showError("显示供应商管理对话框失败: " + e.getMessage());
+            showError(I18nManager.getInstance().get("runtime.supplier_dialog_failed", e.getMessage()));
         }
     }
 

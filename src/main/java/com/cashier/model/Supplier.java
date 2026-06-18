@@ -45,11 +45,11 @@ public class Supplier {
     public String getRankDisplayName() {
         switch (rank) {
             case "A":
-                return "A级";
+                return com.cashier.i18n.I18nManager.getInstance().get("runtime.grade_a");
             case "B":
-                return "B级";
+                return com.cashier.i18n.I18nManager.getInstance().get("runtime.grade_b");
             case "C":
-                return "C级";
+                return com.cashier.i18n.I18nManager.getInstance().get("runtime.grade_c");
             default:
                 return rank;
         }

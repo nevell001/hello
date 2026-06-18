@@ -11,60 +11,61 @@
       styleClass="member-view">
 
     <!-- 顶部工具栏 -->
-    <HBox spacing="10" styleClass="toolbar" alignment="CENTER_LEFT">
+    <VBox spacing="8" styleClass="toolbar">
         <padding>
             <Insets top="10" right="10" bottom="10" left="10"/>
         </padding>
 
-        <!-- 操作按钮 -->
+        <HBox spacing="10" alignment="CENTER_LEFT">
         <Button fx:id="addButton"
                 text="%member.add"
                 onAction="#handleAddMember"
-                prefWidth="100"
+                minWidth="130" prefWidth="130"
                 styleClass="primary-button"/>
 
         <Button fx:id="editButton"
                 text="%member.edit"
                 onAction="#handleEditMember"
-                prefWidth="80"
+                minWidth="100" prefWidth="100"
                 styleClass="secondary-button"/>
 
         <Button fx:id="deleteButton"
                 text="%member.delete"
                 onAction="#handleDeleteMember"
-                prefWidth="80"
+                minWidth="100" prefWidth="100"
                 styleClass="danger-button"/>
 
         <Button fx:id="rechargeButton"
                 text="%member.recharge_action"
                 onAction="#handleRecharge"
-                prefWidth="80"
+                minWidth="110" prefWidth="110"
                 styleClass="info-button"/>
 
-        <Separator orientation="VERTICAL"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="countLabel" text="%member.count" styleClass="text-muted"/>
+        </HBox>
+
+        <HBox spacing="10" alignment="CENTER_LEFT">
 
         <!-- 搜索 -->
         <Label text="%member.search_label"/>
         <TextField fx:id="searchField"
                   promptText="%member.search_hint"
-                  prefWidth="200"
+                  minWidth="260" prefWidth="320" HBox.hgrow="ALWAYS"
                   onAction="#handleSearch"/>
 
         <Button text="%member.search_button"
                 onAction="#handleSearch"
-                prefWidth="60"
+                minWidth="90" prefWidth="90"
                 styleClass="secondary-button"/>
 
         <Button text="%member.clear"
                 onAction="#handleClearSearch"
-                prefWidth="60"
+                minWidth="90" prefWidth="90"
                 styleClass="secondary-button"/>
 
-        <Region HBox.hgrow="ALWAYS"/>
-
-        <!-- 统计信息 -->
-        <Label fx:id="countLabel" text="%member.count" styleClass="text-muted"/>
-    </HBox>
+        </HBox>
+    </VBox>
 
     <!-- 会员表格 -->
     <TableView fx:id="memberTable"

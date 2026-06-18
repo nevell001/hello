@@ -103,7 +103,7 @@ public class SearchController {
         selectedIndex = 0;
 
         if (query == null || query.trim().isEmpty()) {
-            resultCountLabel.setText("0");
+            resultCountLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("member.edit.points_hint"));
             return;
         }
 

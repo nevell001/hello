@@ -109,12 +109,12 @@ public class Shift {
     // 获取班次时长显示文本
     public String getDurationText() {
         if (startTime == null || endTime == null) {
-            return "未完成";
+            return com.cashier.i18n.I18nManager.getInstance().get("runtime.incomplete");
         }
         long minutes = getShiftDuration();
         long hours = minutes / 60;
         long mins = minutes % 60;
-        return String.format("%d小时%d分钟", hours, mins);
+        return com.cashier.i18n.I18nManager.getInstance().get("runtime.shift_duration", hours, mins);
     }
 
     // Getter方法

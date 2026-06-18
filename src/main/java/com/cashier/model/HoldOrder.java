@@ -39,10 +39,10 @@ public class HoldOrder {
      */
     public String getStatusDescription() {
         switch (status) {
-            case 0: return "挂单中";
-            case 1: return "已恢复";
-            case 2: return "已取消";
-            default: return "未知";
+            case 0: return com.cashier.i18n.I18nManager.getInstance().get("runtime.hold.pending");
+            case 1: return com.cashier.i18n.I18nManager.getInstance().get("runtime.hold.resumed");
+            case 2: return com.cashier.i18n.I18nManager.getInstance().get("runtime.hold.cancelled");
+            default: return com.cashier.i18n.I18nManager.getInstance().get("runtime.unknown");
         }
     }
 
