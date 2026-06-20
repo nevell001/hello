@@ -42,7 +42,8 @@ public class HealthController {
             boolean dbOk = DatabaseManager.getConnection() != null;
             result.put("database", dbOk ? "connected" : "disconnected");
         } catch (Exception e) {
-            result.put("database", "error: " + e.getMessage());
+            logger.warn("数据库健康检查失败", e);
+            result.put("database", "disconnected");
         }
         
         // 检查内存

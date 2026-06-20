@@ -18,7 +18,7 @@ public class SyncManager {
     private static final Logger logger = LoggerFactoryUtil.getLogger(SyncManager.class);
     private static final ObjectMapper mapper = new ObjectMapper();
     
-    private static SyncManager instance;
+    private static final SyncManager INSTANCE = new SyncManager();
     
     // 终端连接映射: sessionId -> TerminalConnection
     private final ConcurrentHashMap<String, TerminalConnection> connections = new ConcurrentHashMap<>();
@@ -29,10 +29,7 @@ public class SyncManager {
     private SyncManager() {}
     
     public static SyncManager getInstance() {
-        if (instance == null) {
-            instance = new SyncManager();
-        }
-        return instance;
+        return INSTANCE;
     }
     
     /**
@@ -259,7 +256,7 @@ public class SyncManager {
         } catch (Exception e) {
             logger.error("同步数据失败: {}", entity, e);
             responseData.put("status", "error");
-            responseData.put("message", "同步失败: " + e.getMessage());
+            responseData.put("message", "同步失败");
         }
         
         response.data = responseData;

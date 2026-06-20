@@ -10,10 +10,11 @@ import com.cashier.printer.PrintTask;
 
 import java.io.File;
 import java.math.BigDecimal;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.List;
 import org.slf4j.Logger;
 
@@ -55,7 +56,7 @@ public class ReceiptPrinter {
             String content = generateReceiptContent(transaction, cartItems, member);
 
             // 写入文件
-            try (FileWriter writer = new FileWriter(receiptFile)) {
+            try (java.io.BufferedWriter writer = Files.newBufferedWriter(receiptFile.toPath(), StandardCharsets.UTF_8)) {
                 writer.write(content);
             }
 
@@ -229,7 +230,7 @@ public class ReceiptPrinter {
             String content = generateReceiptContent(transaction, cartItems, member);
 
             // 写入文件
-            try (FileWriter writer = new FileWriter(receiptFile)) {
+            try (java.io.BufferedWriter writer = Files.newBufferedWriter(receiptFile.toPath(), StandardCharsets.UTF_8)) {
                 writer.write(content);
             }
 
@@ -296,7 +297,7 @@ public class ReceiptPrinter {
             String content = generateReturnReceiptContent(returnOrder, returnItems);
 
             // 写入文件
-            try (FileWriter writer = new FileWriter(returnReceiptFile)) {
+            try (java.io.BufferedWriter writer = Files.newBufferedWriter(returnReceiptFile.toPath(), StandardCharsets.UTF_8)) {
                 writer.write(content);
             }
 
@@ -429,7 +430,7 @@ public class ReceiptPrinter {
             String content = generateReturnReceiptContent(returnOrder, returnItems);
 
             // 写入文件
-            try (FileWriter writer = new FileWriter(returnReceiptFile)) {
+            try (java.io.BufferedWriter writer = Files.newBufferedWriter(returnReceiptFile.toPath(), StandardCharsets.UTF_8)) {
                 writer.write(content);
             }
 
@@ -460,12 +461,12 @@ public class ReceiptPrinter {
             // 打印机会自动调用 printLogo()
 
             // 店铺名称
-            content.append(new String(EscPosUtils.ALIGN_CENTER));
-            content.append(new String(EscPosUtils.DOUBLE_HEIGHT_WIDTH_ON));
+            content.append(new String(EscPosUtils.ALIGN_CENTER, StandardCharsets.ISO_8859_1));
+            content.append(new String(EscPosUtils.DOUBLE_HEIGHT_WIDTH_ON, StandardCharsets.ISO_8859_1));
             content.append("狸算(LiSuan)收银系统\n");
-            content.append(new String(EscPosUtils.FONT_NORMAL));
-            content.append(new String(EscPosUtils.ALIGN_LEFT));
-            content.append(new String(EscPosUtils.LINE_FEED));
+            content.append(new String(EscPosUtils.FONT_NORMAL, StandardCharsets.ISO_8859_1));
+            content.append(new String(EscPosUtils.ALIGN_LEFT, StandardCharsets.ISO_8859_1));
+            content.append(new String(EscPosUtils.LINE_FEED, StandardCharsets.ISO_8859_1));
 
             // 分隔线
             content.append("========================================\n");

@@ -109,7 +109,7 @@ mysql -u root -p
 
 ```sql
 -- 创建收银系统专用用户
-CREATE USER 'cashier'@'%' IDENTIFIED BY 'YourStrongPassword123!';
+CREATE USER 'cashier'@'%' IDENTIFIED BY 'REPLACE_WITH_STRONG_RANDOM_PASSWORD';
 
 -- 创建数据库
 CREATE DATABASE lisuan_system CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -176,7 +176,8 @@ db.url=jdbc:mysql://192.168.1.100:3306/lisuan_system?useSSL=false&serverTimezone
 
 # 修改为实际的用户名和密码
 db.username=cashier
-db.password=YourStrongPassword123!
+# 推荐留空，并通过 CASHER_DB_PASSWORD 环境变量提供
+db.password=
 
 # 根据收银机数量调整连接池
 db.pool.size=10

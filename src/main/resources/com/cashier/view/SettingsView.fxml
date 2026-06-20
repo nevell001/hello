@@ -149,7 +149,7 @@
 
                         <!-- Logo 预览区域 -->
                         <HBox spacing="10" alignment="CENTER_LEFT" styleClass="logo-preview-container">
-                            <StackPane prefWidth="120" prefHeight="120" styleClass="surface-muted" style="-fx-border-color: #ddd; -fx-border-width: 1">
+                            <StackPane prefWidth="120" prefHeight="120" styleClass="surface-muted, logo-preview-frame">
                                 <padding>
                                     <Insets top="5" right="5" bottom="5" left="5"/>
                                 </padding>

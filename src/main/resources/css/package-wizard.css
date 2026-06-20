@@ -23,11 +23,59 @@
 
 .wizard-subtitle {
     -fx-font-family: "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+    -fx-text-fill: #6c757d;
 }
 
 .wizard-version {
     -fx-font-family: "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
     -fx-font-size: 11px;
+    -fx-text-fill: #6c757d;
+}
+
+.section-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.step-arrow,
+.help-text {
+    -fx-text-fill: #6c757d;
+}
+
+.help-text {
+    -fx-font-size: 11px;
+}
+
+.wizard-scroll,
+.wizard-scroll > .viewport {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.wizard-content {
+    -fx-padding: 15px;
+    -fx-background-color: #f8f8f8;
+    -fx-background-radius: 8px;
+}
+
+.option-card {
+    -fx-background-color: white;
+    -fx-padding: 15px;
+    -fx-background-radius: 5px;
+    -fx-border-color: #e9ecef;
+    -fx-border-radius: 5px;
+}
+
+.status-label {
+    -fx-text-fill: #333333;
+}
+
+.connection-success {
+    -fx-text-fill: #1B5E20;
+}
+
+.connection-error {
+    -fx-text-fill: #B71C1C;
 }
 
 /* 步骤按钮 */
@@ -237,9 +285,22 @@
     -fx-background-color: #1e1e1e;
 }
 
+.log-area {
+    -fx-font-family: monospace;
+    -fx-font-size: 11px;
+    -fx-text-fill: #cccccc;
+}
+
 /* 打包说明区域 - 终端风格 */
 .info-area .content {
     -fx-background-color: #1e1e1e;
+}
+
+.info-area {
+    -fx-font-family: monospace;
+    -fx-font-size: 11px;
+    -fx-text-fill: #00ff00;
+    -fx-wrap-text: true;
 }
 
 /* Tooltip */

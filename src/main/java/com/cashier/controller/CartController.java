@@ -1315,17 +1315,13 @@ public class CartController {
      * @param table 要闪烁的表格
      */
     private void flashTable(TableView<?> table) {
-        String originalStyle = table.getStyle();
-        
+        table.getStyleClass().remove("scan-success-flash");
         Timeline timeline = new Timeline(
             new KeyFrame(Duration.ZERO, event -> {
-                table.setStyle("-fx-background-color: #4CAF50; -fx-opacity: 0.8;");
-            }),
-            new KeyFrame(Duration.millis(100), event -> {
-                table.setStyle("-fx-background-color: #8BC34A; -fx-opacity: 0.9;");
+                table.getStyleClass().add("scan-success-flash");
             }),
             new KeyFrame(Duration.millis(200), event -> {
-                table.setStyle(originalStyle);
+                table.getStyleClass().remove("scan-success-flash");
             })
         );
         timeline.play();

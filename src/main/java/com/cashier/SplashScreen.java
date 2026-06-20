@@ -42,14 +42,14 @@ public class SplashScreen extends Preloader {
         progress = new ProgressBar();
         progress.setPrefWidth(300);
         progress.setProgress(0);
-        progress.setStyle("-fx-accent: #4CAF50;");
+        progress.getStyleClass().add("splash-progress");
 
         // 状态标签
         statusLabel = new Label("正在启动...");
-        statusLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #666;");
+        statusLabel.getStyleClass().add("splash-status");
 
         VBox root = new VBox(20, logo, progress, statusLabel);
-        root.setStyle("-fx-background-color: #f5f5f5; -fx-padding: 40; -fx-alignment: center;");
+        root.getStyleClass().add("splash-root");
         root.getStylesheets().add("/css/splash.css");
 
         Scene scene = new Scene(root, 400, 280);

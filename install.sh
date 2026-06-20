@@ -31,7 +31,8 @@ DB_TYPE=${DB_TYPE:-"none"}
 DB_HOST=${DB_HOST:-"localhost"}
 DB_PORT=${DB_PORT:-"3306"}
 DB_NAME=${MYSQL_DATABASE:-"lisuan_system"}
-MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-"RootPassword123!"}
+MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-""}
+MYSQL_PASSWORD=${MYSQL_PASSWORD:-""}
 MYSQL_CONTAINER_NAME=${MYSQL_CONTAINER_NAME:-"lisuan-mysql"}
 
 # 环境类型：development 或 production
@@ -40,13 +41,12 @@ ENVIRONMENT=${ENVIRONMENT:-"development"}
 # 开发环境使用 root，生产环境使用专用用户
 if [ "$ENVIRONMENT" = "production" ]; then
     DB_USERNAME=${MYSQL_USER:-"lisuan"}
-    DB_PASSWORD=${MYSQL_PASSWORD:-"LisuanPassword123!"}
+    DB_PASSWORD=${MYSQL_PASSWORD}
 else
     # 开发环境默认使用 root（便于调试）
     DB_USERNAME="root"
-    DB_PASSWORD=${MYSQL_ROOT_PASSWORD:-"RootPassword123!"}
+    DB_PASSWORD=${MYSQL_ROOT_PASSWORD}
     MYSQL_USER=${MYSQL_USER:-"lisuan"}
-    MYSQL_PASSWORD=${MYSQL_PASSWORD:-"LisuanPassword123!"}
 fi
 
 # Auto-detect executable fat JAR (works for any version)
@@ -161,6 +161,25 @@ echo ""
 
 # 检查 Docker
 if [ "$DB_TYPE" == "docker" ]; then
+    if [ -z "$MYSQL_ROOT_PASSWORD" ]; then
+        read -s -p "MySQL root password: " MYSQL_ROOT_PASSWORD
+        echo ""
+    fi
+    if [ -z "$MYSQL_PASSWORD" ]; then
+        read -s -p "MySQL application user password: " MYSQL_PASSWORD
+        echo ""
+    fi
+    if [ -z "$MYSQL_ROOT_PASSWORD" ] || [ -z "$MYSQL_PASSWORD" ]; then
+        echo "[Error] Database passwords cannot be empty"
+        exit 1
+    fi
+    export MYSQL_ROOT_PASSWORD MYSQL_PASSWORD
+    if [ "$ENVIRONMENT" = "production" ]; then
+        DB_PASSWORD="$MYSQL_PASSWORD"
+    else
+        DB_PASSWORD="$MYSQL_ROOT_PASSWORD"
+    fi
+
     echo "[Docker] Checking Docker installation..."
     if ! command -v docker &> /dev/null; then
         echo "[Info] Docker not installed yet"

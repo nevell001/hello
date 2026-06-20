@@ -1029,6 +1029,57 @@
     -fx-text-fill: #757575;
 }
 
+.caption-text {
+    -fx-font-size: 11px;
+}
+
+.logo-preview-frame {
+    -fx-border-color: #BDBDBD;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+}
+
+.custom-tab-close {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #757575;
+    -fx-cursor: hand;
+    -fx-padding: 0 1px 0 6px;
+    -fx-min-width: 14px;
+    -fx-min-height: 14px;
+}
+
+.custom-tab-close:hover {
+    -fx-text-fill: #FFFFFF;
+    -fx-background-color: #F44336;
+    -fx-background-radius: 2px;
+}
+
+.loading-overlay {
+    -fx-background-color: rgba(0, 0, 0, 0.5);
+}
+
+.loading-card {
+    -fx-background-color: rgba(255, 255, 255, 0.94);
+    -fx-background-radius: 10px;
+    -fx-padding: 20px;
+}
+
+.loading-progress {
+    -fx-progress-color: #3F51B5;
+}
+
+.loading-label {
+    -fx-text-fill: #212121;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.table-view.scan-success-flash {
+    -fx-background-color: #4CAF50;
+    -fx-opacity: 0.82;
+}
+
 .text-default {
     -fx-text-fill: #212121;
 }
@@ -1437,6 +1488,61 @@
     -fx-border-color: transparent;
     -fx-border-width: 0;
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 4, 0, 0, 2);
+}
+
+.pos-title {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #FFFFFF;
+}
+
+.pos-user-name {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #FFFFFF;
+}
+
+.pos-secondary-text {
+    -fx-font-size: 13px;
+    -fx-text-fill: #E0E0E0;
+}
+
+.pos-avatar-text {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #FFFFFF;
+}
+
+.pos-status-text,
+.pos-ready-text {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.pos-status-text {
+    -fx-text-fill: #E0E0E0;
+}
+
+.pos-ready-text {
+    -fx-text-fill: #FFFFFF;
+}
+
+.alert-level-critical,
+.alert-level-warning,
+.alert-level-info {
+    -fx-font-weight: bold;
+}
+
+.alert-level-critical {
+    -fx-text-fill: #D32F2F;
+}
+
+.alert-level-warning {
+    -fx-text-fill: #FF9800;
+}
+
+.alert-level-info {
+    -fx-text-fill: #2196F3;
 }
 
 /* POS 主内容区域 */

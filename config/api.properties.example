@@ -7,14 +7,14 @@
 #   export CORS_ALLOWED_ORIGINS="https://your-domain.com"
 # ============================================
 
-# API 服务器开关
-api.enabled=true
+# API 服务器开关（默认关闭；完成下方安全配置后再显式开启）
+api.enabled=false
 
 # API 端口
 api.port=8080
 
-# API 主机绑定（生产环境建议改为具体IP）
-api.host=0.0.0.0
+# API 主机绑定（默认仅本机；确需远程访问时再配置具体内网地址）
+api.host=127.0.0.1
 
 # ============================================
 # CORS 配置（重要！）

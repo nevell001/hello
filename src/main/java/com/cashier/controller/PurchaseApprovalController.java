@@ -231,9 +231,7 @@ public class PurchaseApprovalController {
 
             // 按钮
             Button confirmButton = new Button("approve".equals(action) ? I18nManager.getInstance().get("runtime.approve") : I18nManager.getInstance().get("return_approval.reject"));
-            confirmButton.setStyle("approve".equals(action)
-                ? "-fx-background-color: #4CAF50; -fx-text-fill: white;"
-                : "-fx-background-color: #f44336; -fx-text-fill: white;");
+            confirmButton.getStyleClass().add("approve".equals(action) ? "success-button" : "danger-button");
 
             Button cancelButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("return_order.cancel"));
 

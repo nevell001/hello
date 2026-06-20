@@ -181,24 +181,24 @@ public class InventoryAlertController {
      * 预警级别枚举
      */
     public enum AlertLevel {
-        CRITICAL("严重警告", "#D32F2F"),
-        WARNING("警告", "#FF9800"),
-        INFO("提示", "#2196F3");
+        CRITICAL("严重警告", "alert-level-critical"),
+        WARNING("警告", "alert-level-warning"),
+        INFO("提示", "alert-level-info");
 
         private final String displayName;
-        private final String color;
+        private final String styleClass;
 
-        AlertLevel(String displayName, String color) {
+        AlertLevel(String displayName, String styleClass) {
             this.displayName = displayName;
-            this.color = color;
+            this.styleClass = styleClass;
         }
 
         public String getDisplayName() {
             return displayName;
         }
 
-        public String getColor() {
-            return color;
+        public String getStyleClass() {
+            return styleClass;
         }
     }
 
@@ -243,14 +243,14 @@ public class InventoryAlertController {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
+                getStyleClass().removeAll("alert-level-critical", "alert-level-warning", "alert-level-info");
                 if (empty || item == null) {
                     setText(null);
-                    setStyle("");
                 } else {
                     setText(item);
                     AlertItem alertItem = getTableView().getItems().get(getIndex());
                     if (alertItem != null) {
-                        setStyle("-fx-text-fill: " + alertItem.getLevel().getColor() + "; -fx-font-weight: bold;");
+                        getStyleClass().add(alertItem.getLevel().getStyleClass());
                     }
                 }
             }

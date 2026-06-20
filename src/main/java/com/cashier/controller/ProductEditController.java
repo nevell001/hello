@@ -142,57 +142,6 @@ public class ProductEditController {
             }
         });
 
-        // 强制设置 ComboBox 样式，去除所有内部边框
-        styleComboBox(categoryComboBox);
-        styleComboBox(unitComboBox);
-        styleComboBox(supplierComboBox);
-
-        // 强制设置 TextArea 样式，去除所有内部边框
-        styleTextArea(descriptionField);
-    }
-
-    /**
-     * 强制设置 ComboBox 样式，去除所有内部边框
-     */
-    private void styleComboBox(javafx.scene.control.ComboBox<String> comboBox) {
-        // 使用 CSS 强制覆盖所有内部组件样式
-        comboBox.setStyle(
-            "-fx-background-color: white; " +
-            "-fx-background-insets: 0; " +
-            "-fx-background-radius: 4px; " +
-            "-fx-border-color: #E0E0E0; " +
-            "-fx-border-insets: 0; " +
-            "-fx-border-radius: 4px; " +
-            "-fx-border-width: 1px; " +
-            "-fx-padding: 6px 8px; " +
-            "-fx-font-size: 14px;"
-        );
-
-        // 监听显示变化，确保样式持续应用
-        comboBox.showingProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal) {
-                comboBox.setStyle(comboBox.getStyle());
-            }
-        });
-    }
-
-    /**
-     * 强制设置 TextArea 样式，去除所有内部边框
-     */
-    private void styleTextArea(javafx.scene.control.TextArea textArea) {
-        // 使用 CSS 强制覆盖所有内部组件样式
-        textArea.setStyle(
-            "-fx-background-color: white; " +
-            "-fx-background-insets: 0; " +
-            "-fx-background-radius: 4px; " +
-            "-fx-border-color: #E0E0E0; " +
-            "-fx-border-insets: 0; " +
-            "-fx-border-radius: 4px; " +
-            "-fx-border-width: 1px; " +
-            "-fx-padding: 8px 12px; " +
-            "-fx-font-size: 13px; " +
-            "-fx-text-fill: #424242;"
-        );
     }
 
     /**

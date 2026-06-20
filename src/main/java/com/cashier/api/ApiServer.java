@@ -2,6 +2,7 @@ package com.cashier.api;
 
 import com.cashier.api.controller.*;
 import com.cashier.api.middleware.AuthMiddleware;
+import com.cashier.api.middleware.AuthorizationMiddleware;
 import com.cashier.api.sync.SyncWebSocketHandler;
 import com.cashier.api.sync.SyncManager;
 import com.cashier.dao.UserDAO;
@@ -36,7 +37,7 @@ public class ApiServer {
     private static final int TOKEN_BYTES = 32;
     private static final String HMAC_ALGORITHM = "HmacSHA256";
     
-    private static ApiServer instance;
+    private static final ApiServer INSTANCE = new ApiServer();
     private Javalin app;
     private int port = 8080;
     private boolean running = false;
@@ -52,10 +53,7 @@ public class ApiServer {
     private ApiServer() {}
     
     public static ApiServer getInstance() {
-        if (instance == null) {
-            instance = new ApiServer();
-        }
-        return instance;
+        return INSTANCE;
     }
     
     /**
@@ -65,6 +63,12 @@ public class ApiServer {
         if (running) {
             logger.warn("API 服务器已在运行");
             return;
+        }
+
+        if (!ApiConfig.isProductionReady()) {
+            throw new IllegalStateException(
+                "API 安全配置不完整：请设置至少 32 字符的 TOKEN_SECRET，并限制 CORS_ALLOWED_ORIGINS"
+            );
         }
         
         this.port = port;
@@ -123,18 +127,28 @@ public class ApiServer {
         app.before(ctx -> {
             if (!isPublicApiPath(ctx.path())) {
                 AuthMiddleware.authenticate(ctx);
+                if (ctx.attribute("currentUser") != null) {
+                    AuthorizationMiddleware.authorize(ctx);
+                }
             }
         });
 
         // 注册路由
         registerRoutes();
+
+        // 异常详情只写入服务端日志，所有 5xx 响应统一隐藏内部实现信息。
+        app.after(ctx -> {
+            if (ctx.statusCode() >= 500) {
+                ctx.json(Map.of("success", false, "message", "服务器内部错误"));
+            }
+        });
         
         // 启动服务器
-        app.start(port);
+        app.start(ApiConfig.getHost(), port);
         running = true;
         
-        logger.info("REST API 服务器已启动，端口: {}", port);
-        logger.info("API 文档: http://localhost:{}{}", port, "/api/health");
+        logger.info("REST API 服务器已启动，地址: {}:{}", ApiConfig.getHost(), port);
+        logger.info("API 健康检查: http://{}:{}{}", ApiConfig.getHost(), port, "/api/health");
     }
     
     /**
@@ -280,7 +294,7 @@ public class ApiServer {
         app.exception(Exception.class, (e, ctx) -> {
             logger.error("API 异常: {} - {}", ctx.path(), e.getMessage(), e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "服务器内部错误: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "服务器内部错误"));
         });
         
         // 404 处理
@@ -289,9 +303,8 @@ public class ApiServer {
         });
     }
 
-    private boolean isPublicApiPath(String path) {
+    static boolean isPublicApiPath(String path) {
         return path.equals("/api/health")
-            || path.equals("/api/health/detail")
             || path.equals("/api/auth/login");
     }
     
@@ -359,6 +372,9 @@ public class ApiServer {
      * 验证 Token
      */
     public User validateToken(String token) {
+        if (token == null || token.isBlank()) {
+            return null;
+        }
         TokenInfo info = tokens.get(token);
         if (info == null || info.expireTime < System.currentTimeMillis()) {
             tokens.remove(token);

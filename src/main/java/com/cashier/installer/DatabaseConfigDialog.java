@@ -144,7 +144,11 @@ public class DatabaseConfigDialog {
         String env = System.getenv("ENVIRONMENT");
         boolean isProduction = "production".equalsIgnoreCase(env);
         String defaultUser = isProduction ? "lisuan" : "root";
-        String defaultPassword = isProduction ? "LisuanPassword123!" : "RootPassword123!";
+        String passwordVariable = isProduction ? "MYSQL_PASSWORD" : "MYSQL_ROOT_PASSWORD";
+        String defaultPassword = System.getenv(passwordVariable);
+        if (defaultPassword == null) {
+            defaultPassword = "";
+        }
 
         switch (type) {
             case "Local MySQL":
@@ -198,31 +202,29 @@ public class DatabaseConfigDialog {
         }
 
         // Test actual database connection
-        Connection conn = null;
-        Statement stmt = null;
         try {
             String dbUrl = String.format("jdbc:mysql://%s:%s/?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true",
                     host, port);
-            conn = DriverManager.getConnection(dbUrl, user, pass);
-
-            // Check if database exists
-            stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '" + dbName + "'");
-
             StringBuilder message = new StringBuilder();
             message.append("Database connection successful!\n\n");
+            try (Connection conn = DriverManager.getConnection(dbUrl, user, pass);
+                 PreparedStatement stmt = conn.prepareStatement(
+                         "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?")) {
+                stmt.setString(1, dbName);
+                try (ResultSet rs = stmt.executeQuery()) {
 
-            if (rs.next()) {
-                int tableCount = getTableCount(conn, dbName);
-                message.append("Database '").append(dbName).append("' exists.");
-                message.append("\nTables: ").append(tableCount);
-            } else {
-                message.append("Database '").append(dbName).append("' does not exist yet.\n");
-                message.append("It will be created automatically when you save.");
+                    if (rs.next()) {
+                        int tableCount = getTableCount(conn, dbName);
+                        message.append("Database '").append(dbName).append("' exists.");
+                        message.append("\nTables: ").append(tableCount);
+                    } else {
+                        message.append("Database '").append(dbName).append("' does not exist yet.\n");
+                        message.append("It will be created automatically when you save.");
+                    }
+                }
+
+                showMessage(message.toString(), JOptionPane.INFORMATION_MESSAGE);
             }
-            rs.close();
-
-            showMessage(message.toString(), JOptionPane.INFORMATION_MESSAGE);
 
         } catch (SQLException e) {
             String errorMsg = "Connection failed!\n\n";
@@ -238,20 +240,27 @@ public class DatabaseConfigDialog {
                 errorMsg += "Error: " + e.getMessage();
             }
             showMessage(errorMsg, JOptionPane.ERROR_MESSAGE);
-        } finally {
-            try { if (stmt != null) stmt.close(); } catch (Exception e) { /* ignore */ }
-            try { if (conn != null) conn.close(); } catch (Exception e) { /* ignore */ }
         }
     }
 
     private int getTableCount(Connection conn, String dbName) throws SQLException {
-        try (Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + dbName + "'")) {
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ?")) {
+            stmt.setString(1, dbName);
+            try (ResultSet rs = stmt.executeQuery()) {
             if (rs.next()) {
                 return rs.getInt(1);
             }
+            }
         }
         return 0;
+    }
+
+    private static String validateDatabaseName(String dbName) {
+        if (dbName == null || !dbName.matches("[A-Za-z0-9_]+")) {
+            throw new IllegalArgumentException("Database name may only contain letters, numbers, and underscores");
+        }
+        return dbName;
     }
 
     private void saveAndStart() {
@@ -263,6 +272,13 @@ public class DatabaseConfigDialog {
 
         if (host.isEmpty() || port.isEmpty() || user.isEmpty()) {
             showMessage("Please fill in Host, Port, and Username fields", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            dbName = validateDatabaseName(dbName);
+        } catch (IllegalArgumentException e) {
+            showMessage(e.getMessage(), JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -280,24 +296,24 @@ public class DatabaseConfigDialog {
             boolean dbExists;
             boolean needsInit = false;
 
-            try (Connection conn = DriverManager.getConnection(dbUrl, user, pass);
-                 Statement stmt = conn.createStatement()) {
-
-                ResultSet rs = stmt.executeQuery("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '" + dbName + "'");
-                dbExists = rs.next();
-                rs.close();
+            try (Connection conn = DriverManager.getConnection(dbUrl, user, pass)) {
+                try (PreparedStatement stmt = conn.prepareStatement(
+                        "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?")) {
+                    stmt.setString(1, dbName);
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        dbExists = rs.next();
+                    }
+                }
 
                 if (!dbExists) {
                     // Create database
-                    stmt.execute("CREATE DATABASE " + dbName + " CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+                    try (Statement stmt = conn.createStatement()) {
+                        stmt.execute("CREATE DATABASE `" + dbName + "` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+                    }
                     needsInit = true;
                 } else {
                     // Check if tables exist
-                    rs = stmt.executeQuery("SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + dbName + "'");
-                    if (rs.next() && rs.getInt(1) == 0) {
-                        needsInit = true;
-                    }
-                    rs.close();
+                    needsInit = getTableCount(conn, dbName) == 0;
                 }
             }
 

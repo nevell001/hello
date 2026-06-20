@@ -141,113 +141,28 @@ public class PosModeController {
      * 这是一个简化的映射表，覆盖常见姓氏
      */
     private String getPinyinFirstLetter(char c) {
-        // 常见中文姓氏拼音首字母映射
-        if (c >= '赵' && c <= '座') {
-            // 简化的范围判断，实际应该使用精确的拼音库
-            if (c >= '赵' && c <= '邹') return "Z";
-            if (c >= '张' && c <= '赵') return "Z";
-            if (c >= '李' && c <= '路') return "L";
-            if (c >= '王' && c <= '魏') return "W";
-            if (c >= '刘' && c <= '罗') return "L";
-            if (c >= '陈' && c <= '程') return "C";
-            if (c >= '杨' && c <= '姚') return "Y";
-            if (c >= '黄' && c <= '郝') return "H";
-            if (c >= '赵' && c <= '邹') return "Z";
-            if (c >= '周' && c <= '郑') return "Z";
-            if (c >= '吴' && c <= '伍') return "W";
-            if (c >= '徐' && c <= '许') return "X";
-            if (c >= '孙' && c <= '苏') return "S";
-            if (c >= '马' && c <= '麦') return "M";
-            if (c >= '朱' && c <= '祝') return "Z";
-            if (c >= '胡' && c <= '侯') return "H";
-            if (c >= '郭' && c <= '顾') return "G";
-            if (c >= '何' && c <= '贺') return "H";
-            if (c >= '高' && c <= '葛') return "G";
-            if (c >= '林' && c <= '刘') return "L";
-            if (c >= '罗' && c <= '陆') return "L";
-            if (c >= '梁' && c <= '廖') return "L";
-            if (c >= '宋' && c <= '苏') return "S";
-            if (c >= '郑' && c <= '郑') return "Z";
-            if (c >= '谢' && c <= '薛') return "X";
-            if (c >= '韩' && c <= '郝') return "H";
-            if (c >= '唐' && c <= '汤') return "T";
-            if (c >= '冯' && c <= '傅') return "F";
-            if (c >= '于' && c <= '余') return "Y";
-            if (c >= '董' && c <= '杜') return "D";
-            if (c >= '萧' && c <= '萧') return "X";
-            if (c >= '程' && c <= '崔') return "C";
-            if (c >= '袁' && c <= '袁') return "Y";
-            if (c >= '邓' && c <= '邓') return "D";
-            if (c >= '许' && c <= '许') return "X";
-            if (c >= '傅' && c <= '傅') return "F";
-            if (c >= '沈' && c <= '沈') return "S";
-            if (c >= '曾' && c <= '曾') return "Z";
-            if (c >= '彭' && c <= '彭') return "P";
-            if (c >= '吕' && c <= '吕') return "L";
-            if (c >= '苏' && c <= '苏') return "S";
-            if (c >= '卢' && c <= '陆') return "L";
-            if (c >= '蒋' && c <= '蒋') return "J";
-            if (c >= '蔡' && c <= '蔡') return "C";
-            if (c >= '贾' && c <= '贾') return "J";
-            if (c >= '丁' && c <= '丁') return "D";
-            if (c >= '魏' && c <= '魏') return "W";
-            if (c >= '薛' && c <= '薛') return "X";
-            if (c >= '叶' && c <= '叶') return "Y";
-            if (c >= '阎' && c <= '阎') return "Y";
-            if (c >= '余' && c <= '余') return "Y";
-            if (c >= '潘' && c <= '潘') return "P";
-            if (c >= '杜' && c <= '杜') return "D";
-            if (c >= '戴' && c <= '戴') return "D";
-            if (c >= '夏' && c <= '夏') return "X";
-            if (c >= '钟' && c <= '钟') return "Z";
-            if (c >= '汪' && c <= '汪') return "W";
-            if (c >= '田' && c <= '田') return "T";
-            if (c >= '任' && c <= '任') return "R";
-            if (c >= '姜' && c <= '姜') return "J";
-            if (c >= '范' && c <= '范') return "F";
-            if (c >= '方' && c <= '方') return "F";
-            if (c >= '石' && c <= '石') return "S";
-            if (c >= '姚' && c <= '姚') return "Y";
-            if (c >= '谭' && c <= '谭') return "T";
-            if (c >= '廖' && c <= '廖') return "L";
-            if (c >= '邹' && c <= '邹') return "Z";
-            if (c >= '熊' && c <= '熊') return "X";
-            if (c >= '金' && c <= '金') return "J";
-            if (c >= '陆' && c <= '陆') return "L";
-            if (c >= '郝' && c <= '郝') return "H";
-            if (c >= '孔' && c <= '孔') return "K";
-            if (c >= '白' && c <= '白') return "B";
-            if (c >= '崔' && c <= '崔') return "C";
-            if (c >= '康' && c <= '康') return "K";
-            if (c >= '毛' && c <= '毛') return "M";
-            if (c >= '邱' && c <= '邱') return "Q";
-            if (c >= '秦' && c <= '秦') return "Q";
-            if (c >= '江' && c <= '江') return "J";
-            if (c >= '史' && c <= '史') return "S";
-            if (c >= '顾' && c <= '顾') return "G";
-            if (c >= '侯' && c <= '侯') return "H";
-            if (c >= '邵' && c <= '邵') return "S";
-            if (c >= '孟' && c <= '孟') return "M";
-            if (c >= '龙' && c <= '龙') return "L";
-            if (c >= '万' && c <= '万') return "W";
-            if (c >= '段' && c <= '段') return "D";
-            if (c >= '雷' && c <= '雷') return "L";
-            if (c >= '钱' && c <= '钱') return "Q";
-            if (c >= '汤' && c <= '汤') return "T";
-            if (c >= '尹' && c <= '尹') return "Y";
-            if (c >= '黎' && c <= '黎') return "L";
-            if (c >= '易' && c <= '易') return "Y";
-            if (c >= '常' && c <= '常') return "C";
-            if (c >= '武' && c <= '武') return "W";
-            if (c >= '乔' && c <= '乔') return "Q";
-            if (c >= '贺' && c <= '贺') return "H";
-            if (c >= '赖' && c <= '赖') return "L";
-            if (c >= '龚' && c <= '龚') return "G";
-            if (c >= '文' && c <= '文') return "W";
-        }
-        
-        // 默认返回用户名的第一个字符（对于不在映射表中的汉字）
-        return String.valueOf(c);
+        return switch (c) {
+            case '白' -> "B";
+            case '蔡', '陈', '程', '崔', '常' -> "C";
+            case '戴', '邓', '丁', '董', '杜', '段' -> "D";
+            case '范', '方', '冯', '傅' -> "F";
+            case '高', '葛', '龚', '郭', '顾' -> "G";
+            case '韩', '郝', '何', '贺', '侯', '胡', '黄' -> "H";
+            case '贾', '姜', '江', '蒋', '金' -> "J";
+            case '康', '孔' -> "K";
+            case '赖', '雷', '黎', '李', '梁', '廖', '林', '刘', '龙', '罗', '卢', '陆', '吕' -> "L";
+            case '马', '毛', '孟' -> "M";
+            case '潘', '彭' -> "P";
+            case '钱', '乔', '秦', '邱' -> "Q";
+            case '任' -> "R";
+            case '沈', '史', '石', '宋', '苏', '孙', '邵' -> "S";
+            case '谭', '汤', '唐', '田' -> "T";
+            case '万', '汪', '王', '魏', '文', '吴', '武' -> "W";
+            case '夏', '萧', '谢', '熊', '徐', '许', '薛' -> "X";
+            case '阎', '杨', '姚', '叶', '易', '尹', '于', '余', '袁' -> "Y";
+            case '曾', '张', '赵', '郑', '钟', '周', '朱', '邹' -> "Z";
+            default -> String.valueOf(c);
+        };
     }
 
     /**

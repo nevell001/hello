@@ -93,15 +93,19 @@ docker --version
 # 拉取 MySQL 8.4 镜像
 docker pull mysql:8.4
 
+# 先设置两个不同的强随机密码（不要写入脚本或命令历史）
+read -s MYSQL_ROOT_PASSWORD && export MYSQL_ROOT_PASSWORD
+read -s MYSQL_PASSWORD && export MYSQL_PASSWORD
+
 # 启动 MySQL 容器
 docker run -d \
   --name lisuan-mysql \
   --restart unless-stopped \
-  -p 3306:3306 \
-  -e MYSQL_ROOT_PASSWORD=RootPassword123! \
+  -p 127.0.0.1:3306:3306 \
+  -e MYSQL_ROOT_PASSWORD="$MYSQL_ROOT_PASSWORD" \
   -e MYSQL_DATABASE=lisuan_system \
   -e MYSQL_USER=cashier \
-  -e MYSQL_PASSWORD=YourStrongPassword123! \
+  -e MYSQL_PASSWORD="$MYSQL_PASSWORD" \
   -v lisuan-mysql-data:/var/lib/mysql \
   mysql:8.4 \
   --character-set-server=utf8mb4 \
@@ -121,13 +125,13 @@ services:
     container_name: lisuan-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: RootPassword123!
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?请在 .env 中设置 MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: lisuan_system
       MYSQL_USER: cashier
-      MYSQL_PASSWORD: YourStrongPassword123!
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?请在 .env 中设置 MYSQL_PASSWORD}
       TZ: Asia/Shanghai
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
     volumes:
       - lisuan-mysql-data:/var/lib/mysql
       - ./mysql-init:/docker-entrypoint-initdb.d
@@ -172,10 +176,10 @@ docker-compose down -v
 
 | 变量 | 说明 | 示例值 |
 |-----|------|--------|
-| `MYSQL_ROOT_PASSWORD` | root 用户密码（必需） | RootPassword123! |
+| `MYSQL_ROOT_PASSWORD` | root 用户密码（必需，无默认值） | 使用强随机值 |
 | `MYSQL_DATABASE` | 创建的数据库名 | lisuan_system |
 | `MYSQL_USER` | 创建的专用用户名 | cashier |
-| `MYSQL_PASSWORD` | 专用用户密码 | YourStrongPassword123! |
+| `MYSQL_PASSWORD` | 专用用户密码（必需，无默认值） | 使用强随机值 |
 | `TZ` | 时区 | Asia/Shanghai |
 
 ### 端口映射
@@ -225,7 +229,7 @@ mysql -u root -p
 
 ```sql
 -- 创建专用用户
-CREATE USER 'cashier'@'%' IDENTIFIED BY 'YourStrongPassword123!';
+CREATE USER 'cashier'@'%' IDENTIFIED BY 'REPLACE_WITH_STRONG_RANDOM_PASSWORD';
 
 -- 创建数据库（如果不存在）
 CREATE DATABASE IF NOT EXISTS lisuan_system
@@ -255,7 +259,7 @@ mkdir -p mysql-init
 2. **创建 SQL 脚本** `mysql-init/01-create-user.sql`:
 ```sql
 -- 创建专用用户
-CREATE USER IF NOT EXISTS 'cashier'@'%' IDENTIFIED BY 'YourStrongPassword123!';
+CREATE USER IF NOT EXISTS 'cashier'@'%' IDENTIFIED BY 'REPLACE_WITH_STRONG_RANDOM_PASSWORD';
 
 -- 授予所有权限
 GRANT ALL PRIVILEGES ON lisuan_system.* TO 'cashier'@'%';
@@ -311,13 +315,13 @@ docker volume rm lisuan-mysql-data
 
 ```bash
 # 备份整个数据库
-docker exec lisuan-mysql mysqldump -u root -pRootPassword123! lisuan_system > backup_$(date +%Y%m%d).sql
+docker exec lisuan-mysql mysqldump -u root -p"$MYSQL_ROOT_PASSWORD" lisuan_system > backup_$(date +%Y%m%d).sql
 
 # 备份并压缩
-docker exec lisuan-mysql mysqldump -u root -pRootPassword123! lisuan_system | gzip > backup_$(date +%Y%m%d).sql.gz
+docker exec lisuan-mysql mysqldump -u root -p"$MYSQL_ROOT_PASSWORD" lisuan_system | gzip > backup_$(date +%Y%m%d).sql.gz
 
 # 从备份恢复
-docker exec -i lisuan-mysql mysql -u root -pRootPassword123! lisuan_system < backup_20250203.sql
+docker exec -i lisuan-mysql mysql -u root -p"$MYSQL_ROOT_PASSWORD" lisuan_system < backup_20250203.sql
 ```
 
 ---
@@ -356,7 +360,7 @@ docker rm -v lisuan-mysql
 
 ```bash
 # 进入 MySQL 命令行
-docker exec -it lisuan-mysql mysql -u cashier -pYourStrongPassword123! lisuan_system
+docker exec -it lisuan-mysql mysql -u cashier -p lisuan_system
 
 # 进入容器 Bash
 docker exec -it lisuan-mysql bash
@@ -369,19 +373,19 @@ docker stats lisuan-mysql
 
 ```bash
 # 执行 SQL 文件
-docker exec -i lisuan-mysql mysql -u root -pRootPassword123! < init.sql
+docker exec -i lisuan-mysql mysql -u root -p"$MYSQL_ROOT_PASSWORD" < init.sql
 
 # 查看数据库列表
-docker exec lisuan-mysql mysql -u root -pRootPassword123! -e "SHOW DATABASES;"
+docker exec lisuan-mysql mysql -u root -p"$MYSQL_ROOT_PASSWORD" -e "SHOW DATABASES;"
 
 # 查看表列表
-docker exec lisuan-mysql mysql -u root -pRootPassword123! lisuan_system -e "SHOW TABLES;"
+docker exec lisuan-mysql mysql -u root -p"$MYSQL_ROOT_PASSWORD" lisuan_system -e "SHOW TABLES;"
 
 # 查看表结构
-docker exec lisuan-mysql mysql -u root -pRootPassword123! lisuan_system -e "DESCRIBE users;"
+docker exec lisuan-mysql mysql -u root -p"$MYSQL_ROOT_PASSWORD" lisuan_system -e "DESCRIBE users;"
 
 # 查看表数据
-docker exec lisuan-mysql mysql -u root -pRootPassword123! lisuan_system -e "SELECT * FROM users LIMIT 10;"
+docker exec lisuan-mysql mysql -u root -p"$MYSQL_ROOT_PASSWORD" lisuan_system -e "SELECT * FROM users LIMIT 10;"
 ```
 
 ---
@@ -484,7 +488,7 @@ docker logs lisuan-mysql
 telnet localhost 3306
 
 # 4. 测试连接
-docker exec lisuan-mysql mysql -u cashier -pYourStrongPassword123! -e "SELECT 1;"
+docker exec -it lisuan-mysql mysql -u cashier -p -e "SELECT 1;"
 ```
 
 ### 问题 3: 权限错误
@@ -494,9 +498,9 @@ docker exec lisuan-mysql mysql -u cashier -pYourStrongPassword123! -e "SELECT 1;
 **解决方案**:
 ```bash
 # 重新创建用户
-docker exec -it lisuan-mysql mysql -u root -pRootPassword123! <<EOF
+docker exec -it lisuan-mysql mysql -u root -p"$MYSQL_ROOT_PASSWORD" <<EOF
 DROP USER IF EXISTS 'cashier'@'%';
-CREATE USER 'cashier'@'%' IDENTIFIED BY 'YourStrongPassword123!';
+CREATE USER 'cashier'@'%' IDENTIFIED BY 'REPLACE_WITH_STRONG_RANDOM_PASSWORD';
 GRANT ALL PRIVILEGES ON lisuan_system.* TO 'cashier'@'%';
 FLUSH PRIVILEGES;
 EOF
@@ -555,7 +559,8 @@ db.url=jdbc:mysql://localhost:3306/lisuan_system?useSSL=false&serverTimezone=Asi
 
 # 用户名和密码
 db.username=cashier
-db.password=YourStrongPassword123!
+# 推荐留空，并通过 CASHER_DB_PASSWORD 环境变量提供
+db.password=
 
 # 连接池大小
 db.pool.size=10
@@ -623,13 +628,13 @@ long_query_time = 2
 
 3. **使用 secrets 管理密码**（Docker Swarm）
    ```bash
-   echo "YourStrongPassword123!" | docker secret create mysql_password -
+   printf '%s' "$MYSQL_PASSWORD" | docker secret create mysql_password -
    ```
 
 4. **定期备份**
    ```bash
    # 添加到 crontab
-   0 2 * * * docker exec lisuan-mysql mysqldump -u root -pRootPassword123! lisuan_system | gzip > /backup/cashier_$(date +\%Y\%m\%d).sql.gz
+   0 2 * * * docker exec lisuan-mysql mysqldump -u root -p"$MYSQL_ROOT_PASSWORD" lisuan_system | gzip > /backup/cashier_$(date +\%Y\%m\%d).sql.gz
    ```
 
 5. **更新镜像**
@@ -645,7 +650,7 @@ long_query_time = 2
 
 ```bash
 # 1. 备份数据
-docker exec lisuan-mysql mysqldump -u root -pRootPassword123! --all-databases > backup.sql
+docker exec lisuan-mysql mysqldump -u root -p"$MYSQL_ROOT_PASSWORD" --all-databases > backup.sql
 
 # 2. 停止并删除旧容器
 docker-compose down
@@ -657,7 +662,7 @@ docker pull mysql:8.4
 docker-compose up -d
 
 # 5. 恢复数据
-docker exec -i lisuan-mysql mysql -u root -pRootPassword123! < backup.sql
+docker exec -i lisuan-mysql mysql -u root -p"$MYSQL_ROOT_PASSWORD" < backup.sql
 ```
 
 ---
@@ -675,13 +680,13 @@ services:
     container_name: lisuan-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: RootPassword123!
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?请在 .env 中设置 MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: lisuan_system
       MYSQL_USER: cashier
-      MYSQL_PASSWORD: YourStrongPassword123!
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?请在 .env 中设置 MYSQL_PASSWORD}
       TZ: Asia/Shanghai
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
     volumes:
       - lisuan-mysql-data:/var/lib/mysql
       - ./mysql-init:/docker-entrypoint-initdb.d:ro
@@ -694,7 +699,7 @@ services:
       - --max-connections=200
       - --innodb-buffer-pool-size=1G
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pRootPassword123!"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p\"$${MYSQL_ROOT_PASSWORD}\""]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -775,7 +780,7 @@ chmod +x dbeaver-ce-latest-stable-linux.gtk.x86_64.noarch.rpm
 - **端口**: `3306`
 - **数据库**: `lisuan_system`
 - **用户名**: `cashier`
-- **密码**: `YourStrongPassword123!`（请替换为您设置的密码）
+- **密码**: 使用 `.env` 中的 `MYSQL_PASSWORD`（无默认值）
 - **驱动**: 使用默认驱动（MySQL Connector/J）
 
 **高级配置（可选）**：

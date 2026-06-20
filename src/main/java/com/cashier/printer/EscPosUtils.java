@@ -191,7 +191,7 @@ public class EscPosUtils {
      * GS k 0 n data
      */
     public static byte[] barcodeUPCA(String data) {
-        byte[] barcodeData = data.getBytes();
+        byte[] barcodeData = data.getBytes(java.nio.charset.StandardCharsets.US_ASCII);
         byte[] command = new byte[barcodeData.length + 4];
         command[0] = 0x1D;
         command[1] = 0x6B;
@@ -206,7 +206,7 @@ public class EscPosUtils {
      * GS k 73 n data
      */
     public static byte[] barcodeCode128(String data) {
-        byte[] barcodeData = data.getBytes();
+        byte[] barcodeData = data.getBytes(java.nio.charset.StandardCharsets.US_ASCII);
         byte[] command = new byte[barcodeData.length + 4];
         command[0] = 0x1D;
         command[1] = 0x6B;
@@ -274,7 +274,7 @@ public class EscPosUtils {
      * GS ( k cn fn n 80 m data
      */
     public static byte[] printQRCode(String data) {
-        byte[] qrData = data.getBytes();
+        byte[] qrData = data.getBytes(java.nio.charset.StandardCharsets.UTF_8);
         int length = qrData.length + 3;
         byte[] command = new byte[length + 8];
         
@@ -406,10 +406,6 @@ public class EscPosUtils {
      * 将字符串转换为字节数组（GBK编码）
      */
     public static byte[] toBytes(String text) {
-        try {
-            return text.getBytes("GBK");
-        } catch (java.io.UnsupportedEncodingException e) {
-            return text.getBytes();
-        }
+        return text.getBytes(java.nio.charset.Charset.forName("GBK"));
     }
 }

@@ -77,7 +77,7 @@ public class DatabaseConnectionHelper {
             dbUsername = props.getProperty("db.username");
 
             // 优先从环境变量读取密码
-            String envPassword = System.getenv("LISUAN_DB_PASSWORD");
+            String envPassword = System.getenv("CASHER_DB_PASSWORD");
             if (envPassword != null && !envPassword.isEmpty()) {
                 dbPassword = envPassword;
             } else {
@@ -110,9 +110,9 @@ public class DatabaseConnectionHelper {
             return DiagnosticResult.failure(
                 "数据库密码未配置",
                 "请在 config/database.properties 中设置 db.password 参数\n" +
-                "或者设置环境变量 LISUAN_DB_PASSWORD 来存储密码（更安全）\n" +
-                "Windows: set LISUAN_DB_PASSWORD=YourPassword\n" +
-                "Linux/Mac: export LISUAN_DB_PASSWORD=YourPassword"
+                "或者设置环境变量 CASHER_DB_PASSWORD 来存储密码（更安全）\n" +
+                "Windows: set CASHER_DB_PASSWORD=YourPassword\n" +
+                "Linux/Mac: export CASHER_DB_PASSWORD=YourPassword"
             );
         }
 

@@ -208,7 +208,7 @@ public class LoginController {
 
             // 添加提示信息
             javafx.scene.control.Label hintLabel = new javafx.scene.control.Label("密码要求：至少6位字符");
-            hintLabel.setStyle("-fx-text-fill: #999; -fx-font-size: 11;");
+            hintLabel.getStyleClass().addAll("text-muted", "caption-text");
             grid.add(hintLabel, 1, 2);
 
             dialog.getDialogPane().setContent(grid);

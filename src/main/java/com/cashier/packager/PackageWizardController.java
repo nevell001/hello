@@ -213,7 +213,8 @@ public class PackageWizardController {
                     "findstr \"<version>\" pom.xml | findstr /V \"javafx maven java mysql hikaricp poi pdfbox controlsfx fontawesomefx junit testfx h2 bcrypt logback jackson javalin slf4j plugin\"");
             pb.directory(new File("."));
             Process process = pb.start();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(
+                    process.getInputStream(), java.nio.charset.StandardCharsets.UTF_8));
             String line;
             while ((line = reader.readLine()) != null) {
                 if (line.contains("<version>") && line.contains("</version>")) {
@@ -309,12 +310,12 @@ public class PackageWizardController {
                 testConnectionButton.setDisable(false);
                 if (getValue()) {
                     testConnectionButton.setText("连接成功 ✓");
-                    testConnectionButton.setStyle("-fx-text-fill: green;");
+                    setConnectionStateStyle("connection-success");
                     appendLog("数据库连接测试成功！");
                     showAlert(Alert.AlertType.INFORMATION, "连接成功", "数据库连接测试通过！");
                 } else {
                     testConnectionButton.setText("连接失败 ✗");
-                    testConnectionButton.setStyle("-fx-text-fill: red;");
+                    setConnectionStateStyle("connection-error");
                     showAlert(Alert.AlertType.ERROR, "连接失败", "无法连接到数据库，请检查配置。\n\n详情请查看日志。");
                 }
             }
@@ -323,13 +324,18 @@ public class PackageWizardController {
             protected void failed() {
                 testConnectionButton.setDisable(false);
                 testConnectionButton.setText("连接失败 ✗");
-                testConnectionButton.setStyle("-fx-text-fill: red;");
+                setConnectionStateStyle("connection-error");
                 logger.error("数据库连接测试失败", getException());
                 appendLog("错误: " + getException().getMessage());
             }
         };
 
         executorService.submit(testTask);
+    }
+
+    private void setConnectionStateStyle(String styleClass) {
+        testConnectionButton.getStyleClass().removeAll("connection-success", "connection-error");
+        testConnectionButton.getStyleClass().add(styleClass);
     }
 
     @FXML

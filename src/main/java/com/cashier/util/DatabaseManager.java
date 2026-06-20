@@ -13,6 +13,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
 import java.util.Properties;
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 
 /**
  * 数据库管理器
@@ -21,6 +23,7 @@ import java.util.Properties;
 public class DatabaseManager {
 
     private static final Logger logger = LoggerFactoryUtil.getLogger(DatabaseManager.class);
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private static HikariDataSource dataSource;
     private static boolean initialized = false;
@@ -214,7 +217,7 @@ public class DatabaseManager {
             // 安全提示：建议使用环境变量 CASHER_DB_PASSWORD 存储密码，避免明文存储
             // Windows: set CASHER_DB_PASSWORD=YourPassword
             // Linux/Mac: export CASHER_DB_PASSWORD=YourPassword
-            props.setProperty("db.password", "YourStrongPassword123!");
+            props.setProperty("db.password", "");
             props.setProperty("db.pool.size", "10");
 
             try (FileOutputStream fos = new FileOutputStream(configFile)) {
@@ -1043,9 +1046,8 @@ public class DatabaseManager {
     private static String generateRandomPassword() {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         StringBuilder sb = new StringBuilder();
-        java.security.SecureRandom random = new java.security.SecureRandom();
         for (int i = 0; i < 10; i++) {
-            sb.append(chars.charAt(random.nextInt(chars.length())));
+            sb.append(chars.charAt(SECURE_RANDOM.nextInt(chars.length())));
         }
         return sb.toString();
     }
@@ -1244,7 +1246,7 @@ public class DatabaseManager {
 
         if (exitCode != 0) {
             // 读取错误输出
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream(), StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     logger.error("Docker 错误: {}", line);
@@ -1367,7 +1369,7 @@ public class DatabaseManager {
         Process process = Runtime.getRuntime().exec(command);
 
         // 读取输出
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 logger.info(line);
@@ -1375,7 +1377,7 @@ public class DatabaseManager {
         }
 
         // 读取错误
-        try (BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+        try (BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream(), StandardCharsets.UTF_8))) {
             String line;
             while ((line = errorReader.readLine()) != null) {
                 logger.error(line);
@@ -1422,7 +1424,7 @@ public class DatabaseManager {
         Process process = pb.start();
 
         // 读取输出
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 logger.info(line);

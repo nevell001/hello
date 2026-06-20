@@ -4,16 +4,16 @@ services:
     container_name: lisuan-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: RootPassword123!
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?请在 .env 中设置 MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: lisuan_system
       MYSQL_USER: lisuan
-      MYSQL_PASSWORD: LisuanPassword123!
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?请在 .env 中设置 MYSQL_PASSWORD}
       TZ: Asia/Shanghai
       MYSQL_CHARSET: utf8mb4
       MYSQL_COLLATION: utf8mb4_unicode_ci
     command: --mysql-native-password=ON --bind-address=0.0.0.0 --skip-name-resolve
     ports:
-      - "0.0.0.0:3306:3306"
+      - "127.0.0.1:3306:3306"
     volumes:
       - lisuan-mysql-data:/var/lib/mysql
       - ./docker/mysql-init/00-init-complete.sql:/docker-entrypoint-initdb.d/00-init-complete.sql:ro

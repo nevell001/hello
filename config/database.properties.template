@@ -42,7 +42,7 @@ db.max.lifetime=1800000
 #   端口: 3306
 #   数据库: lisuan_system
 #   用户: lisuan
-#   密码: RootPassword123!
+#   密码: 通过 MYSQL_PASSWORD 或 CASHER_DB_PASSWORD 环境变量提供
 #
 # 本地 MySQL 配置:
 #   主机: localhost

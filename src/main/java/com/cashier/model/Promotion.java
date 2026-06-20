@@ -2,7 +2,6 @@ package com.cashier.model;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class Promotion {
@@ -122,7 +121,6 @@ public class Promotion {
 
     // 获取促销描述
     public String getDisplayText() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         String status = enabled ? "启用" : "禁用";
         String validity = isValid() ? "有效" : "已过期";
 

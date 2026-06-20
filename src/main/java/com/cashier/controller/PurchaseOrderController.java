@@ -244,7 +244,6 @@ public class PurchaseOrderController {
             GridPane gridPane = new GridPane();
             gridPane.setHgap(15);
             gridPane.setVgap(15);
-            gridPane.setStyle("-fx-background-color: transparent;");
 
             // 设置列约束
             javafx.scene.layout.ColumnConstraints col1 = new javafx.scene.layout.ColumnConstraints();

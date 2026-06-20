@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -311,7 +310,7 @@ public class InventoryCheckController {
             actionCol.setCellFactory(col -> new TableCell<CheckItemWrapper, String>() {
                 private final Button deleteBtn = new Button(com.cashier.i18n.I18nManager.getInstance().get("inventory_check.delete"));
                 {
-                    deleteBtn.setStyle("-fx-background-color: #f44336; -fx-text-fill: white;");
+                    deleteBtn.getStyleClass().add("danger-button");
                     deleteBtn.setOnAction(e -> {
                         CheckItemWrapper item = getTableView().getItems().get(getIndex());
                         itemTable.getItems().remove(item);
@@ -558,20 +557,6 @@ public class InventoryCheckController {
 
             productTable.getColumns().addAll(selectColumn, nameCol, barcodeCol, categoryCol, stockCol, costCol);
             
-            // 设置行工厂，使选中行背景色更明显
-            productTable.setRowFactory(tv -> {
-                TableRow<Product> row = new TableRow<>();
-                ChangeListener<Boolean> changeListener = (obs, wasSelected, isNowSelected) -> {
-                    if (isNowSelected) {
-                        row.setStyle("-fx-background-color: linear-gradient(to right, rgba(63, 81, 181, 0.25), rgba(63, 81, 181, 0.35));");
-                    } else {
-                        row.setStyle("");
-                    }
-                };
-                row.selectedProperty().addListener(changeListener);
-                return row;
-            });
-
             // 加载商品数据
             List<Product> products = productDAO.findAll();
             ObservableList<Product> productList = FXCollections.observableArrayList(products);

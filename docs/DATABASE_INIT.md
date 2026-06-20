@@ -19,8 +19,8 @@
 
 ```sql
 -- 创建 cashier 用户
-CREATE USER IF NOT EXISTS 'cashier'@'%' IDENTIFIED BY 'YourStrongPassword123!';
-CREATE USER IF NOT EXISTS 'cashier'@'localhost' IDENTIFIED BY 'YourStrongPassword123!';
+CREATE USER IF NOT EXISTS 'cashier'@'%' IDENTIFIED BY 'REPLACE_WITH_STRONG_RANDOM_PASSWORD';
+CREATE USER IF NOT EXISTS 'cashier'@'localhost' IDENTIFIED BY 'REPLACE_WITH_STRONG_RANDOM_PASSWORD';
 
 -- 授予权限
 GRANT ALL PRIVILEGES ON lisuan_system.* TO 'cashier'@'%';
@@ -65,7 +65,8 @@ db.url=jdbc:mysql://localhost:3306/lisuan_system?useSSL=false&serverTimezone=Asi
 db.username=cashier
 
 # MySQL 密码
-db.password=YourStrongPassword123!
+# 推荐留空，并通过 CASHER_DB_PASSWORD 环境变量提供
+db.password=
 
 # 数据库连接池大小
 db.pool.size=10
@@ -356,7 +357,7 @@ docker run --rm -v lisuan-mysql-data:/data -v $(pwd):/backup alpine tar xzf /bac
 | 用户名 | 密码 | 角色 | 说明 |
 |--------|------|------|------|
 | admin | admin123 | admin | 系统管理员 |
-| cashier | YourStrongPassword123! | cashier | 应用专用用户 |
+| cashier | 自行生成的强随机密码 | cashier | 应用专用用户 |
 
 ### 权限说明
 

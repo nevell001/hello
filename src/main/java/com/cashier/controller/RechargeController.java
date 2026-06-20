@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
 
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -137,7 +136,6 @@ public class RechargeController {
             List<RechargeRecord> allRecords = DataService.loadRechargeRecords();
             List<RechargeRecord> memberRecords = new ArrayList<>();
 
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             for (RechargeRecord record : allRecords) {
                 if (record.memberPhone.equals(member.phone)) {
                     memberRecords.add(record);

@@ -15,9 +15,10 @@ public class ApiConfig {
     
     private static final String CONFIG_FILE = "config/api.properties";
     
-    private static boolean enabled = true;
+    // API 涉及库存、退款、备份等敏感操作，必须由部署者显式开启。
+    private static boolean enabled = false;
     private static int port = 8080;
-    private static String host = "0.0.0.0";
+    private static String host = "127.0.0.1";
     private static String corsOrigins = "*";
     private static int tokenExpireHours = 24;
     private static String tokenSecret = "default_secret_key";
@@ -64,9 +65,9 @@ public class ApiConfig {
                 Properties props = new Properties();
                 props.load(fis);
 
-                enabled = Boolean.parseBoolean(props.getProperty("api.enabled", "true"));
+                enabled = Boolean.parseBoolean(props.getProperty("api.enabled", "false"));
                 port = Integer.parseInt(props.getProperty("api.port", "8080"));
-                host = props.getProperty("api.host", "0.0.0.0");
+                host = props.getProperty("api.host", "127.0.0.1");
 
                 // 只有在环境变量未设置时才从配置文件读取
                 if (tokenSecret.equals("default_secret_key")) {
@@ -80,7 +81,8 @@ public class ApiConfig {
                 logger.info("API 配置加载成功: enabled={}, port={}", enabled, port);
                 logger.warn("生产环境请设置环境变量 TOKEN_SECRET 和 CORS_ALLOWED_ORIGINS");
             } catch (Exception e) {
-                logger.warn("加载 API 配置失败，使用默认值: {}", e.getMessage());
+                enabled = false;
+                logger.warn("加载 API 配置失败，API 已安全关闭: {}", e.getMessage());
             }
         } else {
             logger.info("API 配置文件不存在，使用默认值");
@@ -124,18 +126,22 @@ public class ApiConfig {
      * @return 如果配置安全返回 true，否则返回 false
      */
     public static boolean isProductionReady() {
-        boolean ready = true;
-
-        if (tokenSecret.equals("default_secret_key") || tokenSecret.length() < 32) {
+        boolean ready = isSecurityConfigurationValid(tokenSecret, corsOrigins);
+        if (tokenSecret == null || tokenSecret.equals("default_secret_key") || tokenSecret.length() < 32) {
             logger.error("生产环境检查失败: TOKEN_SECRET 不安全");
-            ready = false;
         }
-
-        if (corsOrigins.equals("*") || corsOrigins.contains("*")) {
+        if (corsOrigins == null || corsOrigins.isBlank() || corsOrigins.contains("*")) {
             logger.error("生产环境检查失败: CORS 配置不安全");
-            ready = false;
         }
-
         return ready;
+    }
+
+    static boolean isSecurityConfigurationValid(String secret, String allowedOrigins) {
+        return secret != null
+            && !secret.equals("default_secret_key")
+            && secret.length() >= 32
+            && allowedOrigins != null
+            && !allowedOrigins.isBlank()
+            && !allowedOrigins.contains("*");
     }
 }

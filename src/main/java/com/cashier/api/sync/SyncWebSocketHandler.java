@@ -21,8 +21,11 @@ public class SyncWebSocketHandler {
      */
     public static void onConnect(WsConnectContext ctx) {
         try {
-            // 从 query 参数获取认证信息
-            String token = ctx.queryParam("token");
+            // Token 放在请求头中，避免出现在 URL、代理日志和浏览器历史记录里。
+            String authorization = ctx.header("Authorization");
+            String token = authorization != null && authorization.startsWith("Bearer ")
+                ? authorization.substring(7)
+                : null;
             String terminalName = ctx.queryParam("terminal");
             
             if (terminalName == null || terminalName.isEmpty()) {

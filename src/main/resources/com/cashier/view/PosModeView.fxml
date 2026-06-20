@@ -18,20 +18,20 @@
         </padding>
 
         <!-- 系统标题 -->
-        <Label text="%pos.title_with_icon" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #FFFFFF;"/>
+        <Label text="%pos.title_with_icon" styleClass="pos-title"/>
 
         <Region HBox.hgrow="ALWAYS"/>
 
         <!-- 当前用户信息 -->
         <VBox spacing="2" alignment="CENTER_LEFT">
-            <Label fx:id="userNameLabel" text="%pos.user" style="-fx-text-fill: #FFFFFF; -fx-font-size: 16px; -fx-font-weight: bold;"/>
-            <Label fx:id="userRoleLabel" text="%pos.cashier_role" style="-fx-text-fill: #E0E0E0; -fx-font-size: 13px;"/>
+            <Label fx:id="userNameLabel" text="%pos.user" styleClass="pos-user-name"/>
+            <Label fx:id="userRoleLabel" text="%pos.cashier_role" styleClass="pos-secondary-text"/>
         </VBox>
 
         <!-- 用户头像（显示首字母） -->
         <StackPane fx:id="avatarContainer" prefWidth="40" prefHeight="40">
             <Circle fx:id="avatarCircle" radius="20" style="-fx-fill: #FFC107; -fx-stroke: #FFFFFF; -fx-stroke-width: 2;"/>
-            <Label fx:id="avatarText" text="U" style="-fx-text-fill: #FFFFFF; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+            <Label fx:id="avatarText" text="U" styleClass="pos-avatar-text"/>
         </StackPane>
 
         <!-- 退出按钮 -->
@@ -56,8 +56,8 @@
             <Insets top="10" right="20" bottom="10" left="20"/>
         </padding>
 
-        <Label fx:id="dateLabel" text="2026-02-23" style="-fx-text-fill: #E0E0E0; -fx-font-size: 14px; -fx-font-weight: bold;"/>
-        <Label fx:id="timeLabel" text="18:00:00" style="-fx-text-fill: #E0E0E0; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+        <Label fx:id="dateLabel" text="2026-02-23" styleClass="pos-status-text"/>
+        <Label fx:id="timeLabel" text="18:00:00" styleClass="pos-status-text"/>
 
         <Region HBox.hgrow="ALWAYS"/>
 
@@ -70,7 +70,7 @@
                 style="-fx-font-size: 15px; -fx-font-weight: bold;"
                 styleClass="primary-button"/>
 
-        <Label fx:id="statusLabel" text="%pos.ready" style="-fx-text-fill: #FFFFFF; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+        <Label fx:id="statusLabel" text="%pos.ready" styleClass="pos-ready-text"/>
     </HBox>
 
 </VBox>

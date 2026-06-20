@@ -1198,44 +1198,12 @@ private Button shiftBtn;
      */
     private javafx.scene.Node createCloseButton(Tab tab) {
         Label closeButton = new Label("×");
-        closeButton.setStyle(
-            "-fx-font-size: 14px; " +
-            "-fx-font-weight: bold; " +
-            "-fx-text-fill: #757575; " +
-            "-fx-cursor: hand; " +
-            "-fx-padding: 0 1 0 6;" +
-            "-fx-min-width: 14px; " +
-            "-fx-min-height: 14px;"
-        );
+        closeButton.getStyleClass().add("custom-tab-close");
         closeButton.setOnMouseClicked(event -> {
             // 从标签面板中移除标签页
             tabPane.getTabs().remove(tab);
             // 从打开的标签页映射中移除
             openTabs.values().remove(tab);
-        });
-        closeButton.setOnMouseEntered(event -> {
-            closeButton.setStyle(
-                "-fx-font-size: 14px; " +
-                "-fx-font-weight: bold; " +
-                "-fx-text-fill: white; " +
-                "-fx-background-color: #F44336; " +
-                "-fx-background-radius: 2; " +
-                "-fx-cursor: hand; " +
-                "-fx-padding: 0 1 0 6;" +
-                "-fx-min-width: 14px; " +
-                "-fx-min-height: 14px;"
-            );
-        });
-        closeButton.setOnMouseExited(event -> {
-            closeButton.setStyle(
-                "-fx-font-size: 14px; " +
-                "-fx-font-weight: bold; " +
-                "-fx-text-fill: #757575; " +
-                "-fx-cursor: hand; " +
-                "-fx-padding: 0 1 0 6;" +
-                "-fx-min-width: 14px; " +
-                "-fx-min-height: 14px;"
-            );
         });
         return closeButton;
     }
@@ -1471,7 +1439,7 @@ private Button shiftBtn;
     
         
     
-                    loadingOverlay.setStyle("-fx-background-color: rgba(0, 0, 0, 0.5);");
+                    loadingOverlay.getStyleClass().add("loading-overlay");
     
         
     
@@ -1483,7 +1451,7 @@ private Button shiftBtn;
     
         
     
-                    progressIndicator.setStyle("-fx-progress-color: #3F51B5;");
+                    progressIndicator.getStyleClass().add("loading-progress");
     
         
     
@@ -1495,7 +1463,7 @@ private Button shiftBtn;
     
         
     
-                    loadingLabel.setStyle("-fx-text-fill: #FFFFFF; -fx-font-size: 14px; -fx-font-weight: bold;");
+                    loadingLabel.getStyleClass().add("loading-label");
     
         
     
@@ -1511,7 +1479,7 @@ private Button shiftBtn;
     
         
     
-                    vbox.setStyle("-fx-background-color: rgba(255, 255, 255, 0.9); -fx-background-radius: 10; -fx-padding: 20;");
+                    vbox.getStyleClass().add("loading-card");
     
         
     

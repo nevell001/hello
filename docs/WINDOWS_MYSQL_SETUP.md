@@ -53,7 +53,7 @@
 
 4. **Accounts and Roles**：
    - 设置 **root** 用户密码
-   - 建议使用强密码，例如：`RootPassword123!`
+   - 使用密码管理器生成并保存独立的强随机密码，不要照抄文档示例
    - 可以添加其他用户（可选）
 
 5. **Windows Service**：
@@ -120,7 +120,7 @@
 
    -- 创建专用用户（推荐）
    CREATE USER IF NOT EXISTS 'cashier'@'localhost'
-   IDENTIFIED BY 'YourStrongPassword123!';
+   IDENTIFIED BY 'REPLACE_WITH_STRONG_RANDOM_PASSWORD';
 
    -- 授予权限
    GRANT ALL PRIVILEGES ON lisuan_system.* TO 'cashier'@'localhost';
@@ -155,7 +155,7 @@ COLLATE utf8mb4_unicode_ci;
 
 -- 创建专用用户（推荐）
 CREATE USER IF NOT EXISTS 'cashier'@'localhost'
-IDENTIFIED BY 'YourStrongPassword123!';
+IDENTIFIED BY 'REPLACE_WITH_STRONG_RANDOM_PASSWORD';
 
 -- 授予权限
 GRANT ALL PRIVILEGES ON lisuan_system.* TO 'cashier'@'localhost';
@@ -178,7 +178,7 @@ FLUSH PRIVILEGES;
 7. 添加新用户：
    - 用户名：`cashier`
    - 主机名：`任意主机 (%)`
-   - 密码：`YourStrongPassword123!`
+   - 密码：使用密码管理器生成的应用专用强随机密码
 8. 在 "数据库特定权限" 部分，选择 `lisuan_system` 数据库
 9. 勾选 "检查全部"，点击 "执行"
 
@@ -191,7 +191,8 @@ FLUSH PRIVILEGES;
 # 数据库连接配置
 db.url=jdbc:mysql://localhost:3306/lisuan_system?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8
 db.username=cashier
-db.password=YourStrongPassword123!
+# 推荐留空，并通过 CASHER_DB_PASSWORD 环境变量提供
+db.password=
 db.pool.size=10
 ```
 
@@ -199,7 +200,8 @@ db.pool.size=10
 
 ```properties
 db.username=root
-db.password=RootPassword123!
+# 推荐留空，并通过 CASHER_DB_PASSWORD 环境变量提供
+db.password=
 ```
 
 4. 保存文件
@@ -264,7 +266,7 @@ mysql -u cashier -p lisuan_system
 
 2. 修改用户认证方式：
    ```sql
-   ALTER USER 'cashier'@'localhost' IDENTIFIED WITH mysql_native_password BY 'YourStrongPassword123!';
+   ALTER USER 'cashier'@'localhost' IDENTIFIED WITH mysql_native_password BY 'REPLACE_WITH_STRONG_RANDOM_PASSWORD';
    FLUSH PRIVILEGES;
    ```
 

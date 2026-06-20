@@ -1262,6 +1262,29 @@
     -fx-text-fill: #BDBDBD;
 }
 
+.logo-preview-frame {
+    -fx-border-color: #616161;
+}
+
+.custom-tab-close {
+    -fx-text-fill: #BDBDBD;
+}
+
+.loading-card {
+    -fx-background-color: rgba(44, 44, 44, 0.96);
+    -fx-border-color: #616161;
+    -fx-border-width: 1px;
+    -fx-border-radius: 10px;
+}
+
+.loading-progress {
+    -fx-progress-color: #7986CB;
+}
+
+.loading-label {
+    -fx-text-fill: #F5F5F5;
+}
+
 .edit-view-container,
 .stat-card-compact,
 .chart-card,

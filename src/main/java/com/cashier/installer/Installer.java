@@ -473,24 +473,15 @@ public class Installer {
         Process process = pb.start();
         
         // Read output with appropriate encoding
-        String charset = isWindows() ? "GBK" : "UTF-8";
+        java.nio.charset.Charset charset = isWindows()
+                ? java.nio.charset.Charset.forName("GBK")
+                : StandardCharsets.UTF_8;
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(process.getInputStream(), charset))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 if (!line.trim().isEmpty()) {
                     log("    " + line);
-                }
-            }
-        } catch (UnsupportedEncodingException e) {
-            // Fallback to system default encoding
-            try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    if (!line.trim().isEmpty()) {
-                        log("    " + line);
-                    }
                 }
             }
         }
