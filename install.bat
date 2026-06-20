@@ -28,7 +28,7 @@ for /f "tokens=3 delims=<>" %%a in ('findstr /R "<version>[0-9]" pom.xml 2^>nul 
 )
 :version_found
 REM Fallback version if pom.xml not found or unreadable
-if "%APP_VERSION%"=="" set "APP_VERSION=2.5.7"
+if "%APP_VERSION%"=="" set "APP_VERSION=2.5.8"
 
 REM 环境类型：development 或 production
 if "%ENVIRONMENT%"=="" set "ENVIRONMENT=development"

@@ -14,8 +14,8 @@
     -fx-faint-focus-color: rgba(92, 107, 192, 0.1);
     -fx-text-fill: #E0E0E0;
     -fx-text-fill-disabled: #616161;
-    -fx-font-family: "Noto Sans CJK JP", "Noto Sans CJK JP Bold", "Noto Sans SC", "Noto Sans CJK SC",
-                     "Microsoft YaHei", "SimHei", "UKIJ CJK",
+    -fx-font-family: "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei",
+                     "Noto Sans SC", "SimHei", "UKIJ CJK",
                      "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji",
                      "DejaVu Sans", "Liberation Sans", "Ubuntu", "Arial", sans-serif;
 }
@@ -1327,7 +1327,8 @@
     -fx-text-fill: #F5F5F5;
 }
 
-.return-refund-combo > .list-cell {
+.return-refund-combo > .list-cell,
+.inventory-check-type-combo > .list-cell {
     -fx-text-fill: #F5F5F5;
 }
 

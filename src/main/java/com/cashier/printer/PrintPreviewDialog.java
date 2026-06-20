@@ -43,7 +43,7 @@ public class PrintPreviewDialog {
         previewArea.setPrefWidth(400);
         previewArea.setPrefHeight(400);
         previewArea.setEditable(false);
-        previewArea.setStyle("-fx-font-family: 'Courier New', monospace; -fx-font-size: 12px;");
+        previewArea.setStyle("-fx-font-family: 'Noto Sans Mono CJK SC', 'Noto Sans CJK SC', 'PingFang SC', 'Microsoft YaHei UI', monospace; -fx-font-size: 12px;");
         previewArea.setText(content);
         
         // 按钮区域

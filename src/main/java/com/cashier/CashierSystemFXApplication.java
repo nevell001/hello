@@ -23,6 +23,7 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
@@ -195,31 +196,30 @@ public class CashierSystemFXApplication extends Application {
      */
     private void loadCustomFonts() {
         try {
-            // 加载 Noto Sans SC Regular 字体
-            Font notoSansRegular = Font.loadFont(
-                getClass().getResourceAsStream("/fonts/NotoSansSC-Regular.ttc"), 14
-            );
-            if (notoSansRegular != null) {
-                logger.info("成功加载 Noto Sans SC Regular 字体: {}",
-                    notoSansRegular.getName());
-            } else {
-                logger.warn("Noto Sans SC Regular 字体加载失败");
-            }
-
-            // 加载 Noto Sans SC Bold 字体
-            Font notoSansBold = Font.loadFont(
-                getClass().getResourceAsStream("/fonts/NotoSansSC-Bold.ttc"), 14
-            );
-            if (notoSansBold != null) {
-                logger.info("成功加载 Noto Sans SC Bold 字体: {}",
-                    notoSansBold.getName());
-            } else {
-                logger.warn("Noto Sans SC Bold 字体加载失败");
-            }
+            loadFontCollection("/fonts/NotoSansSC-Regular.ttc", "Regular");
+            loadFontCollection("/fonts/NotoSansSC-Bold.ttc", "Bold");
 
             logger.debug("自定义字体加载完成");
         } catch (Exception e) {
             logger.error("加载自定义字体时发生错误: {}", e.getMessage(), e);
+        }
+    }
+
+    private void loadFontCollection(String resourcePath, String styleName) throws IOException {
+        try (InputStream inputStream = getClass().getResourceAsStream(resourcePath)) {
+            if (inputStream == null) {
+                logger.warn("未找到 Noto Sans CJK {} 字体资源: {}", styleName, resourcePath);
+                return;
+            }
+
+            Font[] loadedFonts = Font.loadFonts(inputStream, 14);
+            boolean simplifiedChineseLoaded = loadedFonts != null && java.util.Arrays.stream(loadedFonts)
+                .anyMatch(font -> "Noto Sans CJK SC".equals(font.getFamily()));
+            if (simplifiedChineseLoaded) {
+                logger.info("成功加载 Noto Sans CJK SC {} 字体", styleName);
+            } else {
+                logger.warn("Noto Sans CJK SC {} 字体加载失败", styleName);
+            }
         }
     }
 

@@ -61,7 +61,7 @@
                     <StackPane styleClass="avatar-circle">
                         <Label fx:id="avatarLabel"
                                text="A"
-                               style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #FFFFFF;"/>
+                               styleClass="avatar-text"/>
                     </StackPane>
                 </HBox>
 

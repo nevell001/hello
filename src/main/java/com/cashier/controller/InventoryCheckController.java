@@ -256,22 +256,16 @@ public class InventoryCheckController {
 
             ComboBox<String> checkTypeCombo = new ComboBox<>();
             checkTypeCombo.getItems().addAll("full", "partial");
-            checkTypeCombo.setConverter(new javafx.util.StringConverter<String>() {
-                @Override
-                public String toString(String type) {
-                    if ("full".equals(type)) return I18nManager.getInstance().get("runtime.check_type_full");
-                    if ("partial".equals(type)) return I18nManager.getInstance().get("runtime.check_type_partial");
-                    return type;
-                }
-                @Override
-                public String fromString(String string) {
-                    if (I18nManager.getInstance().get("runtime.check_type_full").equals(string)) return "full";
-                    if (I18nManager.getInstance().get("runtime.check_type_partial").equals(string)) return "partial";
-                    return string;
-                }
-            });
+            com.cashier.util.I18nUiUtils.configureComboBox(
+                checkTypeCombo, com.cashier.util.I18nUiUtils::inventoryCheckType);
             checkTypeCombo.setValue("full");
-            checkTypeCombo.getStyleClass().add("form-combo");
+            checkTypeCombo.getStyleClass().addAll("form-combo", "inventory-check-type-combo");
+            checkTypeCombo.setMinWidth(280);
+            checkTypeCombo.setPrefWidth(320);
+            checkTypeCombo.setMaxWidth(Double.MAX_VALUE);
+            checkTypeCombo.setMinHeight(38);
+            checkTypeCombo.setPrefHeight(38);
+            GridPane.setHgrow(checkTypeCombo, javafx.scene.layout.Priority.ALWAYS);
 
             TextArea remarkArea = new TextArea();
             remarkArea.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("restock.reason"));
@@ -281,6 +275,7 @@ public class InventoryCheckController {
             // 商品列表表格
             TableView<CheckItemWrapper> itemTable = new TableView<>();
             itemTable.setEditable(true);
+            itemTable.setPlaceholder(new Label(I18nManager.getInstance().get("message.data.empty")));
 
             TableColumn<CheckItemWrapper, String> productNameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_approval.product_name"));
             productNameCol.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getProductName()));
@@ -504,6 +499,7 @@ public class InventoryCheckController {
             // 商品表格
             TableView<Product> productTable = new TableView<>();
             productTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+            productTable.setPlaceholder(new Label(I18nManager.getInstance().get("message.data.empty")));
             
             // 添加复选框列
             TableColumn<Product, Boolean> selectColumn = new TableColumn<>();

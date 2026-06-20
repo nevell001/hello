@@ -7,7 +7,7 @@ setlocal enabledelayedexpansion
 
 if "%1"=="" (
     echo Usage: set-version.bat x.y.z
-    echo Example: set-version.bat 2.5.7
+    echo Example: set-version.bat 2.5.8
     exit /b 1
 )
 
@@ -26,17 +26,18 @@ REM Validate version format (basic check)
 echo %NEW_VERSION% | findstr /R "^[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$" >nul
 if errorlevel 1 (
     echo [Error] Invalid version format: %NEW_VERSION%
-    echo Expected format: x.y.z (e.g., 2.5.7)
+    echo Expected format: x.y.z (e.g., 2.5.8)
     exit /b 1
 )
 
-echo [1/7] Updating version in Java files...
+echo [1/8] Updating version in Java files...
 powershell -Command "(Get-Content 'src\main\java\com\cashier\constant\AppConstants.java') -replace 'APP_VERSION = \"[\d\.]+\"', 'APP_VERSION = \"%NEW_VERSION%\"' | Set-Content 'src\main\java\com\cashier\constant\AppConstants.java'"
+powershell -Command "(Get-Content 'src\main\java\com\cashier\installer\Installer.java') -replace 'APP_VERSION = \"[\d\.]+\"', 'APP_VERSION = \"%NEW_VERSION%\"' | Set-Content 'src\main\java\com\cashier\installer\Installer.java'"
 
-echo [2/7] Updating version in pom.xml...
+echo [2/8] Updating version in pom.xml...
 powershell -Command "(Get-Content 'pom.xml') -replace '<version>[\d\.]+</version>', '<version>%NEW_VERSION%</version>' | Set-Content 'pom.xml'"
 
-echo [3/7] Updating version in batch scripts...
+echo [3/8] Updating version in batch scripts...
 for %%F in (start.bat quick-start.bat install.bat) do (
     if exist "%%F" (
         powershell -Command "(Get-Content '%%F') -replace 'set \"APP_VERSION=[\d\.]+\"', 'set \"APP_VERSION=%NEW_VERSION%\"' | Set-Content '%%F'"
@@ -44,7 +45,7 @@ for %%F in (start.bat quick-start.bat install.bat) do (
     )
 )
 
-echo [4/7] Updating version in diagnose.bat and create-shortcut.bat...
+echo [4/8] Updating version in diagnose.bat and create-shortcut.bat...
 if exist "diagnose.bat" (
     powershell -Command "(Get-Content 'diagnose.bat') -replace 'set \"APP_VERSION=[\d\.]+\"', 'set \"APP_VERSION=%NEW_VERSION%\"' | Set-Content 'diagnose.bat'"
     powershell -Command "(Get-Content 'diagnose.bat') -replace 'APP_VERSION=\"[\d\.]+\"', 'APP_VERSION=\"%NEW_VERSION%\"' | Set-Content 'diagnose.bat'"
@@ -53,10 +54,10 @@ if exist "create-shortcut.bat" (
     powershell -Command "(Get-Content 'create-shortcut.bat') -replace 'APP_VERSION=v[\d\.]+', 'APP_VERSION=v%NEW_VERSION%' | Set-Content 'create-shortcut.bat'"
 )
 
-echo [5/7] Updating version in PowerShell scripts...
+echo [5/8] Updating version in PowerShell scripts...
 for %%F in (run-app.ps1 package-simple.ps1) do (
     if exist "%%F" (
-        powershell -Command "(Get-Content '%%F') -replace '\$APP_VERSION = \"[\d\.]+\"', '```$APP_VERSION = \"%NEW_VERSION%\"' | Set-Content '%%F'"
+        powershell -Command "(Get-Content '%%F') -replace '\$APP_VERSION = \"[\d\.]+\"', '`$APP_VERSION = \"%NEW_VERSION%\"' | Set-Content '%%F'"
     )
 )
 
@@ -77,13 +78,12 @@ for %%F in (
     "src\main\resources\com\cashier\i18n\messages_en.properties"
     "src\main\resources\com\cashier\i18n\messages_zh_CN.properties"
     "src\main\resources\com\cashier\i18n\messages_zh_TW.properties"
-    "src\main\resources\com\cashier\i18n\messages_ja.properties"
-    "src\main\resources\com\cashier\i18n\messages_ko.properties"
 ) do (
     if exist "%%F" (
         powershell -Command "(Get-Content '%%F') -replace 'v[\d\.]+', 'v%NEW_VERSION%' | Set-Content '%%F'"
     )
 )
+powershell -Command "(Get-Content 'src\main\resources\com\cashier\view\PackageWizardView.fxml') -replace '版本 [\d\.]+', '版本 %NEW_VERSION%' -replace 'text=\"[\d\.]+\"', 'text=\"%NEW_VERSION%\"' | Set-Content 'src\main\resources\com\cashier\view\PackageWizardView.fxml'"
 
 echo [8/8] Verifying updates...
 echo.

@@ -91,6 +91,16 @@ public final class I18nUiUtils {
         return key == null ? value : I18nManager.getInstance().get(key);
     }
 
+    public static String inventoryCheckType(String value) {
+        String normalized = value == null ? "" : value.toLowerCase();
+        String key = switch (normalized) {
+            case "full", "全盘", "全盤" -> "runtime.check_type_full";
+            case "partial", "部分盘点", "部分盤點" -> "runtime.check_type_partial";
+            default -> null;
+        };
+        return key == null ? value : I18nManager.getInstance().get(key);
+    }
+
     public static String itemCondition(String value) {
         String normalized = value == null ? "" : value.toUpperCase();
         String key = switch (normalized) {

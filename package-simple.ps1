@@ -4,7 +4,7 @@
 $ErrorActionPreference = "Stop"
 
 $APP_NAME = "LiSuan"
-$APP_VERSION = "2.5.6"
+$APP_VERSION = "2.5.8"
 $OUTPUT_DIR = "target\dist"
 
 Write-Host "========================================"  -ForegroundColor Cyan

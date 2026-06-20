@@ -103,7 +103,7 @@ public class FXConstants {
     // ========== 字体常量 ==========
 
     /** 主字体名称 */
-    public static final String PRIMARY_FONT_FAMILY = "Microsoft YaHei";
+    public static final String PRIMARY_FONT_FAMILY = "Noto Sans CJK SC";
 
     // ========== 设计规范 - 间距系统 ==========
 

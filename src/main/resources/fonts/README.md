@@ -2,7 +2,7 @@
 
 ## Noto Sans SC
 
-**文件名**: NotoSansSC-Regular.ttf  
+**文件名**: NotoSansSC-Regular.ttc、NotoSansSC-Bold.ttc
 **来源**: Google Fonts (https://github.com/googlefonts/noto-fonts)  
 **许可证**: SIL Open Font License 1.1 (OFL-1.1)
 
@@ -23,13 +23,14 @@ Noto Sans SC 是一个开源字体，采用 SIL Open Font License 1.1 许可证�
 1. **跨平台兼容性**: Noto Sans SC 在所有主流操作系统上都能正常显示
 2. **开源免费**: 采用宽松的开源许可证，可以免费用于商业项目
 3. **完整支持**: 支持所有中文字符，包括简体中文、繁体中文和特殊符号
-4. **文件大小适中**: 字体文件大小约为 292KB，不会显著增加应用体积
+4. **字重完整**: 内置 Regular 和 Bold 字体合集，界面无需依赖操作系统字体
 
 ### 字体用途
 
-此字体文件仅用于：
-- PDF 报表导出功能
-- 确保导出的 PDF 文件中中文内容正确显示
+这些字体文件用于：
+- JavaFX 界面中的简体中文显示
+- PDF 报表导出时的中文字体候选
+- 确保不同操作系统上的中文视觉效果一致
 
 ### 字体嵌入
 
@@ -37,11 +38,11 @@ Noto Sans SC 是一个开源字体，采用 SIL Open Font License 1.1 许可证�
 
 ### 字体信息
 
-- **字体名称**: Noto Sans SC
-- **字体样式**: Regular (常规)
+- **字体名称**: Noto Sans CJK SC
+- **字体样式**: Regular（常规）、Bold（粗体）
 - **字符集**: 简体中文
-- **字体类型**: TrueType Font (.ttf)
-- **文件大小**: 292 KB
+- **字体类型**: TrueType Collection (.ttc)
+- **文件大小**: 每个字体合集约 19 MB
 
 ### 许可证全文
 

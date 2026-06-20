@@ -38,11 +38,17 @@
 
 /* ========== 全局样式 ========== */
 .root {
-    -fx-font-family: "Noto Sans CJK JP", "Noto Sans CJK JP Bold", "Noto Sans SC", "Noto Sans CJK SC",
-                     "Microsoft YaHei", "SimHei", "UKIJ CJK",
+    -fx-font-family: "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei",
+                     "Noto Sans SC", "SimHei", "UKIJ CJK",
                      "DejaVu Sans", "Liberation Sans", "Ubuntu", "Arial", sans-serif;
     -fx-font-size: 14px;
     -fx-text-fill: #212121;
+}
+
+.avatar-text {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #FFFFFF;
 }
 
 /* ========== 登录界面样式 ========== */
@@ -1111,7 +1117,7 @@
 
 .main-tab-pane .content-tab-title {
     -fx-font-size: 12px;
-    -fx-font-family: "Noto Sans CJK JP", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    -fx-font-family: "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
     -fx-wrap-text: false;
     -fx-text-overrun: clip;
 }
@@ -1130,7 +1136,7 @@
     -fx-text-fill: #212121;
     -fx-font-size: 12px;
     -fx-font-weight: normal;
-    -fx-font-family: "Noto Sans CJK JP", "Noto Sans SC", "Microsoft YaHei", "SimHei", sans-serif;
+    -fx-font-family: "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", "SimHei", sans-serif;
     -fx-padding: 0;
     -fx-wrap-text: false;
 }
@@ -2187,6 +2193,21 @@
 }
 
 .return-refund-combo > .list-cell {
+    -fx-padding: 5px 10px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-min-height: 36px;
+    -fx-pref-height: 36px;
+}
+
+.inventory-check-type-combo {
+    -fx-padding: 0;
+    -fx-min-width: 280px;
+    -fx-pref-width: 320px;
+    -fx-min-height: 38px;
+    -fx-pref-height: 38px;
+}
+
+.inventory-check-type-combo > .list-cell {
     -fx-padding: 5px 10px;
     -fx-alignment: CENTER_LEFT;
     -fx-min-height: 36px;

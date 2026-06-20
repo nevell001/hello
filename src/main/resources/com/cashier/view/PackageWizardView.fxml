@@ -30,7 +30,7 @@
                    style="-fx-font-size: 12px;"/>
         </VBox>
         <Region HBox.hgrow="ALWAYS"/>
-        <Label text="版本 2.5.6" styleClass="wizard-version" textFill="gray"/>
+        <Label text="版本 2.5.8" styleClass="wizard-version" textFill="gray"/>
     </HBox>
 
     <Separator/>
@@ -164,7 +164,7 @@
                     <Label fx:id="summaryAppName" text="LiSuan" GridPane.columnIndex="1" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
 
                     <Label text="版本:" GridPane.columnIndex="0" GridPane.rowIndex="1" textFill="gray"/>
-                    <Label fx:id="summaryVersion" text="2.5.6" GridPane.columnIndex="1" GridPane.rowIndex="1" style="-fx-font-weight: bold;"/>
+                    <Label fx:id="summaryVersion" text="2.5.8" GridPane.columnIndex="1" GridPane.rowIndex="1" style="-fx-font-weight: bold;"/>
 
                     <Label text="嵌入 JRE:" GridPane.columnIndex="0" GridPane.rowIndex="2" textFill="gray"/>
                     <Label fx:id="summaryEmbedJre" text="是" GridPane.columnIndex="1" GridPane.rowIndex="2" style="-fx-font-weight: bold;"/>

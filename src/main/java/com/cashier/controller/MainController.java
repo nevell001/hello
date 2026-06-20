@@ -314,24 +314,16 @@ private Button shiftBtn;
             String userLanguage = com.cashier.service.DataService.loadLanguagePreference(user.username);
             com.cashier.i18n.I18nManager.getInstance().setLocale(userLanguage);
 
-            // 更新用户信息显示
-            currentUserLabel.setText(user.name + " (" + user.getRoleDisplayName() + ")");
-            userNameLabel.setText(user.name);
-            userRoleLabel.setText(user.getRoleDisplayName());
+            // 默认管理员名称跟随当前语言；自定义姓名保持用户录入内容。
+            String roleDisplayName = user.getRoleDisplayName();
+            String displayName = "系统管理员".equals(user.name) ? roleDisplayName : user.name;
+            currentUserLabel.setText(displayName + " (" + roleDisplayName + ")");
+            userNameLabel.setText(displayName);
+            userRoleLabel.setText(roleDisplayName);
 
             // 设置头像（显示用户名的首字母）
-            if (user.name != null && !user.name.isEmpty()) {
-                avatarLabel.setText(user.name.substring(0, 1).toUpperCase());
-            }
-
-            // 根据角色设置头像颜色
-            String role = user.role;
-            if ("admin".equals(role)) {
-                avatarLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #FFFFFF;");
-            } else if ("cashier".equals(role)) {
-                avatarLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #FFFFFF;");
-            } else if ("finance".equals(role)) {
-                avatarLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #FFFFFF;");
+            if (displayName != null && !displayName.isEmpty()) {
+                avatarLabel.setText(displayName.substring(0, 1).toUpperCase());
             }
         }
     /**

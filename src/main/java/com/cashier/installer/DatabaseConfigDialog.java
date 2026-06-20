@@ -58,7 +58,7 @@ public class DatabaseConfigDialog {
 
         // Title
         JLabel titleLabel = new JLabel("LiSuan - Database Configuration", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        titleLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
         mainPanel.add(titleLabel, gbc);
 

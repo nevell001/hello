@@ -166,9 +166,7 @@ public class SettingsController {
         languageComboBox.setItems(javafx.collections.FXCollections.observableArrayList(
             "简体中文",
             "繁體中文",
-            "English",
-            "日本語",
-            "한국어"
+            "English"
         ));
         languageComboBox.getSelectionModel().select(0);
 
@@ -490,10 +488,6 @@ public class SettingsController {
                 return "zh-TW";
             case "English":
                 return "en";
-            case "日本語":
-                return "ja";
-            case "한국어":
-                return "ko";
             default:
                 return "zh-CN";
         }
@@ -515,10 +509,6 @@ public class SettingsController {
                 return "繁體中文";
             case "en":
                 return "English";
-            case "ja":
-                return "日本語";
-            case "ko":
-                return "한국어";
             default:
                 return "简体中文";
         }

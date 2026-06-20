@@ -15,7 +15,7 @@ import java.util.logging.Logger;
  */
 public class Installer {
     private static final Logger LOGGER = Logger.getLogger(Installer.class.getName());
-    private static final String APP_VERSION = "2.5.6";
+    private static final String APP_VERSION = "2.5.8";
     private static final String DB_NAME = "lisuan_system";
     
     private JFrame frame;
@@ -66,7 +66,7 @@ public class Installer {
         
         JLabel titleLabel = new JLabel("狸算(LiSuan)收银系统安装程序", SwingConstants.CENTER);
         titleLabel.setForeground(Color.WHITE);
-        titleLabel.setFont(new Font("微软雅黑", Font.BOLD, 20));
+        titleLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 20));
         headerPanel.add(titleLabel, BorderLayout.CENTER);
         
         mainPanel.add(headerPanel, BorderLayout.NORTH);
@@ -79,7 +79,7 @@ public class Installer {
         logArea = new JTextArea();
         logArea.setEditable(false);
         // Use Chinese-compatible font
-        logArea.setFont(new Font("Microsoft YaHei", Font.PLAIN, 12));
+        logArea.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
         logArea.setBackground(Color.WHITE);
         JScrollPane scrollPane = new JScrollPane(logArea);
         scrollPane.setBorder(BorderFactory.createTitledBorder("安装日志"));

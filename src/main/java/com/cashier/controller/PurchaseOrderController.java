@@ -405,6 +405,7 @@ public class PurchaseOrderController {
             itemTable.setEditable(true);
             itemTable.setStyle("-fx-font-size: 13px;");
             itemTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+            itemTable.setPlaceholder(new Label(I18nManager.getInstance().get("message.data.empty")));
 
             TableColumn<PurchaseOrderItem, String> productNameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_approval.product_name"));
             productNameCol.setPrefWidth(200);
@@ -620,6 +621,7 @@ public class PurchaseOrderController {
             productTable.setStyle("-fx-font-size: 13px;");
             productTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
             productTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+            productTable.setPlaceholder(new Label(I18nManager.getInstance().get("message.data.empty")));
             
             // 添加复选框列
             TableColumn<Product, Boolean> selectColumn = new TableColumn<>();

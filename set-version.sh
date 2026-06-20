@@ -7,7 +7,7 @@ set -e
 
 if [ -z "$1" ]; then
     echo "Usage: ./set-version.sh x.y.z"
-    echo "Example: ./set-version.sh 2.5.7"
+    echo "Example: ./set-version.sh 2.5.8"
     exit 1
 fi
 
@@ -25,7 +25,7 @@ echo ""
 # Validate version format
 if ! [[ "$NEW_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     echo "[Error] Invalid version format: $NEW_VERSION"
-    echo "Expected format: x.y.z (e.g., 2.5.7)"
+    echo "Expected format: x.y.z (e.g., 2.5.8)"
     exit 1
 fi
 
@@ -45,14 +45,16 @@ sed_i() {
     fi
 }
 
-echo "[1/7] Updating version in Java files..."
+echo "[1/8] Updating version in Java files..."
 sed_i "s/APP_VERSION = \"[0-9]\+\.[0-9]\+\.[0-9]\+\"/APP_VERSION = \"$NEW_VERSION\"/g" \
     src/main/java/com/cashier/constant/AppConstants.java
+sed_i "s/APP_VERSION = \"[0-9]\+\.[0-9]\+\.[0-9]\+\"/APP_VERSION = \"$NEW_VERSION\"/g" \
+    src/main/java/com/cashier/installer/Installer.java
 
-echo "[2/7] Updating version in pom.xml..."
+echo "[2/8] Updating version in pom.xml..."
 sed_i "s/<version>[0-9]\+\.[0-9]\+\.[0-9]\+<\/version>/<version>$NEW_VERSION<\/version>/g" pom.xml
 
-echo "[3/7] Updating version in batch scripts..."
+echo "[3/8] Updating version in batch scripts..."
 for f in start.bat quick-start.bat install.bat; do
     if [ -f "$f" ]; then
         sed_i "s/set \"APP_VERSION=[0-9]\+\.[0-9]\+\.[0-9]\+\"/set \"APP_VERSION=$NEW_VERSION\"/g" "$f"
@@ -60,7 +62,7 @@ for f in start.bat quick-start.bat install.bat; do
     fi
 done
 
-echo "[4/7] Updating version in diagnose.bat and create-shortcut.bat..."
+echo "[4/8] Updating version in diagnose.bat and create-shortcut.bat..."
 if [ -f "diagnose.bat" ]; then
     sed_i "s/set \"APP_VERSION=[0-9]\+\.[0-9]\+\.[0-9]\+\"/set \"APP_VERSION=$NEW_VERSION\"/g" diagnose.bat
     sed_i "s/APP_VERSION=\"[0-9]\+\.[0-9]\+\.[0-9]\+\"/APP_VERSION=\"$NEW_VERSION\"/g" diagnose.bat
@@ -69,7 +71,7 @@ if [ -f "create-shortcut.bat" ]; then
     sed_i "s/APP_VERSION=v[0-9]\+\.[0-9]\+\.[0-9]\+/APP_VERSION=v$NEW_VERSION/g" create-shortcut.bat
 fi
 
-echo "[5/7] Updating version in PowerShell scripts..."
+echo "[5/8] Updating version in PowerShell scripts..."
 for f in run-app.ps1 package-simple.ps1; do
     if [ -f "$f" ]; then
         sed_i "s/\\\$APP_VERSION = \"[0-9]\+\.[0-9]\+\.[0-9]\+\"/\$APP_VERSION = \"$NEW_VERSION\"/g" "$f"
@@ -88,7 +90,7 @@ if [ -f ".env.example" ]; then
 fi
 
 echo "[7/8] Updating version in i18n files..."
-# Extract version components for i18n pattern (e.g., 2.5.7 -> 2\.5\.6 -> 2\.5\.7)
+# Build the version pattern used to update localized welcome text.
 OLD_VERSION_PATTERN="v[0-9]\+\.[0-9]\+\.[0-9]\+"
 NEW_VERSION_PATTERN="v$NEW_VERSION"
 for f in src/main/resources/com/cashier/i18n/messages*.properties; do
@@ -96,6 +98,10 @@ for f in src/main/resources/com/cashier/i18n/messages*.properties; do
         sed_i "s/$OLD_VERSION_PATTERN/$NEW_VERSION_PATTERN/g" "$f"
     fi
 done
+sed_i "s/版本 [0-9]\+\.[0-9]\+\.[0-9]\+/版本 $NEW_VERSION/g" \
+    src/main/resources/com/cashier/view/PackageWizardView.fxml
+sed_i "s/text=\"[0-9]\+\.[0-9]\+\.[0-9]\+\"/text=\"$NEW_VERSION\"/g" \
+    src/main/resources/com/cashier/view/PackageWizardView.fxml
 
 echo "[8/8] Verifying updates..."
 echo ""
@@ -103,6 +109,7 @@ echo ""
 # Files that should have been updated
 FILES=(
     "src/main/java/com/cashier/constant/AppConstants.java"
+    "src/main/java/com/cashier/installer/Installer.java"
     "pom.xml"
     "start.bat"
     "quick-start.bat"
@@ -118,8 +125,7 @@ FILES=(
     "src/main/resources/com/cashier/i18n/messages_en.properties"
     "src/main/resources/com/cashier/i18n/messages_zh_CN.properties"
     "src/main/resources/com/cashier/i18n/messages_zh_TW.properties"
-    "src/main/resources/com/cashier/i18n/messages_ja.properties"
-    "src/main/resources/com/cashier/i18n/messages_ko.properties"
+    "src/main/resources/com/cashier/view/PackageWizardView.fxml"
 )
 
 # Count updated files

@@ -96,6 +96,14 @@ public class ProductEditController {
      */
     @FXML
     private void initialize() {
+        errorLabel.setVisible(false);
+        errorLabel.setManaged(false);
+        errorLabel.textProperty().addListener((obs, oldText, newText) -> {
+            boolean hasError = newText != null && !newText.isBlank();
+            errorLabel.setVisible(hasError);
+            errorLabel.setManaged(hasError);
+        });
+
         // 加载库存数据
         try {
             List<Product> products = productDAO.findAll();
@@ -493,46 +501,46 @@ public class ProductEditController {
         // 验证商品编号（仅当手动输入时才验证）
         if (!autoCodeCheckBox.isSelected()) {
             if (productCodeField.getText().trim().isEmpty()) {
-                errorMessage += "商品编号不能为空！\n";
+                errorMessage += I18nManager.getInstance().get("product.validation.code_required") + "\n";
             } else {
                 // 验证商品编号是否已存在
                 try {
                     Product existingProduct = productDAO.findByProductCode(productCodeField.getText().trim());
                     if (existingProduct != null && (product == null || existingProduct.id != product.id)) {
-                        errorMessage += "商品编号已存在，请使用其他编号！\n";
+                        errorMessage += I18nManager.getInstance().get("product.validation.code_duplicate") + "\n";
                     }
                 } catch (SQLException e) {
                     logger.error("验证商品编号失败", e);
-                    errorMessage += "验证商品编号失败，请重试！\n";
+                    errorMessage += I18nManager.getInstance().get("product.validation.code_check_failed") + "\n";
                 }
             }
         }
 
         // 验证商品名称
         if (nameField.getText().trim().isEmpty()) {
-            errorMessage += "商品名称不能为空！\n";
+            errorMessage += I18nManager.getInstance().get("product.validation.name_required") + "\n";
         } else if (product == null && inventoryMap.containsKey(nameField.getText().trim())) {
-            errorMessage += "商品名称已存在！\n";
+            errorMessage += I18nManager.getInstance().get("product.validation.name_duplicate") + "\n";
         }
 
         // 验证单价
         try {
             double price = FormValidator.parseDouble(priceField.getText().trim());
             if (price <= 0) {
-                errorMessage += "单价必须大于0！\n";
+                errorMessage += I18nManager.getInstance().get("product.validation.price_positive") + "\n";
             }
         } catch (IllegalArgumentException e) {
-            errorMessage += "单价格式不正确！\n";
+            errorMessage += I18nManager.getInstance().get("product.validation.price_invalid") + "\n";
         }
 
         // 验证最低库存
         try {
             int minStock = FormValidator.parseInt(minStockField.getText().trim());
             if (minStock < 0) {
-                errorMessage += "最低库存不能为负数！\n";
+                errorMessage += I18nManager.getInstance().get("product.validation.min_stock_nonnegative") + "\n";
             }
         } catch (IllegalArgumentException e) {
-            errorMessage += "最低库存格式不正确！\n";
+            errorMessage += I18nManager.getInstance().get("product.validation.min_stock_invalid") + "\n";
         }
 
         // 验证成本价
@@ -540,10 +548,10 @@ public class ProductEditController {
             try {
                 double cost = FormValidator.parseDouble(costField.getText().trim());
                 if (cost < 0) {
-                    errorMessage += "成本价不能为负数！\n";
+                    errorMessage += I18nManager.getInstance().get("product.validation.cost_nonnegative") + "\n";
                 }
             } catch (IllegalArgumentException e) {
-                errorMessage += "成本价格式不正确！\n";
+                errorMessage += I18nManager.getInstance().get("product.validation.cost_invalid") + "\n";
             }
         }
 

@@ -38,4 +38,44 @@ public class PurchaseInbound {
         this.inboundDate = inboundDate;
         this.operator = operator;
     }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getInboundNo() {
+        return inboundNo;
+    }
+
+    public int getOrderId() {
+        return orderId;
+    }
+
+    public String getOrderNo() {
+        return orderNo;
+    }
+
+    public String getInboundDate() {
+        return inboundDate;
+    }
+
+    public int getTotalQuantity() {
+        return totalQuantity;
+    }
+
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
+    }
+
+    public String getOperator() {
+        return operator;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public Timestamp getCreateTime() {
+        return createTime;
+    }
 }

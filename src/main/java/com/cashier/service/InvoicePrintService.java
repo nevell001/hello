@@ -58,7 +58,7 @@ public class InvoicePrintService {
         html.append("<meta charset=\"UTF-8\">\n");
         html.append("<title>电子发票 - ").append(invoice.invoiceId).append("</title>\n");
         html.append("<style>\n");
-        html.append("body { font-family: 'SimSun', serif; margin: 20px; }\n");
+        html.append("body { font-family: 'Noto Sans CJK SC', 'PingFang SC', 'Microsoft YaHei UI', 'Microsoft YaHei', sans-serif; margin: 20px; }\n");
         html.append(".invoice-container { max-width: 800px; margin: auto; border: 2px solid #000; padding: 20px; }\n");
         html.append(".header { text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 20px; }\n");
         html.append(".info-row { margin: 10px 0; }\n");

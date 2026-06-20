@@ -4,7 +4,7 @@
 $ErrorActionPreference = "Stop"
 
 $APP_NAME = "LiSuan"
-$APP_VERSION = "2.5.6"
+$APP_VERSION = "2.5.8"
 $JAR_FILE = "target\lisuan-fx-$APP_VERSION-jar-with-dependencies.jar"
 
 Write-Host "========================================"  -ForegroundColor Cyan

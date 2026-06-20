@@ -28,12 +28,10 @@ public class I18nManager {
     public static final Locale CHINESE_SIMPLIFIED = Locale.SIMPLIFIED_CHINESE;
     public static final Locale CHINESE_TRADITIONAL = Locale.TRADITIONAL_CHINESE;
     public static final Locale ENGLISH = Locale.ENGLISH;
-    public static final Locale JAPANESE = Locale.JAPANESE;
-    public static final Locale KOREAN = Locale.KOREAN;
 
     // 可用的语言列表
     public static final List<Locale> AVAILABLE_LOCALES = Arrays.asList(
-        CHINESE_SIMPLIFIED, CHINESE_TRADITIONAL, ENGLISH, JAPANESE, KOREAN
+        CHINESE_SIMPLIFIED, CHINESE_TRADITIONAL, ENGLISH
     );
 
     private I18nManager() {
