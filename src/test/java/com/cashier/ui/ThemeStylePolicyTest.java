@@ -41,6 +41,8 @@ class ThemeStylePolicyTest {
         assertTrue(css.contains("-fx-background-color: #B85C1B;"));
         assertTrue(css.contains("-fx-text-fill: #FFFFFF;"));
         assertTrue(css.contains(".menu-button:showing"));
+        assertTrue(css.contains(".menu-button:pressed"));
+        assertTrue(css.contains("-fx-background-color: #FFEAD8;"));
     }
 
     private void inspectFiles(Path directory, String suffix, List<String> violations) throws IOException {
