@@ -10,6 +10,10 @@ public class OperationLog {
     public String details;       // 操作详情
     public Date timestamp;       // 操作时间
     public String ipAddress;     // IP地址（预留）
+    public String logLevel;      // INFO/WARN/ERROR
+    public String category;      // AUTH/TRANSACTION/INVENTORY等
+    public String result;        // SUCCESS/FAILURE
+    public int affectedRecords;  // 影响记录数
 
     public OperationLog() {
         this.logId = "";
@@ -18,6 +22,10 @@ public class OperationLog {
         this.details = "";
         this.timestamp = new Date();
         this.ipAddress = "";
+        this.logLevel = "INFO";
+        this.category = "SYSTEM";
+        this.result = "SUCCESS";
+        this.affectedRecords = 0;
     }
 
     public OperationLog(String logId, String username, String operation, String details) {
@@ -52,5 +60,21 @@ public class OperationLog {
 
     public String getIpAddress() {
         return ipAddress;
+    }
+
+    public String getLogLevel() {
+        return logLevel;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public String getResult() {
+        return result;
+    }
+
+    public int getAffectedRecords() {
+        return affectedRecords;
     }
 }

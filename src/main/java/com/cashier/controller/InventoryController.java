@@ -381,6 +381,9 @@ public class InventoryController extends BaseController<Product> {
                 if (controller.isOkClicked()) {
                     loadTableData();
                     StatusBarManager.updateStatus("快速入库成功: " + selected.name + " (+" + controller.getRestockQuantity() + ")");
+                    com.cashier.service.AuditService.success(currentUsername, "INVENTORY", "QUICK_RESTOCK",
+                        "商品=" + selected.name + ", 数量=" + controller.getRestockQuantity(),
+                        controller.getRestockQuantity());
                 }
             } catch (IOException e) {
                 showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
@@ -769,5 +772,11 @@ public class InventoryController extends BaseController<Product> {
             dialog.initOwner(inventoryTable.getScene().getWindow());
             dialog.getDialogPane().getStylesheets().addAll(inventoryTable.getScene().getStylesheets());
         }
+    }
+
+    private String currentUsername;
+
+    public void setCurrentUser(com.cashier.model.User user) {
+        currentUsername = user == null ? null : user.username;
     }
 }

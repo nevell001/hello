@@ -383,10 +383,15 @@ public abstract class DatabaseTestBase {
         stmt.execute("""
             CREATE TABLE IF NOT EXISTS operation_logs (
                 id INT PRIMARY KEY AUTO_INCREMENT,
-                username VARCHAR(50) NOT NULL,
-                operation VARCHAR(50) NOT NULL,
+                username VARCHAR(50),
+                operation VARCHAR(200) NOT NULL,
                 details TEXT,
-                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                ip_address VARCHAR(50),
+                timestamp BIGINT NOT NULL,
+                log_level VARCHAR(20) NOT NULL DEFAULT 'INFO',
+                log_category VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
+                operation_result VARCHAR(20) NOT NULL DEFAULT 'SUCCESS',
+                affected_records INT NOT NULL DEFAULT 0
             )
             """);
 

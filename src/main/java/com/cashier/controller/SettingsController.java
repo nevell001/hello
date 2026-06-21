@@ -1034,6 +1034,9 @@ public class SettingsController {
         DataService.saveFontSizePreference(username, fontSizeCode);
 
         logger.info("SettingsController: 设置保存成功，主题: {}, 语言: {}, 字号: {}, 用户: {}", themeCode, languageTag, fontSizeCode, username);
+        com.cashier.service.AuditService.success(username, "SETTINGS", "SETTINGS_UPDATED",
+            "主题=" + themeCode + ", 语言=" + languageTag + ", 字号=" + fontSizeCode,
+            settings.size());
     }
     /**
      * 显示成功消息

@@ -285,6 +285,19 @@
     -fx-text-fill: #1F2430;
 }
 
+.menu-bar > .container > .menu-button:hover,
+.menu-bar > .container > .menu-button:focused,
+.menu-bar > .container > .menu-button:showing {
+    -fx-background-color: #B85C1B;
+    -fx-background-radius: 3px;
+}
+
+.menu-bar > .container > .menu-button:hover > .label,
+.menu-bar > .container > .menu-button:focused > .label,
+.menu-bar > .container > .menu-button:showing > .label {
+    -fx-text-fill: #FFFFFF;
+}
+
 .tool-bar {
     -fx-background-color: #FFF7EF;
     -fx-border-color: #E9DED1;
@@ -303,7 +316,11 @@
 }
 
 .menu-item:focused {
-    -fx-background-color: #FFEAD8;
+    -fx-background-color: #B85C1B;
+}
+
+.menu-item:focused .label {
+    -fx-text-fill: #FFFFFF;
 }
 
 /* ========== 选项卡 ========== */
@@ -711,17 +728,39 @@
 }
 
 .sidebar .nav-button:hover {
-    -fx-background-color: rgba(184, 92, 27, 0.08);
+    -fx-background-color: #FFEAD8;
+    -fx-text-fill: #8F4314;
+}
+
+.sidebar .nav-button:hover .icon {
+    -fx-text-fill: #8F4314;
 }
 
 .sidebar .nav-button-active,
 .sidebar .nav-button.active {
-    -fx-background-color: #FFEAD8;
-    -fx-text-fill: #B85C1B;
+    -fx-background-color: #B85C1B;
+    -fx-text-fill: #FFFFFF;
+    -fx-background-radius: 4px;
     -fx-font-weight: bold;
 }
 
 .sidebar .nav-button-active .icon,
 .sidebar .nav-button.active .icon {
-    -fx-text-fill: #B85C1B;
+    -fx-text-fill: #FFFFFF;
+}
+
+.sidebar .nav-button-active:hover,
+.sidebar .nav-button.active:hover {
+    -fx-background-color: #C96A24;
+    -fx-text-fill: #FFFFFF;
+}
+
+.sidebar .nav-button-active:hover .icon,
+.sidebar .nav-button.active:hover .icon {
+    -fx-text-fill: #FFFFFF;
+}
+
+.sidebar .nav-button-active:pressed,
+.sidebar .nav-button.active:pressed {
+    -fx-background-color: #8F4314;
 }

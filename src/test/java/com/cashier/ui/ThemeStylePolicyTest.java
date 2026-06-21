@@ -30,6 +30,19 @@ class ThemeStylePolicyTest {
             "请改用语义 styleClass，并在主题 CSS 中定义颜色：\n" + String.join("\n", violations));
     }
 
+    @Test
+    @DisplayName("LiSuan 菜单选中态使用主题主色")
+    void lisuanSelectedNavigationUsesBrandPalette() throws IOException {
+        String css = Files.readString(Path.of(
+            "src/main/resources/css/lisuan-theme.css"
+        ));
+
+        assertTrue(css.contains(".sidebar .nav-button-active"));
+        assertTrue(css.contains("-fx-background-color: #B85C1B;"));
+        assertTrue(css.contains("-fx-text-fill: #FFFFFF;"));
+        assertTrue(css.contains(".menu-button:showing"));
+    }
+
     private void inspectFiles(Path directory, String suffix, List<String> violations) throws IOException {
         try (Stream<Path> paths = Files.walk(directory)) {
             paths.filter(path -> path.toString().endsWith(suffix)).forEach(path -> {

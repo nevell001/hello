@@ -11,13 +11,16 @@ import java.util.*;
  * 负责操作日志相关的数据库操作
  */
 public class OperationLogDAO {
+    private static final String COLUMNS =
+        "id, username, operation, details, ip_address, timestamp, log_level, " +
+        "log_category, operation_result, affected_records";
 
     /**
      * 查询所有操作日志
      */
     public static List<OperationLog> findAll() throws SQLException {
         List<OperationLog> logs = new ArrayList<>();
-        String sql = "SELECT id, username, operation, details, timestamp " +
+        String sql = "SELECT " + COLUMNS + " " +
                      "FROM operation_logs ORDER BY timestamp DESC";
 
         try (Connection conn = DatabaseManager.getConnection();
@@ -35,7 +38,7 @@ public class OperationLogDAO {
      * 根据ID查找操作日志
      */
     public static OperationLog findById(int id) throws SQLException {
-        String sql = "SELECT id, username, operation, details, timestamp " +
+        String sql = "SELECT " + COLUMNS + " " +
                      "FROM operation_logs WHERE id = ?";
 
         try (Connection conn = DatabaseManager.getConnection();
@@ -56,7 +59,7 @@ public class OperationLogDAO {
      */
     public static List<OperationLog> findByUsername(String username) throws SQLException {
         List<OperationLog> logs = new ArrayList<>();
-        String sql = "SELECT id, username, operation, details, timestamp " +
+        String sql = "SELECT " + COLUMNS + " " +
                      "FROM operation_logs WHERE username = ? ORDER BY timestamp DESC";
 
         try (Connection conn = DatabaseManager.getConnection();
@@ -77,7 +80,7 @@ public class OperationLogDAO {
      */
     public static List<OperationLog> findByOperation(String operation) throws SQLException {
         List<OperationLog> logs = new ArrayList<>();
-        String sql = "SELECT id, username, operation, details, timestamp " +
+        String sql = "SELECT " + COLUMNS + " " +
                      "FROM operation_logs WHERE operation = ? ORDER BY timestamp DESC";
 
         try (Connection conn = DatabaseManager.getConnection();
@@ -98,14 +101,14 @@ public class OperationLogDAO {
      */
     public static List<OperationLog> findByDateRange(java.util.Date startDate, java.util.Date endDate) throws SQLException {
         List<OperationLog> logs = new ArrayList<>();
-        String sql = "SELECT id, username, operation, details, timestamp " +
+        String sql = "SELECT " + COLUMNS + " " +
                      "FROM operation_logs WHERE timestamp BETWEEN ? AND ? ORDER BY timestamp DESC";
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setTimestamp(1, new Timestamp(startDate.getTime()));
-            pstmt.setTimestamp(2, new Timestamp(endDate.getTime()));
+            pstmt.setLong(1, startDate.getTime());
+            pstmt.setLong(2, endDate.getTime());
             ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
@@ -132,14 +135,12 @@ public class OperationLogDAO {
      * @throws SQLException 数据库操作异常
      */
     public static boolean insertWithConnection(Connection conn, OperationLog log) throws SQLException {
-        String sql = "INSERT INTO operation_logs (username, operation, details, timestamp) " +
-                     "VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO operation_logs " +
+                     "(username, operation, details, ip_address, timestamp, log_level, log_category, operation_result, affected_records) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, log.username);
-            pstmt.setString(2, log.operation);
-            pstmt.setString(3, log.details);
-            pstmt.setTimestamp(4, new Timestamp(log.timestamp.getTime()));
+            setParameters(pstmt, log);
 
             return pstmt.executeUpdate() > 0;
         }
@@ -149,17 +150,15 @@ public class OperationLogDAO {
      * 批量插入操作日志
      */
     public static void batchInsert(List<OperationLog> logs) throws SQLException {
-        String sql = "INSERT INTO operation_logs (username, operation, details, timestamp) " +
-                     "VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO operation_logs " +
+                     "(username, operation, details, ip_address, timestamp, log_level, log_category, operation_result, affected_records) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             for (OperationLog log : logs) {
-                pstmt.setString(1, log.username);
-                pstmt.setString(2, log.operation);
-                pstmt.setString(3, log.details);
-                pstmt.setTimestamp(4, new Timestamp(log.timestamp.getTime()));
+                setParameters(pstmt, log);
                 pstmt.addBatch();
             }
 
@@ -176,7 +175,7 @@ public class OperationLogDAO {
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setTimestamp(1, new Timestamp(date.getTime()));
+            pstmt.setLong(1, date.getTime());
             return pstmt.executeUpdate() > 0;
         }
     }
@@ -190,8 +189,28 @@ public class OperationLogDAO {
         log.username = rs.getString("username");
         log.operation = rs.getString("operation");
         log.details = rs.getString("details");
-        log.timestamp = rs.getTimestamp("timestamp");
-        log.ipAddress = "";
+        log.timestamp = new java.util.Date(rs.getLong("timestamp"));
+        log.ipAddress = rs.getString("ip_address");
+        log.logLevel = rs.getString("log_level");
+        log.category = rs.getString("log_category");
+        log.result = rs.getString("operation_result");
+        log.affectedRecords = rs.getInt("affected_records");
         return log;
+    }
+
+    private static void setParameters(PreparedStatement pstmt, OperationLog log) throws SQLException {
+        if (log.username == null || log.username.isBlank()) {
+            pstmt.setNull(1, Types.VARCHAR);
+        } else {
+            pstmt.setString(1, log.username);
+        }
+        pstmt.setString(2, log.operation);
+        pstmt.setString(3, log.details);
+        pstmt.setString(4, log.ipAddress);
+        pstmt.setLong(5, log.timestamp.getTime());
+        pstmt.setString(6, log.logLevel);
+        pstmt.setString(7, log.category);
+        pstmt.setString(8, log.result);
+        pstmt.setInt(9, log.affectedRecords);
     }
 }

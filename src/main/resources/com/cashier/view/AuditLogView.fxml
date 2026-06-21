@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.cashier.controller.AuditLogController" spacing="12" styleClass="content-view">
+    <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+
+    <Label text="%audit.title" styleClass="view-title"/>
+    <HBox spacing="10" alignment="CENTER_LEFT" styleClass="toolbar">
+        <TextField fx:id="usernameField" promptText="%audit.username_hint" onAction="#handleSearch" prefWidth="170"/>
+        <ComboBox fx:id="categoryBox" prefWidth="160"/>
+        <ComboBox fx:id="resultBox" prefWidth="140"/>
+        <TextField fx:id="keywordField" promptText="%audit.keyword_hint" onAction="#handleSearch" HBox.hgrow="ALWAYS"/>
+        <Button text="%common.search" onAction="#handleSearch" styleClass="primary-button"/>
+        <Button text="%common.clear" onAction="#handleClear" styleClass="secondary-button"/>
+        <Button text="%common.refresh" onAction="#handleRefresh" styleClass="secondary-button"/>
+    </HBox>
+
+    <TableView fx:id="auditTable" VBox.vgrow="ALWAYS" styleClass="data-table-view">
+        <columns>
+            <TableColumn fx:id="timeColumn" text="%audit.time" prefWidth="165"/>
+            <TableColumn fx:id="usernameColumn" text="%audit.username" prefWidth="110"/>
+            <TableColumn fx:id="categoryColumn" text="%audit.category" prefWidth="120"/>
+            <TableColumn fx:id="operationColumn" text="%audit.operation" prefWidth="170"/>
+            <TableColumn fx:id="resultColumn" text="%audit.result" prefWidth="100"/>
+            <TableColumn fx:id="detailsColumn" text="%audit.details" prefWidth="420"/>
+            <TableColumn fx:id="affectedColumn" text="%audit.affected" prefWidth="90"/>
+        </columns>
+        <placeholder><Label text="%audit.no_data" styleClass="text-muted"/></placeholder>
+    </TableView>
+    <Label fx:id="countLabel" styleClass="text-muted"/>
+</VBox>

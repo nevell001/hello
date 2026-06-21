@@ -76,6 +76,10 @@ public class PurchaseApprovalController {
     // 当前用户（审批人）
     private String currentUser = "admin";
 
+    public void setCurrentUser(com.cashier.model.User user) {
+        currentUser = user == null ? null : user.username;
+    }
+
     /**
      * 初始化方法
      */
@@ -258,6 +262,8 @@ public class PurchaseApprovalController {
                     PurchaseApprovalDAO.insert(approval);
 
                     updateStatus("订单" + ("approve".equals(action) ? "通过" : "拒绝") + ": " + order.orderNo);
+                    com.cashier.service.AuditService.success(currentUser, "PURCHASE", "PURCHASE_APPROVAL",
+                        "采购单=" + order.orderNo + ", 结果=" + statusValue, 1);
                     loadPendingOrders();
                     dialogStage.close();
 

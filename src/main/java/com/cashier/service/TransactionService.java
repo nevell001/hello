@@ -179,6 +179,9 @@ public class TransactionService {
             }
 
             logger.info("交易成功完成，交易ID: {}", transactionId);
+            AuditService.success(transaction.operatorUsername, "TRANSACTION", "SALE_COMPLETED",
+                "交易单号=" + transactionId + ", 金额=" + transaction.finalAmount,
+                cartItems.size());
             
             // 广播交易成功事件
             com.cashier.api.sync.SyncManager.getInstance().broadcastSyncEvent(
@@ -195,6 +198,8 @@ public class TransactionService {
             return new TransactionResult(true, transactionId, "交易成功", transaction);
         } catch (SQLException | RuntimeException e) {
             logger.error("交易失败: {}", e.getMessage(), e);
+            AuditService.failure(transaction.operatorUsername, "TRANSACTION", "SALE_FAILED",
+                "交易单号=" + transactionId + ", 原因=" + e.getMessage());
             return new TransactionResult(false, null, "交易失败: " + e.getMessage(), null);
         }
     }

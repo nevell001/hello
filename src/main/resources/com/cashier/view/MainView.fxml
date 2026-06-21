@@ -242,6 +242,9 @@
                             <Button fx:id="settingsBtn" text="%nav.settings" onAction="#handleSettings" styleClass="nav-button">
                                 <graphic><Label text="" styleClass="icon"/></graphic>
                             </Button>
+                            <Button fx:id="auditLogBtn" text="%nav.audit_logs" onAction="#handleAuditLogs" styleClass="nav-button">
+                                <graphic><Label text="" styleClass="icon"/></graphic>
+                            </Button>
                         </VBox>
                     </VBox>
                 </VBox>

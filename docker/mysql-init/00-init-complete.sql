@@ -232,21 +232,21 @@ CREATE TABLE IF NOT EXISTS recharges (
 -- 创建操作日志表
 CREATE TABLE IF NOT EXISTS operation_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL,
+    username VARCHAR(50) DEFAULT NULL,
     operation VARCHAR(200) NOT NULL,
     details TEXT,
+    ip_address VARCHAR(50),
     timestamp BIGINT NOT NULL,
-    log_level VARCHAR(20) DEFAULT 'INFO',
-    log_category VARCHAR(50) DEFAULT 'SYSTEM',
-    operation_result VARCHAR(20) DEFAULT 'SUCCESS',
-    affected_records INT DEFAULT 0,
-    request_data TEXT,
-    response_data TEXT,
+    log_level VARCHAR(20) NOT NULL DEFAULT 'INFO',
+    log_category VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
+    operation_result VARCHAR(20) NOT NULL DEFAULT 'SUCCESS',
+    affected_records INT NOT NULL DEFAULT 0,
     INDEX idx_username (username),
     INDEX idx_timestamp (timestamp),
     INDEX idx_log_level (log_level),
     INDEX idx_log_category (log_category),
-    FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+    INDEX idx_operation_result (operation_result),
+    FOREIGN KEY (username) REFERENCES users(username) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SELECT '=== 基础表创建完成 ===' AS status;

@@ -2,6 +2,7 @@ package com.cashier.service;
 
 import com.cashier.dao.*;
 import com.cashier.util.DatabaseTestBase;
+import com.cashier.util.DatabaseManager;
 import com.cashier.model.*;
 import org.junit.jupiter.api.*;
 
@@ -405,7 +406,15 @@ class ReturnServiceTest extends DatabaseTestBase {
         ReturnOrder returnOrder = createTestReturnOrder(30.0);
         int initialQuantity = DAOFactory.getInstance().getProductDAO().findById(testProduct1.id).quantity;
 
-        boolean success = ReturnService.approveReturnOrder(returnOrder.returnOrderId, null, "同意退货", true);
+        boolean success;
+        try (var conn = DatabaseManager.getConnection(); var stmt = conn.createStatement()) {
+            stmt.execute("ALTER TABLE operation_logs ADD COLUMN required_test VARCHAR(10) NOT NULL");
+            try {
+                success = ReturnService.approveReturnOrder(returnOrder.returnOrderId, null, "同意退货", true);
+            } finally {
+                stmt.execute("ALTER TABLE operation_logs DROP COLUMN required_test");
+            }
+        }
 
         assertFalse(success);
 

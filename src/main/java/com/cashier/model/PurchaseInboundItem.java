@@ -44,4 +44,36 @@ public class PurchaseInboundItem {
     public void calculateTotal() {
         this.totalPrice = unitPrice.multiply(BigDecimal.valueOf(quantity));
     }
+
+    public int getId() {
+        return id;
+    }
+
+    public int getInboundId() {
+        return inboundId;
+    }
+
+    public int getOrderItemId() {
+        return orderItemId;
+    }
+
+    public int getProductId() {
+        return productId;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public BigDecimal getUnitPrice() {
+        return unitPrice;
+    }
+
+    public BigDecimal getTotalPrice() {
+        return totalPrice;
+    }
 }

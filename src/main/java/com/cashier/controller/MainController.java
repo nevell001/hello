@@ -133,6 +133,9 @@ private Button shiftBtn;
     private Button settingsBtn;
 
     @FXML
+    private Button auditLogBtn;
+
+    @FXML
     private Button returnOrderBtn;
 
     @FXML
@@ -320,6 +323,9 @@ private Button shiftBtn;
             currentUserLabel.setText(displayName + " (" + roleDisplayName + ")");
             userNameLabel.setText(displayName);
             userRoleLabel.setText(roleDisplayName);
+            boolean admin = "admin".equals(user.role);
+            auditLogBtn.setVisible(admin);
+            auditLogBtn.setManaged(admin);
 
             // 设置头像（显示用户名的首字母）
             if (displayName != null && !displayName.isEmpty()) {
@@ -493,6 +499,7 @@ private Button shiftBtn;
             
             // 获取控制器
             UserController controller = loader.getController();
+            controller.setCurrentUser(currentUser);
             
             // 创建内容标签页
             createContentTab(I18nManager.getInstance().get("nav.user_management"), root);
@@ -698,6 +705,7 @@ private Button shiftBtn;
             
             // 获取控制器
             InventoryController controller = loader.getController();
+            controller.setCurrentUser(currentUser);
             
             // 创建内容标签页
             createContentTab(I18nManager.getInstance().get("nav.inventory"), root);
@@ -728,6 +736,7 @@ private Button shiftBtn;
 
             // 获取控制器
             CartController controller = loader.getController();
+            controller.setCurrentUser(currentUser);
             logger.debug("MainController: 获取控制器成功");
 
             // 创建内容标签页
@@ -884,6 +893,7 @@ private Button shiftBtn;
 
             // 获取控制器
             PurchaseApprovalController controller = loader.getController();
+            controller.setCurrentUser(currentUser);
 
             // 创建内容标签页
             createContentTab(I18nManager.getInstance().get("nav.purchase_approval"), root);
@@ -905,6 +915,7 @@ private Button shiftBtn;
 
             // 获取控制器
             PurchaseInboundController controller = loader.getController();
+            controller.setCurrentUser(currentUser);
 
             // 创建内容标签页
             createContentTab(I18nManager.getInstance().get("nav.purchase_inbound"), root);
@@ -1151,6 +1162,28 @@ private Button shiftBtn;
 
         } catch (IOException e) {
             showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+        }
+    }
+
+    @FXML
+    public void handleAuditLogs() {
+        if (currentUser == null || !"admin".equals(currentUser.role)) {
+            showError(I18nManager.getInstance().get("audit.access_denied"));
+            return;
+        }
+        updateStatus(I18nManager.getInstance().get("nav.audit_logs"));
+        setActiveButton(auditLogBtn);
+        try {
+            String title = I18nManager.getInstance().get("nav.audit_logs");
+            if (selectOpenTab(title)) {
+                return;
+            }
+            FXMLLoader loader = FXMLUtils.loadFXMLLoader("/com/cashier/view/AuditLogView.fxml");
+            VBox root = loader.load();
+            createContentTab(title, root);
+        } catch (IOException e) {
+            logger.error("加载审计日志页面失败", e);
+            showError(I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
         }
     }
 

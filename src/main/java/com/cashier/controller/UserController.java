@@ -86,6 +86,11 @@ public class UserController {
 
     private ObservableList<User> userList;
     private Map<String, User> users;
+    private User currentUser;
+
+    public void setCurrentUser(User currentUser) {
+        this.currentUser = currentUser;
+    }
 
     /**
      * 初始化方法
@@ -362,6 +367,7 @@ public class UserController {
                 if (user == null) {
                     // 添加新用户
                     if (UserDAO.insert(result)) {
+                        audit("USER_CREATED", result.username);
                         users.put(result.username, result);
                         loadUsers();
                         updateStatus(I18nManager.getInstance().get("user.added"));
@@ -371,6 +377,7 @@ public class UserController {
                 } else {
                     // 更新现有用户
                     if (UserDAO.update(result)) {
+                        audit("USER_UPDATED", result.username);
                         users.put(result.username, result);
                         loadUsers();
                         updateStatus(I18nManager.getInstance().get("user.updated"));
@@ -453,6 +460,7 @@ public class UserController {
             if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
                 try {
                     if (UserDAO.deleteByUsername(selected.username)) {
+                        audit("USER_DELETED", selected.username);
                         users.remove(selected.username);
                         loadUsers();
                         updateStatus(I18nManager.getInstance().get("user.deleted"));
@@ -488,6 +496,7 @@ public class UserController {
                 selected.password = PasswordUtil.hashPassword(newPassword.trim());
                 try {
                     if (UserDAO.update(selected)) {
+                        audit("USER_PASSWORD_RESET", selected.username);
                         loadUsers();
                         updateStatus(I18nManager.getInstance().get("user.password_reset"));
                     } else {
@@ -511,6 +520,7 @@ public class UserController {
             selected.active = true;
             try {
                 if (UserDAO.update(selected)) {
+                    audit("USER_ACTIVATED", selected.username);
                     loadUsers();
                     updateStatus(I18nManager.getInstance().get("user.activated"));
                 } else {
@@ -544,7 +554,8 @@ public class UserController {
             if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
                 selected.active = false;
                 try {
-                    if (UserDAO.update(selected)) {
+                if (UserDAO.update(selected)) {
+                    audit("USER_DEACTIVATED", selected.username);
                         loadUsers();
                         updateStatus(I18nManager.getInstance().get("user.deactivated"));
                     } else {
@@ -556,6 +567,12 @@ public class UserController {
                 }
             }
         }
+    }
+
+    private void audit(String operation, String targetUsername) {
+        com.cashier.service.AuditService.success(
+            currentUser == null ? null : currentUser.username,
+            "USER", operation, "目标用户=" + targetUsername, 1);
     }
 
     /**

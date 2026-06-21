@@ -363,6 +363,8 @@ public class PaymentService {
             Map.of("refundId", refund.refundId, "paymentId", paymentId, "amount", refundAmount.toString()));
         
         logger.info("退款申请成功: {} - {}", refund.merchantRefundNo, refundAmount);
+        AuditService.success(operator, "REFUND", "PAYMENT_REFUND",
+            "退款单=" + refund.merchantRefundNo + ", 支付单=" + paymentId + ", 金额=" + refundAmount, 1);
         
         return refund;
     }

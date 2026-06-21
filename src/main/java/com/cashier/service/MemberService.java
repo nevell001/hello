@@ -110,6 +110,8 @@ public class MemberService {
 
             if (success) {
                 logger.info("会员充值成功: phone={}, amount={}", member.phone, amount);
+                AuditService.success(operator, "MEMBER", "MEMBER_RECHARGE",
+                    "会员=" + member.phone + ", 金额=" + rechargeAmount, 1);
                 
                 // 广播会员充值事件
                 com.cashier.api.sync.SyncManager.getInstance().broadcastSyncEvent(
@@ -125,6 +127,8 @@ public class MemberService {
             return success;
         } catch (SQLException e) {
             logger.error("会员充值失败: phone={}, amount={}", member.phone, amount, e);
+            AuditService.failure(operator, "MEMBER", "MEMBER_RECHARGE",
+                "会员=" + member.phone + ", 金额=" + rechargeAmount + ", 原因=" + e.getMessage());
             return false;
         }
     }

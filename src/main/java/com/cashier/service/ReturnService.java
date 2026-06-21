@@ -104,6 +104,10 @@ public class ReturnService {
                     returnOrderId, returnOrder.totalAmount);
                 log.ipAddress = "localhost";
                 log.timestamp = new Date();
+                log.category = "REFUND";
+                log.operation = "RETURN_APPROVAL";
+                log.result = "SUCCESS";
+                log.affectedRecords = items.size();
                 return OperationLogDAO.insertWithConnection(conn, log);
             });
 

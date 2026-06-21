@@ -80,6 +80,10 @@ public class PurchaseInboundController {
     // 当前用户
     private String currentUser = "admin";
 
+    public void setCurrentUser(com.cashier.model.User user) {
+        currentUser = user == null ? null : user.username;
+    }
+
     /**
      * 初始化方法
      */
@@ -372,11 +376,16 @@ public class PurchaseInboundController {
                     }
 
                     updateStatus("入库成功: " + inboundNo);
+                    com.cashier.service.AuditService.success(currentUser, "PURCHASE", "PURCHASE_INBOUND",
+                        "入库单=" + inboundNo + ", 采购单=" + order.orderNo + ", 数量=" + totalQty,
+                        totalQty);
                     loadApprovedOrders();
                     dialogStage.close();
 
                 } catch (SQLException ex) {
                     logger.error("入库失败", ex);
+                    com.cashier.service.AuditService.failure(currentUser, "PURCHASE", "PURCHASE_INBOUND",
+                        "采购单=" + order.orderNo + ", 原因=" + ex.getMessage());
                     showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + ex.getMessage());
                 }
             });
@@ -652,10 +661,12 @@ public class PurchaseInboundController {
             TableView<PurchaseInboundItem> itemTable = new TableView<>();
             
             TableColumn<PurchaseInboundItem, String> productNameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_approval.product_name"));
-            productNameCol.setCellValueFactory(new PropertyValueFactory<>("productName"));
+            productNameCol.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().getProductName()));
 
             TableColumn<PurchaseInboundItem, Number> quantityCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("restock.quantity"));
-            quantityCol.setCellValueFactory(new PropertyValueFactory<>("quantity"));
+            quantityCol.setCellValueFactory(cellData ->
+                new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getQuantity()));
 
             TableColumn<PurchaseInboundItem, String> unitPriceCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_approval.unit_price"));
             unitPriceCol.setCellValueFactory(cellData ->

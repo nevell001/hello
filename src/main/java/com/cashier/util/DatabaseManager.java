@@ -497,13 +497,19 @@ public class DatabaseManager {
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS operation_logs (
                     id INT AUTO_INCREMENT PRIMARY KEY,
-                    username VARCHAR(50),
-                    operation VARCHAR(100) NOT NULL,
+                    username VARCHAR(50) DEFAULT NULL,
+                    operation VARCHAR(200) NOT NULL,
                     details TEXT,
                     ip_address VARCHAR(50),
-                    timestamp BIGINT,
+                    timestamp BIGINT NOT NULL,
+                    log_level VARCHAR(20) NOT NULL DEFAULT 'INFO',
+                    log_category VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
+                    operation_result VARCHAR(20) NOT NULL DEFAULT 'SUCCESS',
+                    affected_records INT NOT NULL DEFAULT 0,
                     INDEX idx_timestamp (timestamp),
                     INDEX idx_username (username),
+                    INDEX idx_category (log_category),
+                    INDEX idx_result (operation_result),
                     FOREIGN KEY (username) REFERENCES users(username) ON DELETE SET NULL
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
                 """);
@@ -996,7 +1002,26 @@ public class DatabaseManager {
         }
         rs.close();
 
+        ensureColumn(stmt, "operation_logs", "ip_address", "VARCHAR(50) DEFAULT NULL");
+        ensureColumn(stmt, "operation_logs", "log_level", "VARCHAR(20) NOT NULL DEFAULT 'INFO'");
+        ensureColumn(stmt, "operation_logs", "log_category", "VARCHAR(50) NOT NULL DEFAULT 'SYSTEM'");
+        ensureColumn(stmt, "operation_logs", "operation_result", "VARCHAR(20) NOT NULL DEFAULT 'SUCCESS'");
+        ensureColumn(stmt, "operation_logs", "affected_records", "INT NOT NULL DEFAULT 0");
+
         logger.info("表结构检查完成");
+    }
+
+    private static void ensureColumn(Statement stmt, String table, String column, String definition) throws SQLException {
+        String query = String.format("""
+            SELECT COUNT(*) AS count FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '%s' AND COLUMN_NAME = '%s'
+            """, table, column);
+        try (ResultSet rs = stmt.executeQuery(query)) {
+            if (rs.next() && rs.getInt("count") == 0) {
+                logger.info("为 {} 表添加 {} 字段", table, column);
+                stmt.execute("ALTER TABLE `" + table + "` ADD COLUMN `" + column + "` " + definition);
+            }
+        }
     }
 
     /**

@@ -9,6 +9,7 @@ import com.cashier.util.FXUtils;
 import com.cashier.util.PasswordUtil;
 import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
+import com.cashier.service.AuditService;
 import javafx.animation.FadeTransition;
 import javafx.animation.ScaleTransition;
 import javafx.application.Platform;
@@ -112,6 +113,7 @@ public class LoginController {
                 // 使用数据库验证用户
                 User user = UserDAO.findByUsername(username);
                 if (user == null) {
+                    AuditService.failure(null, "AUTH", "LOGIN", "用户名不存在: " + username);
                     loginAttempts++;
                     checkAndLockAccount(username);
                     Platform.runLater(() -> {
@@ -123,6 +125,7 @@ public class LoginController {
                 }
 
                 if (!PasswordUtil.verifyPassword(password, user.password, username)) {
+                    AuditService.failure(username, "AUTH", "LOGIN", "密码验证失败");
                     loginAttempts++;
                     checkAndLockAccount(username);
                     Platform.runLater(() -> {
@@ -134,6 +137,7 @@ public class LoginController {
                 }
 
                 if (!user.active) {
+                    AuditService.failure(username, "AUTH", "LOGIN", "账户已禁用");
                     Platform.runLater(() -> {
                         showError(I18nManager.getInstance().get("runtime.login_disabled"));
                         setLoginState(false);
@@ -143,6 +147,7 @@ public class LoginController {
 
                 // 更新最后登录时间到数据库
                 UserDAO.updateLastLoginTimeByUsername(username);
+                AuditService.success(username, "AUTH", "LOGIN", "登录成功", 1);
 
                 // 重置登录尝试次数
                 loginAttempts = 0;
@@ -160,6 +165,7 @@ public class LoginController {
                 });
 
             } catch (Exception e) {
+                AuditService.failure(null, "AUTH", "LOGIN", "登录处理异常: " + e.getClass().getSimpleName());
                 javafx.application.Platform.runLater(() -> {
                     showError(I18nManager.getInstance().get("runtime.login_failed", e.getMessage()));
                     setLoginState(false);
