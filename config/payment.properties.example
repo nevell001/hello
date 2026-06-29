@@ -7,11 +7,15 @@ wechat.enabled=false
 wechat.app.id=YOUR_WECHAT_APPID
 wechat.mch.id=YOUR_MCH_ID
 wechat.api.key=YOUR_API_V3_KEY
+wechat.cert.path=
 
 alipay.enabled=false
 alipay.app.id=YOUR_ALIPAY_APPID
 alipay.private.key=YOUR_PRIVATE_KEY_HERE
+alipay.public.key=YOUR_ALIPAY_PUBLIC_KEY
+alipay.cert.path=
 
 # 通用配置
 order.expire.minutes=15
 notify.url=http://localhost:8080/api/payment/notify
+return.url=

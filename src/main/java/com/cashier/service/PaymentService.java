@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.Date;
@@ -23,6 +24,7 @@ import java.util.Properties;
 /** 电子支付编排服务。渠道协议、签名和网络调用由 PaymentChannelProvider 实现。 */
 public final class PaymentService {
     private static final Logger logger = LoggerFactoryUtil.getLogger(PaymentService.class);
+    private static final String PAYMENT_CONFIG_PATH = "config/payment.properties";
     private static final Map<PaymentOrder.PaymentChannel, PaymentChannelProvider> providers =
         new EnumMap<>(PaymentOrder.PaymentChannel.class);
     private static PaymentConfig config = new PaymentConfig();
@@ -37,16 +39,16 @@ public final class PaymentService {
     public static void init() {
         try {
             PaymentDAO.createTable();
-            loadConfig();
+            reloadConfig();
             logger.info("支付服务初始化成功，模式: {}", config.mode);
         } catch (Exception e) {
             logger.error("支付服务初始化失败", e);
         }
     }
 
-    private static void loadConfig() {
+    public static synchronized void reloadConfig() {
         PaymentConfig loaded = new PaymentConfig();
-        File file = new File("config/payment.properties");
+        File file = new File(PAYMENT_CONFIG_PATH);
         if (file.exists()) {
             try (FileInputStream fis = new FileInputStream(file)) {
                 Properties props = new Properties();
@@ -58,16 +60,59 @@ public final class PaymentService {
                 loaded.wechatAppId = props.getProperty("wechat.app.id");
                 loaded.wechatMchId = props.getProperty("wechat.mch.id");
                 loaded.wechatApiKey = props.getProperty("wechat.api.key");
+                loaded.wechatCertPath = props.getProperty("wechat.cert.path");
                 loaded.alipayEnabled = Boolean.parseBoolean(props.getProperty("alipay.enabled", "false"));
                 loaded.alipayAppId = props.getProperty("alipay.app.id");
                 loaded.alipayPrivateKey = props.getProperty("alipay.private.key");
+                loaded.alipayPublicKey = props.getProperty("alipay.public.key");
+                loaded.alipayCertPath = props.getProperty("alipay.cert.path");
                 loaded.orderExpireMinutes = Integer.parseInt(props.getProperty("order.expire.minutes", "15"));
                 loaded.notifyUrl = props.getProperty("notify.url");
+                loaded.returnUrl = props.getProperty("return.url");
             } catch (Exception e) {
                 logger.warn("支付配置无效，电子支付保持禁用: {}", e.getMessage());
             }
         }
         setConfig(loaded);
+    }
+
+    public static synchronized void saveConfig(PaymentConfig newConfig) {
+        PaymentConfig nextConfig = newConfig == null ? new PaymentConfig() : newConfig;
+        File file = new File(PAYMENT_CONFIG_PATH);
+        File parent = file.getParentFile();
+        if (parent != null && !parent.exists() && !parent.mkdirs()) {
+            throw new IllegalStateException("无法创建支付配置目录: " + parent.getAbsolutePath());
+        }
+
+        Properties props = new Properties();
+        props.setProperty("payment.mode", safe(nextConfig.mode, "disabled"));
+        props.setProperty("payment.mock.enabled", String.valueOf(nextConfig.mockEnabled));
+        props.setProperty("payment.mock.callback.secret", safe(nextConfig.mockCallbackSecret, ""));
+        props.setProperty("wechat.enabled", String.valueOf(nextConfig.wechatEnabled));
+        props.setProperty("wechat.app.id", safe(nextConfig.wechatAppId, ""));
+        props.setProperty("wechat.mch.id", safe(nextConfig.wechatMchId, ""));
+        props.setProperty("wechat.api.key", safe(nextConfig.wechatApiKey, ""));
+        props.setProperty("wechat.cert.path", safe(nextConfig.wechatCertPath, ""));
+        props.setProperty("alipay.enabled", String.valueOf(nextConfig.alipayEnabled));
+        props.setProperty("alipay.app.id", safe(nextConfig.alipayAppId, ""));
+        props.setProperty("alipay.private.key", safe(nextConfig.alipayPrivateKey, ""));
+        props.setProperty("alipay.public.key", safe(nextConfig.alipayPublicKey, ""));
+        props.setProperty("alipay.cert.path", safe(nextConfig.alipayCertPath, ""));
+        props.setProperty("order.expire.minutes", String.valueOf(nextConfig.orderExpireMinutes));
+        props.setProperty("notify.url", safe(nextConfig.notifyUrl, ""));
+        props.setProperty("return.url", safe(nextConfig.returnUrl, ""));
+
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            props.store(fos, "LiSuan payment configuration");
+        } catch (Exception e) {
+            throw new IllegalStateException("保存支付配置失败", e);
+        }
+
+        setConfig(nextConfig);
+    }
+
+    private static String safe(String value, String defaultValue) {
+        return value == null ? defaultValue : value;
     }
 
     public static synchronized void registerProvider(PaymentChannelProvider provider) {

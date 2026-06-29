@@ -2,6 +2,7 @@ package com.cashier.controller;
 
 import com.cashier.constant.FXConstants;
 import com.cashier.service.DataService;
+import com.cashier.service.PaymentService;
 import com.cashier.i18n.I18nManager;
 import com.cashier.util.FormValidator;
 import com.cashier.util.DatabaseManager;
@@ -122,6 +123,52 @@ public class SettingsController {
     @FXML
     private Spinner<Integer> passwordMaxAttemptsSpinner;
 
+    // 支付设置标签页
+    @FXML
+    private ComboBox<String> paymentModeComboBox;
+
+    @FXML
+    private CheckBox paymentMockEnabledCheckBox;
+
+    @FXML
+    private TextField paymentMockSecretField;
+
+    @FXML
+    private TextField paymentOrderExpireMinutesField;
+
+    @FXML
+    private TextField paymentNotifyUrlField;
+
+    @FXML
+    private CheckBox wechatEnabledCheckBox;
+
+    @FXML
+    private TextField wechatAppIdField;
+
+    @FXML
+    private TextField wechatMchIdField;
+
+    @FXML
+    private PasswordField wechatApiKeyField;
+
+    @FXML
+    private TextField wechatCertPathField;
+
+    @FXML
+    private CheckBox alipayEnabledCheckBox;
+
+    @FXML
+    private TextField alipayAppIdField;
+
+    @FXML
+    private TextArea alipayPrivateKeyArea;
+
+    @FXML
+    private TextArea alipayPublicKeyArea;
+
+    @FXML
+    private TextField alipayCertPathField;
+
     // 数据导入标签页
     @FXML
     private ProgressBar importProgressBar;
@@ -229,6 +276,14 @@ public class SettingsController {
             new SpinnerValueFactory.IntegerSpinnerValueFactory(3, 10, 5);
         passwordMaxAttemptsSpinner.setValueFactory(passwordMaxAttemptsFactory);
 
+        // 初始化支付模式下拉框
+        paymentModeComboBox.setItems(javafx.collections.FXCollections.observableArrayList(
+            "disabled",
+            "mock",
+            "production"
+        ));
+        paymentModeComboBox.getSelectionModel().select("disabled");
+
         // 初始化数据导入工具
         dataImporter = new com.cashier.util.ProductDataImporter();
 
@@ -315,6 +370,9 @@ public class SettingsController {
 
         // 初始化 I18nManager 的语言
         applyLanguageSetting(savedLanguage);
+
+        // 加载支付配置
+        loadPaymentSettings();
 
         logger.info("SettingsController: 设置加载完成，当前主题: {}, 当前语言: {}, 当前货币: {}, 用户: {}",
                 savedThemeCode, savedLanguage, initialCurrency, username);
@@ -682,6 +740,29 @@ public class SettingsController {
     }
 
     /**
+     * 处理保存支付设置
+     */
+    @FXML
+    public void handleSavePaymentSettings() {
+        try {
+            PaymentService.PaymentConfig paymentConfig = buildPaymentConfigFromForm();
+            PaymentService.saveConfig(paymentConfig);
+            String username = (currentUser != null) ? currentUser.username : "default";
+            com.cashier.service.AuditService.success(username, "SETTINGS", "PAYMENT_SETTINGS_UPDATED",
+                "支付模式=" + paymentConfig.mode
+                    + ", 微信启用=" + paymentConfig.wechatEnabled
+                    + ", 支付宝启用=" + paymentConfig.alipayEnabled,
+                1);
+            showSuccess(I18nManager.getInstance().get("runtime.settings_payment_saved"));
+        } catch (IllegalArgumentException e) {
+            showError(e.getMessage());
+        } catch (Exception e) {
+            logger.error("保存支付配置失败", e);
+            showError(I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
+        }
+    }
+
+    /**
      * 处理浏览备份路径
      */
     @FXML
@@ -984,6 +1065,70 @@ public class SettingsController {
         }
 
         return true;
+    }
+
+    private void loadPaymentSettings() {
+        PaymentService.PaymentConfig paymentConfig = PaymentService.getConfig();
+        if (paymentConfig == null) {
+            paymentConfig = new PaymentService.PaymentConfig();
+        }
+
+        paymentModeComboBox.getSelectionModel().select(defaultText(paymentConfig.mode, "disabled"));
+        paymentMockEnabledCheckBox.setSelected(paymentConfig.mockEnabled);
+        paymentMockSecretField.setText(defaultText(paymentConfig.mockCallbackSecret, ""));
+        paymentOrderExpireMinutesField.setText(String.valueOf(paymentConfig.orderExpireMinutes));
+        paymentNotifyUrlField.setText(defaultText(paymentConfig.notifyUrl, ""));
+
+        wechatEnabledCheckBox.setSelected(paymentConfig.wechatEnabled);
+        wechatAppIdField.setText(defaultText(paymentConfig.wechatAppId, ""));
+        wechatMchIdField.setText(defaultText(paymentConfig.wechatMchId, ""));
+        wechatApiKeyField.setText(defaultText(paymentConfig.wechatApiKey, ""));
+        wechatCertPathField.setText(defaultText(paymentConfig.wechatCertPath, ""));
+
+        alipayEnabledCheckBox.setSelected(paymentConfig.alipayEnabled);
+        alipayAppIdField.setText(defaultText(paymentConfig.alipayAppId, ""));
+        alipayPrivateKeyArea.setText(defaultText(paymentConfig.alipayPrivateKey, ""));
+        alipayPublicKeyArea.setText(defaultText(paymentConfig.alipayPublicKey, ""));
+        alipayCertPathField.setText(defaultText(paymentConfig.alipayCertPath, ""));
+    }
+
+    private PaymentService.PaymentConfig buildPaymentConfigFromForm() {
+        PaymentService.PaymentConfig paymentConfig = new PaymentService.PaymentConfig();
+        String selectedMode = paymentModeComboBox.getSelectionModel().getSelectedItem();
+        paymentConfig.mode = defaultText(selectedMode, "disabled").trim().toLowerCase();
+        if (!List.of("disabled", "mock", "production").contains(paymentConfig.mode)) {
+            throw new IllegalArgumentException(I18nManager.getInstance().get("runtime.payment_mode_invalid"));
+        }
+
+        try {
+            paymentConfig.orderExpireMinutes = Integer.parseInt(paymentOrderExpireMinutesField.getText().trim());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(I18nManager.getInstance().get("runtime.payment_expire_invalid"));
+        }
+        if (paymentConfig.orderExpireMinutes < 1 || paymentConfig.orderExpireMinutes > 120) {
+            throw new IllegalArgumentException(I18nManager.getInstance().get("runtime.payment_expire_invalid"));
+        }
+
+        paymentConfig.mockEnabled = paymentMockEnabledCheckBox.isSelected();
+        paymentConfig.mockCallbackSecret = paymentMockSecretField.getText().trim();
+        paymentConfig.notifyUrl = paymentNotifyUrlField.getText().trim();
+
+        paymentConfig.wechatEnabled = wechatEnabledCheckBox.isSelected();
+        paymentConfig.wechatAppId = wechatAppIdField.getText().trim();
+        paymentConfig.wechatMchId = wechatMchIdField.getText().trim();
+        paymentConfig.wechatApiKey = wechatApiKeyField.getText().trim();
+        paymentConfig.wechatCertPath = wechatCertPathField.getText().trim();
+
+        paymentConfig.alipayEnabled = alipayEnabledCheckBox.isSelected();
+        paymentConfig.alipayAppId = alipayAppIdField.getText().trim();
+        paymentConfig.alipayPrivateKey = alipayPrivateKeyArea.getText().trim();
+        paymentConfig.alipayPublicKey = alipayPublicKeyArea.getText().trim();
+        paymentConfig.alipayCertPath = alipayCertPathField.getText().trim();
+        return paymentConfig;
+    }
+
+    private String defaultText(String value, String defaultValue) {
+        return value == null ? defaultValue : value;
     }
 
     /**

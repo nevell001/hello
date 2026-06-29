@@ -295,6 +295,97 @@
         </Tab>
 
 
+        <!-- 支付设置标签页 -->
+        <Tab text="%settings.tab.payment">
+            <ScrollPane fitToWidth="true" fitToHeight="true">
+                <VBox spacing="20" styleClass="settings-content">
+                    <padding>
+                        <Insets top="20" right="20" bottom="20" left="20"/>
+                    </padding>
+
+                    <Label text="%settings.payment_general" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
+                    <Label text="%settings.payment_adapter_hint" styleClass="text-muted" wrapText="true"/>
+
+                    <GridPane hgap="10" vgap="10">
+                        <padding>
+                            <Insets top="10" right="0" bottom="0" left="0"/>
+                        </padding>
+
+                        <Label text="%settings.payment_mode_label" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                        <ComboBox fx:id="paymentModeComboBox" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="180"/>
+
+                        <CheckBox fx:id="paymentMockEnabledCheckBox" text="%settings.payment_mock_enabled" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+                        <Label text="%settings.payment_mock_secret_label" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                        <TextField fx:id="paymentMockSecretField" GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="360"/>
+
+                        <Label text="%settings.payment_order_expire_label" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                        <TextField fx:id="paymentOrderExpireMinutesField" GridPane.columnIndex="1" GridPane.rowIndex="3" prefWidth="120"/>
+
+                        <Label text="%settings.payment_notify_url_label" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+                        <TextField fx:id="paymentNotifyUrlField" GridPane.columnIndex="1" GridPane.rowIndex="4" prefWidth="420"/>
+                    </GridPane>
+
+                    <Separator/>
+
+                    <Label text="%settings.wechat_payment" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
+
+                    <GridPane hgap="10" vgap="10">
+                        <padding>
+                            <Insets top="10" right="0" bottom="0" left="0"/>
+                        </padding>
+
+                        <CheckBox fx:id="wechatEnabledCheckBox" text="%settings.wechat_enabled" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+                        <Label text="%settings.wechat_app_id_label" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                        <TextField fx:id="wechatAppIdField" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="360"/>
+
+                        <Label text="%settings.wechat_mch_id_label" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                        <TextField fx:id="wechatMchIdField" GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="360"/>
+
+                        <Label text="%settings.wechat_api_key_label" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                        <PasswordField fx:id="wechatApiKeyField" GridPane.columnIndex="1" GridPane.rowIndex="3" prefWidth="360"/>
+
+                        <Label text="%settings.wechat_cert_path_label" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+                        <TextField fx:id="wechatCertPathField" GridPane.columnIndex="1" GridPane.rowIndex="4" prefWidth="420"/>
+                    </GridPane>
+
+                    <Separator/>
+
+                    <Label text="%settings.alipay_payment" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
+
+                    <GridPane hgap="10" vgap="10">
+                        <padding>
+                            <Insets top="10" right="0" bottom="0" left="0"/>
+                        </padding>
+
+                        <CheckBox fx:id="alipayEnabledCheckBox" text="%settings.alipay_enabled" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+                        <Label text="%settings.alipay_app_id_label" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                        <TextField fx:id="alipayAppIdField" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="360"/>
+
+                        <Label text="%settings.alipay_private_key_label" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.valignment="TOP"/>
+                        <TextArea fx:id="alipayPrivateKeyArea" GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="420" prefRowCount="4" wrapText="true"/>
+
+                        <Label text="%settings.alipay_public_key_label" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.valignment="TOP"/>
+                        <TextArea fx:id="alipayPublicKeyArea" GridPane.columnIndex="1" GridPane.rowIndex="3" prefWidth="420" prefRowCount="4" wrapText="true"/>
+
+                        <Label text="%settings.alipay_cert_path_label" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+                        <TextField fx:id="alipayCertPathField" GridPane.columnIndex="1" GridPane.rowIndex="4" prefWidth="420"/>
+                    </GridPane>
+
+                    <Separator/>
+
+                    <HBox spacing="10" alignment="CENTER_RIGHT">
+                        <Button text="%settings.save"
+                                onAction="#handleSavePaymentSettings"
+                                prefWidth="120"
+                                styleClass="primary-button"/>
+                    </HBox>
+                </VBox>
+            </ScrollPane>
+        </Tab>
+
 
         <!-- 数据导入标签页 -->
         <Tab text="%settings.tab.import">

@@ -476,7 +476,7 @@ public class CartController {
      * 更新商品数量标签
      */
     private void updateCountLabel() {
-        countLabel.setText(i18n.get("cart.product_count") + ": " + productList.size());
+        countLabel.setText(i18n.get("cart.product_count", productList.size()));
     }
 
     /**
@@ -1490,7 +1490,6 @@ public class CartController {
                 CurrencyUtil.format(receivedAmount), CurrencyUtil.format(changeAmount));
         }
 
-        com.cashier.util.StatusBarManager.updateSuccess(message);
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(i18n.get("label.success"));
         alert.setHeaderText(i18n.get("payment.success.header"));
