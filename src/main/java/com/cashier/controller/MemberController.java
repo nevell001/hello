@@ -246,6 +246,8 @@ public class MemberController extends BaseController<Member> {
         Member selected = getSelectedItem(memberTable);
         if (selected != null) {
             showEditDialog(selected);
+        } else {
+            showWarning(i18n.get("runtime.select_member"));
         }
     }
 
@@ -256,6 +258,7 @@ public class MemberController extends BaseController<Member> {
     public void handleDeleteMember() {
         ObservableList<Member> selected = getSelectedItems(memberTable);
         if (selected.isEmpty()) {
+            showWarning(i18n.get("runtime.select_member"));
             return;
         }
 
@@ -328,6 +331,8 @@ public class MemberController extends BaseController<Member> {
             } catch (IOException e) {
                 showError(i18n.get("member.recharge.load_error") + ": " + e.getMessage());
             }
+        } else {
+            showWarning(i18n.get("runtime.select_member"));
         }
     }
 

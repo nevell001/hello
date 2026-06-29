@@ -172,6 +172,10 @@ public class PosModeController {
     private void initialize() {
         // 绑定状态栏
         statusLabel.textProperty().bind(StatusBarManager.statusProperty());
+        StatusBarManager.statusLevelProperty().addListener((obs, oldLevel, newLevel) ->
+            applyStatusLevelStyle(newLevel)
+        );
+        applyStatusLevelStyle(StatusBarManager.getStatusLevel());
 
         // 更新状态
         StatusBarManager.updateStatus("就绪");
@@ -187,6 +191,20 @@ public class PosModeController {
         setupShortcuts();
 
         logger.info("POS模式控制器初始化完成");
+    }
+
+    private void applyStatusLevelStyle(StatusBarManager.StatusLevel level) {
+        statusLabel.getStyleClass().removeAll("text-success", "text-warning", "text-danger");
+
+        StatusBarManager.StatusLevel nextLevel = level != null ? level : StatusBarManager.StatusLevel.NORMAL;
+        switch (nextLevel) {
+            case SUCCESS -> statusLabel.getStyleClass().add("text-success");
+            case WARNING -> statusLabel.getStyleClass().add("text-warning");
+            case ERROR -> statusLabel.getStyleClass().add("text-danger");
+            case NORMAL -> {
+                // 默认状态只保留 status-text
+            }
+        }
     }
 
     /**
@@ -208,7 +226,7 @@ public class PosModeController {
             cartContainer.getChildren().setAll(cartView);
             VBox.setMargin(cartView, new Insets(0));
 
-            StatusBarManager.updateStatus("收银台已加载");
+            StatusBarManager.updateSuccess("收银台已加载");
 
             // 加载完成后，自动聚焦到搜索框
             Platform.runLater(() -> {
@@ -311,7 +329,7 @@ public class PosModeController {
             stage.setScene(new Scene(root));
             stage.showAndWait();
 
-            StatusBarManager.updateStatus("交接班操作完成");
+            StatusBarManager.updateSuccess("交接班操作完成");
 
         } catch (IOException e) {
             logger.error("加载交接班界面失败", e);
@@ -332,7 +350,9 @@ public class PosModeController {
                 Alert alert = new Alert(Alert.AlertType.WARNING);
                 alert.setTitle(I18nManager.getInstance().get("common.confirm"));
                 alert.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get("runtime.cart_not_empty"));
-                alert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.cart_exit_confirm"));
+                String message = com.cashier.i18n.I18nManager.getInstance().get("runtime.cart_exit_confirm");
+                StatusBarManager.updateWarning(message);
+                alert.setContentText(message);
                 alert.showAndWait();
                 // 无论选择什么都继续退出（因为收银员可能需要重新开始）
             }
@@ -353,6 +373,7 @@ public class PosModeController {
      * 显示错误信息
      */
     private void showError(String message) {
+        com.cashier.util.StatusBarManager.updateError(message);
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(I18nManager.getInstance().get("label.error"));
         alert.setHeaderText(null);

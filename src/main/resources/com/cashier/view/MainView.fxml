@@ -20,8 +20,8 @@
                     <MenuItem text="%menu.system.exit" onAction="#handleExit"/>
                 </Menu>
                 <Menu text="%menu.data">
-                    <MenuItem text="%menu.data.backup" onAction="#handleDataBackup"/>
-                    <MenuItem text="%menu.data.restore" onAction="#handleDataRestore"/>
+                    <MenuItem fx:id="dataBackupItem" text="%menu.data.backup" onAction="#handleDataBackup"/>
+                    <MenuItem fx:id="dataRestoreItem" text="%menu.data.restore" onAction="#handleDataRestore"/>
                 </Menu>
                 <Menu text="%menu.theme">
                     <MenuItem text="%menu.theme.light" onAction="#handleLightTheme"/>

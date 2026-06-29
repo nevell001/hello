@@ -12,6 +12,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
+import com.cashier.util.StatusBarManager;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -253,6 +254,7 @@ public class RechargeController {
         if (errorMessage.isEmpty()) {
             return true;
         } else {
+            StatusBarManager.updateError(errorMessage);
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.input_error"));
             alert.setHeaderText(null);
@@ -263,6 +265,7 @@ public class RechargeController {
     }
 
     private void showError(String message) {
+        StatusBarManager.updateError(message);
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(I18nManager.getInstance().get("label.error"));
         alert.setHeaderText(null);

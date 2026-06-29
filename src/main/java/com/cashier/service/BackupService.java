@@ -156,6 +156,10 @@ public class BackupService {
                     break;
             }
         }
+
+        if (!Files.exists(zipPath) || Files.size(zipPath) == 0) {
+            throw new IOException("备份文件生成失败或为空: " + zipPath);
+        }
         
         logger.debug("备份文件创建: {}", zipPath);
         return zipPath.toString();
@@ -172,10 +176,10 @@ public class BackupService {
             // 使用 DatabaseManager 进行 MySQL 备份
             boolean success = com.cashier.util.DatabaseManager.backup(tempSqlFile);
             
-            if (success) {
+            if (success && tempSqlFile.exists() && tempSqlFile.length() > 0) {
                 addToZip(zos, "database/backup.sql", tempSqlFile);
             } else {
-                logger.error("数据库 SQL 导出失败");
+                throw new IOException("数据库 SQL 导出失败");
             }
         } finally {
             // 删除临时文件
@@ -229,8 +233,10 @@ public class BackupService {
         
         if (Files.exists(configDir)) {
             Files.walk(configDir)
-                .filter(path -> !Files.isDirectory(path) && path.toString().endsWith(".properties") || 
-                               path.toString().endsWith(".yaml") || path.toString().endsWith(".json"))
+                .filter(path -> !Files.isDirectory(path) &&
+                    (path.toString().endsWith(".properties") ||
+                     path.toString().endsWith(".yaml") ||
+                     path.toString().endsWith(".json")))
                 .forEach(path -> {
                     try {
                         addToZip(zos, "config/" + configDir.relativize(path).toString(), path.toFile());
@@ -282,103 +288,11 @@ public class BackupService {
      * 上传到云存储
      */
     private static String uploadToCloud(BackupRecord record, File backupFile) throws IOException {
-        String remotePath;
-        
-        switch (record.target) {
-            case ALIYUN_OSS:
-                remotePath = uploadToAliyunOSS(record.fileName, backupFile);
-                break;
-                
-            case TENCENT_COS:
-                remotePath = uploadToTencentCOS(record.fileName, backupFile);
-                break;
-                
-            case QINIU:
-                remotePath = uploadToQiniu(record.fileName, backupFile);
-                break;
-                
-            case AWS_S3:
-                remotePath = uploadToAwsS3(record.fileName, backupFile);
-                break;
-                
-            case FTP:
-                remotePath = uploadToFtp(record.fileName, backupFile);
-                break;
-                
-            case WEBDAV:
-                remotePath = uploadToWebDAV(record.fileName, backupFile);
-                break;
-                
-            default:
-                remotePath = null;
+        if (record.target == BackupRecord.BackupTarget.LOCAL) {
+            return null;
         }
-        
-        return remotePath;
-    }
-    
-    /**
-     * 上传到阿里云OSS（模拟）
-     */
-    private static String uploadToAliyunOSS(String fileName, File file) throws IOException {
-        // 实际项目中需要使用阿里云OSS SDK
-        // ossClient.putObject(bucketName, objectKey, file)
-        
-        // 模拟上传
-        logger.info("模拟上传到阿里云OSS: {}", fileName);
-        return "https://" + config.aliyunBucket + ".oss-" + config.aliyunRegion + 
-               ".aliyuncs.com/backups/" + fileName;
-    }
-    
-    /**
-     * 上传到腾讯云COS（模拟）
-     */
-    private static String uploadToTencentCOS(String fileName, File file) throws IOException {
-        // 实际项目使用腾讯云COS SDK
-        
-        logger.info("模拟上传到腾讯云COS: {}", fileName);
-        return "https://" + config.tencentBucket + ".cos." + config.tencentRegion + 
-               ".myqcloud.com/backups/" + fileName;
-    }
-    
-    /**
-     * 上传到七牛云（模拟）
-     */
-    private static String uploadToQiniu(String fileName, File file) throws IOException {
-        // 实际项目使用七牛云SDK
-        
-        logger.info("模拟上传到七牛云: {}", fileName);
-        return config.qiniuDomain + "/backups/" + fileName;
-    }
-    
-    /**
-     * 上传到AWS S3（模拟）
-     */
-    private static String uploadToAwsS3(String fileName, File file) throws IOException {
-        // 实际项目使用AWS SDK
-        
-        logger.info("模拟上传到AWS S3: {}", fileName);
-        return "https://" + config.awsBucket + ".s3." + config.awsRegion + 
-               ".amazonaws.com/backups/" + fileName;
-    }
-    
-    /**
-     * 上传到FTP（模拟）
-     */
-    private static String uploadToFtp(String fileName, File file) throws IOException {
-        // 实际项目使用FTP客户端
-        
-        logger.info("模拟上传到FTP: {}", fileName);
-        return config.ftpPath + "/" + fileName;
-    }
-    
-    /**
-     * 上传到WebDAV（模拟）
-     */
-    private static String uploadToWebDAV(String fileName, File file) throws IOException {
-        // 实际项目使用WebDAV客户端
-        
-        logger.info("模拟上传到WebDAV: {}", fileName);
-        return config.webdavUrl + config.webdavPath + "/" + fileName;
+
+        throw new IOException("云备份目标 " + record.target.getDisplayName() + " 尚未接入真实上传适配器，已阻止模拟成功");
     }
     
     /**
@@ -415,28 +329,67 @@ public class BackupService {
             return false;
         }
         
+        if (record.localPath == null || record.localPath.isBlank()) {
+            logger.warn("备份文件路径为空: {}", backupId);
+            return false;
+        }
+
         File backupFile = new File(record.localPath);
         
         if (!backupFile.exists()) {
             logger.warn("备份文件不存在: {}", record.localPath);
             return false;
         }
+
+        if (record.checksum != null && !record.checksum.isBlank()) {
+            try {
+                String actualChecksum = calculateChecksum(backupFile);
+                if (!record.checksum.equalsIgnoreCase(actualChecksum)) {
+                    logger.error("备份校验失败: {}, expected={}, actual={}", backupId, record.checksum, actualChecksum);
+                    return false;
+                }
+            } catch (Exception e) {
+                throw new IOException("备份校验失败: " + backupId, e);
+            }
+        }
         
-        // 解压恢复
+        Path workspaceRoot = Paths.get("").toAbsolutePath().normalize();
+        Path tempRestoreDir = Files.createTempDirectory("cashier_restore_");
+        Path databaseBackupFile = null;
+
         try (ZipInputStream zis = new ZipInputStream(new FileInputStream(backupFile))) {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
-                Path destPath = Paths.get(entry.getName());
-                
+                String entryName = entry.getName();
+
                 if (entry.isDirectory()) {
-                    Files.createDirectories(destPath);
+                    Path directoryPath = resolveZipEntryPath(workspaceRoot, entryName);
+                    Files.createDirectories(directoryPath);
                 } else {
+                    Path destPath;
+                    if ("database/backup.sql".equals(entryName)) {
+                        destPath = tempRestoreDir.resolve("backup.sql").normalize();
+                        databaseBackupFile = destPath;
+                    } else {
+                        destPath = resolveZipEntryPath(workspaceRoot, entryName);
+                    }
+
                     Files.createDirectories(destPath.getParent());
                     Files.copy(zis, destPath, StandardCopyOption.REPLACE_EXISTING);
                 }
                 
                 zis.closeEntry();
             }
+
+            if (databaseBackupFile != null && Files.exists(databaseBackupFile)) {
+                boolean databaseRestored = DatabaseManager.restore(databaseBackupFile.toFile());
+                if (!databaseRestored) {
+                    logger.error("数据库备份恢复失败: {}", backupId);
+                    return false;
+                }
+            }
+        } finally {
+            deleteDirectoryQuietly(tempRestoreDir);
         }
         
         // 广播恢复事件
@@ -445,6 +398,35 @@ public class BackupService {
         
         logger.info("备份恢复完成: {}", backupId);
         return true;
+    }
+
+    static Path resolveZipEntryPath(Path targetRoot, String entryName) throws IOException {
+        Path normalizedRoot = targetRoot.toAbsolutePath().normalize();
+        Path normalizedPath = normalizedRoot.resolve(entryName).normalize();
+        if (!normalizedPath.startsWith(normalizedRoot)) {
+            throw new IOException("备份文件包含非法路径: " + entryName);
+        }
+        return normalizedPath;
+    }
+
+    private static void deleteDirectoryQuietly(Path directory) {
+        try {
+            if (directory == null || !Files.exists(directory)) {
+                return;
+            }
+
+            Files.walk(directory)
+                .sorted(Comparator.reverseOrder())
+                .forEach(path -> {
+                    try {
+                        Files.deleteIfExists(path);
+                    } catch (IOException e) {
+                        logger.debug("清理临时恢复目录失败: {}", path, e);
+                    }
+                });
+        } catch (IOException e) {
+            logger.debug("清理临时恢复目录失败: {}", directory, e);
+        }
     }
     
     /**

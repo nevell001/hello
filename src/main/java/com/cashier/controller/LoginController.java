@@ -7,6 +7,7 @@ import com.cashier.i18n.I18nManager;
 import com.cashier.model.User;
 import com.cashier.util.FXUtils;
 import com.cashier.util.PasswordUtil;
+import com.cashier.util.StatusBarManager;
 import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
 import com.cashier.service.AuditService;
@@ -254,6 +255,7 @@ public class LoginController {
                         com.cashier.dao.UserDAO.updatePassword(user.id, hashedPassword);
 
                         // 显示成功消息
+                        StatusBarManager.updateSuccess(com.cashier.i18n.I18nManager.getInstance().get("runtime.password_changed_message"));
                         javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
                         alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.password_changed_title"));
                         alert.setHeaderText(null);
@@ -283,6 +285,7 @@ public class LoginController {
      */
     @FXML
     public void handleAbout() {
+        StatusBarManager.updateStatus(I18nManager.getInstance().get("menu.help.about"));
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("menu.help.about"));
         alert.setHeaderText(AppConstants.APP_NAME + " v" + AppConstants.APP_VERSION);
@@ -343,6 +346,7 @@ public class LoginController {
      * @param message 错误消息
      */
     private void showError(String message) {
+        StatusBarManager.updateError(message);
         errorLabel.setText(message);
         errorLabel.setVisible(true);
 

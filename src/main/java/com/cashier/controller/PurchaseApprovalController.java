@@ -3,6 +3,7 @@ package com.cashier.controller;
 import com.cashier.i18n.I18nManager;
 import com.cashier.dao.*;
 import com.cashier.model.*;
+import com.cashier.service.PurchaseService;
 import com.cashier.util.CurrencyUtil;
 import com.cashier.util.StatusBarManager;
 import org.slf4j.Logger;
@@ -186,6 +187,8 @@ public class PurchaseApprovalController {
         PurchaseOrder selected = orderTable.getSelectionModel().getSelectedItem();
         if (selected != null) {
             showApprovalDialog(selected, "approve");
+        } else {
+            showWarning(I18nManager.getInstance().get("runtime.select_purchase_order"));
         }
     }
 
@@ -197,6 +200,8 @@ public class PurchaseApprovalController {
         PurchaseOrder selected = orderTable.getSelectionModel().getSelectedItem();
         if (selected != null) {
             showApprovalDialog(selected, "reject");
+        } else {
+            showWarning(I18nManager.getInstance().get("runtime.select_purchase_order"));
         }
     }
 
@@ -250,16 +255,7 @@ public class PurchaseApprovalController {
                     // 转换状态值：approve -> approved, reject -> rejected
                     String statusValue = "approve".equals(action) ? "approved" : "rejected";
                     
-                    // 更新订单状态
-                    PurchaseOrderDAO.approve(order.id, currentUser, remark, statusValue);
-
-                    // 添加审批记录
-                    PurchaseApproval approval = new PurchaseApproval();
-                    approval.orderId = order.id;
-                    approval.approver = currentUser;
-                    approval.action = action;
-                    approval.remark = remark;
-                    PurchaseApprovalDAO.insert(approval);
+                    PurchaseService.approveOrder(order.id, currentUser, action, remark);
 
                     updateStatus("订单" + ("approve".equals(action) ? "通过" : "拒绝") + ": " + order.orderNo);
                     com.cashier.service.AuditService.success(currentUser, "PURCHASE", "PURCHASE_APPROVAL",
@@ -306,6 +302,8 @@ public class PurchaseApprovalController {
         PurchaseOrder selected = orderTable.getSelectionModel().getSelectedItem();
         if (selected != null) {
             showOrderDetailDialog(selected);
+        } else {
+            showWarning(I18nManager.getInstance().get("runtime.select_purchase_order"));
         }
     }
 
@@ -457,10 +455,16 @@ public class PurchaseApprovalController {
      * @param message 错误消息
      */
     private void showError(String message) {
+        com.cashier.util.StatusBarManager.updateError(message);
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(I18nManager.getInstance().get("label.error"));
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    private void showWarning(String message) {
+        com.cashier.util.FXUtils.showWarningAlert(
+            I18nManager.getInstance().get("common.warning"), message);
     }
 }

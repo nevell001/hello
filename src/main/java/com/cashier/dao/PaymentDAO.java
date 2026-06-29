@@ -217,6 +217,17 @@ public class PaymentDAO {
             return pstmt.executeUpdate() > 0;
         }
     }
+
+    public static boolean updateStatusIfPending(String paymentId, PaymentOrder.PaymentStatus status) throws SQLException {
+        String sql = "UPDATE payment_orders SET status = ? WHERE payment_id = ? " +
+                     "AND status IN ('CREATED', 'WAITING', 'PAYING')";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, status.name());
+            pstmt.setString(2, paymentId);
+            return pstmt.executeUpdate() > 0;
+        }
+    }
     
     /**
      * 更新支付成功信息

@@ -1,11 +1,15 @@
-# 支付配置
-wechat.enabled=true
-wechat.app.id=wxmock123456
-wechat.mch.id=1234567890
-wechat.api.key=YOUR_API_KEY_HERE
+# 支付配置：disabled（默认）/ mock（仅开发测试）/ production（真实适配器）
+payment.mode=disabled
+payment.mock.enabled=false
+payment.mock.callback.secret=REPLACE_WITH_RANDOM_TEST_SECRET
 
-alipay.enabled=true
-alipay.app.id=2021000123456789
+wechat.enabled=false
+wechat.app.id=YOUR_WECHAT_APPID
+wechat.mch.id=YOUR_MCH_ID
+wechat.api.key=YOUR_API_V3_KEY
+
+alipay.enabled=false
+alipay.app.id=YOUR_ALIPAY_APPID
 alipay.private.key=YOUR_PRIVATE_KEY_HERE
 
 # 通用配置

@@ -3,6 +3,7 @@ package com.cashier.controller;
 import com.cashier.i18n.I18nManager;
 import com.cashier.dao.*;
 import com.cashier.model.*;
+import com.cashier.service.PurchaseService;
 import com.cashier.util.CurrencyUtil;
 import com.cashier.util.StatusBarManager;
 import org.slf4j.Logger;
@@ -39,7 +40,6 @@ import javafx.util.converter.IntegerStringConverter;
 @SuppressWarnings("unchecked")
 public class PurchaseInboundController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(PurchaseInboundController.class);
-    private final com.cashier.dao.ProductDAORefactored productDAO = com.cashier.dao.DAOFactory.getInstance().getProductDAO();
 
     @FXML
     private TableView<PurchaseOrder> orderTable;
@@ -173,6 +173,8 @@ public class PurchaseInboundController {
         PurchaseOrder selected = orderTable.getSelectionModel().getSelectedItem();
         if (selected != null) {
             showInboundDialog(selected);
+        } else {
+            showWarning(I18nManager.getInstance().get("runtime.select_purchase_order"));
         }
     }
 
@@ -335,45 +337,21 @@ public class PurchaseInboundController {
                     inbound.totalQuantity = totalQty;
                     inbound.totalAmount = totalAmount;
 
-                    // 插入入库单
-                    PurchaseInboundDAO.insert(inbound);
-
-                    // 插入入库明细并更新订单明细
+                    List<PurchaseInboundItem> inboundItems = new ArrayList<>();
                     for (InboundItemWrapper wrapper : itemTable.getItems()) {
                         int qty = wrapper.thisInboundQuantity.get();
                         if (qty > 0) {
-                            // 创建入库明细
                             PurchaseInboundItem inboundItem = new PurchaseInboundItem();
-                            inboundItem.inboundId = inbound.id;
                             inboundItem.orderItemId = wrapper.orderItem.id;
                             inboundItem.productId = wrapper.orderItem.productId;
                             inboundItem.productName = wrapper.orderItem.productName;
                             inboundItem.quantity = qty;
                             inboundItem.unitPrice = wrapper.orderItem.unitPrice;
                             inboundItem.totalPrice = wrapper.orderItem.unitPrice.multiply(BigDecimal.valueOf(qty));
-                            PurchaseInboundItemDAO.insert(inboundItem);
-
-                            // 更新订单明细的入库数量
-                            PurchaseOrderItemDAO.increaseInboundQuantity(wrapper.orderItem.id, qty);
-
-                            // 更新商品库存
-                            productDAO.updateQuantity(wrapper.orderItem.productId, qty);
+                            inboundItems.add(inboundItem);
                         }
                     }
-
-                    // 检查订单是否全部入库
-                    boolean allInbound = true;
-                    List<PurchaseOrderItem> updatedItems = PurchaseOrderItemDAO.findByOrderId(order.id);
-                    for (PurchaseOrderItem item : updatedItems) {
-                        if (item.inboundQuantity < item.quantity) {
-                            allInbound = false;
-                            break;
-                        }
-                    }
-
-                    if (allInbound) {
-                        PurchaseOrderDAO.updateStatus(order.id, "completed");
-                    }
+                    PurchaseService.receiveInbound(inbound, inboundItems);
 
                     updateStatus("入库成功: " + inboundNo);
                     com.cashier.service.AuditService.success(currentUser, "PURCHASE", "PURCHASE_INBOUND",
@@ -456,6 +434,8 @@ public class PurchaseInboundController {
         PurchaseOrder selected = orderTable.getSelectionModel().getSelectedItem();
         if (selected != null) {
             showOrderDetailDialog(selected);
+        } else {
+            showWarning(I18nManager.getInstance().get("runtime.select_purchase_order"));
         }
     }
 
@@ -760,10 +740,16 @@ public class PurchaseInboundController {
      * @param message 错误消息
      */
     private void showError(String message) {
+        com.cashier.util.StatusBarManager.updateError(message);
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(I18nManager.getInstance().get("label.error"));
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    private void showWarning(String message) {
+        com.cashier.util.FXUtils.showWarningAlert(
+            I18nManager.getInstance().get("common.warning"), message);
     }
 }

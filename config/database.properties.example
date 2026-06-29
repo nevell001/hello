@@ -32,6 +32,10 @@ db.password=
 #   - 7+台收银机: 15-20
 db.pool.size=10
 
+# 备份/恢复使用的 Docker MySQL 容器名
+# 如果使用 docker-compose 默认环境，保持 lisuan-mysql 即可
+backup.mysql.container=lisuan-mysql
+
 # ========================================
 # 高级配置（通常不需要修改）
 # ========================================

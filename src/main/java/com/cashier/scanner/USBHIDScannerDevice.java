@@ -20,6 +20,7 @@ public class USBHIDScannerDevice implements ScannerDevice {
     private Map<String, String> configuration;
     private final List<ScanListener> listeners;
     private boolean connected;
+    private int maxScanLength = 128;
     
     public USBHIDScannerDevice(String deviceId, String deviceName) {
         this.deviceId = deviceId;
@@ -35,6 +36,7 @@ public class USBHIDScannerDevice implements ScannerDevice {
         configuration.put("stopBits", "1");
         configuration.put("parity", "none");
         configuration.put("autoEnter", "true");
+        configuration.put("maxScanLength", String.valueOf(maxScanLength));
     }
     
     @Override
@@ -73,10 +75,22 @@ public class USBHIDScannerDevice implements ScannerDevice {
     @Override
     public boolean start() {
         logger.info("启动 USB HID 扫描设备: {}", deviceName);
+        if (status == ScannerDeviceStatus.DISPOSED) {
+            logger.warn("扫描设备已销毁，不能启动: {}", deviceName);
+            return false;
+        }
+
+        if (status == ScannerDeviceStatus.UNINITIALIZED || status == ScannerDeviceStatus.DISCONNECTED) {
+            if (!initialize()) {
+                return false;
+            }
+        }
+
         status = ScannerDeviceStatus.STARTING;
         
         try {
             status = ScannerDeviceStatus.CONNECTED;
+            connected = true;
             logger.info("USB HID 扫描设备已启动: {}", deviceName);
             return true;
         } catch (Exception e) {
@@ -90,6 +104,7 @@ public class USBHIDScannerDevice implements ScannerDevice {
     public boolean stop() {
         logger.info("停止 USB HID 扫描设备: {}", deviceName);
         status = ScannerDeviceStatus.DISCONNECTED;
+        connected = false;
         return true;
     }
     
@@ -112,6 +127,18 @@ public class USBHIDScannerDevice implements ScannerDevice {
     public void setConfiguration(Map<String, String> config) {
         if (config != null) {
             configuration.putAll(config);
+            if (config.containsKey("maxScanLength")) {
+                try {
+                    int configuredMaxLength = Integer.parseInt(config.get("maxScanLength"));
+                    if (configuredMaxLength > 0) {
+                        maxScanLength = configuredMaxLength;
+                    } else {
+                        logger.warn("无效的扫码长度限制: {}", config.get("maxScanLength"));
+                    }
+                } catch (NumberFormatException e) {
+                    logger.warn("无效的扫码长度限制: {}", config.get("maxScanLength"));
+                }
+            }
         }
     }
     
@@ -146,14 +173,28 @@ public class USBHIDScannerDevice implements ScannerDevice {
             logger.warn("设备未连接，忽略扫描数据: {}", data);
             return;
         }
+
+        String normalizedData = normalizeScanData(data);
+        if (normalizedData == null) {
+            logger.warn("忽略空扫码数据: {}", data);
+            return;
+        }
+
+        if (normalizedData.length() > maxScanLength) {
+            logger.warn("扫码数据过长，已拒绝: device={}, length={}, max={}", deviceId, normalizedData.length(), maxScanLength);
+            notifyListeners(new ScanEvent(normalizedData, deviceId, ScanDataType.BARCODE, false, "扫码数据超过长度限制"));
+            return;
+        }
         
-        logger.debug("收到扫描数据: {}", data);
+        logger.debug("收到扫描数据: {}", normalizedData);
         status = ScannerDeviceStatus.SCANNING;
         
-        ScanEvent event = new ScanEvent(data, deviceId, ScanDataType.BARCODE, true, null);
-        notifyListeners(event);
-        
-        status = ScannerDeviceStatus.CONNECTED;
+        try {
+            ScanEvent event = new ScanEvent(normalizedData, deviceId, ScanDataType.BARCODE, true, null);
+            notifyListeners(event);
+        } finally {
+            status = ScannerDeviceStatus.CONNECTED;
+        }
     }
     
     /**
@@ -168,5 +209,17 @@ public class USBHIDScannerDevice implements ScannerDevice {
                 logger.error("扫描监听器执行失败", e);
             }
         }
+    }
+
+    static String normalizeScanData(String data) {
+        if (data == null) {
+            return null;
+        }
+
+        String normalized = data
+            .replace("\r", "")
+            .replace("\n", "")
+            .trim();
+        return normalized.isEmpty() ? null : normalized;
     }
 }

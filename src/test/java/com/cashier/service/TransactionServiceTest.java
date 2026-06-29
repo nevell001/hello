@@ -176,6 +176,26 @@ class TransactionServiceTest extends DatabaseTestBase {
     }
 
     @Test
+    @DisplayName("非会员余额支付只累计积分而不扣会员余额")
+    void externalPaymentDoesNotDeductMemberBalance() throws Exception {
+        BigDecimal initialBalance = testMember.balance;
+
+        TransactionService.TransactionResult result = TransactionService.executeTransaction(
+            testCartItems,
+            testMember,
+            "微信",
+            0.0,
+            0.0,
+            inventory
+        );
+
+        assertTrue(result.isSuccess());
+        Member updatedMember = MemberDAO.findByPhone(testMember.phone);
+        assertAmountEquals(initialBalance, updatedMember.balance);
+        assertTrue(updatedMember.points.compareTo(BigDecimal.valueOf(100)) > 0);
+    }
+
+    @Test
     @Order(5)
     @DisplayName("测试空购物车交易")
     void testEmptyCartTransaction() throws Exception {

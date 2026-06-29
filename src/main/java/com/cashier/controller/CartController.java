@@ -14,6 +14,10 @@ import com.cashier.model.Member;
 import com.cashier.model.Product;
 import com.cashier.model.Transaction;
 import com.cashier.model.User;
+import com.cashier.model.PaymentOrder;
+import com.cashier.scanner.FocusTarget;
+import com.cashier.scanner.ScannerManager;
+import com.cashier.service.PaymentService;
 import com.cashier.util.CurrencyUtil;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -36,6 +40,7 @@ import javafx.util.Duration;
 import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
 import com.cashier.util.FormValidator;
+import com.cashier.util.QrCodeImageUtil;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -44,6 +49,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 购物车控制器
@@ -57,6 +64,12 @@ public class CartController {
     private static final String SCAN_SUCCESS_SOUND = "/sounds/scan_success.wav";
     private static final String SCAN_ERROR_SOUND = "/sounds/scan_error.wav";
     private static final String SCAN_NOT_FOUND_SOUND = "/sounds/scan_not_found.wav";
+    private static final long DUPLICATE_SCAN_SUPPRESSION_MILLIS = 300;
+    private enum ScanMessageLevel {
+        SUCCESS,
+        WARNING,
+        ERROR
+    }
 
     @FXML
     private TableView<CartItem> cartTable;
@@ -142,6 +155,12 @@ public class CartController {
     private String orderNumber;
     private BigDecimal alreadyPaidAmount = BigDecimal.ZERO; // 已支付金额
     private Promotion appliedPromotion; // 当前应用的促销
+    private boolean paymentInProgress;
+    private final ScannerManager scannerManager = ScannerManager.getInstance();
+    private final FocusTarget scannerFocusTarget = createScannerFocusTarget();
+    private boolean scannerFocusRegistered;
+    private String lastSuccessfulScanText;
+    private long lastSuccessfulScanAt;
     private final ProductDAORefactored productDAO = DAOFactory.getInstance().getProductDAO();
     private final I18nManager i18n = I18nManager.getInstance();
 
@@ -198,6 +217,9 @@ public class CartController {
 
         // 会员手机号框 Enter 键监听
         memberPhoneField.setOnAction(event -> handleSearchMember());
+
+        // 注册扫码焦点目标，扫码枪输入直接进入收银台商品搜索
+        registerScannerFocusTarget();
 
         // 设置全局快捷键
         setupShortcuts();
@@ -547,6 +569,103 @@ public class CartController {
 
         updateStatistics();
         updateButtonStates();
+        selectCartItem(product.name);
+    }
+
+    private boolean addScannedProductToCart(String scanText) {
+        String normalizedScanText = scanText != null ? scanText.trim() : "";
+        if (normalizedScanText.isEmpty()) {
+            return false;
+        }
+
+        if (paymentInProgress) {
+            playScanErrorSound();
+            showScanMessage(i18n.get("cart.scan.payment_in_progress"), ScanMessageLevel.ERROR);
+            return false;
+        }
+
+        if (isDuplicateSuccessfulScan(normalizedScanText)) {
+            searchField.clear();
+            searchField.requestFocus();
+            showScanMessage(i18n.get("cart.scan.duplicate_ignored", normalizedScanText), ScanMessageLevel.WARNING);
+            return false;
+        }
+
+        refreshLatestInventory();
+
+        List<Product> exactMatches = inventoryMap.values().stream()
+            .filter(product -> matchesExactScanCode(product, normalizedScanText))
+            .toList();
+
+        if (exactMatches.isEmpty()) {
+            playScanNotFoundSound();
+            showScanMessage(i18n.get("cart.scan.not_found", normalizedScanText), ScanMessageLevel.ERROR);
+            return false;
+        }
+
+        if (exactMatches.size() > 1) {
+            productList.setAll(exactMatches);
+            updateCountLabel();
+            playScanErrorSound();
+            showScanMessage(i18n.get("cart.scan.multiple_matches", exactMatches.size()), ScanMessageLevel.WARNING);
+            return false;
+        }
+
+        Product product = exactMatches.get(0);
+        if (product.quantity <= 0) {
+            playScanErrorSound();
+            showScanMessage(i18n.get("cart.scan.out_of_stock", product.name), ScanMessageLevel.ERROR);
+            return false;
+        }
+
+        int beforeQuantity = getCartQuantity(product.name);
+        addToCart(product, 1);
+        int afterQuantity = getCartQuantity(product.name);
+        if (afterQuantity <= beforeQuantity) {
+            playScanErrorSound();
+            return false;
+        }
+
+        playScanSuccessSound();
+        flashTable(cartTable);
+        rememberSuccessfulScan(normalizedScanText);
+        showScanMessage(i18n.get("cart.scan.added", product.name), ScanMessageLevel.SUCCESS);
+        searchField.clear();
+        searchField.requestFocus();
+        return true;
+    }
+
+    private boolean isDuplicateSuccessfulScan(String scanText) {
+        long now = System.currentTimeMillis();
+        return lastSuccessfulScanText != null
+            && lastSuccessfulScanText.equalsIgnoreCase(scanText)
+            && now - lastSuccessfulScanAt <= DUPLICATE_SCAN_SUPPRESSION_MILLIS;
+    }
+
+    private void rememberSuccessfulScan(String scanText) {
+        lastSuccessfulScanText = scanText;
+        lastSuccessfulScanAt = System.currentTimeMillis();
+    }
+
+    private boolean matchesExactScanCode(Product product, String scanText) {
+        return (product.barcode != null && product.barcode.equalsIgnoreCase(scanText))
+            || (product.productCode != null && product.productCode.equalsIgnoreCase(scanText));
+    }
+
+    private int getCartQuantity(String productName) {
+        CartItem item = cartMap.get(productName);
+        return item != null ? item.quantity : 0;
+    }
+
+    private void selectCartItem(String productName) {
+        for (int i = 0; i < cartList.size(); i++) {
+            CartItem item = cartList.get(i);
+            if (item.product != null && item.product.name.equals(productName)) {
+                cartTable.getSelectionModel().clearAndSelect(i);
+                cartTable.scrollTo(i);
+                return;
+            }
+        }
     }
 
     /**
@@ -609,7 +728,7 @@ public class CartController {
         if (matchedProducts.isEmpty()) {
             // 未找到商品
             playScanNotFoundSound();
-            showScanMessage("未找到商品: " + searchText, false);
+            showScanMessage(i18n.get("cart.scan.not_found", searchText), ScanMessageLevel.ERROR);
             searchField.clear();
             searchField.requestFocus();
             return;
@@ -622,12 +741,12 @@ public class CartController {
                 addToCart(product, 1);
                 playScanSuccessSound();
                 flashTable(cartTable);
-                showScanMessage("已添加: " + product.name, true);
+                showScanMessage(i18n.get("cart.scan.added", product.name), ScanMessageLevel.SUCCESS);
                 searchField.clear();
                 searchField.requestFocus();
             } else {
                 playScanErrorSound();
-                showScanMessage("商品库存不足: " + product.name, false);
+                showScanMessage(i18n.get("cart.scan.out_of_stock", product.name), ScanMessageLevel.ERROR);
                 searchField.clear();
                 searchField.requestFocus();
             }
@@ -636,7 +755,7 @@ public class CartController {
             productList.setAll(matchedProducts);
             updateCountLabel();
             playScanSuccessSound();
-            showScanMessage("找到 " + matchedProducts.size() + " 个匹配商品，请选择", true);
+            showScanMessage(i18n.get("cart.scan.multiple_matches", matchedProducts.size()), ScanMessageLevel.WARNING);
         }
     }
 
@@ -867,7 +986,7 @@ public class CartController {
      */
     @FXML
     public void handleWechatPayment() {
-        handlePayment("微信");
+        startElectronicPayment(PaymentOrder.PaymentChannel.WECHAT, "微信");
     }
 
     /**
@@ -875,7 +994,7 @@ public class CartController {
      */
     @FXML
     public void handleAlipayPayment() {
-        handlePayment("支付宝");
+        startElectronicPayment(PaymentOrder.PaymentChannel.ALIPAY, "支付宝");
     }
 
     /**
@@ -895,6 +1014,16 @@ public class CartController {
     private void executePayment(String paymentMethod, BigDecimal receivedAmount, BigDecimal changeAmount) {
         try {
             Transaction transaction = createTransaction(paymentMethod, receivedAmount.doubleValue(), changeAmount.doubleValue());
+            completeTransaction(transaction, paymentMethod, receivedAmount, changeAmount);
+        } catch (Exception e) {
+            logger.error("交易失败: " + e.getMessage(), e);
+            showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
+        }
+    }
+
+    private void completeTransaction(Transaction transaction, String paymentMethod,
+                                     BigDecimal receivedAmount, BigDecimal changeAmount) {
+        try {
             TransactionService.TransactionResult result = TransactionService.executeTransaction(
                 cartList,
                 currentMember,
@@ -915,6 +1044,122 @@ public class CartController {
             logger.error("交易失败: " + e.getMessage(), e);
             showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
         }
+    }
+
+    private void startElectronicPayment(PaymentOrder.PaymentChannel channel, String paymentMethod) {
+        if (paymentInProgress) return;
+        if (cartList.isEmpty()) {
+            showError(i18n.get("runtime.cart_empty_payment"));
+            return;
+        }
+        if (!DataService.hasActiveShift()) {
+            showError(i18n.get("runtime.no_active_shift"));
+            return;
+        }
+        if (!PaymentService.isChannelAvailable(channel)) {
+            showError(i18n.get("payment.channel.unavailable") + ": "
+                + PaymentService.getChannelUnavailableReason(channel));
+            return;
+        }
+
+        try {
+            Transaction transaction = createTransaction(paymentMethod, 0, 0);
+            String terminalId = currentUser != null ? currentUser.username : "desktop";
+            PaymentOrder paymentOrder = PaymentService.createPaymentOrder(
+                transaction.transactionId, transaction.finalAmount, channel, terminalId);
+            showElectronicPaymentDialog(paymentOrder, transaction, paymentMethod);
+        } catch (Exception e) {
+            logger.error("创建电子支付订单失败", e);
+            showError(i18n.get("payment.create.failed") + ": " + e.getMessage());
+        }
+    }
+
+    private void showElectronicPaymentDialog(PaymentOrder paymentOrder, Transaction transaction,
+                                             String paymentMethod) throws Exception {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle(i18n.get("payment.scan.title"));
+        dialog.setHeaderText(i18n.get("payment.scan.header",
+            localizePaymentMethod(paymentMethod), CurrencyUtil.format(transaction.finalAmount.doubleValue())));
+        if (cartTable.getScene() != null) {
+            dialog.initOwner(cartTable.getScene().getWindow());
+            dialog.getDialogPane().getStylesheets().addAll(cartTable.getScene().getStylesheets());
+        }
+
+        javafx.scene.image.ImageView qrView = new javafx.scene.image.ImageView(
+            QrCodeImageUtil.create(paymentOrder.qrCodeContent, 260));
+        Label status = new Label(i18n.get("payment.waiting"));
+        status.getStyleClass().add("payment-status-label");
+        Label orderLabel = new Label(paymentOrder.merchantOrderNo);
+        orderLabel.getStyleClass().add("text-muted");
+        VBox content = new VBox(12, qrView, status, orderLabel);
+        content.setAlignment(javafx.geometry.Pos.CENTER);
+        content.setPadding(new javafx.geometry.Insets(16));
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
+
+        AtomicBoolean settled = new AtomicBoolean(false);
+        AtomicBoolean queryRunning = new AtomicBoolean(false);
+        Timeline poller = new Timeline();
+        poller.getKeyFrames().add(new KeyFrame(Duration.seconds(2), event -> {
+            if (!queryRunning.compareAndSet(false, true)) return;
+            CompletableFuture.supplyAsync(() -> {
+                try {
+                    return PaymentService.queryPaymentStatus(paymentOrder.paymentId);
+                } catch (Exception e) {
+                    throw new IllegalStateException(e);
+                }
+            }).whenComplete((latest, error) -> javafx.application.Platform.runLater(() -> {
+                queryRunning.set(false);
+                if (error != null) {
+                    status.setText(i18n.get("payment.query.retrying"));
+                    return;
+                }
+                if (latest == null) return;
+                status.setText(latest.status.getDisplayName());
+                if (latest.status == PaymentOrder.PaymentStatus.SUCCESS
+                        && settled.compareAndSet(false, true)) {
+                    poller.stop();
+                    dialog.close();
+                    setPaymentInProgress(false);
+                    completeTransaction(transaction, paymentMethod, BigDecimal.ZERO, BigDecimal.ZERO);
+                } else if (latest.status.isFinal() && latest.status != PaymentOrder.PaymentStatus.SUCCESS) {
+                    poller.stop();
+                    dialog.close();
+                    showError(i18n.get("payment.not_completed") + ": " + latest.status.getDisplayName());
+                }
+            }));
+        }));
+        poller.setCycleCount(Timeline.INDEFINITE);
+
+        dialog.setOnHidden(event -> {
+            poller.stop();
+            setPaymentInProgress(false);
+            if (!settled.get()) {
+                CompletableFuture.runAsync(() -> {
+                    try {
+                        PaymentService.cancelPaymentOrder(paymentOrder.paymentId);
+                    } catch (SQLException e) {
+                        logger.warn("取消支付订单失败: {}", paymentOrder.paymentId, e);
+                    }
+                });
+            }
+        });
+
+        setPaymentInProgress(true);
+        poller.play();
+        dialog.show();
+    }
+
+    private void setPaymentInProgress(boolean inProgress) {
+        paymentInProgress = inProgress;
+        cartTable.setDisable(inProgress);
+        productTable.setDisable(inProgress);
+        searchField.setDisable(inProgress);
+        memberPhoneField.setDisable(inProgress);
+        addButton.setDisable(inProgress);
+        removeButton.setDisable(inProgress);
+        clearButton.setDisable(inProgress);
+        updateStatistics();
     }
 
     /**
@@ -1003,10 +1248,10 @@ public class CartController {
             transaction.memberPhone = currentMember.phone;
         }
         
-        // 设置操作员信息为 NULL（CartController 无法获取当前用户）
-        // TransactionDAO 会处理 NULL 值
-        transaction.operatorUsername = null;
-        transaction.operatorName = null;
+        if (currentUser != null) {
+            transaction.operatorUsername = currentUser.username;
+            transaction.operatorName = currentUser.name;
+        }
         
         return transaction;
     }
@@ -1111,10 +1356,12 @@ public class CartController {
         
         // 更新支付按钮状态
         boolean hasItems = !cartList.isEmpty();
-        cashButton.setDisable(!hasItems);
-        wechatButton.setDisable(!hasItems);
-        alipayButton.setDisable(!hasItems);
-        cardButton.setDisable(!hasItems);
+        cashButton.setDisable(!hasItems || paymentInProgress);
+        wechatButton.setDisable(!hasItems || paymentInProgress
+            || !PaymentService.isChannelAvailable(PaymentOrder.PaymentChannel.WECHAT));
+        alipayButton.setDisable(!hasItems || paymentInProgress
+            || !PaymentService.isChannelAvailable(PaymentOrder.PaymentChannel.ALIPAY));
+        cardButton.setDisable(!hasItems || paymentInProgress);
     }
 
     /**
@@ -1163,6 +1410,7 @@ public class CartController {
      * @param message 错误消息
      */
     private void showError(String message) {
+        com.cashier.util.StatusBarManager.updateError(message);
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(I18nManager.getInstance().get("label.error"));
         alert.setHeaderText(null);
@@ -1175,6 +1423,7 @@ public class CartController {
      * @param message 提示消息
      */
     private void showInfo(String message) {
+        com.cashier.util.StatusBarManager.updateStatus(message);
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(I18nManager.getInstance().get("common.tip"));
         alert.setHeaderText(null);
@@ -1241,6 +1490,7 @@ public class CartController {
                 CurrencyUtil.format(receivedAmount), CurrencyUtil.format(changeAmount));
         }
 
+        com.cashier.util.StatusBarManager.updateSuccess(message);
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(i18n.get("label.success"));
         alert.setHeaderText(i18n.get("payment.success.header"));
@@ -1333,9 +1583,84 @@ public class CartController {
      * @param success 是否成功
      */
     private void showScanMessage(String message, boolean success) {
+        showScanMessage(message, success ? ScanMessageLevel.SUCCESS : ScanMessageLevel.ERROR);
+    }
+
+    private void showScanMessage(String message, ScanMessageLevel level) {
         // 在状态栏显示消息，不弹出提示框
-        com.cashier.util.StatusBarManager.updateStatus(message);
+        switch (level) {
+            case SUCCESS -> com.cashier.util.StatusBarManager.updateSuccess(message);
+            case WARNING -> com.cashier.util.StatusBarManager.updateWarning(message);
+            case ERROR -> com.cashier.util.StatusBarManager.updateError(message);
+        }
         logger.debug("扫描消息: {}", message);
+    }
+
+    private void registerScannerFocusTarget() {
+        if (!scannerFocusRegistered) {
+            scannerManager.getFocusManager().registerFocusTarget(scannerFocusTarget);
+            scannerFocusRegistered = true;
+            logger.debug("已注册收银台扫码焦点目标");
+        }
+    }
+
+    public void dispose() {
+        if (scannerFocusRegistered) {
+            scannerManager.getFocusManager().unregisterFocusTarget(scannerFocusTarget);
+            scannerFocusRegistered = false;
+            logger.debug("已注销收银台扫码焦点目标");
+        }
+    }
+
+    private FocusTarget createScannerFocusTarget() {
+        return new FocusTarget() {
+            @Override
+            public String getName() {
+                return "cart-search";
+            }
+
+            @Override
+            public void gainFocus() {
+                javafx.application.Platform.runLater(() -> {
+                    if (searchField != null && !searchField.isDisabled()) {
+                        searchField.requestFocus();
+                    }
+                });
+            }
+
+            @Override
+            public void loseFocus() {
+            }
+
+            @Override
+            public boolean canReceiveFocus() {
+                return searchField != null && !searchField.isDisabled() && !paymentInProgress;
+            }
+
+            @Override
+            public boolean isScanTarget() {
+                return true;
+            }
+
+            @Override
+            public void onKeyboardInput(String input) {
+            }
+
+            @Override
+            public void onScanInput(String input) {
+                javafx.application.Platform.runLater(() -> {
+                    if (searchField != null) {
+                        searchField.setText(input);
+                        searchField.positionCaret(searchField.getText().length());
+                    }
+                });
+            }
+
+            @Override
+            public void onScanComplete(String input) {
+                javafx.application.Platform.runLater(() -> addScannedProductToCart(input));
+            }
+        };
     }
 
     /**

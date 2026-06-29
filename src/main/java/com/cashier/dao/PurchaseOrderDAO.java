@@ -288,6 +288,16 @@ public class PurchaseOrderDAO {
         }
     }
 
+    public static boolean updateStatusWithConnection(Connection conn, int id, String status) throws SQLException {
+        String sql = "UPDATE purchase_orders SET status = ?, update_time = ? WHERE id = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, status);
+            pstmt.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
+            pstmt.setInt(3, id);
+            return pstmt.executeUpdate() > 0;
+        }
+    }
+
     /**
      * 审批采购订单
      *
@@ -312,6 +322,32 @@ public class PurchaseOrderDAO {
             pstmt.setInt(6, id);
 
             return pstmt.executeUpdate() > 0;
+        }
+    }
+
+    public static boolean approvePendingWithConnection(Connection conn, int id, String approver,
+                                                        String approvalRemark, String status) throws SQLException {
+        String sql = "UPDATE purchase_orders SET status = ?, approver = ?, approval_time = ?, " +
+                     "approval_remark = ?, update_time = ? WHERE id = ? AND status = 'pending'";
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, status);
+            pstmt.setString(2, approver);
+            pstmt.setTimestamp(3, now);
+            pstmt.setString(4, approvalRemark);
+            pstmt.setTimestamp(5, now);
+            pstmt.setInt(6, id);
+            return pstmt.executeUpdate() > 0;
+        }
+    }
+
+    public static String findStatusForUpdate(Connection conn, int id) throws SQLException {
+        String sql = "SELECT status FROM purchase_orders WHERE id = ? FOR UPDATE";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next() ? rs.getString("status") : null;
+            }
         }
     }
 

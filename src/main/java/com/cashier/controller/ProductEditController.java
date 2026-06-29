@@ -347,7 +347,7 @@ public class ProductEditController {
                             }
 
                             // 添加成功，显示提示
-                            StatusBarManager.updateStatus("商品添加成功: " + product.name);
+                            StatusBarManager.updateSuccess("商品添加成功: " + product.name);
                             logger.info("商品添加成功: {} ({})", product.name, product.productCode);
 
                             // 显示成功提示
@@ -408,7 +408,7 @@ public class ProductEditController {
                             }
 
                             // 更新成功，显示提示
-                            StatusBarManager.updateStatus("商品更新成功: " + product.name);
+                            StatusBarManager.updateSuccess("商品更新成功: " + product.name);
                             logger.info("商品更新成功: {} ({})", product.name, product.productCode);
 
                             // 显示成功提示

@@ -569,6 +569,7 @@ public class ReturnOrderController {
     }
 
     private void showAlert(Alert.AlertType type, String title, String message) {
+        updateStatusForAlert(type, message);
         Alert alert = new Alert(type);
         alert.setTitle(title);
         alert.setHeaderText(null);
@@ -577,5 +578,15 @@ public class ReturnOrderController {
             com.cashier.i18n.I18nManager.getInstance().get("common.ok"), ButtonBar.ButtonData.OK_DONE);
         alert.getButtonTypes().setAll(okButton);
         alert.showAndWait();
+    }
+
+    private void updateStatusForAlert(Alert.AlertType type, String message) {
+        if (type == Alert.AlertType.ERROR) {
+            com.cashier.util.StatusBarManager.updateError(message);
+        } else if (type == Alert.AlertType.WARNING) {
+            com.cashier.util.StatusBarManager.updateWarning(message);
+        } else if (type == Alert.AlertType.INFORMATION) {
+            com.cashier.util.StatusBarManager.updateSuccess(message);
+        }
     }
 }

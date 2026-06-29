@@ -247,6 +247,17 @@ public abstract class DatabaseTestBase {
             )
             """);
 
+        stmt.execute("""
+            CREATE TABLE IF NOT EXISTS purchase_approvals (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                order_id INT NOT NULL,
+                approver VARCHAR(50) NOT NULL,
+                action VARCHAR(20) NOT NULL,
+                remark TEXT,
+                approval_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """);
+
         // 创建 purchase_inbound 表（采购入库）
         stmt.execute("""
             CREATE TABLE IF NOT EXISTS purchase_inbound (
@@ -449,6 +460,7 @@ public abstract class DatabaseTestBase {
             stmt.execute("DELETE FROM inventory_check");
             stmt.execute("DELETE FROM purchase_inbound_items");
             stmt.execute("DELETE FROM purchase_inbound");
+            stmt.execute("DELETE FROM purchase_approvals");
             stmt.execute("DELETE FROM purchase_order_items");
             stmt.execute("DELETE FROM purchase_orders");
             stmt.execute("DELETE FROM suppliers");

@@ -135,7 +135,7 @@ public class PrinterManager {
      */
     public void setDefaultPrinter(String deviceId) {
         PrinterDevice device = getDevice(deviceId);
-        if (device != null && device.isConnected()) {
+        if (device != null) {
             defaultPrinter = device;
             logger.info("设置默认打印机: {}", device.getDeviceName());
         } else {
@@ -156,7 +156,7 @@ public class PrinterManager {
      */
     public void startAllDevices() {
         for (PrinterDevice device : devices.values()) {
-            if (device.isConnected()) {
+            if (device.getStatus() != PrinterDeviceStatus.DISPOSED) {
                 device.start();
                 logger.info("启动打印设备: {}", device.getDeviceName());
             }
@@ -199,17 +199,14 @@ public class PrinterManager {
             return false;
         }
         
-        PrinterDevice printer = defaultPrinter;
-        if (printer == null) {
-            // 尝试使用第一个可用的打印机
-            List<PrinterDevice> connected = getConnectedDevices();
-            if (!connected.isEmpty()) {
-                printer = connected.get(0);
-            }
-        }
-        
+        task.markRunning();
+
+        PrinterDevice printer = selectAvailablePrinter();
         if (printer == null || !printer.isConnected()) {
-            logger.warn("没有可用的打印机");
+            String message = "没有可用的打印机";
+            task.markFailed(message);
+            addToHistory(task);
+            logger.warn(message);
             return false;
         }
         
@@ -218,19 +215,22 @@ public class PrinterManager {
         boolean success = printer.print(task);
         
         if (success) {
+            String postProcessFailure = executePostPrintActions(printer, task);
+            if (postProcessFailure != null) {
+                task.markFailed(postProcessFailure);
+                addToHistory(task);
+                logger.error("打印任务后处理失败: {} - {}", task.getTaskId(), postProcessFailure);
+                return false;
+            }
+
             // 打印后处理
-            if (task.isOpenCashDrawer()) {
-                printer.openCashDrawer();
-            }
-            if (task.isCutPaper()) {
-                printer.cutPaper();
-            }
-            
-            // 添加到历史记录
-            printHistory.add(task);
+            task.markSuccess();
+            addToHistory(task);
             
             logger.info("打印任务完成: {}", task.getTaskId());
         } else {
+            task.markFailed("打印设备执行失败: " + printer.getDeviceName());
+            addToHistory(task);
             logger.error("打印任务失败: {}", task.getTaskId());
         }
         
@@ -243,7 +243,9 @@ public class PrinterManager {
      */
     public void addPrintTask(PrintTask task) {
         if (task != null) {
-            taskQueue.add(task);
+            synchronized (taskQueue) {
+                taskQueue.add(task);
+            }
             logger.info("添加打印任务到队列: {}", task.getTaskName());
         }
     }
@@ -252,10 +254,15 @@ public class PrinterManager {
      * 处理队列中的所有打印任务
      */
     public void processQueue() {
-        while (!taskQueue.isEmpty()) {
-            PrintTask task = taskQueue.poll();
+        while (true) {
+            PrintTask task;
+            synchronized (taskQueue) {
+                task = taskQueue.poll();
+            }
             if (task != null) {
                 print(task);
+            } else {
+                break;
             }
         }
     }
@@ -265,14 +272,18 @@ public class PrinterManager {
      * @return 打印历史记录
      */
     public List<PrintTask> getPrintHistory() {
-        return new ArrayList<>(printHistory);
+        synchronized (printHistory) {
+            return new ArrayList<>(printHistory);
+        }
     }
     
     /**
      * 清空打印历史
      */
     public void clearPrintHistory() {
-        printHistory.clear();
+        synchronized (printHistory) {
+            printHistory.clear();
+        }
         logger.info("清空打印历史");
     }
     
@@ -281,8 +292,9 @@ public class PrinterManager {
      * @return 是否成功
      */
     public boolean openCashDrawer() {
-        if (defaultPrinter != null && defaultPrinter.isConnected()) {
-            return defaultPrinter.openCashDrawer();
+        PrinterDevice printer = selectAvailablePrinter();
+        if (printer != null && printer.isConnected()) {
+            return printer.openCashDrawer();
         }
         logger.warn("没有可用的默认打印机");
         return false;
@@ -295,10 +307,7 @@ public class PrinterManager {
     public List<PrinterStatus> checkAllStatus() {
         List<PrinterStatus> statuses = new ArrayList<>();
         for (PrinterDevice device : devices.values()) {
-            if (device.isConnected()) {
-                PrinterStatus status = device.checkStatus();
-                statuses.add(status);
-            }
+            statuses.add(device.checkStatus());
         }
         return statuses;
     }
@@ -308,7 +317,7 @@ public class PrinterManager {
      * @return 打印机状态
      */
     public PrinterStatus checkDefaultStatus() {
-        if (defaultPrinter != null && defaultPrinter.isConnected()) {
+        if (defaultPrinter != null) {
             return defaultPrinter.checkStatus();
         }
         return null;
@@ -323,9 +332,59 @@ public class PrinterManager {
             device.dispose();
         }
         devices.clear();
-        taskQueue.clear();
-        printHistory.clear();
+        synchronized (taskQueue) {
+            taskQueue.clear();
+        }
+        synchronized (printHistory) {
+            printHistory.clear();
+        }
         defaultPrinter = null;
         logger.info("打印设备管理器已销毁");
+    }
+
+    private PrinterDevice selectAvailablePrinter() {
+        if (ensurePrinterReady(defaultPrinter)) {
+            return defaultPrinter;
+        }
+
+        for (PrinterDevice device : devices.values()) {
+            if (ensurePrinterReady(device)) {
+                return device;
+            }
+        }
+
+        return null;
+    }
+
+    private boolean ensurePrinterReady(PrinterDevice printer) {
+        if (printer == null || printer.getStatus() == PrinterDeviceStatus.DISPOSED) {
+            return false;
+        }
+
+        if (printer.isConnected()) {
+            return true;
+        }
+
+        boolean started = printer.start();
+        if (!started) {
+            logger.warn("打印设备启动失败: {} ({})", printer.getDeviceName(), printer.getDeviceId());
+        }
+        return started && printer.isConnected();
+    }
+
+    private String executePostPrintActions(PrinterDevice printer, PrintTask task) {
+        if (task.isOpenCashDrawer() && !printer.openCashDrawer()) {
+            return "打开钱箱失败";
+        }
+        if (task.isCutPaper() && !printer.cutPaper()) {
+            return "切纸失败";
+        }
+        return null;
+    }
+
+    private void addToHistory(PrintTask task) {
+        synchronized (printHistory) {
+            printHistory.add(task);
+        }
     }
 }

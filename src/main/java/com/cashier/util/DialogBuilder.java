@@ -245,6 +245,8 @@ public class DialogBuilder {
             return ButtonType.CANCEL;
         }
 
+        updateStatusBarForAlert();
+
         I18nManager i18n = I18nManager.getInstance();
 
         Alert alert = new Alert(alertType);
@@ -355,6 +357,18 @@ public class DialogBuilder {
     public boolean showAndGetConfirm() {
         ButtonType result = showAndWait();
         return ButtonType.OK.equals(result);
+    }
+
+    private void updateStatusBarForAlert() {
+        if (contentText == null || contentText.isBlank()) {
+            return;
+        }
+
+        if (alertType == Alert.AlertType.ERROR) {
+            StatusBarManager.updateError(contentText);
+        } else if (alertType == Alert.AlertType.WARNING) {
+            StatusBarManager.updateWarning(contentText);
+        }
     }
 
     /**

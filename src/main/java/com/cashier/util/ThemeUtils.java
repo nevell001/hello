@@ -28,6 +28,14 @@ public final class ThemeUtils {
         }
         String themeName = DataService.loadThemePreference(username);
         addStylesheet(scene, resourceClass, "/css/" + themeName + "-theme.css");
+
+        String fontSize = DataService.loadFontSizePreference(username);
+        if (!java.util.Set.of("small", "medium", "large", "extra-large").contains(fontSize)) {
+            fontSize = "medium";
+        }
+        scene.getRoot().getStyleClass().removeAll(
+            "font-size-small", "font-size-medium", "font-size-large", "font-size-extra-large");
+        scene.getRoot().getStyleClass().add("font-size-" + fontSize);
     }
 
     private static void addStylesheet(Scene scene, Class<?> resourceClass, String path) {

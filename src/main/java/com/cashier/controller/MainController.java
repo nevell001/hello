@@ -76,6 +76,12 @@ public class MainController {
     private TabPane tabPane;
 
     @FXML
+    private MenuItem dataBackupItem;
+
+    @FXML
+    private MenuItem dataRestoreItem;
+
+    @FXML
     private Button inventoryBtn;
 
     @FXML
@@ -164,6 +170,10 @@ private Button shiftBtn;
 
         // 绑定状态栏到 StatusBarManager
         statusLabel.textProperty().bind(StatusBarManager.statusProperty());
+        StatusBarManager.statusLevelProperty().addListener((obs, oldLevel, newLevel) ->
+            applyStatusLevelStyle(newLevel)
+        );
+        applyStatusLevelStyle(StatusBarManager.getStatusLevel());
 
         // 更新状态
         StatusBarManager.updateStatus("就绪");
@@ -175,6 +185,20 @@ private Button shiftBtn;
 
         // 设置快捷键
         setupShortcuts();
+    }
+
+    private void applyStatusLevelStyle(StatusBarManager.StatusLevel level) {
+        statusLabel.getStyleClass().removeAll("text-success", "text-warning", "text-danger");
+
+        StatusBarManager.StatusLevel nextLevel = level != null ? level : StatusBarManager.StatusLevel.NORMAL;
+        switch (nextLevel) {
+            case SUCCESS -> statusLabel.getStyleClass().add("text-success");
+            case WARNING -> statusLabel.getStyleClass().add("text-warning");
+            case ERROR -> statusLabel.getStyleClass().add("text-danger");
+            case NORMAL -> {
+                // 默认状态只保留 status-text
+            }
+        }
     }
 
     /**
@@ -323,15 +347,67 @@ private Button shiftBtn;
             currentUserLabel.setText(displayName + " (" + roleDisplayName + ")");
             userNameLabel.setText(displayName);
             userRoleLabel.setText(roleDisplayName);
-            boolean admin = "admin".equals(user.role);
-            auditLogBtn.setVisible(admin);
-            auditLogBtn.setManaged(admin);
+            configurePermissions();
 
             // 设置头像（显示用户名的首字母）
             if (displayName != null && !displayName.isEmpty()) {
                 avatarLabel.setText(displayName.substring(0, 1).toUpperCase());
             }
         }
+
+    private void configurePermissions() {
+        setButtonAccess(cartBtn, User.PERMISSION_CHECKOUT);
+        setButtonAccess(checkoutBtn, User.PERMISSION_CHECKOUT);
+        setButtonAccess(shiftBtn, User.PERMISSION_MANAGE_SHIFT);
+        setButtonAccess(inventoryBtn, User.PERMISSION_VIEW_INVENTORY);
+        setButtonAccess(inventoryCheckBtn, User.PERMISSION_MANAGE_INVENTORY);
+        setButtonAccess(membersBtn, User.PERMISSION_MANAGE_MEMBERS);
+        setButtonAccess(returnOrderBtn, User.PERMISSION_MANAGE_RETURNS);
+        setButtonAccess(supplierBtn, User.PERMISSION_MANAGE_PURCHASE);
+        setButtonAccess(purchaseOrderBtn, User.PERMISSION_MANAGE_PURCHASE);
+        setButtonAccess(purchaseApprovalBtn, User.PERMISSION_MANAGE_PURCHASE);
+        setButtonAccess(purchaseInboundBtn, User.PERMISSION_MANAGE_PURCHASE);
+        setButtonAccess(transactionsBtn, User.PERMISSION_VIEW_TRANSACTIONS);
+        setButtonAccess(statisticsBtn, User.PERMISSION_VIEW_REPORTS);
+        setButtonAccess(promotionsBtn, User.PERMISSION_MANAGE_PROMOTIONS);
+        setButtonAccess(purchaseReportBtn, User.PERMISSION_VIEW_REPORTS);
+        setButtonAccess(inventoryReportBtn, User.PERMISSION_VIEW_REPORTS);
+        setButtonAccess(profitReportBtn, User.PERMISSION_VIEW_REPORTS);
+        setButtonAccess(returnReportBtn, User.PERMISSION_VIEW_REPORTS);
+        setButtonAccess(userManagementBtn, User.PERMISSION_MANAGE_USERS);
+        setButtonAccess(returnApprovalBtn, User.PERMISSION_APPROVE_RETURNS);
+        setButtonAccess(settingsBtn, User.PERMISSION_MANAGE_SETTINGS);
+        setButtonAccess(auditLogBtn, User.PERMISSION_VIEW_AUDIT);
+
+        boolean canBackup = hasPermission(User.PERMISSION_BACKUP_RESTORE);
+        if (dataBackupItem != null) {
+            dataBackupItem.setVisible(canBackup);
+        }
+        if (dataRestoreItem != null) {
+            dataRestoreItem.setVisible(canBackup);
+        }
+    }
+
+    private void setButtonAccess(Button button, String permission) {
+        if (button == null) {
+            return;
+        }
+        boolean allowed = hasPermission(permission);
+        button.setVisible(allowed);
+        button.setManaged(allowed);
+    }
+
+    private boolean hasPermission(String permission) {
+        return currentUser != null && currentUser.hasPermission(permission);
+    }
+
+    private boolean requirePermission(String permission) {
+        if (hasPermission(permission)) {
+            return true;
+        }
+        showError(I18nManager.getInstance().get("permission.access_denied"));
+        return false;
+    }
     /**
      * 启动时间更新
      */
@@ -489,6 +565,7 @@ private Button shiftBtn;
 
     @FXML
     public void handleUserManagement() {
+        if (!requirePermission(User.PERMISSION_MANAGE_USERS)) return;
         updateStatus("用户管理");
         setActiveButton(userManagementBtn);
         
@@ -511,6 +588,7 @@ private Button shiftBtn;
 
     @FXML
     public void handleDataBackup() {
+        if (!requirePermission(User.PERMISSION_BACKUP_RESTORE)) return;
         updateStatus("数据备份");
         
         try {
@@ -529,6 +607,7 @@ private Button shiftBtn;
     
     @FXML
     public void handleDataRestore() {
+        if (!requirePermission(User.PERMISSION_BACKUP_RESTORE)) return;
         updateStatus("数据恢复");
         
         // 列出可用的备份目录
@@ -581,6 +660,7 @@ private Button shiftBtn;
         });
     }    @FXML
     public void handleExportData() {
+        if (!requirePermission(User.PERMISSION_EXPORT_DATA)) return;
         updateStatus("导出数据");
         FXUtils.showInfoAlert("开发中", "导出数据功能正在开发中...");
     }
@@ -695,6 +775,7 @@ private Button shiftBtn;
 
     @FXML
     public void handleInventory() {
+        if (!requirePermission(User.PERMISSION_VIEW_INVENTORY)) return;
         updateStatus("商品管理");
         setActiveButton(inventoryBtn);
         
@@ -717,6 +798,7 @@ private Button shiftBtn;
 
     @FXML
     public void handleCart() {
+        if (!requirePermission(User.PERMISSION_CHECKOUT)) return;
         updateStatus("POS");
         setActiveButton(cartBtn);
 
@@ -737,6 +819,7 @@ private Button shiftBtn;
             // 获取控制器
             CartController controller = loader.getController();
             controller.setCurrentUser(currentUser);
+            root.getProperties().put("controller", controller);
             logger.debug("MainController: 获取控制器成功");
 
             // 创建内容标签页
@@ -755,6 +838,7 @@ private Button shiftBtn;
 
     @FXML
     public void handleCheckout() {
+        if (!requirePermission(User.PERMISSION_CHECKOUT)) return;
         updateStatus("POS");
         setActiveButton(checkoutBtn);
         
@@ -771,6 +855,8 @@ private Button shiftBtn;
             
             // 获取控制器
             CartController controller = loader.getController();
+            controller.setCurrentUser(currentUser);
+            root.getProperties().put("controller", controller);
             
             // 创建内容标签页
             createContentTab(title, root);
@@ -799,6 +885,7 @@ private Button shiftBtn;
 
     @FXML
     public void handleTransactions() {
+        if (!requirePermission(User.PERMISSION_VIEW_TRANSACTIONS)) return;
         updateStatus("交易记录");
         setActiveButton(transactionsBtn);
 
@@ -820,6 +907,7 @@ private Button shiftBtn;
 
     @FXML
     public void handleMembers() {
+        if (!requirePermission(User.PERMISSION_MANAGE_MEMBERS)) return;
         updateStatus("会员管理");
         setActiveButton(membersBtn);
         
@@ -841,6 +929,7 @@ private Button shiftBtn;
 
     @FXML
     public void handleSupplier() {
+        if (!requirePermission(User.PERMISSION_MANAGE_PURCHASE)) return;
         updateStatus("供应商管理");
         setActiveButton(supplierBtn);
 
@@ -862,6 +951,7 @@ private Button shiftBtn;
 
     @FXML
     public void handlePurchaseOrder() {
+        if (!requirePermission(User.PERMISSION_MANAGE_PURCHASE)) return;
         updateStatus("采购订单");
         setActiveButton(purchaseOrderBtn);
 
@@ -883,6 +973,7 @@ private Button shiftBtn;
 
     @FXML
     public void handlePurchaseApproval() {
+        if (!requirePermission(User.PERMISSION_MANAGE_PURCHASE)) return;
         updateStatus("采购审批");
         setActiveButton(purchaseApprovalBtn);
 
@@ -905,6 +996,7 @@ private Button shiftBtn;
 
     @FXML
     public void handlePurchaseInbound() {
+        if (!requirePermission(User.PERMISSION_MANAGE_PURCHASE)) return;
         updateStatus("采购入库");
         setActiveButton(purchaseInboundBtn);
 
@@ -927,6 +1019,7 @@ private Button shiftBtn;
 
     @FXML
     public void handleInventoryCheck() {
+        if (!requirePermission(User.PERMISSION_MANAGE_INVENTORY)) return;
         updateStatus("库存盘点");
         setActiveButton(inventoryCheckBtn);
 
@@ -948,6 +1041,7 @@ private Button shiftBtn;
 
     @FXML
     public void handleStatistics() {
+        if (!requirePermission(User.PERMISSION_VIEW_REPORTS)) return;
         updateStatus("数据统计");
         setActiveButton(statisticsBtn);
 
@@ -969,6 +1063,7 @@ private Button shiftBtn;
 
     @FXML
     public void handleInventoryAlert() {
+        if (!requirePermission(User.PERMISSION_VIEW_INVENTORY)) return;
         updateStatus("库存预警");
         setActiveButton(inventoryReportBtn);
 
@@ -1008,6 +1103,7 @@ private Button shiftBtn;
 
     @FXML
     public void handlePurchaseReport() {
+        if (!requirePermission(User.PERMISSION_VIEW_REPORTS)) return;
         updateStatus("采购报表");
         setActiveButton(purchaseReportBtn);
 
@@ -1029,6 +1125,7 @@ private Button shiftBtn;
 
     @FXML
     public void handleInventoryReport() {
+        if (!requirePermission(User.PERMISSION_VIEW_REPORTS)) return;
         updateStatus("库存报表");
         setActiveButton(inventoryReportBtn);
 
@@ -1050,6 +1147,7 @@ private Button shiftBtn;
 
     @FXML
     public void handleProfitReport() {
+        if (!requirePermission(User.PERMISSION_VIEW_REPORTS)) return;
         updateStatus("利润分析");
         setActiveButton(profitReportBtn);
 
@@ -1071,6 +1169,7 @@ private Button shiftBtn;
 
     @FXML
     public void handleReturnReport() {
+        if (!requirePermission(User.PERMISSION_VIEW_REPORTS)) return;
         updateStatus("退货报表");
         setActiveButton(returnReportBtn);
 
@@ -1092,6 +1191,7 @@ private Button shiftBtn;
 
     @FXML
     public void handlePromotions() {
+        if (!requirePermission(User.PERMISSION_MANAGE_PROMOTIONS)) return;
         updateStatus("促销管理");
         setActiveButton(promotionsBtn);
 
@@ -1113,6 +1213,7 @@ private Button shiftBtn;
 
     @FXML
     public void handleShift() {
+        if (!requirePermission(User.PERMISSION_MANAGE_SHIFT)) return;
         updateStatus("交接班");
         setActiveButton(shiftBtn);
 
@@ -1140,6 +1241,7 @@ private Button shiftBtn;
 
     @FXML
     public void handleSettings() {
+        if (!requirePermission(User.PERMISSION_MANAGE_SETTINGS)) return;
         updateStatus("系统设置");
         setActiveButton(settingsBtn);
 
@@ -1167,10 +1269,7 @@ private Button shiftBtn;
 
     @FXML
     public void handleAuditLogs() {
-        if (currentUser == null || !"admin".equals(currentUser.role)) {
-            showError(I18nManager.getInstance().get("audit.access_denied"));
-            return;
-        }
+        if (!requirePermission(User.PERMISSION_VIEW_AUDIT)) return;
         updateStatus(I18nManager.getInstance().get("nav.audit_logs"));
         setActiveButton(auditLogBtn);
         try {
@@ -1189,6 +1288,7 @@ private Button shiftBtn;
 
     @FXML
     public void handleReturnOrder() {
+        if (!requirePermission(User.PERMISSION_MANAGE_RETURNS)) return;
         updateStatus("退货订单");
         setActiveButton(returnOrderBtn);
 
@@ -1207,6 +1307,7 @@ private Button shiftBtn;
 
     @FXML
     public void handleReturnApproval() {
+        if (!requirePermission(User.PERMISSION_APPROVE_RETURNS)) return;
         updateStatus("退货审批");
         setActiveButton(returnApprovalBtn);
 
@@ -1233,12 +1334,24 @@ private Button shiftBtn;
         Label closeButton = new Label("×");
         closeButton.getStyleClass().add("custom-tab-close");
         closeButton.setOnMouseClicked(event -> {
+            disposeTabContent(tab);
             // 从标签面板中移除标签页
             tabPane.getTabs().remove(tab);
             // 从打开的标签页映射中移除
             openTabs.values().remove(tab);
         });
         return closeButton;
+    }
+
+    private void disposeTabContent(Tab tab) {
+        if (tab == null || tab.getContent() == null) {
+            return;
+        }
+
+        Object controller = tab.getContent().getProperties().get("controller");
+        if (controller instanceof CartController cartController) {
+            cartController.dispose();
+        }
     }
 
     /**
@@ -1360,6 +1473,7 @@ private Button shiftBtn;
 
             // 添加标签页关闭事件
             tab.setOnClosed(event -> {
+                disposeTabContent(tab);
                 openTabs.remove(title);
             });
 
@@ -1669,6 +1783,7 @@ private Button shiftBtn;
         
     
                     private void showError(String message) {
+                        com.cashier.util.StatusBarManager.updateError(message);
     
         
     

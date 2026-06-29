@@ -221,6 +221,8 @@ public class InventoryCheckController {
         InventoryCheck selected = checkTable.getSelectionModel().getSelectedItem();
         if (selected != null) {
             showCheckDialog(selected);
+        } else {
+            showWarning(I18nManager.getInstance().get("runtime.select_inventory_check"));
         }
     }
 
@@ -745,6 +747,8 @@ public class InventoryCheckController {
                     showError(I18nManager.getInstance().get("runtime.inventory_check_delete_failed", e.getMessage()));
                 }
             }
+        } else {
+            showWarning(I18nManager.getInstance().get("runtime.select_inventory_check"));
         }
     }
 
@@ -756,6 +760,8 @@ public class InventoryCheckController {
         InventoryCheck selected = checkTable.getSelectionModel().getSelectedItem();
         if (selected != null) {
             showCheckDetailDialog(selected);
+        } else {
+            showWarning(I18nManager.getInstance().get("runtime.select_inventory_check"));
         }
     }
 
@@ -871,6 +877,8 @@ public class InventoryCheckController {
                     showError(I18nManager.getInstance().get("runtime.inventory_check_complete_failed", e.getMessage()));
                 }
             }
+        } else {
+            showWarning(I18nManager.getInstance().get("runtime.select_inventory_check"));
         }
     }
 
@@ -924,7 +932,7 @@ public class InventoryCheckController {
      * @param status 状态文本
      */
     private void updateStatus(String status) {
-        StatusBarManager.updateStatus(status);
+        StatusBarManager.updateSuccess(status);
     }
 
     /**
@@ -932,10 +940,16 @@ public class InventoryCheckController {
      * @param message 错误消息
      */
     private void showError(String message) {
+        com.cashier.util.StatusBarManager.updateError(message);
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(I18nManager.getInstance().get("label.error"));
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    private void showWarning(String message) {
+        com.cashier.util.FXUtils.showWarningAlert(
+            I18nManager.getInstance().get("common.warning"), message);
     }
 }

@@ -800,6 +800,7 @@ try {
      * @param message 错误消息
      */
     private void showError(String message) {
+        com.cashier.util.StatusBarManager.updateError(message);
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(I18nManager.getInstance().get("label.error"));
         alert.setHeaderText(null);
@@ -812,6 +813,7 @@ try {
      * @param message 成功消息
      */
     private void showSuccess(String message) {
+        com.cashier.util.StatusBarManager.updateSuccess(message);
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(I18nManager.getInstance().get("label.success"));
         alert.setHeaderText(null);

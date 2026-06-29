@@ -5,6 +5,7 @@ import com.cashier.util.LoggerFactoryUtil;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * 扫描设备管理器
@@ -44,7 +45,7 @@ public class ScannerManager {
      */
     private ScannerManager() {
         this.devices = new ConcurrentHashMap<>();
-        this.globalListeners = new ArrayList<>();
+        this.globalListeners = new CopyOnWriteArrayList<>();
         this.focusManager = new FocusManager();
     }
     
@@ -139,7 +140,7 @@ public class ScannerManager {
      */
     public void setActiveDevice(String deviceId) {
         ScannerDevice device = getDevice(deviceId);
-        if (device != null && device.isConnected()) {
+        if (device != null && device.getStatus() != ScannerDeviceStatus.DISPOSED) {
             activeDevice = device;
             logger.info("设置活跃扫描设备: {}", device.getDeviceName());
         } else {
@@ -160,7 +161,7 @@ public class ScannerManager {
      */
     public void startAllDevices() {
         for (ScannerDevice device : devices.values()) {
-            if (device.isConnected()) {
+            if (device.getStatus() != ScannerDeviceStatus.DISPOSED) {
                 device.start();
                 logger.info("启动扫描设备: {}", device.getDeviceName());
             }
@@ -210,6 +211,15 @@ public class ScannerManager {
      * @param event 扫描事件
      */
     private void onScanEvent(ScanEvent event) {
+        if (event == null) {
+            logger.warn("收到空扫描事件");
+            return;
+        }
+
+        if (event.isSuccess() && event.getData() != null && !event.getData().isBlank()) {
+            focusManager.dispatchScan(event.getData());
+        }
+
         logger.info("收到扫描事件: {}", event.getData());
         
         // 通知所有全局监听器
@@ -233,6 +243,7 @@ public class ScannerManager {
         devices.clear();
         globalListeners.clear();
         activeDevice = null;
+        focusManager = new FocusManager();
         logger.info("扫描设备管理器已销毁");
     }
 }

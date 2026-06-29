@@ -172,13 +172,23 @@ public class PaymentApiController {
                 notifyData.put("total_amount", params.containsKey("total_amount") ? params.get("total_amount").get(0) : "0");
             }
             
+            if (ctx.formParam("mock_signature") != null) {
+                notifyData.put("mock_signature", ctx.formParam("mock_signature"));
+            }
             boolean success = PaymentService.handlePaymentNotify(channel, notifyData);
             
             // 返回响应
-            if (channel == PaymentOrder.PaymentChannel.WECHAT) {
+            if (!success) {
+                ctx.status(400);
+            }
+            if (channel == PaymentOrder.PaymentChannel.WECHAT && success) {
                 ctx.result("<xml><return_code><![CDATA[SUCCESS]]></return_code></xml>");
-            } else {
+            } else if (channel == PaymentOrder.PaymentChannel.WECHAT) {
+                ctx.result("<xml><return_code><![CDATA[FAIL]]></return_code></xml>");
+            } else if (success) {
                 ctx.result("success");
+            } else {
+                ctx.result("fail");
             }
             
         } catch (Exception e) {

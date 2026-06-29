@@ -229,6 +229,29 @@ public class PurchaseOrderItemDAO {
         }
     }
 
+    public static boolean increaseInboundQuantityWithConnection(Connection conn, int id, int delta) throws SQLException {
+        String sql = "UPDATE purchase_order_items SET inbound_quantity = inbound_quantity + ? " +
+                     "WHERE id = ? AND ? > 0 AND inbound_quantity + ? <= quantity";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, delta);
+            pstmt.setInt(2, id);
+            pstmt.setInt(3, delta);
+            pstmt.setInt(4, delta);
+            return pstmt.executeUpdate() > 0;
+        }
+    }
+
+    public static boolean areAllInboundWithConnection(Connection conn, int orderId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM purchase_order_items " +
+                     "WHERE order_id = ? AND inbound_quantity < quantity";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, orderId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next() && rs.getInt(1) == 0;
+            }
+        }
+    }
+
     /**
      * 删除采购订单明细
      *

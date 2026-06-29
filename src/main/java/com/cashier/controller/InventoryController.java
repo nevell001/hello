@@ -8,6 +8,7 @@ import com.cashier.dao.UnitDAO;
 import com.cashier.model.Category;
 import com.cashier.model.Product;
 import com.cashier.model.Unit;
+import com.cashier.model.User;
 import com.cashier.util.FXMLUtils;
 import com.cashier.util.StatusBarManager;
 import com.cashier.util.FormValidator;
@@ -249,6 +250,7 @@ public class InventoryController extends BaseController<Product> {
 
     @FXML
     public void handleAddProduct() {
+        if (!requireInventoryManagement()) return;
         showEditDialog(null);
     }
 
@@ -262,9 +264,12 @@ public class InventoryController extends BaseController<Product> {
 
     @FXML
     public void handleEditProduct() {
+        if (!requireInventoryManagement()) return;
         Product selected = getSelectedItem(inventoryTable);
         if (selected != null) {
             showEditDialog(selected);
+        } else {
+            showWarning(i18n.get("runtime.select_product_first"));
         }
     }
 
@@ -278,8 +283,12 @@ public class InventoryController extends BaseController<Product> {
 
     @FXML
     public void handleDeleteProduct() {
+        if (!requireInventoryManagement()) return;
         ObservableList<Product> selected = getSelectedItems(inventoryTable);
-        if (selected.isEmpty()) return;
+        if (selected.isEmpty()) {
+            showWarning(i18n.get("runtime.select_product_first"));
+            return;
+        }
 
         if (selected.size() == 1) {
             Product product = selected.get(0);
@@ -287,7 +296,7 @@ public class InventoryController extends BaseController<Product> {
                 try {
                     if (productDAO.delete(product.id)) {
                         loadTableData();
-                        StatusBarManager.updateStatus("商品删除成功: " + product.name);
+                        StatusBarManager.updateSuccess("商品删除成功: " + product.name);
                     }
                 } catch (SQLException e) {
                     logger.error("删除商品失败", e);
@@ -318,6 +327,7 @@ public class InventoryController extends BaseController<Product> {
      */
     @Override
     protected boolean showEditDialog(Product item) {
+        if (!requireInventoryManagement()) return false;
         try {
             FXMLLoader loader = FXMLUtils.loadFXMLLoader("/com/cashier/view/ProductEditView.fxml");
             VBox root = loader.load();
@@ -341,7 +351,7 @@ public class InventoryController extends BaseController<Product> {
 
             if (controller.isOkClicked()) {
                 loadTableData();
-                StatusBarManager.updateStatus(item == null ? "商品添加成功" : "商品更新成功");
+                StatusBarManager.updateSuccess(item == null ? "商品添加成功" : "商品更新成功");
                 return true;
             }
         } catch (IOException e) {
@@ -355,6 +365,7 @@ public class InventoryController extends BaseController<Product> {
      */
     @FXML
     public void handleRestock() {
+        if (!requireInventoryManagement()) return;
         Product selected = getSelectedItem(inventoryTable);
         if (selected != null) {
             try {
@@ -380,7 +391,7 @@ public class InventoryController extends BaseController<Product> {
 
                 if (controller.isOkClicked()) {
                     loadTableData();
-                    StatusBarManager.updateStatus("快速入库成功: " + selected.name + " (+" + controller.getRestockQuantity() + ")");
+                    StatusBarManager.updateSuccess("快速入库成功: " + selected.name + " (+" + controller.getRestockQuantity() + ")");
                     com.cashier.service.AuditService.success(currentUsername, "INVENTORY", "QUICK_RESTOCK",
                         "商品=" + selected.name + ", 数量=" + controller.getRestockQuantity(),
                         controller.getRestockQuantity());
@@ -388,6 +399,8 @@ public class InventoryController extends BaseController<Product> {
             } catch (IOException e) {
                 showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
             }
+        } else {
+            showWarning(i18n.get("runtime.select_product_first"));
         }
     }
 
@@ -428,7 +441,7 @@ public class InventoryController extends BaseController<Product> {
     @FXML
     public void handleRefresh() {
         loadTableData();
-        StatusBarManager.updateStatus("商品列表已刷新");
+        StatusBarManager.updateSuccess("商品列表已刷新");
     }
 
     /**
@@ -458,6 +471,7 @@ public class InventoryController extends BaseController<Product> {
      */
     @FXML
     public void handleCategoryManagement() {
+        if (!requireInventoryManagement()) return;
         showCategoryManagementDialog();
     }
 
@@ -508,11 +522,19 @@ public class InventoryController extends BaseController<Product> {
         addBtn.setOnAction(event -> showAddCategoryDialog(categoryList));
         editBtn.setOnAction(event -> {
             Category sel = categoryTable.getSelectionModel().getSelectedItem();
-            if (sel != null) showEditCategoryDialog(sel, categoryList);
+            if (sel != null) {
+                showEditCategoryDialog(sel, categoryList);
+            } else {
+                showWarning(i18n.get("runtime.select_product_first"));
+            }
         });
         deleteBtn.setOnAction(event -> {
             Category sel = categoryTable.getSelectionModel().getSelectedItem();
-            if (sel != null) showDeleteCategoryDialog(sel, categoryList);
+            if (sel != null) {
+                showDeleteCategoryDialog(sel, categoryList);
+            } else {
+                showWarning(i18n.get("runtime.select_product_first"));
+            }
         });
 
         VBox content = new VBox(10);
@@ -621,6 +643,7 @@ public class InventoryController extends BaseController<Product> {
      */
     @FXML
     public void handleUnitManagement() {
+        if (!requireInventoryManagement()) return;
         showUnitManagementDialog();
     }
 
@@ -664,11 +687,19 @@ public class InventoryController extends BaseController<Product> {
         addBtn.setOnAction(event -> showAddUnitDialog(unitList));
         editBtn.setOnAction(event -> {
             Unit sel = unitTable.getSelectionModel().getSelectedItem();
-            if (sel != null) showEditUnitDialog(sel, unitList);
+            if (sel != null) {
+                showEditUnitDialog(sel, unitList);
+            } else {
+                showWarning(i18n.get("runtime.select_product_first"));
+            }
         });
         deleteBtn.setOnAction(event -> {
             Unit sel = unitTable.getSelectionModel().getSelectedItem();
-            if (sel != null) showDeleteUnitDialog(sel, unitList);
+            if (sel != null) {
+                showDeleteUnitDialog(sel, unitList);
+            } else {
+                showWarning(i18n.get("runtime.select_product_first"));
+            }
         });
 
         VBox content = new VBox(10);
@@ -775,8 +806,23 @@ public class InventoryController extends BaseController<Product> {
     }
 
     private String currentUsername;
+    private User currentUser;
 
-    public void setCurrentUser(com.cashier.model.User user) {
+    public void setCurrentUser(User user) {
+        currentUser = user;
         currentUsername = user == null ? null : user.username;
+        boolean canManage = user != null && user.hasPermission(User.PERMISSION_MANAGE_INVENTORY);
+        for (Button button : List.of(addButton, editButton, deleteButton, restockButton, categoryButton, unitButton)) {
+            button.setVisible(canManage);
+            button.setManaged(canManage);
+        }
+    }
+
+    private boolean requireInventoryManagement() {
+        if (currentUser != null && currentUser.hasPermission(User.PERMISSION_MANAGE_INVENTORY)) {
+            return true;
+        }
+        showError(i18n.get("permission.access_denied"));
+        return false;
     }
 }

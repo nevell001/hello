@@ -825,6 +825,8 @@ public class ProfitReportController {
                 );
 
                 if (filePath != null) {
+                    com.cashier.util.StatusBarManager.updateSuccess(
+                        com.cashier.i18n.I18nManager.getInstance().get("success.export"));
                     Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
                     successAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("success.export"));
                     successAlert.setHeaderText(null);
@@ -892,6 +894,8 @@ public class ProfitReportController {
                 );
 
                 if (filePath != null) {
+                    com.cashier.util.StatusBarManager.updateSuccess(
+                        com.cashier.i18n.I18nManager.getInstance().get("success.export"));
                     Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
                     successAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("success.export"));
                     successAlert.setHeaderText(null);
@@ -960,6 +964,8 @@ public class ProfitReportController {
                 );
 
                 if (filePath != null) {
+                    com.cashier.util.StatusBarManager.updateSuccess(
+                        com.cashier.i18n.I18nManager.getInstance().get("success.export"));
                     Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
                     successAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("success.export"));
                     successAlert.setHeaderText(null);
@@ -980,6 +986,7 @@ public class ProfitReportController {
      * 显示错误信息
      */
     private void showError(String message) {
+        com.cashier.util.StatusBarManager.updateError(message);
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(I18nManager.getInstance().get("label.error"));
         alert.setHeaderText(null);

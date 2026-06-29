@@ -211,6 +211,8 @@ public class PromotionController {
         Promotion selected = promotionTable.getSelectionModel().getSelectedItem();
         if (selected != null) {
             showPromotionDialog(selected);
+        } else {
+            showWarning(I18nManager.getInstance().get("runtime.select_promotion"));
         }
     }
 
@@ -360,11 +362,14 @@ public class PromotionController {
                 event.consume();
             } catch (IllegalArgumentException e) {
                 logger.info("促销数据验证失败: {}", e.getMessage());
+                StatusBarManager.updateWarning(e.getMessage());
                 errorLabel.setText(e.getMessage());
                 event.consume();
             } catch (Exception e) {
                 logger.error("保存促销失败", e);
-                errorLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_save_validation_error", e.getMessage()));
+                String message = com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_save_validation_error", e.getMessage());
+                StatusBarManager.updateError(message);
+                errorLabel.setText(message);
                 event.consume();
             }
         });
@@ -634,8 +639,18 @@ public class PromotionController {
      * 显示警告对话框
      */
     private void showAlert(String title, String message) {
+        StatusBarManager.updateWarning(message);
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private void showWarning(String message) {
+        StatusBarManager.updateWarning(message);
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle(I18nManager.getInstance().get("common.warning"));
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
@@ -648,6 +663,7 @@ public class PromotionController {
     public void handleDeletePromotion() {
         List<Promotion> selected = promotionTable.getSelectionModel().getSelectedItems();
         if (selected.isEmpty()) {
+            showWarning(I18nManager.getInstance().get("runtime.select_promotion"));
             return;
         }
 
@@ -670,6 +686,10 @@ public class PromotionController {
     @FXML
     public void handleEnablePromotion() {
         List<Promotion> selected = promotionTable.getSelectionModel().getSelectedItems();
+        if (selected.isEmpty()) {
+            showWarning(I18nManager.getInstance().get("runtime.select_promotion"));
+            return;
+        }
         for (Promotion p : selected) {
             p.enabled = true;
         }
@@ -684,6 +704,10 @@ public class PromotionController {
     @FXML
     public void handleDisablePromotion() {
         List<Promotion> selected = promotionTable.getSelectionModel().getSelectedItems();
+        if (selected.isEmpty()) {
+            showWarning(I18nManager.getInstance().get("runtime.select_promotion"));
+            return;
+        }
         for (Promotion p : selected) {
             p.enabled = false;
         }
@@ -752,7 +776,7 @@ public class PromotionController {
      * @param status 状态文本
      */
     private void updateStatus(String status) {
-        StatusBarManager.updateStatus(status);
+        StatusBarManager.updateSuccess(status);
     }
 
     /**

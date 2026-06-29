@@ -2,7 +2,9 @@ package com.cashier.util;
 
 import com.cashier.i18n.I18nManager;
 import javafx.application.Platform;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.StringProperty;
 
 import java.util.Map;
@@ -12,6 +14,13 @@ import java.util.Map;
  * 提供全局的状态栏更新功能
  */
 public class StatusBarManager {
+
+    public enum StatusLevel {
+        NORMAL,
+        SUCCESS,
+        WARNING,
+        ERROR
+    }
 
     private static final Map<String, String> LEGACY_STATUS_KEYS = Map.ofEntries(
         Map.entry("就绪", "status.ready"),
@@ -64,6 +73,8 @@ public class StatusBarManager {
 
     private static final StringProperty statusProperty =
         new SimpleStringProperty(I18nManager.getInstance().get("status.ready"));
+    private static final ObjectProperty<StatusLevel> statusLevelProperty =
+        new SimpleObjectProperty<>(StatusLevel.NORMAL);
 
     private StatusBarManager() {
         // 私有构造函数，防止实例化
@@ -77,6 +88,10 @@ public class StatusBarManager {
         return statusProperty;
     }
 
+    public static ObjectProperty<StatusLevel> statusLevelProperty() {
+        return statusLevelProperty;
+    }
+
     /**
      * 获取当前状态
      * @return 当前状态文本
@@ -85,20 +100,44 @@ public class StatusBarManager {
         return statusProperty.get();
     }
 
+    public static StatusLevel getStatusLevel() {
+        return statusLevelProperty.get();
+    }
+
     /**
      * 更新状态栏
      * @param status 状态文本
      */
     public static void updateStatus(String status) {
+        updateStatus(status, inferStatusLevel(status));
+    }
+
+    public static void updateSuccess(String status) {
+        updateStatus(status, StatusLevel.SUCCESS);
+    }
+
+    public static void updateWarning(String status) {
+        updateStatus(status, StatusLevel.WARNING);
+    }
+
+    public static void updateError(String status) {
+        updateStatus(status, StatusLevel.ERROR);
+    }
+
+    public static void updateStatus(String status, StatusLevel level) {
         String localizedStatus = localizeStatus(status);
-        Platform.runLater(() -> statusProperty.set(localizedStatus));
+        StatusLevel nextLevel = level != null ? level : StatusLevel.NORMAL;
+        Platform.runLater(() -> {
+            statusProperty.set(localizedStatus);
+            statusLevelProperty.set(nextLevel);
+        });
     }
 
     /**
      * 清除状态栏（恢复默认状态）
      */
     public static void clearStatus() {
-        updateStatus(I18nManager.getInstance().get("status.ready"));
+        updateStatus(I18nManager.getInstance().get("status.ready"), StatusLevel.NORMAL);
     }
 
     private static String localizeStatus(String status) {
@@ -159,5 +198,41 @@ public class StatusBarManager {
             return null;
         }
         return I18nManager.getInstance().get(key, status.substring(prefix.length()));
+    }
+
+    private static StatusLevel inferStatusLevel(String status) {
+        if (status == null || status.isBlank()) {
+            return StatusLevel.NORMAL;
+        }
+
+        String normalized = status.toLowerCase();
+        if (containsAny(normalized,
+                "失败", "错误", "无法", "异常", "不足", "未找到", "拒绝", "无权限",
+                "failed", "failure", "error", "invalid", "unavailable", "not found", "denied")) {
+            return StatusLevel.ERROR;
+        }
+
+        if (containsAny(normalized,
+                "警告", "请选择", "需要", "重复", "冲突", "待处理",
+                "warning", "select", "required", "duplicate", "conflict", "pending")) {
+            return StatusLevel.WARNING;
+        }
+
+        if (containsAny(normalized,
+                "成功", "完成", "已保存", "已刷新", "已加载",
+                "success", "completed", "saved", "refreshed", "loaded")) {
+            return StatusLevel.SUCCESS;
+        }
+
+        return StatusLevel.NORMAL;
+    }
+
+    private static boolean containsAny(String text, String... patterns) {
+        for (String pattern : patterns) {
+            if (text.contains(pattern)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

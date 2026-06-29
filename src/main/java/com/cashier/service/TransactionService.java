@@ -132,7 +132,8 @@ public class TransactionService {
                         throw new SQLException("会员不存在: " + member.phone);
                     }
 
-                    if (latestMember.getBalance().compareTo(payableAmount) < 0) {
+                    boolean memberBalancePayment = "会员余额".equals(transaction.paymentMethod);
+                    if (memberBalancePayment && latestMember.getBalance().compareTo(payableAmount) < 0) {
                         throw new SQLException("会员余额不足！当前余额: " + latestMember.getBalance() + ", 需要支付: " + payableAmount);
                     }
 
@@ -150,7 +151,9 @@ public class TransactionService {
                     member.discount = updatedDiscount;
                     member.discountRate = updatedDiscount;
                     member.birthday = latestMember.getBirthday();
-                    member.balance = latestMember.getBalance().subtract(payableAmount);
+                    member.balance = memberBalancePayment
+                        ? latestMember.getBalance().subtract(payableAmount)
+                        : latestMember.getBalance();
                     member.points = updatedPoints;
 
                     if (!MemberDAO.updateWithConnection(conn, member)) {

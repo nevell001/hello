@@ -95,6 +95,9 @@ public class CashierSystemFXApplication extends Application {
         // 检查数据库配置
         checkDatabaseConfiguration();
 
+        // 支付渠道必须在收银界面加载前完成配置，未配置渠道保持禁用。
+        com.cashier.service.PaymentService.init();
+
         // 立即设置应用图标（同步）
         setupApplicationIcon();
 

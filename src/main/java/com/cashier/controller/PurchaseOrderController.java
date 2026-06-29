@@ -227,6 +227,8 @@ public class PurchaseOrderController {
         PurchaseOrder selected = orderTable.getSelectionModel().getSelectedItem();
         if (selected != null) {
             showOrderDialog(selected);
+        } else {
+            showWarning(I18nManager.getInstance().get("runtime.select_purchase_order"));
         }
     }
 
@@ -819,6 +821,8 @@ public class PurchaseOrderController {
                     break;
                 }
             }
+        } else {
+            showWarning(I18nManager.getInstance().get("runtime.select_purchase_order"));
         }
     }
 
@@ -896,6 +900,8 @@ public class PurchaseOrderController {
         PurchaseOrder selected = orderTable.getSelectionModel().getSelectedItem();
         if (selected != null) {
             showOrderDetailDialog(selected);
+        } else {
+            showWarning(I18nManager.getInstance().get("runtime.select_purchase_order"));
         }
     }
 
@@ -990,6 +996,8 @@ public class PurchaseOrderController {
                     showError(I18nManager.getInstance().get("runtime.purchase_order_submit_failed", e.getMessage()));
                 }
             }
+        } else {
+            showWarning(I18nManager.getInstance().get("runtime.select_purchase_order"));
         }
     }
 
@@ -1052,11 +1060,17 @@ public class PurchaseOrderController {
      * @param message 错误消息
      */
     private void showError(String message) {
+        com.cashier.util.StatusBarManager.updateError(message);
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(I18nManager.getInstance().get("label.error"));
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    private void showWarning(String message) {
+        com.cashier.util.FXUtils.showWarningAlert(
+            I18nManager.getInstance().get("common.warning"), message);
     }
 
     /**

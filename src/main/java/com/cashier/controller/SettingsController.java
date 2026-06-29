@@ -4,6 +4,7 @@ import com.cashier.constant.FXConstants;
 import com.cashier.service.DataService;
 import com.cashier.i18n.I18nManager;
 import com.cashier.util.FormValidator;
+import com.cashier.util.DatabaseManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -829,15 +830,16 @@ public class SettingsController {
             
             // 确保备份路径存在
             File backupDir = new File(backupBasePath);
-            if (!backupDir.exists()) {
-                backupDir.mkdirs();
+            if (!backupDir.exists() && !backupDir.mkdirs()) {
+                showError(I18nManager.getInstance().get("runtime.backup_path_create_failed", backupBasePath));
+                return;
             }
             
             // 备份数据库（会在备份目录中创建带时间戳的 .sql 文件）
             DataService.backupData(backupBasePath);
             
             // 获取最新的备份文件名
-            File[] sqlFiles = backupDir.listFiles((dir, name) -> name.startsWith("lisuan_system_") && name.endsWith(".sql"));
+            File[] sqlFiles = backupDir.listFiles((dir, name) -> isCurrentDatabaseBackupFile(name));
             if (sqlFiles != null && sqlFiles.length > 0) {
                 java.util.Arrays.sort(sqlFiles, (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
                 showSuccess(I18nManager.getInstance().get("runtime.backup_file_success", sqlFiles[0].getName()));
@@ -870,7 +872,7 @@ public class SettingsController {
             return;
         }
         
-        File[] sqlFiles = backupDir.listFiles((dir, name) -> name.startsWith("lisuan_system_") && name.endsWith(".sql"));
+        File[] sqlFiles = backupDir.listFiles((dir, name) -> isCurrentDatabaseBackupFile(name));
         
         if (sqlFiles == null || sqlFiles.length == 0) {
             showError(I18nManager.getInstance().get("runtime.backup_not_found", backupBasePath));
@@ -895,7 +897,14 @@ public class SettingsController {
         }
         dialog.getItems().addAll(options);
         
-        dialog.showAndWait().ifPresent(selected -> {
+        java.util.Optional<String> selectedBackup = dialog.showAndWait();
+        if (selectedBackup.isEmpty()) {
+            com.cashier.util.StatusBarManager.updateWarning(
+                I18nManager.getInstance().get("status.cancelled"));
+            return;
+        }
+
+        selectedBackup.ifPresent(selected -> {
             // 提取备份文件名
             String backupFileName = selected.split(" \\(")[0];
             File backupFile = new File(backupBasePath, backupFileName);
@@ -913,6 +922,9 @@ public class SettingsController {
                     
                     // 重新加载数据
                     loadSettings();
+                } else {
+                    com.cashier.util.StatusBarManager.updateWarning(
+                        I18nManager.getInstance().get("status.cancelled"));
                 }
             } catch (Exception e) {
                 showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
@@ -1043,6 +1055,7 @@ public class SettingsController {
      * @param message 消息内容
      */
     private void showSuccess(String message) {
+        com.cashier.util.StatusBarManager.updateSuccess(message);
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(I18nManager.getInstance().get("label.success"));
         alert.setHeaderText(null);
@@ -1055,6 +1068,7 @@ public class SettingsController {
      * @param message 错误消息
      */
     private void showError(String message) {
+        com.cashier.util.StatusBarManager.updateError(message);
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(I18nManager.getInstance().get("label.error"));
         alert.setHeaderText(null);
@@ -1225,5 +1239,11 @@ public class SettingsController {
         Label logLabel = new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.import_log"));
         logLabel.setStyle("-fx-font-weight: bold;");
         importMessagesArea.getChildren().add(logLabel);
+    }
+
+    private boolean isCurrentDatabaseBackupFile(String fileName) {
+        return fileName != null
+            && fileName.startsWith(DatabaseManager.getBackupFilePrefix() + "_")
+            && fileName.endsWith(".sql");
     }
 }

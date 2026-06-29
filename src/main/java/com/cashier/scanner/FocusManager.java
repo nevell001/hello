@@ -3,8 +3,8 @@ package com.cashier.scanner;
 import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * 焦点管理器
@@ -40,7 +40,7 @@ public class FocusManager {
     private static final long KEYBOARD_INPUT_INTERVAL = 500;
     
     public FocusManager() {
-        this.focusTargets = new ArrayList<>();
+        this.focusTargets = new CopyOnWriteArrayList<>();
     }
     
     /**
@@ -73,14 +73,17 @@ public class FocusManager {
      * @param target 焦点目标
      */
     public void requestFocus(FocusTarget target) {
-        if (target != null) {
-            if (currentTarget != null && currentTarget != target) {
-                currentTarget.loseFocus();
-            }
-            currentTarget = target;
-            currentTarget.gainFocus();
-            logger.debug("焦点切换到: {}", target.getName());
+        if (target == null || !target.canReceiveFocus()) {
+            logger.debug("焦点目标不可用: {}", target != null ? target.getName() : "null");
+            return;
         }
+
+        if (currentTarget != null && currentTarget != target) {
+            safeLoseFocus(currentTarget);
+        }
+        currentTarget = target;
+        safeGainFocus(currentTarget);
+        logger.debug("焦点切换到: {}", target.getName());
     }
     
     /**
@@ -101,10 +104,12 @@ public class FocusManager {
         long currentTime = System.currentTimeMillis();
         long timeDiff = currentTime - lastInputTime;
         
-        if (currentTarget == null && !focusTargets.isEmpty()) {
+        if ((currentTarget == null || !currentTarget.canReceiveFocus()) && !focusTargets.isEmpty()) {
             // 自动选择第一个可用的焦点目标
-            currentTarget = focusTargets.get(0);
-            currentTarget.gainFocus();
+            currentTarget = findFirstAvailableTarget(false);
+            if (currentTarget != null) {
+                safeGainFocus(currentTarget);
+            }
         }
         
         if (currentTarget == null) {
@@ -114,23 +119,48 @@ public class FocusManager {
         // 根据时间间隔判断输入类型
         if (timeDiff <= SCAN_INPUT_INTERVAL) {
             // 快速连续输入，判定为扫描输入
-            currentTarget.onScanInput(input);
+            safeScanInput(currentTarget, input);
             if (isEnter) {
-                currentTarget.onScanComplete(input);
+                safeScanComplete(currentTarget, input);
             }
             lastInputTime = currentTime;
             return InputType.SCAN;
         } else if (timeDiff <= KEYBOARD_INPUT_INTERVAL) {
             // 正常速度输入，判定为键盘输入
-            currentTarget.onKeyboardInput(input);
+            safeKeyboardInput(currentTarget, input);
             lastInputTime = currentTime;
             return InputType.KEYBOARD;
         } else {
             // 超过间隔，可能是新的扫描开始
-            currentTarget.onScanInput(input);
+            safeKeyboardInput(currentTarget, input);
             lastInputTime = currentTime;
             return InputType.KEYBOARD; // 暂时判定为键盘，等待下一个字符
         }
+    }
+
+    public boolean dispatchScan(String input) {
+        String normalizedInput = USBHIDScannerDevice.normalizeScanData(input);
+        if (normalizedInput == null) {
+            return false;
+        }
+
+        FocusTarget target = currentTarget;
+        if (target == null || !target.canReceiveFocus() || !target.isScanTarget()) {
+            target = findFirstAvailableTarget(true);
+            if (target != null) {
+                requestFocus(target);
+            }
+        }
+
+        if (target == null) {
+            logger.warn("没有可接收扫码的焦点目标: {}", normalizedInput);
+            return false;
+        }
+
+        safeScanInput(target, normalizedInput);
+        safeScanComplete(target, normalizedInput);
+        lastInputTime = System.currentTimeMillis();
+        return true;
     }
     
     /**
@@ -144,6 +174,55 @@ public class FocusManager {
                 requestFocus(target);
                 return;
             }
+        }
+    }
+
+    private FocusTarget findFirstAvailableTarget(boolean scanOnly) {
+        for (FocusTarget target : focusTargets) {
+            if (target.canReceiveFocus() && (!scanOnly || target.isScanTarget())) {
+                return target;
+            }
+        }
+        return null;
+    }
+
+    private void safeGainFocus(FocusTarget target) {
+        try {
+            target.gainFocus();
+        } catch (Exception e) {
+            logger.error("焦点目标获取焦点失败: {}", target.getName(), e);
+        }
+    }
+
+    private void safeLoseFocus(FocusTarget target) {
+        try {
+            target.loseFocus();
+        } catch (Exception e) {
+            logger.error("焦点目标失去焦点失败: {}", target.getName(), e);
+        }
+    }
+
+    private void safeKeyboardInput(FocusTarget target, String input) {
+        try {
+            target.onKeyboardInput(input);
+        } catch (Exception e) {
+            logger.error("键盘输入处理失败: {}", target.getName(), e);
+        }
+    }
+
+    private void safeScanInput(FocusTarget target, String input) {
+        try {
+            target.onScanInput(input);
+        } catch (Exception e) {
+            logger.error("扫码输入处理失败: {}", target.getName(), e);
+        }
+    }
+
+    private void safeScanComplete(FocusTarget target, String input) {
+        try {
+            target.onScanComplete(input);
+        } catch (Exception e) {
+            logger.error("扫码完成处理失败: {}", target.getName(), e);
         }
     }
     

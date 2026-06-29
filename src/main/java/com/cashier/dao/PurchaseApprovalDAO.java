@@ -195,6 +195,27 @@ public class PurchaseApprovalDAO {
         }
     }
 
+    public static boolean insertWithConnection(Connection conn, PurchaseApproval approval) throws SQLException {
+        String sql = "INSERT INTO purchase_approvals (order_id, approver, action, remark, approval_time) " +
+                     "VALUES (?, ?, ?, ?, ?)";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            pstmt.setInt(1, approval.orderId);
+            pstmt.setString(2, approval.approver);
+            pstmt.setString(3, approval.action);
+            pstmt.setString(4, approval.remark);
+            pstmt.setTimestamp(5, approval.approvalTime);
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows > 0) {
+                try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        approval.id = generatedKeys.getInt(1);
+                    }
+                }
+            }
+            return affectedRows > 0;
+        }
+    }
+
     /**
      * 删除采购审批记录
      *

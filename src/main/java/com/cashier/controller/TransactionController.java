@@ -532,6 +532,8 @@ public class TransactionController {
             );
 
             if (filePath != null) {
+                com.cashier.util.StatusBarManager.updateSuccess(
+                    I18nManager.getInstance().get("success.export"));
                 Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
                 successAlert.setTitle(I18nManager.getInstance().get("success.export"));
                 successAlert.setHeaderText(null);
@@ -571,6 +573,7 @@ public class TransactionController {
      * @param message 消息内容
      */
     private void showAlert(Alert.AlertType type, String title, String message) {
+        updateStatusForAlert(type, message);
         Alert alert = new Alert(type);
         alert.setTitle(title);
         alert.setHeaderText(null);
@@ -578,11 +581,22 @@ public class TransactionController {
         alert.showAndWait();
     }
 
+    private void updateStatusForAlert(Alert.AlertType type, String message) {
+        if (type == Alert.AlertType.ERROR) {
+            com.cashier.util.StatusBarManager.updateError(message);
+        } else if (type == Alert.AlertType.WARNING) {
+            com.cashier.util.StatusBarManager.updateWarning(message);
+        } else if (type == Alert.AlertType.INFORMATION) {
+            com.cashier.util.StatusBarManager.updateSuccess(message);
+        }
+    }
+
     /**
      * 显示错误信息
      * @param message 错误消息
      */
     private void showError(String message) {
+        com.cashier.util.StatusBarManager.updateError(message);
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(I18nManager.getInstance().get("label.error"));
         alert.setHeaderText(null);

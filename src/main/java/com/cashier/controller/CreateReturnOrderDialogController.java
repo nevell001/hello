@@ -5,6 +5,7 @@ import com.cashier.model.*;
 import com.cashier.service.ReturnService;
 import com.cashier.util.CurrencyUtil;
 import com.cashier.util.LoggerFactoryUtil;
+import com.cashier.util.StatusBarManager;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
@@ -581,10 +582,21 @@ public class CreateReturnOrderDialogController {
      * 显示提示
      */
     private void showAlert(Alert.AlertType type, String title, String message) {
+        updateStatusForAlert(type, message);
         Alert alert = new Alert(type);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    private void updateStatusForAlert(Alert.AlertType type, String message) {
+        if (type == Alert.AlertType.ERROR) {
+            StatusBarManager.updateError(message);
+        } else if (type == Alert.AlertType.WARNING) {
+            StatusBarManager.updateWarning(message);
+        } else if (type == Alert.AlertType.INFORMATION) {
+            StatusBarManager.updateSuccess(message);
+        }
     }
 }

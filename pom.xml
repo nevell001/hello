@@ -237,6 +237,13 @@
             <version>11.2.1</version>
         </dependency>
 
+        <!-- ZXing - 桌面收银支付二维码 -->
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>3.5.3</version>
+        </dependency>
+
         <!-- FontAwesomeFX - 图标库 -->
         <dependency>
             <groupId>de.jensd</groupId>

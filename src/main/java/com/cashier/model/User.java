@@ -4,6 +4,22 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class User {
+    public static final String PERMISSION_CHECKOUT = "checkout";
+    public static final String PERMISSION_VIEW_INVENTORY = "view_inventory";
+    public static final String PERMISSION_VIEW_TRANSACTIONS = "view_transactions";
+    public static final String PERMISSION_MANAGE_MEMBERS = "manage_members";
+    public static final String PERMISSION_MANAGE_RETURNS = "manage_returns";
+    public static final String PERMISSION_APPROVE_RETURNS = "approve_returns";
+    public static final String PERMISSION_MANAGE_SHIFT = "manage_shift";
+    public static final String PERMISSION_VIEW_REPORTS = "view_reports";
+    public static final String PERMISSION_EXPORT_DATA = "export_data";
+    public static final String PERMISSION_MANAGE_INVENTORY = "manage_inventory";
+    public static final String PERMISSION_MANAGE_PURCHASE = "manage_purchase";
+    public static final String PERMISSION_MANAGE_PROMOTIONS = "manage_promotions";
+    public static final String PERMISSION_MANAGE_USERS = "manage_users";
+    public static final String PERMISSION_MANAGE_SETTINGS = "manage_settings";
+    public static final String PERMISSION_VIEW_AUDIT = "view_audit";
+    public static final String PERMISSION_BACKUP_RESTORE = "backup_restore";
     public int id;              // 用户ID（数据库自增主键）
     public String username;      // 用户名
     public String password;      // 密码（实际应用中应该加密存储）
@@ -59,15 +75,16 @@ public class User {
                 // 管理员拥有所有权限
                 return true;
             case "cashier":
-                // 收银员权限：收银、查看商品
-                return "checkout".equals(permission) || 
-                       "view_inventory".equals(permission) ||
-                       "view_transactions".equals(permission);
+                return PERMISSION_CHECKOUT.equals(permission)
+                    || PERMISSION_VIEW_INVENTORY.equals(permission)
+                    || PERMISSION_VIEW_TRANSACTIONS.equals(permission)
+                    || PERMISSION_MANAGE_MEMBERS.equals(permission)
+                    || PERMISSION_MANAGE_RETURNS.equals(permission)
+                    || PERMISSION_MANAGE_SHIFT.equals(permission);
             case "finance":
-                // 财务权限：查看报表、导出数据
-                return "view_reports".equals(permission) || 
-                       "export_data".equals(permission) ||
-                       "view_transactions".equals(permission);
+                return PERMISSION_VIEW_REPORTS.equals(permission)
+                    || PERMISSION_EXPORT_DATA.equals(permission)
+                    || PERMISSION_VIEW_TRANSACTIONS.equals(permission);
             default:
                 return false;
         }

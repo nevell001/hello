@@ -6,6 +6,7 @@ import javafx.animation.FadeTransition;
 import javafx.fxml.FXML;
 import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
+import com.cashier.util.StatusBarManager;
 
 import java.sql.SQLException;
 import javafx.scene.control.*;
@@ -148,6 +149,7 @@ public class PasswordResetController {
      */
     private void showError(String message) {
         javafx.application.Platform.runLater(() -> {
+            StatusBarManager.updateError(message);
             errorLabel.setText(message);
             errorLabel.setVisible(true);
             errorLabel.setManaged(true);
@@ -168,6 +170,7 @@ public class PasswordResetController {
      */
     private void showSuccess(String message) {
         javafx.application.Platform.runLater(() -> {
+            StatusBarManager.updateSuccess(message);
             successLabel.setText(message);
             successLabel.setVisible(true);
             successLabel.setManaged(true);

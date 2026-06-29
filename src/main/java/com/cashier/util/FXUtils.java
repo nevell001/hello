@@ -31,6 +31,7 @@ public class FXUtils {
      * @param message 消息
      */
     public static void showInfoAlert(String title, String message) {
+        StatusBarManager.updateStatus(message);
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
         alert.setHeaderText(null);
@@ -44,6 +45,7 @@ public class FXUtils {
      * @param message 消息
      */
     public static void showWarningAlert(String title, String message) {
+        StatusBarManager.updateWarning(message);
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle(title);
         alert.setHeaderText(null);
@@ -57,6 +59,7 @@ public class FXUtils {
      * @param message 消息
      */
     public static void showErrorAlert(String title, String message) {
+        StatusBarManager.updateError(message);
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(title);
         alert.setHeaderText(null);

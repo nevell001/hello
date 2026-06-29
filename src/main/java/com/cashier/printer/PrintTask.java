@@ -56,6 +56,26 @@ public class PrintTask {
      * 是否需要预览
      */
     private final boolean requirePreview;
+
+    /**
+     * 打印状态
+     */
+    private PrintTaskStatus status;
+
+    /**
+     * 开始打印时间
+     */
+    private Date startedAt;
+
+    /**
+     * 完成打印时间
+     */
+    private Date finishedAt;
+
+    /**
+     * 失败原因
+     */
+    private String errorMessage;
     
     public PrintTask(String taskId, String taskName, PrintTaskType taskType, String content) {
         this(taskId, taskName, taskType, content, 1, false, false, false, false);
@@ -74,6 +94,7 @@ public class PrintTask {
         this.openCashDrawer = openCashDrawer;
         this.cutPaper = cutPaper;
         this.requirePreview = requirePreview;
+        this.status = PrintTaskStatus.PENDING;
     }
     
     public String getTaskId() {
@@ -114,6 +135,41 @@ public class PrintTask {
     
     public boolean isRequirePreview() {
         return requirePreview;
+    }
+
+    public PrintTaskStatus getStatus() {
+        return status;
+    }
+
+    public Date getStartedAt() {
+        return startedAt;
+    }
+
+    public Date getFinishedAt() {
+        return finishedAt;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    public void markRunning() {
+        this.status = PrintTaskStatus.RUNNING;
+        this.startedAt = new Date();
+        this.finishedAt = null;
+        this.errorMessage = null;
+    }
+
+    public void markSuccess() {
+        this.status = PrintTaskStatus.SUCCESS;
+        this.finishedAt = new Date();
+        this.errorMessage = null;
+    }
+
+    public void markFailed(String errorMessage) {
+        this.status = PrintTaskStatus.FAILED;
+        this.finishedAt = new Date();
+        this.errorMessage = errorMessage;
     }
     
     /**

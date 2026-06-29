@@ -24,6 +24,9 @@ db.password=
 # 连接池大小 (默认: 10)
 db.pool.size=10
 
+# 备份/恢复使用的 Docker MySQL 容器名
+backup.mysql.container=lisuan-mysql
+
 # 连接超时时间 (毫秒, 默认: 30000)
 db.connection.timeout=30000
 

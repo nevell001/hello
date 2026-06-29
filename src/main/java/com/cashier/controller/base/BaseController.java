@@ -132,6 +132,7 @@ public abstract class BaseController<T> {
      * 显示操作成功消息
      */
     protected void showSuccess(String message) {
+        com.cashier.util.StatusBarManager.updateSuccess(message);
         DialogBuilder.information()
                 .title(i18n.get("label.success"))
                 .content(message)
@@ -142,8 +143,20 @@ public abstract class BaseController<T> {
      * 显示操作失败消息
      */
     protected void showError(String message) {
+        com.cashier.util.StatusBarManager.updateError(message);
         DialogBuilder.error()
                 .title(i18n.get("label.error"))
+                .content(message)
+                .show();
+    }
+
+    /**
+     * 显示操作警告消息
+     */
+    protected void showWarning(String message) {
+        com.cashier.util.StatusBarManager.updateWarning(message);
+        DialogBuilder.warning()
+                .title(i18n.get("common.warning"))
                 .content(message)
                 .show();
     }

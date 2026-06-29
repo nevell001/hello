@@ -386,10 +386,21 @@ public class ReturnApprovalController {
     }
 
     private void showAlert(Alert.AlertType type, String title, String message) {
+        updateStatusForAlert(type, message);
         Alert alert = new Alert(type);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    private void updateStatusForAlert(Alert.AlertType type, String message) {
+        if (type == Alert.AlertType.ERROR) {
+            com.cashier.util.StatusBarManager.updateError(message);
+        } else if (type == Alert.AlertType.WARNING) {
+            com.cashier.util.StatusBarManager.updateWarning(message);
+        } else if (type == Alert.AlertType.INFORMATION) {
+            com.cashier.util.StatusBarManager.updateSuccess(message);
+        }
     }
 }

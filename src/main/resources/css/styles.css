@@ -2021,6 +2021,46 @@
     -fx-text-fill: #212121;
 }
 
+/* 商品编辑表单：为中文字体下沿和可调字号预留完整行高，避免底部笔画被裁切。 */
+.product-edit-view .form-input,
+.product-edit-view .form-combo {
+    -fx-min-height: 38px;
+    -fx-pref-height: 38px;
+}
+
+.product-edit-view .form-input {
+    -fx-padding: 7px 10px 8px 10px;
+}
+
+.product-edit-view .form-combo {
+    -fx-padding: 0;
+}
+
+.product-edit-view .form-combo > .list-cell,
+.product-edit-view .form-combo > .text-field,
+.product-edit-view .form-combo > .arrow-button {
+    -fx-min-height: 36px;
+    -fx-pref-height: 36px;
+}
+
+.product-edit-view .form-combo > .list-cell,
+.product-edit-view .form-combo > .text-field {
+    -fx-padding: 7px 10px 8px 10px;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.font-size-large.product-edit-view .form-input,
+.font-size-large.product-edit-view .form-combo {
+    -fx-min-height: 42px;
+    -fx-pref-height: 42px;
+}
+
+.font-size-extra-large.product-edit-view .form-input,
+.font-size-extra-large.product-edit-view .form-combo {
+    -fx-min-height: 46px;
+    -fx-pref-height: 46px;
+}
+
 .member-level-combo {
     -fx-padding: 0;
     -fx-min-width: 210px;

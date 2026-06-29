@@ -186,6 +186,28 @@ public class PurchaseInboundItemDAO {
         }
     }
 
+    public static boolean insertWithConnection(Connection conn, PurchaseInboundItem item) throws SQLException {
+        String sql = "INSERT INTO purchase_inbound_items (inbound_id, order_item_id, product_id, quantity, " +
+                     "unit_price, total_price) VALUES (?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            pstmt.setInt(1, item.inboundId);
+            pstmt.setInt(2, item.orderItemId);
+            pstmt.setInt(3, item.productId);
+            pstmt.setInt(4, item.quantity);
+            pstmt.setBigDecimal(5, item.unitPrice);
+            pstmt.setBigDecimal(6, item.totalPrice);
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows > 0) {
+                try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        item.id = generatedKeys.getInt(1);
+                    }
+                }
+            }
+            return affectedRows > 0;
+        }
+    }
+
     /**
      * 更新采购入库明细
      *

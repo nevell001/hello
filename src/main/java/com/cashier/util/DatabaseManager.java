@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
 import java.util.Properties;
+import java.nio.file.Files;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 
@@ -41,6 +42,7 @@ public class DatabaseManager {
     private static long leakDetectionThreshold = 0;  // 0 表示禁用
     private static String connectionTestQuery = "SELECT 1";
     private static long validationTimeout = 3000;
+    private static String dockerMysqlContainerName = "lisuan-mysql";
 
     static {
         // 检查是否在测试环境中运行
@@ -195,6 +197,10 @@ public class DatabaseManager {
         }
 
         connectionTestQuery = props.getProperty("db.connectionTestQuery", "SELECT 1");
+        dockerMysqlContainerName = props.getProperty("backup.mysql.container", "lisuan-mysql").trim();
+        if (dockerMysqlContainerName.isEmpty()) {
+            dockerMysqlContainerName = "lisuan-mysql";
+        }
 
         try {
             validationTimeout = Long.parseLong(props.getProperty("db.validationTimeout", "3000"));
@@ -219,6 +225,7 @@ public class DatabaseManager {
             // Linux/Mac: export CASHER_DB_PASSWORD=YourPassword
             props.setProperty("db.password", "");
             props.setProperty("db.pool.size", "10");
+            props.setProperty("backup.mysql.container", "lisuan-mysql");
 
             try (FileOutputStream fos = new FileOutputStream(configFile)) {
                 props.store(fos, "收银系统数据库配置文件模板\n" +
@@ -1227,18 +1234,31 @@ public class DatabaseManager {
      */
     public static boolean backup(File backupFile) {
         try {
+            if (backupFile == null) {
+                logger.error("备份文件不能为空");
+                return false;
+            }
+
             // 确保备份目录存在
             File backupDir = backupFile.getParentFile();
             if (backupDir != null && !backupDir.exists()) {
-                backupDir.mkdirs();
+                Files.createDirectories(backupDir.toPath());
             }
 
             // 检查是否可以使用 Docker 容器
-            if (isDockerContainerRunning("lisuan-mysql")) {
-                return backupViaDocker(backupFile);
+            boolean success;
+            if (isDockerContainerRunning(dockerMysqlContainerName)) {
+                success = backupViaDocker(backupFile);
             } else {
-                return backupViaLocalCommand(backupFile);
+                success = backupViaLocalCommand(backupFile);
             }
+
+            if (!success || !isValidSqlBackupFile(backupFile)) {
+                logger.error("数据库备份未生成有效文件: {}", backupFile.getAbsolutePath());
+                return false;
+            }
+
+            return true;
 
         } catch (Exception e) {
             logger.error("数据库备份失败", e);
@@ -1255,13 +1275,13 @@ public class DatabaseManager {
         // 构建 docker exec 命令 - 使用环境变量传递密码
         String[] command = {
             "docker", "exec", "-e", "MYSQL_PWD=" + dbPassword,
-            "lisuan-mysql",
+            dockerMysqlContainerName,
             "mysqldump",
             "-u" + dbUsername,
             "--single-transaction",
             "--routines",
             "--triggers",
-            "lisuan_system",
+            getDatabaseNameFromUrl(dbUrl),
             "-r", containerPath
         };
 
@@ -1283,7 +1303,7 @@ public class DatabaseManager {
 
         // 从容器复制文件到本地
         String[] copyCommand = {
-            "docker", "cp", "lisuan-mysql:" + containerPath,
+            "docker", "cp", dockerMysqlContainerName + ":" + containerPath,
             backupFile.getAbsolutePath()
         };
 
@@ -1292,7 +1312,7 @@ public class DatabaseManager {
 
         if (copyExitCode == 0) {
             // 清理容器中的临时文件
-            Runtime.getRuntime().exec(new String[]{"docker", "exec", "lisuan-mysql", "rm", "-f", containerPath});
+            Runtime.getRuntime().exec(new String[]{"docker", "exec", dockerMysqlContainerName, "rm", "-f", containerPath});
 
             logger.info("数据库备份成功: {}", backupFile.getAbsolutePath());
             return true;
@@ -1316,7 +1336,7 @@ public class DatabaseManager {
             "--single-transaction",
             "--routines",
             "--triggers",
-            "lisuan_system"
+            getDatabaseNameFromUrl(dbUrl)
         );
         
         // 设置环境变量传递密码
@@ -1342,14 +1362,19 @@ public class DatabaseManager {
      * @return 如果恢复成功返回 true，否则返回 false
      */
     public static boolean restore(File backupFile) {
-        if (!backupFile.exists()) {
-            logger.error("备份文件不存在: {}", backupFile.getAbsolutePath());
+        if (backupFile == null || !backupFile.exists()) {
+            logger.error("备份文件不存在: {}", backupFile != null ? backupFile.getAbsolutePath() : "null");
+            return false;
+        }
+
+        if (!isValidSqlBackupFile(backupFile)) {
+            logger.error("备份文件为空或不可读: {}", backupFile.getAbsolutePath());
             return false;
         }
 
         try {
             // 检查是否可以使用 Docker 容器
-            if (isDockerContainerRunning("lisuan-mysql")) {
+            if (isDockerContainerRunning(dockerMysqlContainerName)) {
                 return restoreViaDocker(backupFile);
             } else {
                 return restoreViaLocalCommand(backupFile);
@@ -1365,35 +1390,19 @@ public class DatabaseManager {
      * 使用 Docker 容器执行恢复
      */
     private static boolean restoreViaDocker(File backupFile) throws Exception {
-        String containerPath = "/tmp/" + backupFile.getName();
-        
-        // 复制文件到容器
-        String[] copyCommand = {
-            "docker", "cp", backupFile.getAbsolutePath(),
-            "lisuan-mysql:" + containerPath
-        };
-
-        Process copyProcess = Runtime.getRuntime().exec(copyCommand);
-        int copyExitCode = copyProcess.waitFor();
-
-        if (copyExitCode != 0) {
-            logger.error("复制文件到容器失败，退出码: {}", copyExitCode);
-            return false;
-        }
-
-        // 构建 docker exec 命令 - 使用环境变量传递密码
-        String[] command = {
-            "docker", "exec", "-e", "MYSQL_PWD=" + dbPassword,
-            "lisuan-mysql",
-            "bash", "-c",
-            "mysql -u" + dbUsername + " lisuan_system < " + containerPath
-        };
+        ProcessBuilder pb = new ProcessBuilder(
+            "docker", "exec", "-i", "-e", "MYSQL_PWD=" + dbPassword,
+            dockerMysqlContainerName,
+            "mysql",
+            "-u" + dbUsername,
+            getDatabaseNameFromUrl(dbUrl)
+        );
+        pb.redirectInput(ProcessBuilder.Redirect.from(backupFile));
+        pb.redirectErrorStream(true);
 
         logger.info("执行 Docker 恢复命令...");
 
-        Process process = Runtime.getRuntime().exec(command);
-
-        // 读取输出
+        Process process = pb.start();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
@@ -1401,18 +1410,7 @@ public class DatabaseManager {
             }
         }
 
-        // 读取错误
-        try (BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream(), StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = errorReader.readLine()) != null) {
-                logger.error(line);
-            }
-        }
-
         int exitCode = process.waitFor();
-
-        // 清理容器中的临时文件
-        Runtime.getRuntime().exec(new String[]{"docker", "exec", "lisuan-mysql", "rm", "-f", containerPath});
 
         if (exitCode == 0) {
             logger.info("数据库恢复成功: {}", backupFile.getAbsolutePath());
@@ -1433,7 +1431,7 @@ public class DatabaseManager {
             "--host=" + getHostFromUrl(dbUrl),
             "--port=" + getPortFromUrl(dbUrl),
             "--user=" + dbUsername,
-            "lisuan_system"
+            getDatabaseNameFromUrl(dbUrl)
         );
         
         // 设置环境变量传递密码
@@ -1472,18 +1470,41 @@ public class DatabaseManager {
      */
     private static boolean isDockerContainerRunning(String containerName) {
         try {
-            Process process = Runtime.getRuntime().exec(new String[]{"docker", "ps", "--filter", "name=" + containerName});
+            Process process = Runtime.getRuntime().exec(new String[]{
+                "docker", "ps", "--filter", "name=" + containerName, "--format", "{{.Names}}"
+            });
             int exitCode = process.waitFor();
-            return exitCode == 0;
+            if (exitCode != 0) {
+                return false;
+            }
+
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (containerName.equals(line.trim())) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         } catch (Exception e) {
             return false;
         }
     }
 
+    static boolean isValidSqlBackupFile(File backupFile) {
+        return backupFile != null
+            && backupFile.exists()
+            && backupFile.isFile()
+            && backupFile.canRead()
+            && backupFile.length() > 0;
+    }
+
     /**
      * 从 JDBC URL 提取主机名
      */
-    private static String getHostFromUrl(String url) {
+    static String getHostFromUrl(String url) {
         // jdbc:mysql://localhost:3306/dbname
         int start = url.indexOf("://") + 3;
         int colon = url.indexOf(":", start);
@@ -1494,7 +1515,7 @@ public class DatabaseManager {
     /**
      * 从 JDBC URL 提取端口
      */
-    private static int getPortFromUrl(String url) {
+    static int getPortFromUrl(String url) {
         // jdbc:mysql://localhost:3306/dbname
         int colon = url.indexOf(":", url.indexOf("://") + 3);
         int slash = url.indexOf("/", colon);
@@ -1502,6 +1523,47 @@ public class DatabaseManager {
             return Integer.parseInt(url.substring(colon + 1, slash));
         }
         return 3306; // 默认端口
+    }
+
+    static String getDatabaseNameFromUrl(String url) {
+        if (url == null || url.isBlank()) {
+            return "lisuan_system";
+        }
+
+        try {
+            int protocolEnd = url.indexOf("://");
+            int start = url.indexOf("/", protocolEnd >= 0 ? protocolEnd + 3 : 0);
+            if (start < 0 || start + 1 >= url.length()) {
+                return "lisuan_system";
+            }
+
+            int queryStart = url.indexOf("?", start);
+            String databaseName = queryStart >= 0 ? url.substring(start + 1, queryStart) : url.substring(start + 1);
+            int paramsStart = databaseName.indexOf(";");
+            if (paramsStart >= 0) {
+                databaseName = databaseName.substring(0, paramsStart);
+            }
+
+            databaseName = databaseName.trim();
+            return databaseName.isEmpty() ? "lisuan_system" : databaseName;
+        } catch (Exception e) {
+            return "lisuan_system";
+        }
+    }
+
+    public static String getCurrentDatabaseName() {
+        return getDatabaseNameFromUrl(dbUrl);
+    }
+
+    public static String getBackupFilePrefix() {
+        return sanitizeBackupFilePrefix(getCurrentDatabaseName());
+    }
+
+    static String sanitizeBackupFilePrefix(String databaseName) {
+        if (databaseName == null || databaseName.isBlank()) {
+            return "lisuan_system";
+        }
+        return databaseName.replaceAll("[^A-Za-z0-9._-]", "_");
     }
 
     /**

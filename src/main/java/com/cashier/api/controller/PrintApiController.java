@@ -653,7 +653,11 @@ public class PrintApiController {
                 info.put("taskName", task.getTaskName());
                 info.put("taskType", task.getTaskType().getDisplayName());
                 info.put("createdAt", task.getCreatedAt());
+                info.put("startedAt", task.getStartedAt());
+                info.put("finishedAt", task.getFinishedAt());
                 info.put("copies", task.getCopies());
+                info.put("status", task.getStatus().getDisplayName());
+                info.put("errorMessage", task.getErrorMessage());
                 return info;
             })
             .collect(Collectors.toList());
