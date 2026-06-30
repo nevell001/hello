@@ -615,6 +615,11 @@ public class PurchaseInboundController {
      */
     private void showInboundDetailDialog(PurchaseInbound inbound, Stage parentStage) {
         try {
+            Stage detailStage = new Stage();
+            detailStage.setTitle(I18nManager.getInstance().get("runtime.inbound_detail_title", inbound.inboundNo));
+            detailStage.initModality(Modality.WINDOW_MODAL);
+            detailStage.initOwner(parentStage);
+
             VBox root = new VBox(10);
             root.setPadding(new javafx.geometry.Insets(20));
 
@@ -663,7 +668,7 @@ public class PurchaseInboundController {
             itemTable.setItems(FXCollections.observableArrayList(items));
 
             Button closeButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.close"));
-            closeButton.setOnAction(e -> parentStage.close());
+            closeButton.setOnAction(e -> detailStage.close());
 
             root.getChildren().addAll(
                 new Label(I18nManager.getInstance().get("runtime.inbound_info")),
@@ -672,11 +677,6 @@ public class PurchaseInboundController {
                 itemTable,
                 closeButton
             );
-
-            Stage detailStage = new Stage();
-            detailStage.setTitle(I18nManager.getInstance().get("runtime.inbound_detail_title", inbound.inboundNo));
-            detailStage.initModality(Modality.WINDOW_MODAL);
-            detailStage.initOwner(parentStage);
 
             Scene scene = new Scene(root, 600, 500);
             applyCurrentTheme(scene);

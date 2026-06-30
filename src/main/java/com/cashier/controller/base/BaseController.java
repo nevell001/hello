@@ -124,7 +124,7 @@ public abstract class BaseController<T> {
     protected boolean confirmDeleteWithName(String name) {
         return DialogBuilder.confirmation()
                 .title(i18n.get("dialog.confirm"))
-                .content(String.format(i18n.get("dialog.delete.confirm_with_name"), name))
+                .content(i18n.get("dialog.delete.confirm_with_name", name))
                 .showAndGetConfirm();
     }
 

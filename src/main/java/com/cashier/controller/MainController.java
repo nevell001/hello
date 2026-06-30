@@ -686,7 +686,7 @@ private Button shiftBtn;
             dialogStage.setResizable(false);
 
             Scene scene = new Scene(root, 700, 600);
-            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+            com.cashier.util.ThemeUtils.applyCurrentTheme(scene, getClass());
 
             dialogStage.setScene(scene);
             controller.setStage(dialogStage);
@@ -757,7 +757,6 @@ private Button shiftBtn;
 
     @FXML
     public void handleAbout() {
-        updateStatus("关于");
         String about =
             AppConstants.APP_NAME + "\n\n" +
             "版本: " + AppConstants.FULL_VERSION_STRING + "\n" +
@@ -768,7 +767,15 @@ private Button shiftBtn;
             "- JDK " + AppConstants.MIN_JDK_VERSION + "/21\n\n" +
             "许可证: " + AppConstants.LICENSE;
 
-        FXUtils.showInfoAlert(com.cashier.i18n.I18nManager.getInstance().get("menu.help.about"), about);
+        showInformationOnlyAlert(com.cashier.i18n.I18nManager.getInstance().get("menu.help.about"), about);
+    }
+
+    private void showInformationOnlyAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
     // ========== 导航处理方法 ==========

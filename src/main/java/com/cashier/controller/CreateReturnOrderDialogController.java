@@ -49,7 +49,6 @@ public class CreateReturnOrderDialogController {
     @FXML private TableColumn<ReturnItem, Double> unitPriceColumn;
     @FXML private TableColumn<ReturnItem, Double> returnAmountColumn;
     @FXML private TableColumn<ReturnItem, String> conditionColumn;
-    @FXML private TableColumn<ReturnItem, String> reasonColumn;
 
     @FXML private TextField returnReasonField;
     @FXML private ComboBox<String> refundMethodComboBox;
@@ -72,7 +71,6 @@ public class CreateReturnOrderDialogController {
         public int returnQuantity;
         public double unitPrice;
         public String condition = "GOOD";
-        public String reason = "";
 
         public ReturnItem() {
             selected.addListener((obs, oldVal, newVal) -> {
@@ -121,10 +119,6 @@ public class CreateReturnOrderDialogController {
 
         public String getCondition() {
             return condition;
-        }
-
-        public String getReason() {
-            return reason;
         }
 
         public double getReturnAmount() {
@@ -273,7 +267,8 @@ public class CreateReturnOrderDialogController {
                     ));
                     com.cashier.util.I18nUiUtils.configureComboBox(
                         comboBox, com.cashier.util.I18nUiUtils::itemCondition);
-                    comboBox.setPrefWidth(100);
+                    comboBox.setMinWidth(118);
+                    comboBox.setPrefWidth(128);
 
                     comboBox.setOnAction(event -> {
                         returnItem.condition = comboBox.getValue();
@@ -282,38 +277,6 @@ public class CreateReturnOrderDialogController {
 
                 comboBox.setValue(returnItem.condition);
                 setGraphic(comboBox);
-            }
-        });
-
-        // 退货原因（可编辑）
-        reasonColumn.setCellValueFactory(cellData -> 
-            new javafx.beans.property.ReadOnlyObjectWrapper<>(cellData.getValue().getReason()));
-        reasonColumn.setCellFactory(column -> new TableCell<ReturnItem, String>() {
-            private TextField textField;
-
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
-                    setGraphic(null);
-                    return;
-                }
-
-                ReturnItem returnItem = getTableRow().getItem();
-
-                if (textField == null) {
-                    textField = new TextField();
-                    textField.setPrefWidth(140);
-                    textField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.return_reason_hint"));
-
-                    textField.textProperty().addListener((obs, oldVal, newVal) -> {
-                        returnItem.reason = newVal;
-                    });
-                }
-
-                textField.setText(returnItem.reason);
-                setGraphic(textField);
             }
         });
 
@@ -507,7 +470,7 @@ public class CreateReturnOrderDialogController {
                 returnItem.unitPrice = BigDecimal.valueOf(item.unitPrice);
                 returnItem.returnAmount = BigDecimal.valueOf(item.getReturnAmount());
                 returnItem.condition = getConditionCode(item.condition);
-                returnItem.reason = item.reason;
+                returnItem.reason = returnReason;
                 returnItem.calculateAmount();
                 items.add(returnItem);
             }

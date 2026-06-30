@@ -54,8 +54,7 @@
                 <TableColumn fx:id="returnQuantityColumn" text="%return_order.return_quantity" prefWidth="100" editable="true"/>
                 <TableColumn fx:id="unitPriceColumn" text="%return_order.unit_price" prefWidth="80"/>
                 <TableColumn fx:id="returnAmountColumn" text="%return_order.return_amount" prefWidth="100"/>
-                <TableColumn fx:id="conditionColumn" text="%return_order.condition" prefWidth="100" editable="true"/>
-                <TableColumn fx:id="reasonColumn" text="%return_order.reason" prefWidth="150" editable="true"/>
+                <TableColumn fx:id="conditionColumn" text="%return_order.condition" minWidth="130" prefWidth="140" editable="true"/>
             </columns>
         </TableView>
     </VBox>

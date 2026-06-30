@@ -781,3 +781,65 @@
 .sidebar .nav-button.active:pressed {
     -fx-background-color: #8F4314;
 }
+
+/* ========== LiSuan 快捷键帮助 ========== */
+.shortcut-help-view {
+    -fx-background-color: #FFF7EF;
+}
+
+.shortcut-help-view .header-bar {
+    -fx-background-color: #B85C1B;
+    -fx-border-color: transparent;
+    -fx-effect: dropshadow(three-pass-box, rgba(143,67,20,0.18), 4, 0, 0, 2);
+}
+
+.shortcut-help-view .search-bar,
+.shortcut-help-view .content-area,
+.shortcut-help-view .scroll-pane,
+.shortcut-help-view .scroll-pane .viewport {
+    -fx-background-color: #FFF7EF;
+}
+
+.shortcut-help-view .search-bar {
+    -fx-border-color: #E9DED1;
+}
+
+.shortcut-help-view .search-field {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E9DED1;
+    -fx-text-fill: #1F2430;
+}
+
+.shortcut-help-view .search-field:focused {
+    -fx-border-color: #B85C1B;
+}
+
+.shortcut-help-view .shortcut-group {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E9DED1;
+    -fx-effect: dropshadow(three-pass-box, rgba(143,67,20,0.08), 3, 0, 0, 1);
+}
+
+.shortcut-help-view .group-title {
+    -fx-text-fill: #8F4314;
+}
+
+.shortcut-help-view .shortcut-key {
+    -fx-background-color: linear-gradient(to bottom, #FFF7EF, #FFEAD8);
+    -fx-border-color: #E0C8AF;
+    -fx-text-fill: #8F4314;
+}
+
+.shortcut-help-view .shortcut-desc {
+    -fx-text-fill: #1F2430;
+}
+
+.shortcut-help-view .icon-button {
+    -fx-background-color: rgba(255, 247, 239, 0.18);
+    -fx-border-color: rgba(255, 247, 239, 0.36);
+    -fx-text-fill: #FFFFFF;
+}
+
+.shortcut-help-view .icon-button:hover {
+    -fx-background-color: rgba(255, 247, 239, 0.28);
+}

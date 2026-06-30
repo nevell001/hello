@@ -393,7 +393,7 @@ public class ReturnOrderController {
     @FXML
     public void handleCreateReturn() {
         // 显示一个简单的对话框提示用户使用交易记录创建退货
-        showAlert(Alert.AlertType.INFORMATION,
+        showInformationOnlyAlert(
             com.cashier.i18n.I18nManager.getInstance().get("return_order.title"),
             com.cashier.i18n.I18nManager.getInstance().get("runtime.return_help"));
     }
@@ -470,7 +470,7 @@ public class ReturnOrderController {
                     transaction.memberName != null ? transaction.memberName
                         : com.cashier.i18n.I18nManager.getInstance().get("common.none")
                 );
-                showAlert(Alert.AlertType.INFORMATION, com.cashier.i18n.I18nManager.getInstance().get("runtime.original_transaction"), details);
+                showInformationOnlyAlert(com.cashier.i18n.I18nManager.getInstance().get("runtime.original_transaction"), details);
             } else {
                 showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.original_transaction_missing"));
             }
@@ -571,6 +571,17 @@ public class ReturnOrderController {
     private void showAlert(Alert.AlertType type, String title, String message) {
         updateStatusForAlert(type, message);
         Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        ButtonType okButton = new ButtonType(
+            com.cashier.i18n.I18nManager.getInstance().get("common.ok"), ButtonBar.ButtonData.OK_DONE);
+        alert.getButtonTypes().setAll(okButton);
+        alert.showAndWait();
+    }
+
+    private void showInformationOnlyAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);

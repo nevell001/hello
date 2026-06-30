@@ -285,7 +285,6 @@ public class LoginController {
      */
     @FXML
     public void handleAbout() {
-        StatusBarManager.updateStatus(I18nManager.getInstance().get("menu.help.about"));
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("menu.help.about"));
         alert.setHeaderText(AppConstants.APP_NAME + " v" + AppConstants.APP_VERSION);

@@ -8,6 +8,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -36,12 +37,6 @@ public class ShortcutHelpController {
         // 设置焦点到搜索框
         Platform.runLater(() -> searchField.requestFocus());
 
-        // 设置 ESC 键关闭窗口
-        contentArea.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.ESCAPE) {
-                handleClose();
-            }
-        });
     }
 
     /**
@@ -49,6 +44,14 @@ public class ShortcutHelpController {
      */
     public void setStage(Stage stage) {
         this.stage = stage;
+        if (stage != null && stage.getScene() != null) {
+            stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+                if (event.getCode() == KeyCode.ESCAPE) {
+                    handleClose();
+                    event.consume();
+                }
+            });
+        }
     }
 
     /**

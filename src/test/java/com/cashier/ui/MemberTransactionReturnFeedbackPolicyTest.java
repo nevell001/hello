@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MemberTransactionReturnFeedbackPolicyTest {
@@ -56,5 +57,60 @@ class MemberTransactionReturnFeedbackPolicyTest {
             String bundle = Files.readString(Path.of(file));
             assertTrue(bundle.contains("runtime.select_member="), file);
         }
+    }
+
+    @Test
+    @DisplayName("退货订单页创建退货说明不应写入底部状态栏")
+    void returnOrderCreateHelpDoesNotUpdateStatusBar() throws Exception {
+        String controller = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/ReturnOrderController.java"
+        ));
+
+        int methodStart = controller.indexOf("public void handleCreateReturn()");
+        assertTrue(methodStart >= 0, "未找到创建退货入口");
+        int methodEnd = controller.indexOf("\n    @FXML", methodStart + 1);
+        String methodBody = controller.substring(methodStart, methodEnd);
+
+        assertTrue(methodBody.contains("showInformationOnlyAlert("));
+        assertTrue(methodBody.contains("runtime.return_help"));
+        assertFalse(methodBody.contains("showAlert("));
+        assertFalse(methodBody.contains("updateStatusForAlert("));
+    }
+
+    @Test
+    @DisplayName("退货订单页查看原交易详情不应写入底部状态栏")
+    void returnOrderOriginalTransactionDetailsDoNotUpdateStatusBar() throws Exception {
+        String controller = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/ReturnOrderController.java"
+        ));
+
+        int methodStart = controller.indexOf("public void handleViewOriginalTransaction()");
+        assertTrue(methodStart >= 0, "未找到查看原交易入口");
+        int methodEnd = controller.indexOf("\n    @FXML", methodStart + 1);
+        String methodBody = controller.substring(methodStart, methodEnd);
+
+        assertTrue(methodBody.contains("showInformationOnlyAlert("));
+        assertTrue(methodBody.contains("runtime.original_transaction_details"));
+        assertFalse(methodBody.contains("showAlert(Alert.AlertType.INFORMATION"));
+    }
+
+    @Test
+    @DisplayName("创建退货订单页面只保留整单退货原因入口")
+    void createReturnOrderDialogKeepsSingleReturnReasonInput() throws Exception {
+        String view = Files.readString(Path.of(
+            "src/main/resources/com/cashier/view/CreateReturnOrderDialog.fxml"
+        ));
+        String controller = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/CreateReturnOrderDialogController.java"
+        ));
+
+        assertTrue(view.contains("fx:id=\"conditionColumn\" text=\"%return_order.condition\" minWidth=\"130\" prefWidth=\"140\""));
+        assertTrue(view.contains("text=\"%return_order.return_reason_label\""));
+        assertFalse(view.contains("fx:id=\"reasonColumn\""));
+        assertFalse(view.contains("return_order.item_reason"));
+        assertFalse(controller.contains("reasonColumn"));
+        assertTrue(controller.contains("returnItem.reason = returnReason"));
+        assertTrue(controller.contains("comboBox.setMinWidth(118)"));
+        assertTrue(controller.contains("comboBox.setPrefWidth(128)"));
     }
 }

@@ -38,4 +38,26 @@ class ElectronicPaymentSafetyPolicyTest {
         assertTrue(config.contains("alipay.enabled=false"));
         assertFalse(config.contains("wxmock"));
     }
+
+    @Test
+    @DisplayName("系统设置应提供微信支付宝接入配置入口")
+    void settingsExposeElectronicPaymentConfiguration() throws Exception {
+        String settingsView = Files.readString(Path.of(
+            "src/main/resources/com/cashier/view/SettingsView.fxml"
+        ));
+        String settingsController = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/SettingsController.java"
+        ));
+
+        assertTrue(settingsView.contains("<Tab text=\"%settings.tab.payment\">"));
+        assertTrue(settingsView.contains("fx:id=\"wechatEnabledCheckBox\""));
+        assertTrue(settingsView.contains("fx:id=\"wechatAppIdField\""));
+        assertTrue(settingsView.contains("fx:id=\"wechatMchIdField\""));
+        assertTrue(settingsView.contains("fx:id=\"wechatApiKeyField\""));
+        assertTrue(settingsView.contains("fx:id=\"alipayEnabledCheckBox\""));
+        assertTrue(settingsView.contains("fx:id=\"alipayAppIdField\""));
+        assertTrue(settingsView.contains("fx:id=\"alipayPrivateKeyArea\""));
+        assertTrue(settingsView.contains("fx:id=\"alipayPublicKeyArea\""));
+        assertTrue(settingsController.contains("PaymentService.saveConfig(paymentConfig)"));
+    }
 }

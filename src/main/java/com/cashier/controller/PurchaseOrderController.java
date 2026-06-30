@@ -103,8 +103,11 @@ public class PurchaseOrderController {
         setupTableColumns();
 
         // 设置状态筛选
-        statusFilterCombo.getItems().addAll("全部", "待审批", "已审批", "已拒绝", "已完成");
-        statusFilterCombo.setValue("全部");
+        statusFilterCombo.getItems().addAll("all", "pending", "approved", "rejected", "completed");
+        com.cashier.util.I18nUiUtils.configureComboBox(statusFilterCombo, value ->
+            "all".equals(value) ? I18nManager.getInstance().get("filter.all")
+                : com.cashier.util.I18nUiUtils.purchaseStatus(value));
+        statusFilterCombo.setValue("all");
 
         // 加载数据
         loadSuppliers();
@@ -174,14 +177,8 @@ public class PurchaseOrderController {
         String statusFilter = statusFilterCombo.getValue();
         List<PurchaseOrder> filtered = orders.values().stream()
             .filter(order -> {
-                if ("全部".equals(statusFilter)) return true;
-                switch (statusFilter) {
-                    case "待审批": return "pending".equals(order.status);
-                    case "已审批": return "approved".equals(order.status);
-                    case "已拒绝": return "rejected".equals(order.status);
-                    case "已完成": return "completed".equals(order.status);
-                    default: return true;
-                }
+                if ("all".equals(statusFilter)) return true;
+                return statusFilter != null && statusFilter.equals(order.status);
             })
             .collect(Collectors.toList());
 

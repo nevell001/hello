@@ -45,6 +45,20 @@ class ThemeStylePolicyTest {
         assertTrue(css.contains("-fx-background-color: #FFEAD8;"));
     }
 
+    @Test
+    @DisplayName("LiSuan 主题应覆盖快捷键帮助窗口的紫色默认样式")
+    void lisuanShortcutHelpUsesBrandPalette() throws IOException {
+        String css = Files.readString(Path.of(
+            "src/main/resources/css/lisuan-theme.css"
+        ));
+
+        assertTrue(css.contains(".shortcut-help-view .header-bar"));
+        assertTrue(css.contains(".shortcut-help-view .shortcut-key"));
+        assertTrue(css.contains("-fx-background-color: #B85C1B;"));
+        assertTrue(css.contains("-fx-text-fill: #8F4314;"));
+        assertTrue(css.contains("-fx-background-color: linear-gradient(to bottom, #FFF7EF, #FFEAD8);"));
+    }
+
     private void inspectFiles(Path directory, String suffix, List<String> violations) throws IOException {
         try (Stream<Path> paths = Files.walk(directory)) {
             paths.filter(path -> path.toString().endsWith(suffix)).forEach(path -> {

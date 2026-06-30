@@ -276,7 +276,7 @@
                                 prefHeight="40"
                                 styleClass="primary-button"/>
                         <Button text="%main.view_help"
-                                onAction="#handleAbout"
+                                onAction="#handleShortcutHelp"
                                 prefWidth="120"
                                 prefHeight="40"
                                 styleClass="secondary-button"/>
