@@ -23,12 +23,12 @@
             </image>
         </ImageView>
         <VBox spacing="5">
-            <Label text="狸算(LiSuan)收银系统 - 打包向导" styleClass="wizard-title"
+            <Label text="%wizard.title" styleClass="wizard-title"
                    style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
-            <Label text="按照提示配置打包选项，生成 Windows 安装程序" styleClass="wizard-subtitle"/>
+            <Label text="%wizard.subtitle" styleClass="wizard-subtitle"/>
         </VBox>
         <Region HBox.hgrow="ALWAYS"/>
-        <Label text="版本 2.5.8" styleClass="wizard-version"/>
+        <Label fx:id="versionLabel" text="Version 2.5.8" styleClass="wizard-version"/>
     </HBox>
 
     <Separator/>
@@ -38,13 +38,13 @@
         <padding>
             <Insets topRightBottomLeft="15"/>
         </padding>
-        <ToggleButton fx:id="step1Button" text="1. 基本信息" selected="true" styleClass="step-button"/>
+        <ToggleButton fx:id="step1Button" text="%wizard.step1" selected="true" styleClass="step-button"/>
         <Label text="→" styleClass="step-arrow"/>
-        <ToggleButton fx:id="step2Button" text="2. 打包选项" styleClass="step-button"/>
+        <ToggleButton fx:id="step2Button" text="%wizard.step2" styleClass="step-button"/>
         <Label text="→" styleClass="step-arrow"/>
-        <ToggleButton fx:id="step3Button" text="3. 数据库配置" styleClass="step-button"/>
+        <ToggleButton fx:id="step3Button" text="%wizard.step3" styleClass="step-button"/>
         <Label text="→" styleClass="step-arrow"/>
-        <ToggleButton fx:id="step4Button" text="4. 确认打包" styleClass="step-button"/>
+        <ToggleButton fx:id="step4Button" text="%wizard.step4" styleClass="step-button"/>
     </HBox>
 
     <!-- 主内容区域 - 包装在 ScrollPane 中以支持滚动 -->
@@ -53,37 +53,37 @@
 
         <!-- 步骤 1: 基本信息 -->
         <VBox fx:id="step1Content" spacing="15">
-            <Label text="基本信息" styleClass="section-title"/>
+            <Label text="%wizard.section.basic_info" styleClass="section-title"/>
 
             <GridPane hgap="15" vgap="15">
-                <Label text="应用名称:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                <Label text="%wizard.label.app_name" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
                 <TextField fx:id="appNameField" prefWidth="300" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 
-                <Label text="版本号:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                <Label text="%wizard.label.version" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
                 <TextField fx:id="appVersionField" prefWidth="200" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
-                <Label text="开发商:" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                <Label text="%wizard.label.vendor" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
                 <TextField fx:id="vendorField" prefWidth="200" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
 
-                <Label text="应用图标:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                <Label text="%wizard.label.icon" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
                 <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="3">
-                    <TextField fx:id="iconPathField" prefWidth="300" promptText="选择 .ico 或 .png 文件"/>
-                    <Button text="浏览..." onAction="#handleBrowseIcon"/>
+                    <TextField fx:id="iconPathField" prefWidth="300" promptText="%wizard.prompt.icon"/>
+                    <Button text="%wizard.button.browse" onAction="#handleBrowseIcon"/>
                 </HBox>
 
-                <Label text="应用描述:" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.valignment="TOP"/>
+                <Label text="%wizard.label.description" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.valignment="TOP"/>
                 <TextArea fx:id="descriptionArea" prefRowCount="3" prefWidth="400" GridPane.columnIndex="1" GridPane.rowIndex="4"
-                          promptText="简短描述应用的功能"/>
+                          promptText="%wizard.prompt.description"/>
             </GridPane>
         </VBox>
 
         <!-- 步骤 2: 打包选项 -->
         <VBox fx:id="step2Content" spacing="15" visible="false" managed="false">
-            <Label text="打包选项" styleClass="section-title"/>
+            <Label text="%wizard.section.package_options" styleClass="section-title"/>
 
             <VBox spacing="10" styleClass="option-card">
-                <CheckBox fx:id="embedJreCheckBox" text="嵌入 JRE（推荐）" selected="true"/>
-                <Label text="将 JRE 嵌入安装包，用户无需安装 Java" styleClass="help-text">
+                <CheckBox fx:id="embedJreCheckBox" text="%wizard.checkbox.embed_jre" selected="true"/>
+                <Label text="%wizard.checkbox.embed_jre_desc" styleClass="help-text">
                     <VBox.margin>
                         <Insets left="25"/>
                     </VBox.margin>
@@ -91,8 +91,8 @@
             </VBox>
 
             <VBox spacing="10" styleClass="option-card">
-                <CheckBox fx:id="createExeInstallerCheckBox" text="创建 EXE 安装程序 (需要 WiX)" selected="false"/>
-                <Label text="如未安装 WiX 工具，请取消勾选，将创建应用文件夹" styleClass="help-text">
+                <CheckBox fx:id="createExeInstallerCheckBox" text="%wizard.checkbox.create_exe" selected="false"/>
+                <Label text="%wizard.checkbox.create_exe_desc" styleClass="help-text">
                     <VBox.margin>
                         <Insets left="25"/>
                     </VBox.margin>
@@ -100,97 +100,87 @@
             </VBox>
 
             <VBox spacing="10" styleClass="option-card">
-                <CheckBox fx:id="createShortcutCheckBox" text="创建桌面快捷方式" selected="true"/>
+                <CheckBox fx:id="createShortcutCheckBox" text="%wizard.checkbox.create_shortcut" selected="true"/>
             </VBox>
 
             <VBox spacing="10" styleClass="option-card">
-                <CheckBox fx:id="addMenuCheckBox" text="添加到开始菜单" selected="true"/>
+                <CheckBox fx:id="addMenuCheckBox" text="%wizard.checkbox.add_menu" selected="true"/>
             </VBox>
 
             <VBox spacing="10" styleClass="option-card">
-                <CheckBox fx:id="dirChooserCheckBox" text="允许用户选择安装目录" selected="true"/>
+                <CheckBox fx:id="dirChooserCheckBox" text="%wizard.checkbox.dir_chooser" selected="true"/>
             </VBox>
 
             <GridPane hgap="15" vgap="15">
-                <Label text="最小内存 (MB):" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                <Label text="%wizard.label.min_memory" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
                 <Spinner fx:id="memoryMinSpinner" prefWidth="150" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 
-                <Label text="最大内存 (MB):" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                <Label text="%wizard.label.max_memory" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
                 <Spinner fx:id="memoryMaxSpinner" prefWidth="150" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
             </GridPane>
         </VBox>
 
         <!-- 步骤 3: 数据库配置 -->
         <VBox fx:id="step3Content" spacing="15" visible="false" managed="false">
-            <Label text="数据库配置" styleClass="section-title"/>
+            <Label text="%wizard.section.db_config" styleClass="section-title"/>
 
             <GridPane hgap="15" vgap="15">
-                <Label text="数据库类型:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                <Label text="%wizard.label.db_type" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
                 <ComboBox fx:id="dbTypeComboBox" prefWidth="200" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 
-                <Label text="主机地址:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                <Label text="%wizard.label.host" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
                 <TextField fx:id="dbHostField" prefWidth="200" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
-                <Label text="端口:" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                <Label text="%wizard.label.port" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
                 <TextField fx:id="dbPortField" prefWidth="100" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
 
-                <Label text="数据库名:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                <Label text="%wizard.label.db_name" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
                 <TextField fx:id="dbNameField" prefWidth="200" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
 
-                <Label text="用户名:" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+                <Label text="%wizard.label.username" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
                 <TextField fx:id="dbUsernameField" prefWidth="200" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
 
-                <Label text="密码:" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
+                <Label text="%wizard.label.password" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
                 <PasswordField fx:id="dbPasswordField" prefWidth="200" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
             </GridPane>
 
             <HBox spacing="10" alignment="CENTER_LEFT">
-                <Button fx:id="testConnectionButton" text="测试连接" onAction="#handleTestConnection"/>
-                <Label text="测试数据库连接是否正常" styleClass="help-text"/>
+                <Button fx:id="testConnectionButton" text="%wizard.button.test_connection" onAction="#handleTestConnection"/>
+                <Label text="%wizard.help.test_connection" styleClass="help-text"/>
             </HBox>
         </VBox>
 
         <!-- 步骤 4: 确认打包 -->
         <VBox fx:id="step4Content" spacing="15" visible="false" managed="false">
-            <Label text="确认打包信息" styleClass="section-title"/>
+            <Label text="%wizard.section.confirm" styleClass="section-title"/>
 
             <VBox spacing="10" styleClass="option-card">
-                <Label text="打包配置摘要:" style="-fx-font-weight: bold;"/>
+                <Label text="%wizard.label.summary" style="-fx-font-weight: bold;"/>
                 <GridPane hgap="15" vgap="5">
-                    <Label text="应用名称:" GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="help-text"/>
+                    <Label text="%wizard.label.app_name" GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="help-text"/>
                     <Label fx:id="summaryAppName" text="LiSuan" GridPane.columnIndex="1" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
 
-                    <Label text="版本:" GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="help-text"/>
+                    <Label text="%wizard.label.version" GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="help-text"/>
                     <Label fx:id="summaryVersion" text="2.5.8" GridPane.columnIndex="1" GridPane.rowIndex="1" style="-fx-font-weight: bold;"/>
 
-                    <Label text="嵌入 JRE:" GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="help-text"/>
-                    <Label fx:id="summaryEmbedJre" text="是" GridPane.columnIndex="1" GridPane.rowIndex="2" style="-fx-font-weight: bold;"/>
+                    <Label text="%wizard.label.embed_jre" GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="help-text"/>
+                    <Label fx:id="summaryEmbedJre" text="%wizard.yes" GridPane.columnIndex="1" GridPane.rowIndex="2" style="-fx-font-weight: bold;"/>
 
-                    <Label text="输出目录:" GridPane.columnIndex="0" GridPane.rowIndex="3" styleClass="help-text"/>
+                    <Label text="%wizard.label.output_dir" GridPane.columnIndex="0" GridPane.rowIndex="3" styleClass="help-text"/>
                     <Label fx:id="summaryOutputDir" text="target/dist" GridPane.columnIndex="1" GridPane.rowIndex="3" style="-fx-font-weight: bold;"/>
                 </GridPane>
             </VBox>
 
             <GridPane hgap="15" vgap="15">
-                <Label text="输出目录:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                <Label text="%wizard.label.output_dir" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
                 <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                    <TextField fx:id="outputDirField" prefWidth="400" promptText="选择 EXE 文件输出目录"/>
-                    <Button text="浏览..." onAction="#handleBrowseOutputDir"/>
+                    <TextField fx:id="outputDirField" prefWidth="400" promptText="%wizard.prompt.output_dir"/>
+                    <Button text="%wizard.button.browse" onAction="#handleBrowseOutputDir"/>
                 </HBox>
             </GridPane>
 
-            <TextArea prefRowCount="6" prefWidth="750" editable="false" wrapText="true" styleClass="info-area"
-                      text="打包说明：
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. 确保 Maven 和 JDK 已安装并配置环境变量
-2. 确保项目目录有写入权限
-3. 打包过程可能需要 5-10 分钟，请耐心等待
-4. 生成的 EXE 文件可直接分发安装
-
-打包完成后：
-- 安装包将保存到指定输出目录
-- 用户运行 EXE 即可安装，无需配置
-- 内嵌 JRE 版本无需用户安装 Java"/>
+            <TextArea fx:id="instructionsArea" prefRowCount="6" prefWidth="750" editable="false" wrapText="true" styleClass="info-area"
+                      text="%wizard.instructions"/>
         </VBox>
         </VBox>
     </ScrollPane>
@@ -211,10 +201,10 @@
             <Insets topRightBottomLeft="10"/>
         </padding>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button fx:id="backButton" text="&lt; 上一步" onAction="#handleBack" prefWidth="100"/>
-        <Button fx:id="nextButton" text="下一步 &gt;" onAction="#handleNext" prefWidth="100" styleClass="primary-button"/>
-        <Button fx:id="finishButton" text="开始打包" onAction="#handleFinish" prefWidth="100" visible="false" managed="false" styleClass="primary-button"/>
-        <Button fx:id="cancelButton" text="取消" onAction="#handleCancel" prefWidth="80"/>
+        <Button fx:id="backButton" text="%wizard.button.back" onAction="#handleBack" prefWidth="100"/>
+        <Button fx:id="nextButton" text="%wizard.button.next" onAction="#handleNext" prefWidth="100" styleClass="primary-button"/>
+        <Button fx:id="finishButton" text="%wizard.button.finish" onAction="#handleFinish" prefWidth="100" visible="false" managed="false" styleClass="primary-button"/>
+        <Button fx:id="cancelButton" text="%wizard.button.cancel" onAction="#handleCancel" prefWidth="80"/>
     </HBox>
 
 </VBox>

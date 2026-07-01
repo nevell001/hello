@@ -294,7 +294,7 @@ public class PackageWizardController {
                 // 加载 MySQL 驱动并测试连接
                 try {
                     Class.forName("com.mysql.cj.jdbc.Driver");
-                    String url = "jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false&serverTimezone=Asia/Shanghai";
+                    String url = "jdbc:mysql://" + host + ":" + port + "/" + database + "?sslMode=PREFERRED&serverTimezone=Asia/Shanghai";
                     try (java.sql.Connection conn = java.sql.DriverManager.getConnection(url, username, password)) {
                         return conn.isValid(5);
                     }
@@ -656,7 +656,7 @@ public class PackageWizardController {
         }
 
         File configFile = new File(configDir, "database.properties");
-        String url = String.format("jdbc:mysql://%s:%s/%s?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8",
+        String url = String.format("jdbc:mysql://%s:%s/%s?sslMode=PREFERRED&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8",
                 dbHostField.getText().trim(),
                 dbPortField.getText().trim(),
                 dbNameField.getText().trim());

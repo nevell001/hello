@@ -4,6 +4,7 @@ import com.cashier.dao.MemberDAO;
 import com.cashier.dao.RechargeRecordDAO;
 import com.cashier.model.Member;
 import com.cashier.model.RechargeRecord;
+import com.cashier.i18n.I18nManager;
 import com.cashier.util.DatabaseManager;
 import com.cashier.util.LoggerFactoryUtil;
 import org.slf4j.Logger;
@@ -72,7 +73,7 @@ public class MemberService {
                 // 获取最新会员信息
                 Member latestMember = MemberDAO.findByIdWithConnection(conn, member.id);
                 if (latestMember == null) {
-                    throw new SQLException("会员不存在");
+                    throw new SQLException(I18nManager.getInstance().get("service.member_not_found_id", member.id));
                 }
 
                 // 在同一事务内统一更新余额、积分和等级
@@ -82,7 +83,7 @@ public class MemberService {
                 latestMember.discount = LEVEL_DISCOUNTS.getOrDefault(latestMember.level, BigDecimal.TEN);
                 latestMember.discountRate = latestMember.discount;
                 if (!MemberDAO.updateWithConnection(conn, latestMember)) {
-                    throw new SQLException("更新会员信息失败");
+                    throw new SQLException(I18nManager.getInstance().get("service.member_update_failed"));
                 }
 
                 // 创建充值记录
@@ -96,7 +97,7 @@ public class MemberService {
                 record.timestamp = new Date();
 
                 if (!RechargeRecordDAO.insertWithConnection(conn, record)) {
-                    throw new SQLException("创建充值记录失败");
+                    throw new SQLException(I18nManager.getInstance().get("service.recharge_record_create_failed"));
                 }
 
                 // 更新传入的会员对象

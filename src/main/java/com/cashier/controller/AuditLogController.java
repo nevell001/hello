@@ -10,6 +10,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.util.StringConverter;
 import org.slf4j.Logger;
 
 import java.text.SimpleDateFormat;
@@ -34,24 +35,82 @@ public class AuditLogController {
     @FXML private ComboBox<String> resultBox;
     @FXML private Label countLabel;
 
+    /** 分类枚举值（存储在数据库中的原始值，用于筛选） */
+    private static final String[] CATEGORY_VALUES = {
+        "ALL", "AUTH", "TRANSACTION", "REFUND", "INVENTORY", "PURCHASE", "MEMBER", "USER", "SETTINGS", "SYSTEM"
+    };
+    /** 结果枚举值（存储在数据库中的原始值，用于筛选） */
+    private static final String[] RESULT_VALUES = {"ALL", "SUCCESS", "FAILURE"};
+
     @FXML
     private void initialize() {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         timeColumn.setCellValueFactory(data -> new SimpleStringProperty(format.format(data.getValue().timestamp)));
         usernameColumn.setCellValueFactory(data -> new SimpleStringProperty(
             data.getValue().username == null ? "-" : data.getValue().username));
-        categoryColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().category));
+        categoryColumn.setCellValueFactory(data -> new SimpleStringProperty(
+            translateCategory(data.getValue().category)));
         operationColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().operation));
-        resultColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().result));
+        resultColumn.setCellValueFactory(data -> new SimpleStringProperty(
+            translateResult(data.getValue().result)));
         detailsColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().details));
         affectedColumn.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().affectedRecords));
 
-        categoryBox.setItems(FXCollections.observableArrayList(
-            "ALL", "AUTH", "TRANSACTION", "REFUND", "INVENTORY", "PURCHASE", "MEMBER", "USER", "SETTINGS", "SYSTEM"));
-        resultBox.setItems(FXCollections.observableArrayList("ALL", "SUCCESS", "FAILURE"));
+        // ComboBox 存储原始枚举值用于筛选，通过 StringConverter 显示本地化文本
+        categoryBox.setItems(FXCollections.observableArrayList(CATEGORY_VALUES));
+        categoryBox.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(String value) {
+                return translateCategory(value);
+            }
+            @Override
+            public String fromString(String string) {
+                return string;
+            }
+        });
+        resultBox.setItems(FXCollections.observableArrayList(RESULT_VALUES));
+        resultBox.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(String value) {
+                return translateResult(value);
+            }
+            @Override
+            public String fromString(String string) {
+                return string;
+            }
+        });
         categoryBox.getSelectionModel().selectFirst();
         resultBox.getSelectionModel().selectFirst();
         handleRefresh();
+    }
+
+    /**
+     * 将分类枚举值翻译为本地化显示文本
+     * @param category 数据库中的原始枚举值（如 AUTH, TRANSACTION）
+     * @return 本地化文本（如"登录认证"、"Authentication"）
+     */
+    private String translateCategory(String category) {
+        if (category == null || category.isEmpty()) {
+            return "-";
+        }
+        String key = "audit.category." + category.toLowerCase(Locale.ROOT);
+        String translated = I18nManager.getInstance().get(key);
+        // 如果翻译结果等于 key 本身，说明未找到翻译，回退显示原始值
+        return translated.equals(key) ? category : translated;
+    }
+
+    /**
+     * 将结果枚举值翻译为本地化显示文本
+     * @param result 数据库中的原始枚举值（SUCCESS/FAILURE）
+     * @return 本地化文本（如"成功"、"Success"）
+     */
+    private String translateResult(String result) {
+        if (result == null || result.isEmpty()) {
+            return "-";
+        }
+        String key = "audit.result." + result.toLowerCase(Locale.ROOT);
+        String translated = I18nManager.getInstance().get(key);
+        return translated.equals(key) ? result : translated;
     }
 
     @FXML
@@ -61,7 +120,7 @@ public class AuditLogController {
             allLogs.setAll(logs);
             handleSearch();
         } catch (Exception e) {
-            logger.error("加载审计日志失败", e);
+            logger.error("Failed to load audit logs", e);
             countLabel.setText(I18nManager.getInstance().get("audit.load_failed"));
         }
     }

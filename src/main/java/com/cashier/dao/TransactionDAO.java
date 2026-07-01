@@ -80,8 +80,13 @@ public class TransactionDAO {
      * 根据交易ID查找交易
      */
     public static Transaction findById(String transactionId) throws SQLException {
-        String sql = "SELECT transaction_id, timestamp, total_amount, tax, final_amount, payment_method, member_phone, operator_username, operator_name " +
-                     "FROM transactions WHERE transaction_id = ?";
+        // LEFT JOIN users 表兜底：当 operator_name 冗余字段为 NULL 时，从 users 表获取收银员姓名
+        String sql = "SELECT t.transaction_id, t.timestamp, t.total_amount, t.tax, t.final_amount, t.payment_method, " +
+                     "t.member_phone, t.operator_username, " +
+                     "COALESCE(t.operator_name, u.name, t.operator_username) AS operator_name " +
+                     "FROM transactions t " +
+                     "LEFT JOIN users u ON t.operator_username = u.username " +
+                     "WHERE t.transaction_id = ?";
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -143,11 +148,13 @@ public class TransactionDAO {
     public static List<Transaction> findAll() throws SQLException {
         Map<String, Transaction> transactionMap = new LinkedHashMap<>();
 
-        // 使用 JOIN 查询一次性获取所有交易和明细
+        // LEFT JOIN users 表兜底：当 operator_name 为 NULL 时从 users 表获取收银员姓名
         String sql = "SELECT t.transaction_id, t.timestamp, t.total_amount, t.tax, t.final_amount, t.payment_method, " +
-                     "t.member_phone, t.operator_username, t.operator_name, " +
+                     "t.member_phone, t.operator_username, " +
+                     "COALESCE(t.operator_name, u.name, t.operator_username) AS operator_name, " +
                      "ti.id as item_id, ti.product_id, ti.product_code, ti.barcode, ti.product_name, ti.price, ti.quantity, ti.subtotal " +
                      "FROM transactions t " +
+                     "LEFT JOIN users u ON t.operator_username = u.username " +
                      "LEFT JOIN transaction_items ti ON t.transaction_id = ti.transaction_id " +
                      "ORDER BY t.timestamp DESC";
 
@@ -198,10 +205,13 @@ public class TransactionDAO {
     public static List<Transaction> findByDateRange(String startDate, String endDate) throws SQLException {
         Map<String, Transaction> transactionMap = new LinkedHashMap<>();
 
+        // LEFT JOIN users 表兜底：当 operator_name 为 NULL 时从 users 表获取收银员姓名
         String sql = "SELECT t.transaction_id, t.timestamp, t.total_amount, t.tax, t.final_amount, t.payment_method, " +
-                     "t.member_phone, t.operator_username, t.operator_name, " +
+                     "t.member_phone, t.operator_username, " +
+                     "COALESCE(t.operator_name, u.name, t.operator_username) AS operator_name, " +
                      "ti.id as item_id, ti.product_id, ti.product_code, ti.barcode, ti.product_name, ti.price, ti.quantity, ti.subtotal " +
                      "FROM transactions t " +
+                     "LEFT JOIN users u ON t.operator_username = u.username " +
                      "LEFT JOIN transaction_items ti ON t.transaction_id = ti.transaction_id " +
                      "WHERE t.timestamp BETWEEN ? AND ? " +
                      "ORDER BY t.timestamp DESC";
@@ -255,8 +265,13 @@ public class TransactionDAO {
      */
     public static List<Transaction> findByPaymentMethod(String paymentMethod) throws SQLException {
         List<Transaction> transactions = new ArrayList<>();
-        String sql = "SELECT transaction_id, timestamp, total_amount, tax, final_amount, payment_method, member_phone, operator_username, operator_name " +
-                     "FROM transactions WHERE payment_method = ? ORDER BY timestamp DESC";
+        // LEFT JOIN users 表兜底：当 operator_name 为 NULL 时从 users 表获取收银员姓名
+        String sql = "SELECT t.transaction_id, t.timestamp, t.total_amount, t.tax, t.final_amount, t.payment_method, " +
+                     "t.member_phone, t.operator_username, " +
+                     "COALESCE(t.operator_name, u.name, t.operator_username) AS operator_name " +
+                     "FROM transactions t " +
+                     "LEFT JOIN users u ON t.operator_username = u.username " +
+                     "WHERE t.payment_method = ? ORDER BY t.timestamp DESC";
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {

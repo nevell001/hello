@@ -34,11 +34,11 @@
         </VBox>
         <VBox spacing="5" prefWidth="150">
             <Label text="%return_report.total_amount" style="-fx-font-weight: bold;"/>
-            <Label fx:id="totalReturnAmountLabel" text="¥0.00" styleClass="text-danger" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+            <Label fx:id="totalReturnAmountLabel" text="0.00" styleClass="text-danger" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
         </VBox>
         <VBox spacing="5" prefWidth="150">
             <Label text="%return_report.avg_amount" style="-fx-font-weight: bold;"/>
-            <Label fx:id="avgReturnAmountLabel" text="¥0.00" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+            <Label fx:id="avgReturnAmountLabel" text="0.00" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
         </VBox>
         <VBox spacing="5" prefWidth="120">
             <Label text="%return_report.pending_orders" style="-fx-font-weight: bold;"/>

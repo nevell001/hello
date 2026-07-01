@@ -2,6 +2,7 @@ package com.cashier.service;
 
 import com.cashier.dao.*;
 import com.cashier.model.*;
+import com.cashier.i18n.I18nManager;
 import com.cashier.util.DatabaseManager;
 import com.cashier.util.LoggerFactoryUtil;
 import org.slf4j.Logger;
@@ -88,12 +89,12 @@ public class ReturnService {
                 for (ReturnOrderItem item : items) {
                     Product product = productDAO.findByIdWithConnection(conn, item.productId);
                     if (product == null) {
-                        throw new SQLException("退货商品不存在: productId=" + item.productId);
+                        throw new SQLException(I18nManager.getInstance().get("service.return_product_not_found", item.productId));
                     }
 
                     product.quantity += item.returnQuantity;
                     if (!productDAO.updateWithVersionWithConnection(conn, product)) {
-                        throw new SQLException("恢复退货库存失败: productId=" + item.productId);
+                        throw new SQLException(I18nManager.getInstance().get("service.return_stock_restore_failed", item.productId));
                     }
                 }
 
@@ -149,12 +150,12 @@ public class ReturnService {
 
                 Member member = MemberDAO.findByIdWithConnection(conn, returnOrder.memberId);
                 if (member == null) {
-                    throw new SQLException("退货会员不存在: memberId=" + returnOrder.memberId);
+                    throw new SQLException(I18nManager.getInstance().get("service.return_member_not_found", returnOrder.memberId));
                 }
 
                 member.balance = member.getBalance().add(returnOrder.getTotalAmount());
                 if (!MemberDAO.updateWithConnection(conn, member)) {
-                    throw new SQLException("更新退货会员余额失败: memberId=" + returnOrder.memberId);
+                    throw new SQLException(I18nManager.getInstance().get("service.return_member_balance_update_failed", returnOrder.memberId));
                 }
 
                 RechargeRecord record = new RechargeRecord();
@@ -166,7 +167,7 @@ public class ReturnService {
                 record.timestamp = new Date();
                 record.recordId = returnOrderId;
                 if (!RechargeRecordDAO.insertWithConnection(conn, record)) {
-                    throw new SQLException("插入退款记录失败");
+                    throw new SQLException(I18nManager.getInstance().get("service.return_refund_record_insert_failed"));
                 }
                 
                 // 广播退货完成（退款）事件

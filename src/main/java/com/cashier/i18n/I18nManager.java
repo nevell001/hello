@@ -19,9 +19,9 @@ public class I18nManager {
     private ResourceBundle bundle;
     private final ConcurrentHashMap<String, ResourceBundle> bundles = new ConcurrentHashMap<>();
     private static final Map<String, String> FALLBACK_TEXTS = Map.of(
-        "inventory.status.out_of_stock", "缺货",
-        "inventory.status.low_stock", "库存不足",
-        "inventory.status.normal", "正常"
+        "inventory.status.out_of_stock", "Out of Stock",
+        "inventory.status.low_stock", "Low Stock",
+        "inventory.status.normal", "Normal"
     );
     
     // 支持的语言列表

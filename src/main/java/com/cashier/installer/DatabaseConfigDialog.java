@@ -203,7 +203,7 @@ public class DatabaseConfigDialog {
 
         // Test actual database connection
         try {
-            String dbUrl = String.format("jdbc:mysql://%s:%s/?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true",
+            String dbUrl = String.format("jdbc:mysql://%s:%s/?sslMode=PREFERRED&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true",
                     host, port);
             StringBuilder message = new StringBuilder();
             message.append("Database connection successful!\n\n");
@@ -289,7 +289,7 @@ public class DatabaseConfigDialog {
             Class.forName("com.mysql.cj.jdbc.Driver");
 
             // Connect without specifying database first
-            String dbUrl = String.format("jdbc:mysql://%s:%s/?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true",
+            String dbUrl = String.format("jdbc:mysql://%s:%s/?sslMode=PREFERRED&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true",
                     host, port);
 
             // Check if database exists and create if needed
@@ -306,7 +306,7 @@ public class DatabaseConfigDialog {
                 }
 
                 if (!dbExists) {
-                    // Create database
+                    // Create database (dbName 已通过 validateDatabaseName 白名单校验，仅允许 [A-Za-z0-9_])
                     try (Statement stmt = conn.createStatement()) {
                         stmt.execute("CREATE DATABASE `" + dbName + "` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
                     }
@@ -332,7 +332,7 @@ public class DatabaseConfigDialog {
             }
 
             // Write database.properties
-            String fullDbUrl = String.format("jdbc:mysql://%s:%s/%s?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8",
+            String fullDbUrl = String.format("jdbc:mysql://%s:%s/%s?sslMode=PREFERRED&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8",
                     host, port, dbName);
 
             String config = String.format(
@@ -400,7 +400,7 @@ public class DatabaseConfigDialog {
         }
 
         try (Connection conn = DriverManager.getConnection(
-                String.format("jdbc:mysql://%s:%s/%s?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true",
+                String.format("jdbc:mysql://%s:%s/%s?sslMode=PREFERRED&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true",
                     host, port, dbName), user, pass)) {
 
             // Read and execute the script

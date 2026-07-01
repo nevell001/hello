@@ -101,7 +101,8 @@ public class DatabaseManager {
                 initializeDatabase();
 
             } catch (Exception e) {
-                logger.error("数据库初始化失败", e);
+                logger.error("数据库初始化失败，系统将终止启动", e);
+                throw new ExceptionInInitializerError("数据库初始化失败: " + e.getMessage());
             }
         } else {
             logger.info("检测到测试模式，跳过 MySQL 数据库初始化");
@@ -218,7 +219,7 @@ public class DatabaseManager {
             configFile.getParentFile().mkdirs();
 
             Properties props = new Properties();
-            props.setProperty("db.url", "jdbc:mysql://localhost:3306/lisuan_system?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8");
+            props.setProperty("db.url", "jdbc:mysql://localhost:3306/lisuan_system?sslMode=PREFERRED&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8");
             props.setProperty("db.username", "lisuan");
             // 安全提示：建议使用环境变量 CASHER_DB_PASSWORD 存储密码，避免明文存储
             // Windows: set CASHER_DB_PASSWORD=YourPassword
@@ -1063,8 +1064,13 @@ public class DatabaseManager {
 
             logger.info("默认管理员用户创建成功:");
             logger.info("  用户名: admin");
-            logger.info("  初始密码: " + initialPassword + " (请妥善保存，首次登录需修改)");
-            logger.info("  密码已使用 BCrypt 加密存储");
+            // 安全提示：不在日志中记录明文密码，避免日志泄露凭据
+            logger.info("  初始密码已生成并使用 BCrypt 加密存储，请查看控制台输出获取临时密码");
+            // NOSONAR - 有意使用 System.out 而非 logger，确保密码仅输出到控制台而不写入日志文件
+            System.out.println("========================================");
+            System.out.println("  默认管理员初始密码: " + initialPassword);
+            System.out.println("  请妥善保存，首次登录后需立即修改！");
+            System.out.println("========================================");
         } else {
             logger.info("用户表已有数据，跳过创建默认用户");
         }

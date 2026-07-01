@@ -279,9 +279,11 @@ public class InventoryCheckController {
             itemTable.setPlaceholder(new Label(I18nManager.getInstance().get("message.data.empty")));
 
             TableColumn<CheckItemWrapper, String> productNameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_approval.product_name"));
+            productNameCol.setPrefWidth(200);
             productNameCol.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getProductName()));
 
             TableColumn<CheckItemWrapper, Integer> bookQtyCol = new TableColumn<>(I18nManager.getInstance().get("runtime.book_quantity"));
+            bookQtyCol.setPrefWidth(100);
             bookQtyCol.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().bookQuantity).asObject());
 
             TableColumn<CheckItemWrapper, Integer> actualQtyCol = new TableColumn<>(I18nManager.getInstance().get("runtime.actual_quantity"));
@@ -297,6 +299,7 @@ public class InventoryCheckController {
             });
 
             TableColumn<CheckItemWrapper, Integer> diffQtyCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("shift.difference"));
+            diffQtyCol.setPrefWidth(80);
             diffQtyCol.setCellValueFactory(cellData -> cellData.getValue().diffQuantityProperty().asObject());
 
             TableColumn<CheckItemWrapper, String> diffReasonCol = new TableColumn<>(I18nManager.getInstance().get("runtime.difference_reason"));
@@ -543,18 +546,23 @@ public class InventoryCheckController {
             });
             
             TableColumn<Product, String> nameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_approval.product_name"));
+            nameCol.setPrefWidth(200);
             nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
 
             TableColumn<Product, String> barcodeCol = new TableColumn<>(I18nManager.getInstance().get("runtime.barcode"));
+            barcodeCol.setPrefWidth(130);
             barcodeCol.setCellValueFactory(new PropertyValueFactory<>("barcode"));
 
             TableColumn<Product, String> categoryCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_report.category"));
+            categoryCol.setPrefWidth(100);
             categoryCol.setCellValueFactory(new PropertyValueFactory<>("category"));
 
             TableColumn<Product, Number> stockCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("product.stock"));
+            stockCol.setPrefWidth(80);
             stockCol.setCellValueFactory(new PropertyValueFactory<>("quantity"));
 
             TableColumn<Product, Number> costCol = new TableColumn<>(I18nManager.getInstance().get("runtime.cost_price"));
+            costCol.setPrefWidth(100);
             costCol.setCellValueFactory(new PropertyValueFactory<>("cost"));
 
             productTable.getColumns().addAll(selectColumn, nameCol, barcodeCol, categoryCol, stockCol, costCol);
@@ -795,18 +803,23 @@ public class InventoryCheckController {
             // 商品明细
             TableView<InventoryCheckItem> itemTable = new TableView<>();
             TableColumn<InventoryCheckItem, String> nameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_approval.product_name"));
+            nameCol.setPrefWidth(200);
             nameCol.setCellValueFactory(new PropertyValueFactory<>("productName"));
 
             TableColumn<InventoryCheckItem, Number> bookCol = new TableColumn<>(I18nManager.getInstance().get("runtime.book_quantity"));
+            bookCol.setPrefWidth(100);
             bookCol.setCellValueFactory(new PropertyValueFactory<>("bookQuantity"));
 
             TableColumn<InventoryCheckItem, Number> actualCol = new TableColumn<>(I18nManager.getInstance().get("runtime.actual_quantity"));
+            actualCol.setPrefWidth(100);
             actualCol.setCellValueFactory(new PropertyValueFactory<>("actualQuantity"));
 
             TableColumn<InventoryCheckItem, Number> diffCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("shift.difference"));
+            diffCol.setPrefWidth(80);
             diffCol.setCellValueFactory(new PropertyValueFactory<>("diffQuantity"));
 
             TableColumn<InventoryCheckItem, String> reasonCol = new TableColumn<>(I18nManager.getInstance().get("runtime.difference_reason"));
+            reasonCol.setPrefWidth(150);
             reasonCol.setCellValueFactory(new PropertyValueFactory<>("diffReason"));
 
             itemTable.getColumns().addAll(nameCol, bookCol, actualCol, diffCol, reasonCol);

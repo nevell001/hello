@@ -3,6 +3,7 @@ package com.cashier.service;
 import com.cashier.model.BackupRecord;
 import com.cashier.model.BackupConfig;
 import com.cashier.dao.BackupDAO;
+import com.cashier.i18n.I18nManager;
 import com.cashier.util.DatabaseManager;
 import com.cashier.api.sync.SyncManager;
 import com.cashier.api.sync.SyncEventType;
@@ -158,7 +159,7 @@ public class BackupService {
         }
 
         if (!Files.exists(zipPath) || Files.size(zipPath) == 0) {
-            throw new IOException("备份文件生成失败或为空: " + zipPath);
+            throw new IOException(I18nManager.getInstance().get("service.backup_file_empty", zipPath));
         }
         
         logger.debug("备份文件创建: {}", zipPath);
@@ -179,7 +180,7 @@ public class BackupService {
             if (success && tempSqlFile.exists() && tempSqlFile.length() > 0) {
                 addToZip(zos, "database/backup.sql", tempSqlFile);
             } else {
-                throw new IOException("数据库 SQL 导出失败");
+                throw new IOException(I18nManager.getInstance().get("service.backup_sql_export_failed"));
             }
         } finally {
             // 删除临时文件

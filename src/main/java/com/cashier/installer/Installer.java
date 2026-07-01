@@ -434,7 +434,7 @@ public class Installer {
         }
         
         // Create database.properties
-        String dbUrl = String.format("jdbc:mysql://%s:%s/%s?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8",
+        String dbUrl = String.format("jdbc:mysql://%s:%s/%s?sslMode=PREFERRED&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8",
             dbHost, dbPort, DB_NAME);
         
         String dbConfig = String.format(

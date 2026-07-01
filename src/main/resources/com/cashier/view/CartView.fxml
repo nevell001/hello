@@ -113,7 +113,7 @@
 
                     <HBox spacing="15" alignment="CENTER_LEFT">
                         <Label text="%cart.total_amount" styleClass="amount-label"/>
-                        <Label fx:id="totalAmountLabel" text="¥0.00" styleClass="amount-value"/>
+                        <Label fx:id="totalAmountLabel" text="0.00" styleClass="amount-value"/>
                     </HBox>
 
                     <HBox spacing="15" alignment="CENTER_LEFT">
@@ -123,14 +123,14 @@
 
                     <HBox spacing="15" alignment="CENTER_LEFT">
                         <Label text="%cart.discount_amount" styleClass="amount-label"/>
-                        <Label fx:id="discountLabel" text="-¥0.00" styleClass="discount-value"/>
+                        <Label fx:id="discountLabel" text="0.00" styleClass="discount-value"/>
                     </HBox>
 
                     <Separator/>
 
                     <HBox spacing="15" alignment="CENTER_LEFT">
                         <Label text="%cart.final_amount" styleClass="final-label"/>
-                        <Label fx:id="finalAmountLabel" text="¥0.00" styleClass="final-value"/>
+                        <Label fx:id="finalAmountLabel" text="0.00" styleClass="final-value"/>
                     </HBox>
                 </VBox>
 

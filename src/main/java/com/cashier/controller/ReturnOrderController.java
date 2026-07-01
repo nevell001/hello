@@ -88,6 +88,10 @@ public class ReturnOrderController {
         initializeReturnOrderTable();
         initializeItemTable();
 
+        // 设置表格空数据占位符（i18n）
+        returnOrderTable.setPlaceholder(new Label(com.cashier.i18n.I18nManager.getInstance().get("message.data.empty")));
+        itemTable.setPlaceholder(new Label(com.cashier.i18n.I18nManager.getInstance().get("message.data.empty")));
+
         // 加载退货订单数据
         loadReturnOrders();
 
@@ -220,22 +224,17 @@ public class ReturnOrderController {
                     setText(null);
                     clearSemanticTextStyles(this);
                 } else {
+                    setText(com.cashier.util.I18nUiUtils.itemCondition(item));
+                    clearSemanticTextStyles(this);
                     switch (item) {
-                        case "GOOD":
-                            setText(com.cashier.i18n.I18nManager.getInstance().get("runtime.condition_good"));
-                            clearSemanticTextStyles(this);
-                            break;
                         case "DAMAGED":
-                            setText(com.cashier.i18n.I18nManager.getInstance().get("runtime.condition_damaged"));
                             applySemanticTextStyle(this, "text-danger");
                             break;
                         case "OPENED":
-                            setText(com.cashier.i18n.I18nManager.getInstance().get("runtime.condition_opened"));
                             applySemanticTextStyle(this, "text-warning");
                             break;
                         default:
-                            setText(item);
-                            clearSemanticTextStyles(this);
+                            break;
                     }
                 }
             }
@@ -270,7 +269,9 @@ public class ReturnOrderController {
         memberNameLabel.setText(returnOrder.memberName != null ? returnOrder.memberName : com.cashier.i18n.I18nManager.getInstance().get("statistics.no_data"));
         totalAmountLabel.setText(CurrencyUtil.format(returnOrder.totalAmount.doubleValue()));
         statusLabel.setText(returnOrder.getStatusText());
-        operatorNameLabel.setText(returnOrder.operatorName);
+        operatorNameLabel.setText(returnOrder.operatorName != null && !returnOrder.operatorName.isEmpty()
+            ? returnOrder.operatorName
+            : com.cashier.i18n.I18nManager.getInstance().get("common.none"));
         returnDateLabel.setText(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(returnOrder.returnDate));
         returnReasonTextArea.setText(returnOrder.returnReason != null ? returnOrder.returnReason : "");
         notesTextArea.setText(returnOrder.notes != null ? returnOrder.notes : "");
@@ -464,7 +465,9 @@ public class ReturnOrderController {
                     "runtime.original_transaction_details",
                     transaction.transactionId,
                     transaction.timestamp,
-                    transaction.operatorName,
+                    transaction.operatorName != null && !transaction.operatorName.isEmpty()
+                        ? transaction.operatorName
+                        : com.cashier.i18n.I18nManager.getInstance().get("common.none"),
                     com.cashier.util.I18nUiUtils.paymentMethod(transaction.paymentMethod),
                     String.format("%.2f", transaction.totalAmount),
                     transaction.memberName != null ? transaction.memberName

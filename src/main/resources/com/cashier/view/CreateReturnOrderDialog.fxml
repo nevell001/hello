@@ -82,7 +82,7 @@
     <!-- 退货金额汇总 -->
     <HBox spacing="20" alignment="CENTER_RIGHT" styleClass="surface-muted" style="-fx-padding: 10">
         <Label text="%return_order.total_amount" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
-        <Label fx:id="totalReturnAmountLabel" text="¥0.00"
+        <Label fx:id="totalReturnAmountLabel" text="0.00"
               styleClass="text-danger" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
     </HBox>
 

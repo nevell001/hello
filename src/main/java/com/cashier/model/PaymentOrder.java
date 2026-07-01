@@ -144,6 +144,7 @@ public class PaymentOrder {
     
     /**
      * 支付渠道枚举
+     * displayName 存储中文默认值用于向后兼容，getDisplayName() 返回 i18n 翻译
      */
     public enum PaymentChannel {
         WECHAT("微信支付"),
@@ -160,17 +161,33 @@ public class PaymentOrder {
             this.displayName = displayName;
         }
         
+        /**
+         * 获取显示名称（i18n 翻译，回退到默认中文值）
+         */
         public String getDisplayName() {
+            String key = "payment.channel." + name().toLowerCase(java.util.Locale.ROOT);
+            try {
+                return com.cashier.i18n.I18nManager.getInstance().get(key);
+            } catch (Exception e) {
+                return displayName;
+            }
+        }
+        
+        /**
+         * 获取内部默认显示名称（不经过 i18n，用于 fromString 匹配）
+         */
+        public String getDefaultDisplayName() {
             return displayName;
         }
         
         /**
-         * 从字符串解析
+         * 从字符串解析（同时匹配枚举名、i18n 翻译和默认中文名）
          */
         public static PaymentChannel fromString(String str) {
             for (PaymentChannel channel : values()) {
                 if (channel.name().equalsIgnoreCase(str) || 
-                    channel.displayName.equals(str)) {
+                    channel.displayName.equals(str) ||
+                    channel.getDisplayName().equals(str)) {
                     return channel;
                 }
             }

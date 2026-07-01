@@ -71,6 +71,10 @@ public class ReturnApprovalController {
         initializePendingOrderTable();
         initializeItemTable();
 
+        // 设置表格空数据占位符（i18n）
+        pendingOrderTable.setPlaceholder(new Label(I18nManager.getInstance().get("message.data.empty")));
+        itemTable.setPlaceholder(new Label(I18nManager.getInstance().get("message.data.empty")));
+
         // 加载待审批订单
         loadPendingOrders();
 
@@ -177,22 +181,20 @@ public class ReturnApprovalController {
                     setText(null);
                     clearSemanticTextStyles(this);
                 } else {
+                    setText(com.cashier.util.I18nUiUtils.itemCondition(item));
+                    clearSemanticTextStyles(this);
                     switch (item) {
                         case "GOOD":
-                            setText(com.cashier.i18n.I18nManager.getInstance().get("runtime.condition_good"));
                             applySemanticTextStyle(this, "text-success");
                             break;
                         case "DAMAGED":
-                            setText(com.cashier.i18n.I18nManager.getInstance().get("runtime.condition_damaged"));
                             applySemanticTextStyle(this, "text-danger");
                             break;
                         case "OPENED":
-                            setText(com.cashier.i18n.I18nManager.getInstance().get("runtime.condition_opened"));
                             applySemanticTextStyle(this, "text-warning");
                             break;
                         default:
-                            setText(item);
-                            clearSemanticTextStyles(this);
+                            break;
                     }
                 }
             }
@@ -227,7 +229,9 @@ public class ReturnApprovalController {
         memberNameLabel.setText(order.memberName != null ? order.memberName : com.cashier.i18n.I18nManager.getInstance().get("statistics.no_data"));
         totalAmountLabel.setText(CurrencyUtil.format(order.totalAmount.doubleValue()));
         returnDateLabel.setText(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(order.returnDate));
-        operatorNameLabel.setText(order.operatorName);
+        operatorNameLabel.setText(order.operatorName != null && !order.operatorName.isEmpty()
+            ? order.operatorName
+            : com.cashier.i18n.I18nManager.getInstance().get("common.none"));
         returnReasonTextArea.setText(order.returnReason != null ? order.returnReason : "");
         originalTransactionLabel.setText(order.originalTransactionId != null ? order.originalTransactionId : com.cashier.i18n.I18nManager.getInstance().get("statistics.no_data"));
         paymentMethodLabel.setText(order.paymentMethod != null
@@ -360,11 +364,13 @@ public class ReturnApprovalController {
                 String details = I18nManager.getInstance().get("runtime.original_transaction_details",
                     transaction.transactionId,
                     transaction.timestamp,
-                    transaction.operatorName,
+                    transaction.operatorName != null && !transaction.operatorName.isEmpty()
+                        ? transaction.operatorName
+                        : I18nManager.getInstance().get("common.none"),
                     com.cashier.util.I18nUiUtils.paymentMethod(transaction.paymentMethod),
                     String.format("%.2f", transaction.totalAmount),
                     transaction.memberName != null ? transaction.memberName : I18nManager.getInstance().get("statistics.no_data"));
-                showAlert(Alert.AlertType.INFORMATION, com.cashier.i18n.I18nManager.getInstance().get("runtime.original_transaction"), details);
+                showInformationOnlyAlert(com.cashier.i18n.I18nManager.getInstance().get("runtime.original_transaction"), details);
             } else {
                 showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.original_transaction_missing"));
             }
@@ -391,6 +397,21 @@ public class ReturnApprovalController {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    /**
+     * 仅弹出信息对话框，不将完整内容写入状态栏。
+     * 用于显示多行详情（如原交易详情），状态栏仅显示简短提示。
+     */
+    private void showInformationOnlyAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        ButtonType okButton = new ButtonType(
+            I18nManager.getInstance().get("common.ok"), ButtonBar.ButtonData.OK_DONE);
+        alert.getButtonTypes().setAll(okButton);
         alert.showAndWait();
     }
 

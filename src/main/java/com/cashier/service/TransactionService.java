@@ -2,6 +2,7 @@ package com.cashier.service;
 
 import com.cashier.dao.*;
 import com.cashier.model.*;
+import com.cashier.i18n.I18nManager;
 import com.cashier.util.DatabaseManager;
 import com.cashier.util.LoggerFactoryUtil;
 import org.slf4j.Logger;
@@ -102,23 +103,24 @@ public class TransactionService {
                 for (CartItem item : cartItems) {
                     Product product = inventory.get(item.product.name);
                     if (product == null) {
-                        throw new SQLException("商品不存在: " + item.product.name);
+                        throw new SQLException(I18nManager.getInstance().get("service.product_not_found", item.product.name));
                     }
 
                     Product latestProduct = productDAO.findByIdWithConnection(conn, item.product.id);
                     if (latestProduct == null) {
-                        throw new SQLException("商品不存在: " + item.product.name);
+                        throw new SQLException(I18nManager.getInstance().get("service.product_not_found", item.product.name));
                     }
 
                     if (latestProduct.quantity < item.quantity) {
-                        throw new SQLException("商品 " + item.product.name + " 库存不足！当前库存: " + latestProduct.quantity + ", 需要数量: " + item.quantity);
+                        throw new SQLException(I18nManager.getInstance().get("service.product_out_of_stock",
+                            item.product.name, latestProduct.quantity, item.quantity));
                     }
 
                     product.quantity = latestProduct.quantity - item.quantity;
                     product.version = latestProduct.version;
 
                     if (!productDAO.updateWithVersionWithConnection(conn, product)) {
-                        throw new SQLException("商品 " + item.product.name + " 库存更新失败，可能已被其他操作修改");
+                        throw new SQLException(I18nManager.getInstance().get("service.product_update_failed", item.product.name));
                     }
 
                     updatedProducts.add(product);
@@ -129,12 +131,13 @@ public class TransactionService {
                         ? MemberDAO.findByIdWithConnection(conn, member.id)
                         : MemberDAO.findByPhoneWithConnection(conn, member.phone);
                     if (latestMember == null) {
-                        throw new SQLException("会员不存在: " + member.phone);
+                        throw new SQLException(I18nManager.getInstance().get("service.member_not_found", member.phone));
                     }
 
-                    boolean memberBalancePayment = "会员余额".equals(transaction.paymentMethod);
+                    boolean memberBalancePayment = I18nManager.getInstance().get("payment.method.member_balance").equals(transaction.paymentMethod);
                     if (memberBalancePayment && latestMember.getBalance().compareTo(payableAmount) < 0) {
-                        throw new SQLException("会员余额不足！当前余额: " + latestMember.getBalance() + ", 需要支付: " + payableAmount);
+                        throw new SQLException(I18nManager.getInstance().get("service.member_balance_insufficient",
+                            latestMember.getBalance(), payableAmount));
                     }
 
                     BigDecimal updatedPoints = latestMember.getPoints().add(
@@ -157,24 +160,24 @@ public class TransactionService {
                     member.points = updatedPoints;
 
                     if (!MemberDAO.updateWithConnection(conn, member)) {
-                        throw new SQLException("更新会员信息失败");
+                        throw new SQLException(I18nManager.getInstance().get("service.member_update_failed"));
                     }
                 }
 
                 if (!TransactionDAO.insertWithConnection(conn, transaction)) {
-                    throw new SQLException("保存交易记录失败: transactionId=" + transactionId);
+                    throw new SQLException(I18nManager.getInstance().get("service.transaction_save_failed", transactionId));
                 }
 
                 if (appliedPromotion != null && !PromotionDAO.incrementUsageWithConnection(conn, appliedPromotion.id)) {
-                    throw new SQLException("更新促销使用次数失败: promotionId=" + appliedPromotion.id);
+                    throw new SQLException(I18nManager.getInstance().get("service.promotion_update_failed", appliedPromotion.id));
                 }
 
                 return true;
             });
 
             if (!success) {
-                logger.warn("交易未提交: transactionId={}", transactionId);
-                return new TransactionResult(false, null, "交易失败", null);
+                logger.warn("Transaction not committed: transactionId={}", transactionId);
+                return new TransactionResult(false, null, I18nManager.getInstance().get("service.transaction_failed"), null);
             }
 
             for (Product product : updatedProducts) {
@@ -198,12 +201,12 @@ public class TransactionService {
                 )
             );
             
-            return new TransactionResult(true, transactionId, "交易成功", transaction);
+            return new TransactionResult(true, transactionId, I18nManager.getInstance().get("service.transaction_success"), transaction);
         } catch (SQLException | RuntimeException e) {
-            logger.error("交易失败: {}", e.getMessage(), e);
+            logger.error("Transaction failed: {}", e.getMessage(), e);
             AuditService.failure(transaction.operatorUsername, "TRANSACTION", "SALE_FAILED",
-                "交易单号=" + transactionId + ", 原因=" + e.getMessage());
-            return new TransactionResult(false, null, "交易失败: " + e.getMessage(), null);
+                "transactionId=" + transactionId + ", reason=" + e.getMessage());
+            return new TransactionResult(false, null, I18nManager.getInstance().get("service.transaction_failed_detail", e.getMessage()), null);
         }
     }
 

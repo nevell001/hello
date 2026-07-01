@@ -124,7 +124,7 @@ fi
 # 更新配置文件
 cat > config/database.properties << EOF
 # Database Configuration
-db.url=jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8
+db.url=jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}?sslMode=PREFERRED&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8
 db.username=${MYSQL_USER}
 db.password=${MYSQL_PASSWORD}
 db.pool.size=10

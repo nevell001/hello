@@ -54,27 +54,27 @@
         <discardingThreshold>0</discardingThreshold>
     </appender>
 
-    <!-- 默认配置（开发环境） -->
-    <root level="DEBUG">
+    <!-- 默认配置 -->
+    <root level="INFO">
         <appender-ref ref="CONSOLE" />
         <appender-ref ref="ASYNC_FILE" />
         <appender-ref ref="ASYNC_ERROR_FILE" />
     </root>
 
     <!-- DAO层日志 -->
-    <logger name="com.cashier.dao" level="DEBUG" />
+    <logger name="com.cashier.dao" level="INFO" />
 
     <!-- 数据库管理器日志 -->
-    <logger name="com.cashier.util.DatabaseManager" level="DEBUG" />
+    <logger name="com.cashier.util.DatabaseManager" level="INFO" />
 
     <!-- 服务层日志 -->
-    <logger name="com.cashier.service" level="DEBUG" />
+    <logger name="com.cashier.service" level="INFO" />
 
     <!-- 控制器日志 -->
-    <logger name="com.cashier.controller" level="DEBUG" />
+    <logger name="com.cashier.controller" level="INFO" />
 
     <!-- 缓存管理器日志 -->
-    <logger name="com.cashier.util.CacheManager" level="DEBUG" />
+    <logger name="com.cashier.util.CacheManager" level="INFO" />
 
     <!-- 第三方库日志：避免开发 DEBUG 根级别输出 POI/PDFBox 内部细节 -->
     <logger name="org.apache.poi" level="WARN" />

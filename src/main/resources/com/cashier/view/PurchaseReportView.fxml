@@ -71,7 +71,7 @@
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding>
                     <Label text="%purchase_report.total_amount" styleClass="text-muted" style="-fx-font-size: 11px"/>
-                    <Label fx:id="totalAmountLabel" text="¥0.00" styleClass="text-success" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
+                    <Label fx:id="totalAmountLabel" text="0.00" styleClass="text-success" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
                 </VBox>
 
                 <VBox spacing="4" styleClass="stat-card-compact" GridPane.columnIndex="2" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS">
@@ -87,7 +87,7 @@
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding>
                     <Label text="%purchase_report.avg_order_amount" styleClass="text-muted" style="-fx-font-size: 11px"/>
-                    <Label fx:id="avgOrderAmountLabel" text="¥0.00" styleClass="text-accent" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
+                    <Label fx:id="avgOrderAmountLabel" text="0.00" styleClass="text-accent" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
                 </VBox>
 
                 <!-- 第二行：3列 -->

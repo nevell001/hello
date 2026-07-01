@@ -63,7 +63,7 @@
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding>
                     <Label text="%profit_report.total_revenue" styleClass="text-muted" style="-fx-font-size: 11px"/>
-                    <Label fx:id="totalRevenueLabel" text="¥0.00" styleClass="text-success" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
+                    <Label fx:id="totalRevenueLabel" text="0.00" styleClass="text-success" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
                 </VBox>
 
                 <VBox spacing="4" styleClass="stat-card-compact" GridPane.columnIndex="1" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS">
@@ -71,7 +71,7 @@
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding>
                     <Label text="%profit_report.total_cost" styleClass="text-muted" style="-fx-font-size: 11px"/>
-                    <Label fx:id="totalCostLabel" text="¥0.00" styleClass="text-danger" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
+                    <Label fx:id="totalCostLabel" text="0.00" styleClass="text-danger" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
                 </VBox>
 
                 <VBox spacing="4" styleClass="stat-card-compact" GridPane.columnIndex="2" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS">
@@ -79,7 +79,7 @@
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding>
                     <Label text="%profit_report.gross_profit" styleClass="text-muted" style="-fx-font-size: 11px"/>
-                    <Label fx:id="grossProfitLabel" text="¥0.00" styleClass="text-info" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
+                    <Label fx:id="grossProfitLabel" text="0.00" styleClass="text-info" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
                 </VBox>
 
                 <!-- 第二行：3列 -->
@@ -96,7 +96,7 @@
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding>
                     <Label text="%profit_report.net_profit" styleClass="text-muted" style="-fx-font-size: 11px"/>
-                    <Label fx:id="netProfitLabel" text="¥0.00" styleClass="text-accent" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
+                    <Label fx:id="netProfitLabel" text="0.00" styleClass="text-accent" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
                 </VBox>
 
                 <VBox spacing="4" styleClass="stat-card-compact" GridPane.columnIndex="2" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS">
