@@ -113,4 +113,30 @@ class MemberTransactionReturnFeedbackPolicyTest {
         assertTrue(controller.contains("comboBox.setMinWidth(118)"));
         assertTrue(controller.contains("comboBox.setPrefWidth(128)"));
     }
+
+    @Test
+    @DisplayName("退货审批表格空状态提示应使用页面专属国际化文案")
+    void returnApprovalTablePlaceholdersAreLocalized() throws Exception {
+        String controller = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/ReturnApprovalController.java"
+        ));
+
+        assertTrue(controller.contains("return_approval.pending_no_data"));
+        assertTrue(controller.contains("return_approval.items_no_data"));
+        assertFalse(controller.contains("pendingOrderTable.setPlaceholder(new Label(I18nManager.getInstance().get(\"message.data.empty\")))"));
+        assertFalse(controller.contains("itemTable.setPlaceholder(new Label(I18nManager.getInstance().get(\"message.data.empty\")))"));
+
+        List<String> bundleFiles = List.of(
+            "src/main/resources/com/cashier/i18n/messages.properties",
+            "src/main/resources/com/cashier/i18n/messages_zh_CN.properties",
+            "src/main/resources/com/cashier/i18n/messages_en.properties",
+            "src/main/resources/com/cashier/i18n/messages_zh_TW.properties"
+        );
+
+        for (String file : bundleFiles) {
+            String bundle = Files.readString(Path.of(file));
+            assertTrue(bundle.contains("return_approval.pending_no_data="), file);
+            assertTrue(bundle.contains("return_approval.items_no_data="), file);
+        }
+    }
 }

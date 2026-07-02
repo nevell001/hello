@@ -72,8 +72,8 @@ public class ReturnApprovalController {
         initializeItemTable();
 
         // 设置表格空数据占位符（i18n）
-        pendingOrderTable.setPlaceholder(new Label(I18nManager.getInstance().get("message.data.empty")));
-        itemTable.setPlaceholder(new Label(I18nManager.getInstance().get("message.data.empty")));
+        pendingOrderTable.setPlaceholder(new Label(I18nManager.getInstance().get("return_approval.pending_no_data")));
+        itemTable.setPlaceholder(new Label(I18nManager.getInstance().get("return_approval.items_no_data")));
 
         // 加载待审批订单
         loadPendingOrders();
