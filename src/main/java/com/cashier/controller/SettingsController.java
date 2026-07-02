@@ -331,7 +331,7 @@ public class SettingsController {
 
         // 加载备份设置
         autoBackupCheckBox.setSelected(Boolean.parseBoolean(settings.getOrDefault("autoBackup", "false")));
-        backupPathField.setText(settings.getOrDefault("backupPath", ""));
+        backupPathField.setText(DataService.resolveSqlBackupPath(settings.get("backupPath")));
 
         // 加载安全设置
         autoLogoutCheckBox.setSelected(Boolean.parseBoolean(settings.getOrDefault("autoLogout", "true")));
@@ -903,11 +903,8 @@ public class SettingsController {
     @FXML
     public void handleBackupNow() {
         try {
-            // 获取用户选择的备份路径，如果为空则使用项目根目录
-            String backupBasePath = backupPathField.getText().trim();
-            if (backupBasePath.isEmpty()) {
-                backupBasePath = System.getProperty("user.dir");
-            }
+            // 获取用户选择的备份路径，如果为空则使用默认 SQL 备份目录
+            String backupBasePath = DataService.resolveSqlBackupPath(backupPathField.getText());
             
             // 确保备份路径存在
             File backupDir = new File(backupBasePath);
@@ -937,14 +934,8 @@ public class SettingsController {
      */
     @FXML
     public void handleRestore() {
-        // 获取用户选择的备份路径，如果为空则使用项目根目录
-        final String backupBasePath;
-        String path = backupPathField.getText().trim();
-        if (path.isEmpty()) {
-            backupBasePath = System.getProperty("user.dir");
-        } else {
-            backupBasePath = path;
-        }
+        // 获取用户选择的备份路径，如果为空则使用默认 SQL 备份目录
+        final String backupBasePath = DataService.resolveSqlBackupPath(backupPathField.getText());
         
         // 列出可用的备份文件
         File backupDir = new File(backupBasePath);
@@ -1030,7 +1021,7 @@ public class SettingsController {
             storePhoneField.clear();
             taxRateField.setText("0.0");
             printerNameField.clear();
-            backupPathField.clear();
+            backupPathField.setText(DataService.DEFAULT_SQL_BACKUP_PATH);
             
             // 重置为默认值
             enablePrintCheckBox.setSelected(false);

@@ -18,6 +18,7 @@ import java.util.*;
  */
 public class DataService {
     private static final Logger logger = LoggerFactoryUtil.getLogger(DataService.class);
+    public static final String DEFAULT_SQL_BACKUP_PATH = "backup/sql";
     private static final com.cashier.dao.ProductDAORefactored productDAO = com.cashier.dao.DAOFactory.getInstance().getProductDAO();
 
     /**
@@ -432,7 +433,7 @@ public class DataService {
          * @param backupPath 备份目录路径
          */
         public static void backupData(String backupPath) throws IOException {
-            File backupDir = new File(backupPath);
+            File backupDir = new File(resolveSqlBackupPath(backupPath));
             if (!backupDir.exists()) {
                 backupDir.mkdirs();
             }
@@ -452,7 +453,7 @@ public class DataService {
          * @param backupPath 备份文件路径或备份目录路径
          */
         public static void restoreData(String backupPath) throws IOException {
-            File backupFile = new File(backupPath);
+            File backupFile = new File(resolveSqlBackupPath(backupPath));
     
             // 如果是目录，查找最新的 .sql 文件
             if (backupFile.isDirectory()) {
@@ -474,4 +475,12 @@ public class DataService {
             if (!success) {
                 throw new IOException("数据库恢复失败");
             }
-        }}
+        }
+
+        public static String resolveSqlBackupPath(String backupPath) {
+            if (backupPath == null || backupPath.trim().isEmpty()) {
+                return DEFAULT_SQL_BACKUP_PATH;
+            }
+            return backupPath.trim();
+        }
+}
