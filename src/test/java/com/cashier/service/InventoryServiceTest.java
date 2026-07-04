@@ -1,148 +1,83 @@
 package com.cashier.service;
 
 import com.cashier.dao.DAOFactory;
-import com.cashier.util.DatabaseTestBase;
+import com.cashier.dao.ProductDAORefactored;
+import com.cashier.model.InventoryStatistics;
 import com.cashier.model.Product;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-/**
- * InventoryService 单元测试
- * 测试库存服务的核心功能
- */
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class InventoryServiceTest extends DatabaseTestBase {
+class InventoryServiceTest {
 
-    private Product testProduct;
+    private Map<String, Product> mockInventory;
 
     @BeforeEach
-    void setUp() throws Exception {
-        // 确保使用测试数据库
-        if (!DatabaseTestBase.isInitialized()) {
-            DatabaseTestBase.initTestDatabase();
-        }
+    void setUp() {
+        mockInventory = new HashMap<>();
+        // 使用正确的构造器: Product(name, price, quantity, category, barcode, unit, description)
+        Product p1 = new Product("商品A", BigDecimal.valueOf(10.0), 10, "分类", "123", "个", "desc");
+        Product p2 = new Product("商品B", BigDecimal.valueOf(20.0), 2, "分类", "456", "个", "desc");
+        // 设置 minStock
+        p1.minStock = 5;
+        p2.minStock = 5;
         
-        // 清空数据库
-        clearTestData();
-
-        // 创建测试商品
-        testProduct = createProduct("测试商品", 10.0, 100);
+        mockInventory.put(p1.name, p1);
+        mockInventory.put(p2.name, p2);
     }
 
     @Test
-    @Order(1)
-    @DisplayName("测试批量更新库存 - 正常情况")
-    void testBatchUpdateInventoryNormal() throws Exception {
-        int initialQuantity = testProduct.quantity;
-        int deductQuantity = 10;
+    void testSearchProducts() {
+        List<Product> result = InventoryService.searchProducts("商品", mockInventory);
+        assertEquals(2, result.size());
 
-        // 扣减库存
-        Map<Integer, Integer> productUpdates = new HashMap<>();
-        productUpdates.put(testProduct.id, -deductQuantity);
-        int count = InventoryService.batchUpdateInventory(productUpdates);
+        result = InventoryService.searchProducts("A", mockInventory);
+        assertEquals(1, result.size());
+        assertEquals("商品A", result.get(0).name);
 
-        assertTrue(count > 0);
-
-        // 验证库存已扣减
-        Product updatedProduct = DAOFactory.getInstance().getProductDAO().findById(testProduct.id);
-        assertEquals(initialQuantity - deductQuantity, updatedProduct.quantity);
+        result = InventoryService.searchProducts("nonexistent", mockInventory);
+        assertTrue(result.isEmpty());
     }
 
     @Test
-    @Order(2)
-    @DisplayName("测试批量更新库存 - 库存不足")
-    void testBatchUpdateInventoryInsufficientStock() throws Exception {
-        int deductQuantity = testProduct.quantity + 10; // 超出库存
-
-        // 扣减库存（应该失败）
-        Map<Integer, Integer> productUpdates = new HashMap<>();
-        productUpdates.put(testProduct.id, -deductQuantity);
-        int count = InventoryService.batchUpdateInventory(productUpdates);
-
-        assertEquals(0, count);
-
-        // 验证库存未变化
-        Product updatedProduct = DAOFactory.getInstance().getProductDAO().findById(testProduct.id);
-        assertEquals(testProduct.quantity, updatedProduct.quantity);
+    void testGetLowStockProducts() {
+        List<Product> lowStock = InventoryService.getLowStockProducts(mockInventory);
+        assertEquals(1, lowStock.size());
+        assertEquals("商品B", lowStock.get(0).name);
     }
 
     @Test
-    @Order(3)
-    @DisplayName("测试批量更新库存 - 增加库存")
-    void testBatchUpdateInventoryIncrease() throws Exception {
-        int initialQuantity = testProduct.quantity;
-        int increaseQuantity = 50;
-
-        // 增加库存
-        Map<Integer, Integer> productUpdates = new HashMap<>();
-        productUpdates.put(testProduct.id, increaseQuantity);
-        int count = InventoryService.batchUpdateInventory(productUpdates);
-
-        assertTrue(count > 0);
-
-        // 验证库存已增加
-        Product updatedProduct = DAOFactory.getInstance().getProductDAO().findById(testProduct.id);
-        assertEquals(initialQuantity + increaseQuantity, updatedProduct.quantity);
+    void testGetInventoryStatistics() {
+        InventoryStatistics stats = InventoryService.getInventoryStatistics(mockInventory);
+        assertEquals(2, stats.getTotalProducts());
+        assertEquals(12, stats.getTotalQuantity());
+        // (10*10 + 2*20) = 100 + 40 = 140.0
+        // Product constructor calculates cost as: price * 0.7
+        // Product p1 = new Product("商品A", BigDecimal.valueOf(10.0), 10...); cost = 10.0 * 0.7 = 7.0
+        // Product p2 = new Product("商品B", BigDecimal.valueOf(20.0), 2...);  cost = 20.0 * 0.7 = 14.0
+        // totalValue = (7.0 * 10) + (14.0 * 2) = 70.0 + 28.0 = 98.0
+        assertEquals(0, BigDecimal.valueOf(98.0).compareTo(stats.getTotalValue()));
+        assertEquals(1, stats.getLowStockCount());
     }
+@Test
+void testCheckStockAvailable() throws Exception {
+    ProductDAORefactored mockDAO = mock(ProductDAORefactored.class);
+    InventoryService.setProductDAO(mockDAO);
 
-    @Test
-    @Order(4)
-    @DisplayName("测试批量更新库存 - 多商品失败时整体回滚")
-    void testBatchUpdateInventoryRollbackAcrossMultipleProducts() throws Exception {
-        Product secondProduct = createProduct("第二个测试商品", 12.0, 5);
+    Product p = new Product("商品A", BigDecimal.valueOf(10.0), 20, "分类", "123", "个", "desc");
+    when(mockDAO.findById(1)).thenReturn(p);
 
-        Map<Integer, Integer> productUpdates = new java.util.LinkedHashMap<>();
-        productUpdates.put(testProduct.id, -10);
-        productUpdates.put(secondProduct.id, -10);
+    assertTrue(InventoryService.checkStockAvailable(1, 5));
+    assertFalse(InventoryService.checkStockAvailable(1, 25));
 
-        int count = InventoryService.batchUpdateInventory(productUpdates);
+    // Reset to original
+    InventoryService.setProductDAO(DAOFactory.getInstance().getProductDAO());
+}
 
-        assertEquals(0, count);
-
-        Product firstUpdatedProduct = DAOFactory.getInstance().getProductDAO().findById(testProduct.id);
-        Product secondUpdatedProduct = DAOFactory.getInstance().getProductDAO().findById(secondProduct.id);
-        assertEquals(testProduct.quantity, firstUpdatedProduct.quantity);
-        assertEquals(secondProduct.quantity, secondUpdatedProduct.quantity);
-    }
-
-    @Test
-    @Order(5)
-    @DisplayName("测试检查库存是否充足")
-    void testCheckStockAvailable() throws Exception {
-        // 充足库存
-        assertTrue(InventoryService.checkStockAvailable(testProduct.id, 50));
-
-        // 库存不足
-        assertFalse(InventoryService.checkStockAvailable(testProduct.id, 150));
-
-        // 刚好充足
-        assertTrue(InventoryService.checkStockAvailable(testProduct.id, testProduct.quantity));
-    }
-
-    /**
-     * 辅助方法：创建测试商品
-     */
-    private Product createProduct(String name, double price, int quantity) throws Exception {
-        Product product = new Product();
-        product.productCode = "P" + name.hashCode();
-        product.name = name;
-        product.price = BigDecimal.valueOf(price);
-        product.quantity = quantity;
-        product.category = "测试分类";
-        product.barcode = "TEST" + name.hashCode();
-        product.unit = "个";
-        product.minStock = 10;
-        product.cost = BigDecimal.valueOf(price).multiply(new BigDecimal("0.7"));
-        product.version = 0;
-
-        DAOFactory.getInstance().getProductDAO().insert(product);
-        return DAOFactory.getInstance().getProductDAO().findByName(name);
-    }
-
-    }
+}

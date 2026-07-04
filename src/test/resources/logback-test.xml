@@ -14,7 +14,7 @@
     <logger name="com.cashier.service.ReturnService" level="OFF" />
     <logger name="com.cashier.service.TransactionService" level="OFF" />
     <logger name="com.cashier.service.MemberService" level="OFF" />
-    <logger name="com.cashier.service.InventoryService" level="OFF" />
+    <logger name="com.cashier.service.InventoryService" level="INFO" />
     <logger name="com.cashier.util.ExportUtil" level="WARN" />
     <logger name="com.cashier.api.ApiConfig" level="ERROR" />
     <logger name="org.apache.poi" level="WARN" />
