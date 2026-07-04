@@ -18,7 +18,7 @@ class PromotionLoginRechargeFeedbackPolicyTest {
             "src/main/java/com/cashier/controller/PromotionController.java"
         ));
 
-        assertTrue(controller.contains("showWarning(I18nManager.getInstance().get(\"runtime.select_promotion\"))"));
+        assertTrue(controller.contains("showWarning(I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_PROMOTION))"));
         assertTrue(controller.contains("StatusBarManager.updateWarning(e.getMessage())"));
         assertTrue(controller.contains("StatusBarManager.updateWarning(message)"));
         assertTrue(controller.contains("StatusBarManager.updateError(message)"));

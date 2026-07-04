@@ -36,6 +36,6 @@ class OperationLogDAOTest extends DatabaseTestBase {
         assertEquals(1, result.size());
         assertEquals("AUTH", result.get(0).category);
         assertEquals("FAILURE", result.get(0).result);
-        assertEquals(log.timestamp.getTime(), result.get(0).timestamp.getTime());
+        assertEquals(log.timestamp.toEpochMilli(), result.get(0).timestamp.toEpochMilli());
     }
 }

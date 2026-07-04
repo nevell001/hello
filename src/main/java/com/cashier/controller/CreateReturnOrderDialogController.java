@@ -1,5 +1,7 @@
 package com.cashier.controller;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.dao.*;
 import com.cashier.model.*;
 import com.cashier.service.ReturnService;
@@ -8,23 +10,17 @@ import com.cashier.util.LoggerFactoryUtil;
 import com.cashier.util.StatusBarManager;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
-import javafx.util.Callback;
 import org.slf4j.Logger;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -294,7 +290,7 @@ public class CreateReturnOrderDialogController {
         transactionAmountLabel.setText(CurrencyUtil.format(transaction.finalAmount.doubleValue()));
         transactionDateLabel.setText(transaction.timestamp);  // timestamp已经是格式化的字符串
         paymentMethodLabel.setText(com.cashier.util.I18nUiUtils.paymentMethod(transaction.paymentMethod));
-        memberNameLabel.setText(transaction.memberName != null ? transaction.memberName : com.cashier.i18n.I18nManager.getInstance().get("statistics.no_data"));
+        memberNameLabel.setText(transaction.memberName != null ? transaction.memberName : com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Statistics.NO_DATA));
 
         // 设置退款方式
         refundMethodComboBox.setValue(transaction.paymentMethod);
@@ -410,21 +406,12 @@ public class CreateReturnOrderDialogController {
         // 验证输入
         String returnReason = returnReasonField.getText().trim();
         if (returnReason.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("return_order.return_reason_hint"));
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.INFO), com.cashier.i18n.I18nManager.getInstance().get("return_order.return_reason_hint"));
             return;
         }
 
-        // 检查是否选择了退货商品
-        boolean hasSelectedItem = false;
-        for (ReturnItem item : returnItems) {
-            if (item.isSelected() && item.returnQuantity > 0) {
-                hasSelectedItem = true;
-                break;
-            }
-        }
-
-        if (!hasSelectedItem) {
-            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.return_item_required"));
+        if (!hasSelectedReturnItem()) {
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.INFO), com.cashier.i18n.I18nManager.getInstance().get("runtime.return_item_required"));
             return;
         }
 
@@ -435,20 +422,33 @@ public class CreateReturnOrderDialogController {
             return;
         }
 
-        // 获取会员ID（根据手机号查询）
-        Integer memberId = null;
-        if (originalTransaction.memberPhone != null && !originalTransaction.memberPhone.trim().isEmpty()) {
-            try {
-                Member member = MemberDAO.findByPhone(originalTransaction.memberPhone);
-                if (member != null) {
-                    memberId = member.id;
-                }
-            } catch (SQLException e) {
-                logger.error("查询会员信息失败: {}", e.getMessage());
-            }
-        }
+        ReturnOrder returnOrder = buildReturnOrder(returnReason, resolveMemberId());
+        List<ReturnOrderItem> items = buildReturnOrderItems(returnReason);
+        returnOrder.totalAmount = calculateReturnTotal(items);
 
-        // 创建退货订单
+        // 保存退货订单
+        boolean result = ReturnService.createReturnOrder(returnOrder, items);
+        handleReturnOrderSaveResult(result, returnOrder);
+    }
+
+    private boolean hasSelectedReturnItem() {
+        return returnItems.stream().anyMatch(item -> item.isSelected() && item.returnQuantity > 0);
+    }
+
+    private Integer resolveMemberId() {
+        if (originalTransaction.memberPhone == null || originalTransaction.memberPhone.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            Member member = MemberDAO.findByPhone(originalTransaction.memberPhone);
+            return member != null ? member.id : null;
+        } catch (SQLException e) {
+            logger.error("查询会员信息失败: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private ReturnOrder buildReturnOrder(String returnReason, Integer memberId) {
         ReturnOrder returnOrder = new ReturnOrder();
         returnOrder.originalTransactionId = originalTransaction.transactionId;
         returnOrder.memberId = memberId;  // 可以为null
@@ -457,45 +457,53 @@ public class CreateReturnOrderDialogController {
         returnOrder.paymentMethod = getPaymentMethodCode(refundMethodComboBox.getValue());
         returnOrder.operatorName = getOperatorName();
         returnOrder.notes = notesArea.getText().trim();
+        return returnOrder;
+    }
 
-        // 创建退货订单明细
+    private List<ReturnOrderItem> buildReturnOrderItems(String returnReason) {
         List<ReturnOrderItem> items = new ArrayList<>();
         for (ReturnItem item : returnItems) {
             if (item.isSelected() && item.returnQuantity > 0) {
-                ReturnOrderItem returnItem = new ReturnOrderItem();
-                returnItem.productId = item.productId;
-                returnItem.productCode = item.productCode;
-                returnItem.productName = item.productName;
-                returnItem.returnQuantity = item.returnQuantity;
-                returnItem.unitPrice = BigDecimal.valueOf(item.unitPrice);
-                returnItem.returnAmount = BigDecimal.valueOf(item.getReturnAmount());
-                returnItem.condition = getConditionCode(item.condition);
-                returnItem.reason = returnReason;
-                returnItem.calculateAmount();
-                items.add(returnItem);
+                items.add(buildReturnOrderItem(item, returnReason));
             }
         }
+        return items;
+    }
 
-        // 计算总金额
-        returnOrder.totalAmount = items.stream()
+    private ReturnOrderItem buildReturnOrderItem(ReturnItem item, String returnReason) {
+        ReturnOrderItem returnItem = new ReturnOrderItem();
+        returnItem.productId = item.productId;
+        returnItem.productCode = item.productCode;
+        returnItem.productName = item.productName;
+        returnItem.returnQuantity = item.returnQuantity;
+        returnItem.unitPrice = BigDecimal.valueOf(item.unitPrice);
+        returnItem.returnAmount = BigDecimal.valueOf(item.getReturnAmount());
+        returnItem.condition = getConditionCode(item.condition);
+        returnItem.reason = returnReason;
+        returnItem.calculateAmount();
+        return returnItem;
+    }
+
+    private BigDecimal calculateReturnTotal(List<ReturnOrderItem> items) {
+        return items.stream()
             .map(ReturnOrderItem::getReturnAmount)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
 
-        // 保存退货订单
-        boolean result = ReturnService.createReturnOrder(returnOrder, items);
+    private void handleReturnOrderSaveResult(boolean result, ReturnOrder returnOrder) {
+        if (!result) {
+            showAlert(Alert.AlertType.ERROR, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.FAILED), com.cashier.i18n.I18nManager.getInstance().get("runtime.return_create_failed"));
+            return;
+        }
 
-        if (result) {
-            submitted = true;
-            showAlert(Alert.AlertType.INFORMATION, com.cashier.i18n.I18nManager.getInstance().get("label.success"),
-                com.cashier.i18n.I18nManager.getInstance().get("runtime.return_create_success",
-                    returnOrder.returnOrderId, String.format("%.2f", returnOrder.totalAmount)));
-            logger.info("退货订单创建成功: {}", returnOrder.returnOrderId);
+        submitted = true;
+        showAlert(Alert.AlertType.INFORMATION, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.SUCCESS),
+            com.cashier.i18n.I18nManager.getInstance().get("runtime.return_create_success",
+                returnOrder.returnOrderId, String.format("%.2f", returnOrder.totalAmount)));
+        logger.info("退货订单创建成功: {}", returnOrder.returnOrderId);
 
-            if (dialogStage != null) {
-                dialogStage.close();
-            }
-        } else {
-            showAlert(Alert.AlertType.ERROR, com.cashier.i18n.I18nManager.getInstance().get("label.failed"), com.cashier.i18n.I18nManager.getInstance().get("runtime.return_create_failed"));
+        if (dialogStage != null) {
+            dialogStage.close();
         }
     }
 

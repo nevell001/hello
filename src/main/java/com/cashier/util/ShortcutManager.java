@@ -1,5 +1,7 @@
 package com.cashier.util;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.i18n.I18nManager;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
@@ -136,9 +138,9 @@ public class ShortcutManager {
         SHORTCUTS.add(new Shortcut(Category.NAVIGATION, "ESCAPE", "shortcut.close_tab", "关闭标签页"));
 
         // ========== 编辑 ==========
-        SHORTCUTS.add(new Shortcut(Category.EDITING, "Ctrl+S", "shortcut.save", "保存"));
+        SHORTCUTS.add(new Shortcut(Category.EDITING, "Ctrl+S", I18nKeys.Shortcut.SAVE, "保存"));
         SHORTCUTS.add(new Shortcut(Category.EDITING, "Ctrl+E", "shortcut.edit", "编辑"));
-        SHORTCUTS.add(new Shortcut(Category.EDITING, "Ctrl+A", "shortcut.select_all", "全选"));
+        SHORTCUTS.add(new Shortcut(Category.EDITING, "Ctrl+A", I18nKeys.Shortcut.SELECT_ALL, "全选"));
         SHORTCUTS.add(new Shortcut(Category.EDITING, "Ctrl+B", "shortcut.batch", "批量操作"));
         SHORTCUTS.add(new Shortcut(Category.EDITING, "Ctrl+D", "shortcut.export", "导出数据"));
         SHORTCUTS.add(new Shortcut(Category.EDITING, "Ctrl+R", "shortcut.refresh_edit", "刷新编辑"));

@@ -96,7 +96,7 @@ public class InventoryCheckDAO {
     public static String generateNextCheckNo(String checkDate) throws SQLException {
         String dateStr = checkDate != null ? checkDate.replaceAll("[^0-9]", "") : "";
         if (dateStr.length() != 8) {
-            dateStr = new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date());
+            dateStr = java.time.LocalDate.now(java.time.ZoneId.systemDefault()).format(com.cashier.util.DateTimeFormats.COMPACT_DATE);
         }
 
         String prefix = "IC" + dateStr;

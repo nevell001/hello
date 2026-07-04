@@ -1,12 +1,13 @@
 package com.cashier.util;
 
+import com.cashier.i18n.I18nKeys;
+
 import javafx.animation.FadeTransition;
 import com.cashier.i18n.I18nManager;
 import javafx.animation.ScaleTransition;
 import javafx.animation.TranslateTransition;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.image.Image;
@@ -88,7 +89,7 @@ public class FXUtils {
      * @param message 消息
      */
     public static void showError(String message) {
-        showErrorAlert(I18nManager.getInstance().get("label.error"), message);
+        showErrorAlert(I18nManager.getInstance().get(I18nKeys.Label.ERROR), message);
     }
 
     /**

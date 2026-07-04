@@ -59,6 +59,9 @@ public class GlobalExceptionHandler {
                 case CRITICAL:
                     logger.error("[CRITICAL] {}{}", contextPrefix, ce.getFullMessage(), e);
                     break;
+                default:
+                    logger.error("{}{}", contextPrefix, ce.getFullMessage(), e);
+                    break;
             }
         } else if (e instanceof RuntimeException) {
             logger.error("{}运行时异常: {}", contextPrefix, e.getMessage(), e);

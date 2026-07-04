@@ -4,11 +4,11 @@ import com.cashier.model.Promotion;
 import com.cashier.util.DatabaseTestBase;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,8 +34,8 @@ class PromotionDAOTest extends DatabaseTestBase {
         p.discount = BigDecimal.valueOf(discount);
         p.description = "测试促销";
         p.enabled = true;
-        p.startDate = new java.util.Date(System.currentTimeMillis() - 86400000);
-        p.endDate = new java.util.Date(System.currentTimeMillis() + 86400000);
+        p.startDate = LocalDateTime.now().minusDays(1);
+        p.endDate = LocalDateTime.now().plusDays(1);
         p.usageCount = 0;
         p.maxUsage = -1;
         return p;
@@ -95,13 +95,13 @@ class PromotionDAOTest extends DatabaseTestBase {
     @Test
     void testFindActive() throws SQLException {
         Promotion active = createTestPromotion("进行中促销", "满减", 100, 10);
-        active.startDate = new java.util.Date(System.currentTimeMillis() - 86400000);
-        active.endDate = new java.util.Date(System.currentTimeMillis() + 86400000);
+        active.startDate = LocalDateTime.now().minusDays(1);
+        active.endDate = LocalDateTime.now().plusDays(1);
         PromotionDAO.insert(active);
 
         Promotion expired = createTestPromotion("已过期促销", "满减", 100, 10);
-        expired.startDate = new java.util.Date(System.currentTimeMillis() - 172800000);
-        expired.endDate = new java.util.Date(System.currentTimeMillis() - 86400000);
+        expired.startDate = LocalDateTime.now().minusDays(2);
+        expired.endDate = LocalDateTime.now().minusDays(1);
         PromotionDAO.insert(expired);
 
         List<Promotion> activeList = PromotionDAO.findActive();
@@ -164,8 +164,8 @@ class PromotionDAOTest extends DatabaseTestBase {
     void testPromotionCalculateDiscount() {
         Promotion p = createTestPromotion("满100减20", "满减", 100, 20);
         p.enabled = true;
-        p.startDate = new java.util.Date(System.currentTimeMillis() - 86400000);
-        p.endDate = new java.util.Date(System.currentTimeMillis() + 86400000);
+        p.startDate = LocalDateTime.now().minusDays(1);
+        p.endDate = LocalDateTime.now().plusDays(1);
 
         // 未达到门槛
         BigDecimal discount1 = p.calculateDiscount(BigDecimal.valueOf(50));
@@ -182,8 +182,8 @@ class PromotionDAOTest extends DatabaseTestBase {
         p.enabled = true;
         p.usageCount = 5;
         p.maxUsage = 5;
-        p.startDate = new java.util.Date(System.currentTimeMillis() - 86400000);
-        p.endDate = new java.util.Date(System.currentTimeMillis() + 86400000);
+        p.startDate = LocalDateTime.now().minusDays(1);
+        p.endDate = LocalDateTime.now().plusDays(1);
 
         BigDecimal discount = p.calculateDiscount(BigDecimal.valueOf(200));
         assertEquals(0, BigDecimal.ZERO.compareTo(discount));

@@ -1,5 +1,7 @@
 package com.cashier.i18n;
 
+import com.cashier.constant.ResourceBundleNames;
+
 import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
 
@@ -20,8 +22,8 @@ public class I18nManager {
     private final ConcurrentHashMap<String, ResourceBundle> bundles = new ConcurrentHashMap<>();
     private static final Map<String, String> FALLBACK_TEXTS = Map.of(
         "inventory.status.out_of_stock", "Out of Stock",
-        "inventory.status.low_stock", "Low Stock",
-        "inventory.status.normal", "Normal"
+        I18nKeys.Inventory.Status.LOW_STOCK, "Low Stock",
+        I18nKeys.Inventory.Status.NORMAL, "Normal"
     );
     
     // 支持的语言列表
@@ -109,10 +111,10 @@ public class I18nManager {
     private ResourceBundle getBundle(Locale locale) {
         return bundles.computeIfAbsent(locale.toLanguageTag(), tag -> {
             try {
-                return ResourceBundle.getBundle("com.cashier.i18n.messages", locale);
+                return ResourceBundle.getBundle(ResourceBundleNames.I18N_MESSAGES, locale);
             } catch (MissingResourceException e) {
                 logger.warn("找不到语言包: {}, 使用默认", locale);
-                return ResourceBundle.getBundle("com.cashier.i18n.messages", CHINESE_SIMPLIFIED);
+                return ResourceBundle.getBundle(ResourceBundleNames.I18N_MESSAGES, CHINESE_SIMPLIFIED);
             }
         });
     }

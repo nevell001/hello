@@ -1,7 +1,6 @@
 package com.cashier.controller;
 
 import com.cashier.i18n.I18nManager;
-import com.cashier.util.ShortcutManager;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -12,7 +11,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-import java.util.Map;
 
 /**
  * 快捷键帮助控制器

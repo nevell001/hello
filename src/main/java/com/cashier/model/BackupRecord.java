@@ -275,7 +275,8 @@ public class BackupRecord {
      * 生成备份文件名
      */
     private static String generateFileName(BackupContentType contentType) {
-        String timestamp = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String timestamp = java.time.LocalDateTime.now(java.time.ZoneId.systemDefault())
+            .format(com.cashier.util.DateTimeFormats.BACKUP_TIMESTAMP);
         String prefix = contentType.name().toLowerCase();
         return prefix + "_backup_" + timestamp + ".zip";
     }

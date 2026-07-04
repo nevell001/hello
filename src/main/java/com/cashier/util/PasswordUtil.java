@@ -2,7 +2,6 @@ package com.cashier.util;
 
 import at.favre.lib.crypto.bcrypt.BCrypt;
 import org.slf4j.Logger;
-import com.cashier.util.LoggerFactoryUtil;
 
 /**
  * 密码加密工具类

@@ -1,5 +1,7 @@
 package com.cashier.util;
 
+import com.cashier.constant.DatabaseConfigKeys;
+
 import com.cashier.exception.DatabaseException;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -26,6 +28,10 @@ public class DatabaseManager {
     private static final Logger logger = LoggerFactoryUtil.getLogger(DatabaseManager.class);
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
+    public static SecureRandom getSecureRandom() {
+        return SECURE_RANDOM;
+    }
+
     private static HikariDataSource dataSource;
     private static boolean initialized = false;
     private static HikariDataSource testDataSource = null; // 测试用数据源（连接池）
@@ -43,6 +49,9 @@ public class DatabaseManager {
     private static String connectionTestQuery = "SELECT 1";
     private static long validationTimeout = 3000;
     private static String dockerMysqlContainerName = "lisuan-mysql";
+    private static final String CONSOLE_SEPARATOR = "========================================";
+    private static final String DEFAULT_DATABASE_NAME = "lisuan_system";
+    private static final String OPERATION_LOGS_TABLE = "operation_logs";
 
     static {
         // 检查是否在测试环境中运行
@@ -113,46 +122,12 @@ public class DatabaseManager {
      * 加载数据库配置
      */
     private static void loadConfig() {
-        Properties props = new Properties();
-
-        // 从文件加载配置
-        File configFile = new File(CONFIG_FILE);
-        if (configFile.exists()) {
-            try (FileInputStream fis = new FileInputStream(configFile);
-                 InputStreamReader isr = new InputStreamReader(fis, "UTF-8")) {
-                props.load(isr);
-                logger.info("已加载数据库配置: {}", CONFIG_FILE);
-            } catch (IOException e) {
-                logger.error("加载配置文件失败: {}", e.getMessage(), e);
-                throw DatabaseException.connectionFailed(e);
-            }
-        } else {
-            // 配置文件不存在，创建默认配置文件模板
-            logger.info("配置文件不存在，创建默认配置文件模板");
-            saveDefaultConfigTemplate();
-            throw new DatabaseException(
-                "数据库配置文件不存在: " + CONFIG_FILE + "\n" +
-                "请先配置数据库连接信息：\n" +
-                "1. 编辑 config/database.properties 文件\n" +
-                "2. 设置正确的数据库 URL、用户名和密码\n" +
-                "3. 或者设置环境变量 CASHER_DB_PASSWORD 来避免明文存储密码\n" +
-                "4. 然后重新启动应用",
-                DatabaseException.DbErrorType.CONNECTION_FAILED
-            );
-        }
+        Properties props = loadDatabaseProperties();
 
         // 验证必需的配置项
-        dbUrl = props.getProperty("db.url");
-        dbUsername = props.getProperty("db.username");
-
-        // 优先从环境变量读取密码（更安全），如果没有则从配置文件读取
-        String envPassword = System.getenv("CASHER_DB_PASSWORD");
-        if (envPassword != null && !envPassword.isEmpty()) {
-            dbPassword = envPassword;
-            logger.info("已从环境变量读取数据库密码");
-        } else {
-            dbPassword = props.getProperty("db.password");
-        }
+        dbUrl = props.getProperty(DatabaseConfigKeys.URL);
+        dbUsername = props.getProperty(DatabaseConfigKeys.USERNAME);
+        dbPassword = resolveDatabasePassword(props);
 
         if (dbUrl == null || dbUrl.isEmpty() ||
             dbUsername == null || dbUsername.isEmpty() ||
@@ -167,35 +142,11 @@ public class DatabaseManager {
             );
         }
 
-        try {
-            poolSize = Integer.parseInt(props.getProperty("db.pool.size", "10"));
-        } catch (NumberFormatException e) {
-            poolSize = 10;
-        }
-
-        try {
-            connectionTimeout = Long.parseLong(props.getProperty("db.connection.timeout", "15000"));
-        } catch (NumberFormatException e) {
-            connectionTimeout = 15000;
-        }
-
-        try {
-            idleTimeout = Long.parseLong(props.getProperty("db.idle.timeout", "600000"));
-        } catch (NumberFormatException e) {
-            idleTimeout = 600000;
-        }
-
-        try {
-            maxLifetime = Long.parseLong(props.getProperty("db.max.lifetime", "1800000"));
-        } catch (NumberFormatException e) {
-            maxLifetime = 1800000;
-        }
-
-        try {
-            leakDetectionThreshold = Long.parseLong(props.getProperty("db.connection.leakDetectionThreshold", "0"));
-        } catch (NumberFormatException e) {
-            leakDetectionThreshold = 0;
-        }
+        poolSize = parseIntProperty(props, DatabaseConfigKeys.POOL_SIZE, 10);
+        connectionTimeout = parseLongProperty(props, "db.connection.timeout", 15000);
+        idleTimeout = parseLongProperty(props, "db.idle.timeout", 600000);
+        maxLifetime = parseLongProperty(props, "db.max.lifetime", 1800000);
+        leakDetectionThreshold = parseLongProperty(props, "db.connection.leakDetectionThreshold", 0);
 
         connectionTestQuery = props.getProperty("db.connectionTestQuery", "SELECT 1");
         dockerMysqlContainerName = props.getProperty("backup.mysql.container", "lisuan-mysql").trim();
@@ -203,10 +154,63 @@ public class DatabaseManager {
             dockerMysqlContainerName = "lisuan-mysql";
         }
 
+        validationTimeout = parseLongProperty(props, "db.validationTimeout", 3000);
+    }
+
+    private static Properties loadDatabaseProperties() {
+        Properties props = new Properties();
+        File configFile = new File(CONFIG_FILE);
+        if (!configFile.exists()) {
+            handleMissingConfigFile();
+        }
+
+        try (FileInputStream fis = new FileInputStream(configFile);
+             InputStreamReader isr = new InputStreamReader(fis, "UTF-8")) {
+            props.load(isr);
+            logger.info("已加载数据库配置: {}", CONFIG_FILE);
+            return props;
+        } catch (IOException e) {
+            logger.error("加载配置文件失败: {}", e.getMessage(), e);
+            throw DatabaseException.connectionFailed(e);
+        }
+    }
+
+    private static void handleMissingConfigFile() {
+        logger.info("配置文件不存在，创建默认配置文件模板");
+        saveDefaultConfigTemplate();
+        throw new DatabaseException(
+            "数据库配置文件不存在: " + CONFIG_FILE + "\n" +
+            "请先配置数据库连接信息：\n" +
+            "1. 编辑 config/database.properties 文件\n" +
+            "2. 设置正确的数据库 URL、用户名和密码\n" +
+            "3. 或者设置环境变量 CASHER_DB_PASSWORD 来避免明文存储密码\n" +
+            "4. 然后重新启动应用",
+            DatabaseException.DbErrorType.CONNECTION_FAILED
+        );
+    }
+
+    private static String resolveDatabasePassword(Properties props) {
+        String envPassword = System.getenv("CASHER_DB_PASSWORD");
+        if (envPassword != null && !envPassword.isEmpty()) {
+            logger.info("已从环境变量读取数据库密码");
+            return envPassword;
+        }
+        return props.getProperty(DatabaseConfigKeys.PASSWORD);
+    }
+
+    private static int parseIntProperty(Properties props, String key, int defaultValue) {
         try {
-            validationTimeout = Long.parseLong(props.getProperty("db.validationTimeout", "3000"));
+            return Integer.parseInt(props.getProperty(key, String.valueOf(defaultValue)));
         } catch (NumberFormatException e) {
-            validationTimeout = 3000;
+            return defaultValue;
+        }
+    }
+
+    private static long parseLongProperty(Properties props, String key, long defaultValue) {
+        try {
+            return Long.parseLong(props.getProperty(key, String.valueOf(defaultValue)));
+        } catch (NumberFormatException e) {
+            return defaultValue;
         }
     }
 
@@ -219,13 +223,13 @@ public class DatabaseManager {
             configFile.getParentFile().mkdirs();
 
             Properties props = new Properties();
-            props.setProperty("db.url", "jdbc:mysql://localhost:3306/lisuan_system?sslMode=PREFERRED&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8");
-            props.setProperty("db.username", "lisuan");
+            props.setProperty(DatabaseConfigKeys.URL, "jdbc:mysql://localhost:3306/lisuan_system?sslMode=PREFERRED&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8");
+            props.setProperty(DatabaseConfigKeys.USERNAME, "lisuan");
             // 安全提示：建议使用环境变量 CASHER_DB_PASSWORD 存储密码，避免明文存储
             // Windows: set CASHER_DB_PASSWORD=YourPassword
             // Linux/Mac: export CASHER_DB_PASSWORD=YourPassword
-            props.setProperty("db.password", "");
-            props.setProperty("db.pool.size", "10");
+            props.setProperty(DatabaseConfigKeys.PASSWORD, "");
+            props.setProperty(DatabaseConfigKeys.POOL_SIZE, "10");
             props.setProperty("backup.mysql.container", "lisuan-mysql");
 
             try (FileOutputStream fos = new FileOutputStream(configFile)) {
@@ -882,72 +886,34 @@ public class DatabaseManager {
         logger.info("检查表结构...");
 
         // 为 products 表添加 product_code 字段（如果不存在）
-        ResultSet rs = stmt.executeQuery("""
-            SELECT COUNT(*) as count
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-            AND TABLE_NAME = 'products'
-            AND COLUMN_NAME = 'product_code'
-        """);
-        if (rs.next() && rs.getInt("count") == 0) {
+        if (columnMissing(stmt, "products", "product_code")) {
             logger.info("正在为 products 表添加 product_code 字段...");
             stmt.execute("ALTER TABLE products ADD COLUMN product_code VARCHAR(50) UNIQUE COMMENT '商品编号' AFTER id");
             stmt.execute("ALTER TABLE products ADD INDEX idx_product_code (product_code)");
         }
-        rs.close();
-        
+
         // 为 members 表添加 id 字段（如果不存在）
-        rs = stmt.executeQuery("""
-            SELECT COUNT(*) as count
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-            AND TABLE_NAME = 'members'
-            AND COLUMN_NAME = 'id'
-        """);
-        if (rs.next() && rs.getInt("count") == 0) {
+        if (columnMissing(stmt, "members", "id")) {
             logger.info("正在为 members 表添加 id 字段...");
             stmt.execute("ALTER TABLE members ADD COLUMN id INT AUTO_INCREMENT PRIMARY KEY FIRST");
         }
-        rs.close();
 
         // 为 categories 表添加 id 字段（如果不存在）
-        rs = stmt.executeQuery("""
-            SELECT COUNT(*) as count
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-            AND TABLE_NAME = 'categories'
-            AND COLUMN_NAME = 'id'
-        """);
-        if (rs.next() && rs.getInt("count") == 0) {
+        if (columnMissing(stmt, "categories", "id")) {
             logger.info("正在为 categories 表添加 id 字段...");
             stmt.execute("ALTER TABLE categories ADD COLUMN id INT AUTO_INCREMENT PRIMARY KEY FIRST");
             stmt.execute("ALTER TABLE categories MODIFY COLUMN name VARCHAR(50) UNIQUE NOT NULL");
         }
-        rs.close();
 
         // 为 units 表添加 id 字段（如果不存在）
-        rs = stmt.executeQuery("""
-            SELECT COUNT(*) as count
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-            AND TABLE_NAME = 'units'
-            AND COLUMN_NAME = 'id'
-        """);
-        if (rs.next() && rs.getInt("count") == 0) {
+        if (columnMissing(stmt, "units", "id")) {
             logger.info("正在为 units 表添加 id 字段...");
             stmt.execute("ALTER TABLE units ADD COLUMN id INT AUTO_INCREMENT PRIMARY KEY FIRST");
             stmt.execute("ALTER TABLE units MODIFY COLUMN name VARCHAR(50) UNIQUE NOT NULL");
         }
-        rs.close();
-        
+
         // 创建主题偏好表（如果不存在）
-        rs = stmt.executeQuery("""
-            SELECT COUNT(*) as count
-            FROM INFORMATION_SCHEMA.TABLES
-            WHERE TABLE_SCHEMA = DATABASE()
-            AND TABLE_NAME = 'theme_preferences'
-        """);
-        if (rs.next() && rs.getInt("count") == 0) {
+        if (tableMissing(stmt, "theme_preferences")) {
             logger.info("正在创建 theme_preferences 表...");
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS theme_preferences (
@@ -958,16 +924,9 @@ public class DatabaseManager {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             """);
         }
-        rs.close();
 
         // 创建字号偏好表（如果不存在）
-        rs = stmt.executeQuery("""
-            SELECT COUNT(*) as count
-            FROM INFORMATION_SCHEMA.TABLES
-            WHERE TABLE_SCHEMA = DATABASE()
-            AND TABLE_NAME = 'font_size_preferences'
-        """);
-        if (rs.next() && rs.getInt("count") == 0) {
+        if (tableMissing(stmt, "font_size_preferences")) {
             logger.info("正在创建 font_size_preferences 表...");
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS font_size_preferences (
@@ -979,56 +938,53 @@ public class DatabaseManager {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             """);
         }
-        rs.close();
 
         // 为 promotions 表添加 promotion_code 字段（如果不存在）
-        rs = stmt.executeQuery("""
-            SELECT COUNT(*) as count
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-            AND TABLE_NAME = 'promotions'
-            AND COLUMN_NAME = 'promotion_code'
-        """);
-        if (rs.next() && rs.getInt("count") == 0) {
+        if (columnMissing(stmt, "promotions", "promotion_code")) {
             logger.info("正在为 promotions 表添加 promotion_code 字段...");
             stmt.execute("ALTER TABLE promotions ADD COLUMN promotion_code VARCHAR(50) UNIQUE AFTER id");
         }
-        rs.close();
         stmt.execute("UPDATE promotions SET promotion_code = CONCAT('P', LPAD(id, 6, '0')) WHERE promotion_code IS NULL OR promotion_code = ''");
 
         // 为 users 表添加 force_password_change 字段（如果不存在）
-        rs = stmt.executeQuery("""
-            SELECT COUNT(*) as count
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-            AND TABLE_NAME = 'users'
-            AND COLUMN_NAME = 'force_password_change'
-        """);
-        if (rs.next() && rs.getInt("count") == 0) {
+        if (columnMissing(stmt, "users", "force_password_change")) {
             logger.info("正在为 users 表添加 force_password_change 字段...");
             stmt.execute("ALTER TABLE users ADD COLUMN force_password_change TINYINT(1) DEFAULT 0 AFTER active");
         }
-        rs.close();
 
-        ensureColumn(stmt, "operation_logs", "ip_address", "VARCHAR(50) DEFAULT NULL");
-        ensureColumn(stmt, "operation_logs", "log_level", "VARCHAR(20) NOT NULL DEFAULT 'INFO'");
-        ensureColumn(stmt, "operation_logs", "log_category", "VARCHAR(50) NOT NULL DEFAULT 'SYSTEM'");
-        ensureColumn(stmt, "operation_logs", "operation_result", "VARCHAR(20) NOT NULL DEFAULT 'SUCCESS'");
-        ensureColumn(stmt, "operation_logs", "affected_records", "INT NOT NULL DEFAULT 0");
+        ensureColumn(stmt, OPERATION_LOGS_TABLE, "ip_address", "VARCHAR(50) DEFAULT NULL");
+        ensureColumn(stmt, OPERATION_LOGS_TABLE, "log_level", "VARCHAR(20) NOT NULL DEFAULT 'INFO'");
+        ensureColumn(stmt, OPERATION_LOGS_TABLE, "log_category", "VARCHAR(50) NOT NULL DEFAULT 'SYSTEM'");
+        ensureColumn(stmt, OPERATION_LOGS_TABLE, "operation_result", "VARCHAR(20) NOT NULL DEFAULT 'SUCCESS'");
+        ensureColumn(stmt, OPERATION_LOGS_TABLE, "affected_records", "INT NOT NULL DEFAULT 0");
 
         logger.info("表结构检查完成");
     }
 
-    private static void ensureColumn(Statement stmt, String table, String column, String definition) throws SQLException {
+    private static boolean columnMissing(Statement stmt, String table, String column) throws SQLException {
         String query = String.format("""
             SELECT COUNT(*) AS count FROM INFORMATION_SCHEMA.COLUMNS
             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '%s' AND COLUMN_NAME = '%s'
             """, table, column);
         try (ResultSet rs = stmt.executeQuery(query)) {
-            if (rs.next() && rs.getInt("count") == 0) {
-                logger.info("为 {} 表添加 {} 字段", table, column);
-                stmt.execute("ALTER TABLE `" + table + "` ADD COLUMN `" + column + "` " + definition);
-            }
+            return rs.next() && rs.getInt("count") == 0;
+        }
+    }
+
+    private static boolean tableMissing(Statement stmt, String table) throws SQLException {
+        String query = String.format("""
+            SELECT COUNT(*) AS count FROM INFORMATION_SCHEMA.TABLES
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '%s'
+            """, table);
+        try (ResultSet rs = stmt.executeQuery(query)) {
+            return rs.next() && rs.getInt("count") == 0;
+        }
+    }
+
+    private static void ensureColumn(Statement stmt, String table, String column, String definition) throws SQLException {
+        if (columnMissing(stmt, table, column)) {
+            logger.info("为 {} 表添加 {} 字段", table, column);
+            stmt.execute("ALTER TABLE `" + table + "` ADD COLUMN `" + column + "` " + definition);
         }
     }
 
@@ -1066,15 +1022,19 @@ public class DatabaseManager {
             logger.info("  用户名: admin");
             // 安全提示：不在日志中记录明文密码，避免日志泄露凭据
             logger.info("  初始密码已生成并使用 BCrypt 加密存储，请查看控制台输出获取临时密码");
-            // NOSONAR - 有意使用 System.out 而非 logger，确保密码仅输出到控制台而不写入日志文件
-            System.out.println("========================================");
-            System.out.println("  默认管理员初始密码: " + initialPassword);
-            System.out.println("  请妥善保存，首次登录后需立即修改！");
-            System.out.println("========================================");
+            printInitialAdminPassword(initialPassword);
         } else {
             logger.info("用户表已有数据，跳过创建默认用户");
         }
         rs.close();
+    }
+
+    private static void printInitialAdminPassword(String initialPassword) {
+        // NOSONAR - 有意使用 System.out 而非 logger，确保密码仅输出到控制台而不写入日志文件
+        System.out.println(CONSOLE_SEPARATOR);
+        System.out.println("  默认管理员初始密码: " + initialPassword);
+        System.out.println("  请妥善保存，首次登录后需立即修改！");
+        System.out.println(CONSOLE_SEPARATOR);
     }
 
     /**
@@ -1533,14 +1493,14 @@ public class DatabaseManager {
 
     static String getDatabaseNameFromUrl(String url) {
         if (url == null || url.isBlank()) {
-            return "lisuan_system";
+            return DEFAULT_DATABASE_NAME;
         }
 
         try {
             int protocolEnd = url.indexOf("://");
             int start = url.indexOf("/", protocolEnd >= 0 ? protocolEnd + 3 : 0);
             if (start < 0 || start + 1 >= url.length()) {
-                return "lisuan_system";
+                return DEFAULT_DATABASE_NAME;
             }
 
             int queryStart = url.indexOf("?", start);
@@ -1551,9 +1511,9 @@ public class DatabaseManager {
             }
 
             databaseName = databaseName.trim();
-            return databaseName.isEmpty() ? "lisuan_system" : databaseName;
+            return databaseName.isEmpty() ? DEFAULT_DATABASE_NAME : databaseName;
         } catch (Exception e) {
-            return "lisuan_system";
+            return DEFAULT_DATABASE_NAME;
         }
     }
 
@@ -1567,7 +1527,7 @@ public class DatabaseManager {
 
     static String sanitizeBackupFilePrefix(String databaseName) {
         if (databaseName == null || databaseName.isBlank()) {
-            return "lisuan_system";
+            return DEFAULT_DATABASE_NAME;
         }
         return databaseName.replaceAll("[^A-Za-z0-9._-]", "_");
     }

@@ -1,5 +1,7 @@
 package com.cashier.controller;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.i18n.I18nManager;
 import com.cashier.dao.PurchaseOrderDAO;
 import com.cashier.dao.PurchaseOrderItemDAO;
@@ -15,7 +17,6 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.chart.*;
 import javafx.scene.control.*;
-import javafx.scene.layout.*;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -226,15 +227,15 @@ public class PurchaseReportController {
 
         // 采购金额趋势折线图
         amountTrendLineChart.setTitle(com.cashier.i18n.I18nManager.getInstance().get("purchase_report.amount_trend"));
-        amountTrendLineChart.getXAxis().setLabel(I18nManager.getInstance().get("chart.date"));
-        amountTrendLineChart.getYAxis().setLabel(I18nManager.getInstance().get("chart.amount"));
+        amountTrendLineChart.getXAxis().setLabel(I18nManager.getInstance().get(I18nKeys.Chart.DATE));
+        amountTrendLineChart.getYAxis().setLabel(I18nManager.getInstance().get(I18nKeys.Chart.AMOUNT));
         amountTrendLineChart.setCreateSymbols(false); // 不显示数据点
         amountTrendLineChart.setLegendVisible(false);
 
         // 供应商采购对比柱状图
         supplierComparisonBarChart.setTitle(com.cashier.i18n.I18nManager.getInstance().get("purchase_report.supplier_comparison"));
         supplierComparisonBarChart.getXAxis().setLabel(I18nManager.getInstance().get("chart.supplier"));
-        supplierComparisonBarChart.getYAxis().setLabel(I18nManager.getInstance().get("chart.amount"));
+        supplierComparisonBarChart.getYAxis().setLabel(I18nManager.getInstance().get(I18nKeys.Chart.AMOUNT));
         supplierComparisonBarChart.setLegendVisible(false);
     }
 
@@ -267,7 +268,7 @@ public class PurchaseReportController {
             logger.info("成功加载 {} 条采购订单记录", allOrders.size());
         } catch (SQLException e) {
             logger.error("加载数据失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
             allOrders = new ArrayList<>();
             allSuppliers = new ArrayList<>();
             orderItemsMap = new HashMap<>();
@@ -316,6 +317,8 @@ public class PurchaseReportController {
             case "自定义":
                 // 不自动设置日期
                 break;
+            default:
+                break;
         }
     }
 
@@ -328,12 +331,12 @@ public class PurchaseReportController {
         LocalDate endDate = endDatePicker.getValue();
 
         if (startDate == null || endDate == null) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.select_date_range"));
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_DATE_RANGE));
             return;
         }
 
         if (startDate.isAfter(endDate)) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.invalid_date_range"));
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.INVALID_DATE_RANGE));
             return;
         }
 
@@ -409,6 +412,9 @@ public class PurchaseReportController {
                 case "completed":
                     completedOrders++;
                     break;
+                default:
+                    logger.debug("跳过未知采购订单状态统计: {}", order.status);
+                    break;
             }
 
             // 供应商统计
@@ -424,7 +430,7 @@ public class PurchaseReportController {
                     totalQuantity += item.quantity;
 
                     // 分类统计（从商品名称中提取分类，如果没有则使用"未分类"）
-                    String category = I18nManager.getInstance().get("report.uncategorized");
+                    String category = I18nManager.getInstance().get(I18nKeys.Report.UNCATEGORIZED);
                     if (item.productName != null && item.productName.contains("-")) {
                         category = item.productName.split("-")[0].trim();
                     }
@@ -550,13 +556,13 @@ public class PurchaseReportController {
         ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList();
 
         if (pendingOrders > 0) {
-            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get("runtime.status.pending_approval"), pendingOrders));
+            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get(I18nKeys.Runtime.STATUS_PENDING_APPROVAL), pendingOrders));
         }
         if (approvedOrders > 0) {
-            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get("runtime.status.approved"), approvedOrders));
+            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get(I18nKeys.Runtime.STATUS_APPROVED), approvedOrders));
         }
         if (completedOrders > 0) {
-            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get("runtime.status.completed"), completedOrders));
+            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get(I18nKeys.Runtime.STATUS_COMPLETED), completedOrders));
         }
 
         statusPieChart.setData(pieChartData);
@@ -623,9 +629,9 @@ public class PurchaseReportController {
         ChoiceDialog<String> exportDialog = new ChoiceDialog<>(
             "订单统计", "订单统计", "供应商排名", "分类采购"
         );
-        exportDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.select_export_content"));
-        exportDialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get("runtime.select_export_content_header"));
-        exportDialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_content_label"));
+        exportDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_EXPORT_CONTENT));
+        exportDialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_EXPORT_CONTENT_HEADER));
+        exportDialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.EXPORT_CONTENT_LABEL));
 
         exportDialog.showAndWait().ifPresent(exportType -> {
             if (exportType.equals("订单统计")) {
@@ -651,9 +657,9 @@ public class PurchaseReportController {
         ChoiceDialog<String> formatDialog = new ChoiceDialog<>(
             "Excel", "Excel", "PDF"
         );
-        formatDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("label.export_format"));
-        formatDialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get("label.please_select_format"));
-        formatDialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.format_label"));
+        formatDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.EXPORT_FORMAT));
+        formatDialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.PLEASE_SELECT_FORMAT));
+        formatDialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.FORMAT_LABEL));
 
         formatDialog.showAndWait().ifPresent(format -> {
             com.cashier.util.ExportUtil.ExportFormat exportFormat =
@@ -690,19 +696,19 @@ public class PurchaseReportController {
 
                 if (filePath != null) {
                     com.cashier.util.StatusBarManager.updateSuccess(
-                        com.cashier.i18n.I18nManager.getInstance().get("success.export"));
+                        com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Success.EXPORT));
                     Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                    successAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("success.export"));
+                    successAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Success.EXPORT));
                     successAlert.setHeaderText(null);
-                    successAlert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_success_path") + "\n" + filePath);
+                    successAlert.setContentText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.EXPORT_SUCCESS_PATH) + "\n" + filePath);
                     successAlert.showAndWait();
                     logger.info("采购订单报表导出成功: {}", filePath);
                 } else {
-                    showError(com.cashier.i18n.I18nManager.getInstance().get("error.export_failed"));
+                    showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.EXPORT_FAILED));
                 }
             } catch (Exception e) {
                 logger.error("导出采购订单报表失败", e);
-                showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_failed_detail", e.getMessage()));
+                showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.EXPORT_FAILED_DETAIL, e.getMessage()));
             }
         });
     }
@@ -720,9 +726,9 @@ public class PurchaseReportController {
         ChoiceDialog<String> formatDialog = new ChoiceDialog<>(
             "Excel", "Excel", "PDF"
         );
-        formatDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("label.export_format"));
-        formatDialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get("label.please_select_format"));
-        formatDialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.format_label"));
+        formatDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.EXPORT_FORMAT));
+        formatDialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.PLEASE_SELECT_FORMAT));
+        formatDialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.FORMAT_LABEL));
 
         formatDialog.showAndWait().ifPresent(format -> {
             com.cashier.util.ExportUtil.ExportFormat exportFormat =
@@ -757,19 +763,19 @@ public class PurchaseReportController {
 
                 if (filePath != null) {
                     com.cashier.util.StatusBarManager.updateSuccess(
-                        com.cashier.i18n.I18nManager.getInstance().get("success.export"));
+                        com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Success.EXPORT));
                     Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                    successAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("success.export"));
+                    successAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Success.EXPORT));
                     successAlert.setHeaderText(null);
-                    successAlert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_success_path") + "\n" + filePath);
+                    successAlert.setContentText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.EXPORT_SUCCESS_PATH) + "\n" + filePath);
                     successAlert.showAndWait();
                     logger.info("供应商排名导出成功: {}", filePath);
                 } else {
-                    showError(com.cashier.i18n.I18nManager.getInstance().get("error.export_failed"));
+                    showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.EXPORT_FAILED));
                 }
             } catch (Exception e) {
                 logger.error("导出供应商排名失败", e);
-                showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_failed_detail", e.getMessage()));
+                showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.EXPORT_FAILED_DETAIL, e.getMessage()));
             }
         });
     }
@@ -787,9 +793,9 @@ public class PurchaseReportController {
         ChoiceDialog<String> formatDialog = new ChoiceDialog<>(
             "Excel", "Excel", "PDF"
         );
-        formatDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("label.export_format"));
-        formatDialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get("label.please_select_format"));
-        formatDialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.format_label"));
+        formatDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.EXPORT_FORMAT));
+        formatDialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.PLEASE_SELECT_FORMAT));
+        formatDialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.FORMAT_LABEL));
 
         formatDialog.showAndWait().ifPresent(format -> {
             com.cashier.util.ExportUtil.ExportFormat exportFormat =
@@ -823,19 +829,19 @@ public class PurchaseReportController {
 
                 if (filePath != null) {
                     com.cashier.util.StatusBarManager.updateSuccess(
-                        com.cashier.i18n.I18nManager.getInstance().get("success.export"));
+                        com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Success.EXPORT));
                     Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                    successAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("success.export"));
+                    successAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Success.EXPORT));
                     successAlert.setHeaderText(null);
-                    successAlert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_success_path") + "\n" + filePath);
+                    successAlert.setContentText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.EXPORT_SUCCESS_PATH) + "\n" + filePath);
                     successAlert.showAndWait();
                     logger.info("分类采购报表导出成功: {}", filePath);
                 } else {
-                    showError(com.cashier.i18n.I18nManager.getInstance().get("error.export_failed"));
+                    showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.EXPORT_FAILED));
                 }
             } catch (Exception e) {
                 logger.error("导出分类采购报表失败", e);
-                showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_failed_detail", e.getMessage()));
+                showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.EXPORT_FAILED_DETAIL, e.getMessage()));
             }
         });
     }
@@ -846,7 +852,7 @@ public class PurchaseReportController {
     private void showError(String message) {
         com.cashier.util.StatusBarManager.updateError(message);
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(I18nManager.getInstance().get("label.error"));
+        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Label.ERROR));
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();

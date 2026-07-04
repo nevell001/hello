@@ -4,7 +4,6 @@ import com.cashier.model.PageResult;
 import com.cashier.model.Product;
 
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;

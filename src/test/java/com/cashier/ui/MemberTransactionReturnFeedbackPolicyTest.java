@@ -19,7 +19,7 @@ class MemberTransactionReturnFeedbackPolicyTest {
             "src/main/java/com/cashier/controller/MemberController.java"
         ));
 
-        assertTrue(memberController.contains("showWarning(i18n.get(\"runtime.select_member\"))"));
+        assertTrue(memberController.contains("showWarning(i18n.get(I18nKeys.Runtime.SELECT_MEMBER))"));
         assertTrue(memberController.contains("if (selected.isEmpty())"));
         assertTrue(memberController.contains("Member selected = getSelectedItem(memberTable);"));
     }

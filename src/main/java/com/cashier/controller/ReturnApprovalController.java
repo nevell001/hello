@@ -1,5 +1,7 @@
 package com.cashier.controller;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.dao.*;
 import com.cashier.i18n.I18nManager;
 import com.cashier.model.*;
@@ -14,8 +16,9 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import org.slf4j.Logger;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 /**
@@ -104,8 +107,10 @@ public class ReturnApprovalController {
                     setText(null);
                 } else {
                     try {
-                        Date date = new Date(FormValidator.parseLong(item));
-                        setText(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date));
+                        java.time.LocalDateTime dateTime = Instant.ofEpochMilli(FormValidator.parseLong(item))
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDateTime();
+                        setText(dateTime.format(com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME));
                     } catch (Exception e) {
                         setText(item);
                     }
@@ -226,14 +231,15 @@ public class ReturnApprovalController {
         }
 
         returnOrderIdLabel.setText(order.returnOrderId);
-        memberNameLabel.setText(order.memberName != null ? order.memberName : com.cashier.i18n.I18nManager.getInstance().get("statistics.no_data"));
+        memberNameLabel.setText(order.memberName != null ? order.memberName : com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Statistics.NO_DATA));
         totalAmountLabel.setText(CurrencyUtil.format(order.totalAmount.doubleValue()));
-        returnDateLabel.setText(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(order.returnDate));
+        returnDateLabel.setText(order.returnDate != null ? order.returnDate.atZone(ZoneId.systemDefault()).toLocalDateTime()
+            .format(com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME) : "");
         operatorNameLabel.setText(order.operatorName != null && !order.operatorName.isEmpty()
             ? order.operatorName
-            : com.cashier.i18n.I18nManager.getInstance().get("common.none"));
+            : com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Common.NONE));
         returnReasonTextArea.setText(order.returnReason != null ? order.returnReason : "");
-        originalTransactionLabel.setText(order.originalTransactionId != null ? order.originalTransactionId : com.cashier.i18n.I18nManager.getInstance().get("statistics.no_data"));
+        originalTransactionLabel.setText(order.originalTransactionId != null ? order.originalTransactionId : com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Statistics.NO_DATA));
         paymentMethodLabel.setText(order.paymentMethod != null
             ? com.cashier.util.I18nUiUtils.paymentMethod(order.paymentMethod)
             : com.cashier.i18n.I18nManager.getInstance().get("runtime.not_set"));
@@ -264,13 +270,13 @@ public class ReturnApprovalController {
     @FXML
     public void handleApprove() {
         if (selectedOrder == null) {
-            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.return_select_for_approval"));
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.INFO), com.cashier.i18n.I18nManager.getInstance().get("runtime.return_select_for_approval"));
             return;
         }
 
         String approvalComment = approvalCommentTextArea.getText().trim();
         if (approvalComment.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.approval_comment_required"));
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.INFO), com.cashier.i18n.I18nManager.getInstance().get("runtime.approval_comment_required"));
             return;
         }
 
@@ -301,13 +307,13 @@ public class ReturnApprovalController {
     @FXML
     public void handleReject() {
         if (selectedOrder == null) {
-            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.return_select_for_approval"));
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.INFO), com.cashier.i18n.I18nManager.getInstance().get("runtime.return_select_for_approval"));
             return;
         }
 
         String approvalComment = approvalCommentTextArea.getText().trim();
         if (approvalComment.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.rejection_reason_required"));
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.INFO), com.cashier.i18n.I18nManager.getInstance().get("runtime.rejection_reason_required"));
             return;
         }
 
@@ -337,7 +343,7 @@ public class ReturnApprovalController {
             loadPendingOrders();
             clearDetail();
         } else {
-            showAlert(Alert.AlertType.ERROR, com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed"), com.cashier.i18n.I18nManager.getInstance().get("runtime.operation_log_error"));
+            showAlert(Alert.AlertType.ERROR, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED), com.cashier.i18n.I18nManager.getInstance().get("runtime.operation_log_error"));
         }
     }
 
@@ -352,7 +358,7 @@ public class ReturnApprovalController {
     @FXML
     public void handleViewOriginalTransaction() {
         if (selectedOrder == null || selectedOrder.originalTransactionId == null) {
-            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.select_return_order"));
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.INFO), com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_RETURN_ORDER));
             return;
         }
 
@@ -366,16 +372,16 @@ public class ReturnApprovalController {
                     transaction.timestamp,
                     transaction.operatorName != null && !transaction.operatorName.isEmpty()
                         ? transaction.operatorName
-                        : I18nManager.getInstance().get("common.none"),
+                        : I18nManager.getInstance().get(I18nKeys.Common.NONE),
                     com.cashier.util.I18nUiUtils.paymentMethod(transaction.paymentMethod),
                     String.format("%.2f", transaction.totalAmount),
-                    transaction.memberName != null ? transaction.memberName : I18nManager.getInstance().get("statistics.no_data"));
+                    transaction.memberName != null ? transaction.memberName : I18nManager.getInstance().get(I18nKeys.Statistics.NO_DATA));
                 showInformationOnlyAlert(com.cashier.i18n.I18nManager.getInstance().get("runtime.original_transaction"), details);
             } else {
-                showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.original_transaction_missing"));
+                showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.INFO), com.cashier.i18n.I18nManager.getInstance().get("runtime.original_transaction_missing"));
             }
         } catch (Exception e) {
-            showAlert(Alert.AlertType.ERROR, com.cashier.i18n.I18nManager.getInstance().get("label.error"),
+            showAlert(Alert.AlertType.ERROR, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.ERROR),
                     com.cashier.i18n.I18nManager.getInstance().get("runtime.original_transaction_query_failed", e.getMessage()));
         }
     }
@@ -410,7 +416,7 @@ public class ReturnApprovalController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         ButtonType okButton = new ButtonType(
-            I18nManager.getInstance().get("common.ok"), ButtonBar.ButtonData.OK_DONE);
+            I18nManager.getInstance().get(I18nKeys.Common.OK), ButtonBar.ButtonData.OK_DONE);
         alert.getButtonTypes().setAll(okButton);
         alert.showAndWait();
     }

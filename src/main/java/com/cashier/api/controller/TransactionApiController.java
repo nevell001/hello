@@ -1,6 +1,5 @@
 package com.cashier.api.controller;
 
-import com.cashier.api.ApiServer;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.MemberDAO;
 import com.cashier.dao.ProductDAORefactored;
@@ -8,7 +7,6 @@ import com.cashier.dao.ReturnOrderDAO;
 import com.cashier.dao.ReturnOrderItemDAO;
 import com.cashier.dao.TransactionDAO;
 import com.cashier.model.*;
-import com.cashier.service.ReturnService;
 import com.cashier.util.DatabaseManager;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
@@ -28,7 +26,7 @@ import java.util.*;
  */
 public class TransactionApiController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(TransactionApiController.class);
-    private static final DateTimeFormatter ID_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
+    private static final DateTimeFormatter ID_FORMATTER = com.cashier.util.DateTimeFormats.COMPACT_DATE_TIME_MILLIS;
     private static final ProductDAORefactored productDAO = DAOFactory.getInstance().getProductDAO();
     
     /**
@@ -102,7 +100,7 @@ public class TransactionApiController {
             
             Transaction transaction = new Transaction();
             transaction.transactionId = transactionId;
-            transaction.timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            transaction.timestamp = LocalDateTime.now().format(com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME);
             transaction.items = request.items;
             transaction.totalAmount = request.totalAmount != null ? request.totalAmount : BigDecimal.ZERO;
             transaction.tax = request.tax != null ? request.tax : BigDecimal.ZERO;
@@ -148,107 +146,17 @@ public class TransactionApiController {
         try {
             String transactionId = ctx.pathParam("id");
             Transaction transaction = TransactionDAO.findById(transactionId);
-            
-            if (transaction == null) {
-                ctx.status(HttpStatus.NOT_FOUND)
-                   .json(Map.of("success", false, "message", "交易不存在"));
+
+            if (!validateRefundRequest(ctx, transaction)) {
                 return;
             }
-            
-            // 检查是否已退款
-            if ("REFUNDED".equals(transaction.status)) {
-                ctx.status(HttpStatus.BAD_REQUEST)
-                   .json(Map.of("success", false, "message", "该交易已退款"));
-                return;
-            }
-            
+
             // 执行退款事务
-            boolean success = DatabaseManager.executeBooleanTransaction(conn -> {
-                try {
-                    // 1. 创建退货订单
-                    ReturnOrder returnOrder = new ReturnOrder();
-                    returnOrder.originalTransactionId = transactionId;
-                    returnOrder.memberId = transaction.memberId > 0 ? transaction.memberId : null;
-                    returnOrder.memberName = transaction.memberName;
-                    returnOrder.totalAmount = transaction.finalAmount != null ? transaction.finalAmount : BigDecimal.ZERO;
-                    returnOrder.returnReason = "API退款";
-                    returnOrder.paymentMethod = mapPaymentMethodToRefund(transaction.paymentMethod);
-                    returnOrder.operatorName = transaction.operatorName;
-                    returnOrder.status = "COMPLETED"; // 直接完成，无需审批
-                    
-                    // 生成退货单号并插入
-                    returnOrder.returnOrderId = ReturnOrderDAO.generateNextReturnOrderId(conn);
-                    if (!ReturnOrderDAO.insertWithConnection(conn, returnOrder)) {
-                        return false;
-                    }
-                    
-                    // 2. 创建退货明细并恢复库存
-                    if (transaction.items != null && !transaction.items.isEmpty()) {
-                        List<ReturnOrderItem> returnItems = new ArrayList<>();
-                        for (Product product : transaction.items) {
-                            ReturnOrderItem item = new ReturnOrderItem();
-                            item.returnOrderId = returnOrder.returnOrderId;
-                            item.productId = product.id;
-                            item.productCode = product.productCode;
-                            item.productName = product.name;
-                            item.barcode = product.barcode;
-                            item.category = product.category;
-                            item.returnQuantity = product.quantity;
-                            item.unitPrice = product.price != null ? product.price : BigDecimal.ZERO;
-                            item.returnAmount = item.unitPrice.multiply(BigDecimal.valueOf(item.returnQuantity));
-                            item.condition = "GOOD";
-                            returnItems.add(item);
-                            
-                            // 恢复库存
-                            productDAO.updateQuantityWithConnection(conn, product.id, product.quantity);
-                        }
-                        
-                        if (!ReturnOrderItemDAO.batchInsertWithConnection(conn, returnItems)) {
-                            return false;
-                        }
-                    }
-                    
-                    // 3. 扣减会员积分（如果有会员）
-                    if (transaction.memberId > 0 && transaction.finalAmount != null) {
-                        // 积分按消费金额的 1% 计算，退货时扣减
-                        double pointsToDeduct = transaction.finalAmount.divide(BigDecimal.valueOf(100), 2, RoundingMode.DOWN).doubleValue();
-                        MemberDAO.updatePointsWithConnection(conn, transaction.memberId, -pointsToDeduct);
-                        
-                        // 重新计算会员等级
-                        Member member = MemberDAO.findByIdWithConnection(conn, transaction.memberId);
-                        if (member != null) {
-                            String newLevel = calculateMemberLevel(member.points);
-                            member.level = newLevel;
-                            MemberDAO.updateWithConnection(conn, member);
-                        }
-                    }
-                    
-                    // 4. 更新原交易状态
-                    TransactionDAO.updateStatusWithConnection(conn, transactionId, "REFUNDED");
-                    
-                    return true;
-                } catch (SQLException e) {
-                    logger.error("退款事务执行失败", e);
-                    throw e;
-                }
-            });
-            
+            boolean success = DatabaseManager.executeBooleanTransaction(
+                conn -> processRefundTransaction(conn, transactionId, transaction));
+
             if (success) {
-                logger.info("交易退款成功: {} - 金额: {}", transactionId, transaction.finalAmount);
-                
-                // 广播交易退款事件
-                com.cashier.api.sync.SyncManager.getInstance().broadcastSyncEvent(
-                    com.cashier.api.sync.SyncEventType.TRANSACTION_REFUNDED,
-                    Map.of(
-                        "transactionId", transactionId,
-                        "refundAmount", transaction.finalAmount.toString(),
-                        "timestamp", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                    )
-                );
-                
-                ctx.json(Map.of("success", true, "message", "退款成功", 
-                    "transactionId", transactionId,
-                    "refundAmount", transaction.finalAmount));
+                respondRefundSuccess(ctx, transactionId, transaction);
             } else {
                 ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
                    .json(Map.of("success", false, "message", "退款处理失败"));
@@ -258,6 +166,118 @@ public class TransactionApiController {
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
                .json(Map.of("success", false, "message", "交易退款失败: " + e.getMessage()));
         }
+    }
+
+    private static boolean validateRefundRequest(Context ctx, Transaction transaction) {
+        if (transaction == null) {
+            ctx.status(HttpStatus.NOT_FOUND)
+               .json(Map.of("success", false, "message", "交易不存在"));
+            return false;
+        }
+        if ("REFUNDED".equals(transaction.status)) {
+            ctx.status(HttpStatus.BAD_REQUEST)
+               .json(Map.of("success", false, "message", "该交易已退款"));
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean processRefundTransaction(Connection conn, String transactionId, Transaction transaction)
+            throws SQLException {
+        try {
+            ReturnOrder returnOrder = createRefundReturnOrder(conn, transactionId, transaction);
+            if (!ReturnOrderDAO.insertWithConnection(conn, returnOrder)) {
+                return false;
+            }
+            if (!createReturnItemsAndRestoreInventory(conn, transaction, returnOrder.returnOrderId)) {
+                return false;
+            }
+            adjustMemberPointsAfterRefund(conn, transaction);
+            TransactionDAO.updateStatusWithConnection(conn, transactionId, "REFUNDED");
+            return true;
+        } catch (SQLException e) {
+            logger.error("退款事务执行失败", e);
+            throw e;
+        }
+    }
+
+    private static ReturnOrder createRefundReturnOrder(Connection conn, String transactionId, Transaction transaction)
+            throws SQLException {
+        ReturnOrder returnOrder = new ReturnOrder();
+        returnOrder.originalTransactionId = transactionId;
+        returnOrder.memberId = transaction.memberId > 0 ? transaction.memberId : null;
+        returnOrder.memberName = transaction.memberName;
+        returnOrder.totalAmount = transaction.finalAmount != null ? transaction.finalAmount : BigDecimal.ZERO;
+        returnOrder.returnReason = "API退款";
+        returnOrder.paymentMethod = mapPaymentMethodToRefund(transaction.paymentMethod);
+        returnOrder.operatorName = transaction.operatorName;
+        returnOrder.status = "COMPLETED"; // 直接完成，无需审批
+        returnOrder.returnOrderId = ReturnOrderDAO.generateNextReturnOrderId(conn);
+        return returnOrder;
+    }
+
+    private static boolean createReturnItemsAndRestoreInventory(
+            Connection conn, Transaction transaction, String returnOrderId) throws SQLException {
+        if (transaction.items == null || transaction.items.isEmpty()) {
+            return true;
+        }
+
+        List<ReturnOrderItem> returnItems = new ArrayList<>();
+        for (Product product : transaction.items) {
+            returnItems.add(createReturnOrderItem(returnOrderId, product));
+            productDAO.updateQuantityWithConnection(conn, product.id, product.quantity);
+        }
+        return ReturnOrderItemDAO.batchInsertWithConnection(conn, returnItems);
+    }
+
+    private static ReturnOrderItem createReturnOrderItem(String returnOrderId, Product product) {
+        ReturnOrderItem item = new ReturnOrderItem();
+        item.returnOrderId = returnOrderId;
+        item.productId = product.id;
+        item.productCode = product.productCode;
+        item.productName = product.name;
+        item.barcode = product.barcode;
+        item.category = product.category;
+        item.returnQuantity = product.quantity;
+        item.unitPrice = product.price != null ? product.price : BigDecimal.ZERO;
+        item.returnAmount = item.unitPrice.multiply(BigDecimal.valueOf(item.returnQuantity));
+        item.condition = "GOOD";
+        return item;
+    }
+
+    private static void adjustMemberPointsAfterRefund(Connection conn, Transaction transaction) throws SQLException {
+        if (transaction.memberId <= 0 || transaction.finalAmount == null) {
+            return;
+        }
+
+        // 积分按消费金额的 1% 计算，退货时扣减
+        double pointsToDeduct = transaction.finalAmount.divide(BigDecimal.valueOf(100), 2, RoundingMode.DOWN).doubleValue();
+        MemberDAO.updatePointsWithConnection(conn, transaction.memberId, -pointsToDeduct);
+
+        // 重新计算会员等级
+        Member member = MemberDAO.findByIdWithConnection(conn, transaction.memberId);
+        if (member != null) {
+            member.level = calculateMemberLevel(member.points);
+            MemberDAO.updateWithConnection(conn, member);
+        }
+    }
+
+    private static void respondRefundSuccess(Context ctx, String transactionId, Transaction transaction) {
+        logger.info("交易退款成功: {} - 金额: {}", transactionId, transaction.finalAmount);
+
+        // 广播交易退款事件
+        com.cashier.api.sync.SyncManager.getInstance().broadcastSyncEvent(
+            com.cashier.api.sync.SyncEventType.TRANSACTION_REFUNDED,
+            Map.of(
+                "transactionId", transactionId,
+                "refundAmount", transaction.finalAmount.toString(),
+                "timestamp", LocalDateTime.now().format(com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME)
+            )
+        );
+
+        ctx.json(Map.of("success", true, "message", "退款成功",
+            "transactionId", transactionId,
+            "refundAmount", transaction.finalAmount));
     }
     
     /**
@@ -291,7 +311,7 @@ public class TransactionApiController {
         try {
             List<Transaction> transactions = TransactionDAO.findAll();
             
-            String today = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            String today = LocalDateTime.now().format(com.cashier.util.DateTimeFormats.DATE);
             
             BigDecimal totalAmount = BigDecimal.ZERO;
             int count = 0;

@@ -1,5 +1,7 @@
 package com.cashier.util;
 
+import com.cashier.constant.SystemPropertyKeys;
+
 import com.cashier.model.CartItem;
 import com.cashier.model.Member;
 import com.cashier.model.Transaction;
@@ -27,8 +29,10 @@ public class ReceiptPrinter {
     private static final Logger logger = LoggerFactoryUtil.getLogger(ReceiptPrinter.class);
 
     // 使用线程安全的 DateTimeFormatter 替代 SimpleDateFormat
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter DATE_FORMATTER = com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME;
     private static final String RECEIPT_DIR = "receipts";
+    private static final String THICK_SEPARATOR = "========================================\n";
+    private static final String THIN_SEPARATOR = "----------------------------------------\n";
 
     /**
      * 生成并打印小票
@@ -48,7 +52,7 @@ public class ReceiptPrinter {
             // 生成小票文件名
             String fileName = String.format("receipt_%s_%s.txt",
                 transaction.transactionId,
-                java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
+                java.time.LocalDateTime.now().format(com.cashier.util.DateTimeFormats.COMPACT_DATE_TIME));
 
             File receiptFile = new File(dir, fileName);
 
@@ -78,13 +82,13 @@ public class ReceiptPrinter {
         StringBuilder sb = new StringBuilder();
 
         // 店铺信息（带 Logo）
-        sb.append("========================================\n");
+        sb.append(THICK_SEPARATOR);
         sb.append("              ╔═══╗                    \n");
         sb.append("              ║狸算║                    \n");
         sb.append("              ║收银║                    \n");
         sb.append("              ╚═══╝                    \n");
         sb.append("        狸算(LiSuan)收银系统小票\n");
-        sb.append("========================================\n\n");
+        sb.append(THICK_SEPARATOR).append("\n");
 
         // 交易信息
         sb.append("订单号: ").append(transaction.transactionId).append("\n");
@@ -92,7 +96,7 @@ public class ReceiptPrinter {
             // 解析时间戳字符串并重新格式化
             java.time.LocalDateTime dateTime = java.time.LocalDateTime.parse(
                 transaction.timestamp, 
-                java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME
             );
             sb.append("时间: ").append(DATE_FORMATTER.format(dateTime)).append("\n");
         } catch (Exception e) {
@@ -102,21 +106,21 @@ public class ReceiptPrinter {
 
         // 会员信息
         if (member != null) {
-            sb.append("----------------------------------------\n");
+            sb.append(THIN_SEPARATOR);
             sb.append("会员信息:\n");
             sb.append("  会员姓名: ").append(member.name).append("\n");
             sb.append("  手机号: ").append(member.phone).append("\n");
             sb.append("  积分: ").append(member.points).append("\n");
-            sb.append("----------------------------------------\n");
+            sb.append(THIN_SEPARATOR);
         }
 
         sb.append("\n");
 
         // 商品列表
         sb.append("商品列表:\n");
-        sb.append("----------------------------------------\n");
+        sb.append(THIN_SEPARATOR);
         sb.append(String.format("%-20s %5s %8s %10s\n", "商品名称", "数量", "单价", "金额"));
-        sb.append("----------------------------------------\n");
+        sb.append(THIN_SEPARATOR);
 
         for (CartItem item : cartItems) {
             String name = item.product.name;
@@ -130,16 +134,16 @@ public class ReceiptPrinter {
                 item.subtotal));
         }
 
-        sb.append("----------------------------------------\n");
+        sb.append(THIN_SEPARATOR);
 
         // 金额汇总
         sb.append(String.format("%35s %10.2f\n", "商品总额:", transaction.totalAmount));
         if (transaction.tax.compareTo(BigDecimal.ZERO) > 0) {
             sb.append(String.format("%35s %10.2f\n", "税费:", transaction.tax));
         }
-        sb.append("----------------------------------------\n");
+        sb.append(THIN_SEPARATOR);
         sb.append(String.format("%35s %10.2f\n", "实付金额:", transaction.finalAmount));
-        sb.append("========================================\n");
+        sb.append(THICK_SEPARATOR);
 
         // 支付方式
         String paymentMethod = getPaymentMethodDisplayName(transaction.paymentMethod);
@@ -154,9 +158,9 @@ public class ReceiptPrinter {
 
         // 底部信息
         sb.append("谢谢惠顾！欢迎再次光临！\n");
-        sb.append("========================================\n");
+        sb.append(THICK_SEPARATOR);
         sb.append("       退换货凭据\n");
-        sb.append("========================================\n");
+        sb.append(THICK_SEPARATOR);
 
         return sb.toString();
     }
@@ -181,7 +185,7 @@ public class ReceiptPrinter {
      */
     private static void printFile(File file) {
         try {
-            String os = System.getProperty("os.name").toLowerCase();
+            String os = System.getProperty(SystemPropertyKeys.OS_NAME).toLowerCase();
 
             if (os.contains("win")) {
                 // Windows: 使用 notepad /p 打印
@@ -222,7 +226,7 @@ public class ReceiptPrinter {
             // 生成小票文件名
             String fileName = String.format("receipt_%s_%s.txt",
                 transaction.transactionId,
-                java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
+                java.time.LocalDateTime.now().format(com.cashier.util.DateTimeFormats.COMPACT_DATE_TIME));
 
             File receiptFile = new File(dir, fileName);
 
@@ -254,7 +258,7 @@ public class ReceiptPrinter {
                 return;
             }
 
-            String os = System.getProperty("os.name").toLowerCase();
+            String os = System.getProperty(SystemPropertyKeys.OS_NAME).toLowerCase();
 
             if (os.contains("mac")) {
                 // macOS: 使用 open 命令
@@ -289,7 +293,7 @@ public class ReceiptPrinter {
             // 生成退货单据文件名
             String fileName = String.format("return_%s_%s.txt",
                 returnOrder.returnOrderId,
-                java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
+                java.time.LocalDateTime.now().format(com.cashier.util.DateTimeFormats.COMPACT_DATE_TIME));
 
             File returnReceiptFile = new File(dir, fileName);
 
@@ -318,91 +322,93 @@ public class ReceiptPrinter {
     private static String generateReturnReceiptContent(ReturnOrder returnOrder, List<ReturnOrderItem> returnItems) {
         StringBuilder sb = new StringBuilder();
 
-        // 店铺信息
-        sb.append("========================================\n");
-        sb.append("           退货单据\n");
-        sb.append("========================================\n\n");
+        appendReturnReceiptHeader(sb, returnOrder);
+        appendReturnApprovalInfo(sb, returnOrder);
+        appendReturnMemberInfo(sb, returnOrder);
+        appendReturnItems(sb, returnItems);
+        appendReturnSummary(sb, returnOrder);
+        appendReturnReceiptFooter(sb);
 
-        // 退货单信息
+        return sb.toString();
+    }
+
+    private static void appendReturnReceiptHeader(StringBuilder sb, ReturnOrder returnOrder) {
+        sb.append(THICK_SEPARATOR);
+        sb.append("           退货单据\n");
+        sb.append(THICK_SEPARATOR).append("\n");
         sb.append("退货单号: ").append(returnOrder.returnOrderId).append("\n");
         sb.append("原订单号: ").append(returnOrder.originalTransactionId != null ? returnOrder.originalTransactionId : "无").append("\n");
         sb.append("退货日期: ").append(returnOrder.getReturnDateFormatted()).append("\n");
         sb.append("操作员: ").append(returnOrder.operatorName).append("\n");
+    }
 
-        // 审批信息
-        if ("APPROVED".equals(returnOrder.status) || "COMPLETED".equals(returnOrder.status)) {
-            sb.append("----------------------------------------\n");
-            sb.append("审批信息:\n");
-            sb.append("  审批人: ").append(returnOrder.approverName != null ? returnOrder.approverName : "无").append("\n");
-            if (returnOrder.approvalDate != null) {
-                sb.append("  审批日期: ").append(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(returnOrder.approvalDate)).append("\n");
-            }
-            if (returnOrder.approvalComment != null && !returnOrder.approvalComment.isEmpty()) {
-                sb.append("  审批意见: ").append(returnOrder.approvalComment).append("\n");
-            }
-            sb.append("----------------------------------------\n");
+    private static void appendReturnApprovalInfo(StringBuilder sb, ReturnOrder returnOrder) {
+        if (!"APPROVED".equals(returnOrder.status) && !"COMPLETED".equals(returnOrder.status)) {
+            return;
         }
-
-        // 会员信息
-        if (returnOrder.memberName != null) {
-            sb.append("----------------------------------------\n");
-            sb.append("会员信息:\n");
-            sb.append("  会员姓名: ").append(returnOrder.memberName).append("\n");
-            sb.append("----------------------------------------\n");
+        sb.append(THIN_SEPARATOR);
+        sb.append("审批信息:\n");
+        sb.append("  审批人: ").append(returnOrder.approverName != null ? returnOrder.approverName : "无").append("\n");
+        if (returnOrder.approvalDate != null) {
+            sb.append("  审批日期: ").append(returnOrder.approvalDate.atZone(java.time.ZoneId.systemDefault())
+                .toLocalDateTime().format(DateTimeFormats.STANDARD_DATE_TIME)).append("\n");
         }
+        if (returnOrder.approvalComment != null && !returnOrder.approvalComment.isEmpty()) {
+            sb.append("  审批意见: ").append(returnOrder.approvalComment).append("\n");
+        }
+        sb.append(THIN_SEPARATOR);
+    }
 
+    private static void appendReturnMemberInfo(StringBuilder sb, ReturnOrder returnOrder) {
+        if (returnOrder.memberName == null) {
+            return;
+        }
+        sb.append(THIN_SEPARATOR);
+        sb.append("会员信息:\n");
+        sb.append("  会员姓名: ").append(returnOrder.memberName).append("\n");
+        sb.append(THIN_SEPARATOR);
+    }
+
+    private static void appendReturnItems(StringBuilder sb, List<ReturnOrderItem> returnItems) {
         sb.append("\n");
-
-        // 退货商品列表
         sb.append("退货商品列表:\n");
-        sb.append("----------------------------------------\n");
+        sb.append(THIN_SEPARATOR);
         sb.append(String.format("%-20s %8s %8s %10s %10s\n", "商品名称", "退货数量", "单价", "退货金额", "商品状态"));
-        sb.append("----------------------------------------\n");
+        sb.append(THIN_SEPARATOR);
 
         for (ReturnOrderItem item : returnItems) {
-            String name = item.productName;
-            if (name.length() > 18) {
-                name = name.substring(0, 17) + "~";
-            }
             sb.append(String.format("%-20s %8d %8.2f %10.2f %10s\n",
-                name,
+                abbreviateReturnItemName(item.productName),
                 item.returnQuantity,
                 item.unitPrice,
                 item.returnAmount,
                 item.condition != null ? item.condition : "正常"));
         }
+        sb.append(THIN_SEPARATOR);
+    }
 
-        sb.append("----------------------------------------\n");
+    private static String abbreviateReturnItemName(String name) {
+        return name.length() > 18 ? name.substring(0, 17) + "~" : name;
+    }
 
-        // 金额汇总
+    private static void appendReturnSummary(StringBuilder sb, ReturnOrder returnOrder) {
         sb.append(String.format("%35s %10.2f\n", "退货总额:", returnOrder.totalAmount));
-        sb.append("========================================\n");
-
-        // 退款方式
-        String paymentMethod = returnOrder.getPaymentMethodText();
-        sb.append(String.format("退款方式: %s\n", paymentMethod));
-
-        // 退货原因
+        sb.append(THICK_SEPARATOR);
+        sb.append(String.format("退款方式: %s\n", returnOrder.getPaymentMethodText()));
         if (returnOrder.returnReason != null && !returnOrder.returnReason.isEmpty()) {
             sb.append(String.format("退货原因: %s\n", returnOrder.returnReason));
         }
-
-        // 状态
         sb.append(String.format("订单状态: %s\n", returnOrder.getStatusText()));
-
         sb.append("\n");
-
-        // 备注
         if (returnOrder.notes != null && !returnOrder.notes.isEmpty()) {
             sb.append("备注: ").append(returnOrder.notes).append("\n\n");
         }
+    }
 
-        // 底部信息
-        sb.append("========================================\n");
+    private static void appendReturnReceiptFooter(StringBuilder sb) {
+        sb.append(THICK_SEPARATOR);
         sb.append("      退货单据\n");
-        sb.append("========================================\n");
-
-        return sb.toString();
+        sb.append(THICK_SEPARATOR);
     }
 
     /**
@@ -422,7 +428,7 @@ public class ReceiptPrinter {
             // 生成退货单据文件名
             String fileName = String.format("return_%s_%s.txt",
                 returnOrder.returnOrderId,
-                java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
+                java.time.LocalDateTime.now().format(com.cashier.util.DateTimeFormats.COMPACT_DATE_TIME));
 
             File returnReceiptFile = new File(dir, fileName);
 
@@ -469,7 +475,7 @@ public class ReceiptPrinter {
             content.append(new String(EscPosUtils.LINE_FEED, StandardCharsets.ISO_8859_1));
 
             // 分隔线
-            content.append("========================================\n");
+            content.append(THICK_SEPARATOR);
 
             // 交易信息
             content.append(String.format("订单号: %s\n", transaction.transactionId));
@@ -478,16 +484,16 @@ public class ReceiptPrinter {
 
             // 会员信息
             if (member != null) {
-                content.append("----------------------------------------\n");
+                content.append(THIN_SEPARATOR);
                 content.append(String.format("会员: %s\n", member.name));
                 content.append(String.format("手机: %s\n", member.phone));
                 content.append(String.format("积分: %d\n", member.points));
-                content.append("----------------------------------------\n");
+                content.append(THIN_SEPARATOR);
             }
 
             content.append("\n商品列表:\n");
             String sym = CurrencyUtil.getSymbol();
-            content.append("----------------------------------------\n");
+            content.append(THIN_SEPARATOR);
 
             // 商品列表
             for (CartItem item : cartItems) {
@@ -499,14 +505,14 @@ public class ReceiptPrinter {
                 content.append(String.format("                  小计: " + sym + "%.2f\n", item.subtotal));
             }
 
-            content.append("----------------------------------------\n");
+            content.append(THIN_SEPARATOR);
             content.append(String.format("商品总额: " + sym + "%.2f\n", transaction.totalAmount));
             if (transaction.tax.compareTo(BigDecimal.ZERO) > 0) {
                 content.append(String.format("税费: " + sym + "%.2f\n", transaction.tax));
             }
-            content.append("----------------------------------------\n");
+            content.append(THIN_SEPARATOR);
             content.append(String.format("实付金额: " + sym + "%.2f\n", transaction.finalAmount));
-            content.append("========================================\n");
+            content.append(THICK_SEPARATOR);
 
             // 支付方式
             String paymentMethod = getPaymentMethodDisplayName(transaction.paymentMethod);
@@ -519,7 +525,7 @@ public class ReceiptPrinter {
 
             content.append("\n");
             content.append("谢谢惠顾！欢迎再次光临！\n");
-            content.append("========================================\n");
+            content.append(THICK_SEPARATOR);
 
             // 创建打印任务
             PrintTask task = new PrintTask(

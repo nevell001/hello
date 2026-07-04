@@ -1,5 +1,7 @@
 package com.cashier.controller;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.dao.*;
 import com.cashier.model.*;
 import com.cashier.service.ReturnService;
@@ -14,12 +16,11 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import org.slf4j.Logger;
 
-import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.TemporalAdjusters;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -72,7 +73,7 @@ public class ReturnOrderController {
             "全部", "待审批", "已批准", "已拒绝", "已完成"
         ));
         com.cashier.util.I18nUiUtils.configureComboBox(statusFilter, value ->
-            "全部".equals(value) ? com.cashier.i18n.I18nManager.getInstance().get("filter.all")
+            "全部".equals(value) ? com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Filter.ALL)
                 : com.cashier.util.I18nUiUtils.purchaseStatus(value));
         statusFilter.setValue("全部");
 
@@ -89,8 +90,8 @@ public class ReturnOrderController {
         initializeItemTable();
 
         // 设置表格空数据占位符（i18n）
-        returnOrderTable.setPlaceholder(new Label(com.cashier.i18n.I18nManager.getInstance().get("message.data.empty")));
-        itemTable.setPlaceholder(new Label(com.cashier.i18n.I18nManager.getInstance().get("message.data.empty")));
+        returnOrderTable.setPlaceholder(new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.DATA_EMPTY)));
+        itemTable.setPlaceholder(new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.DATA_EMPTY)));
 
         // 加载退货订单数据
         loadReturnOrders();
@@ -121,8 +122,9 @@ public class ReturnOrderController {
                     setText(null);
                 } else {
                     try {
-                        Date date = new Date(FormValidator.parseLong(item));
-                        setText(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date));
+                        Instant date = Instant.ofEpochMilli(FormValidator.parseLong(item));
+                        setText(com.cashier.util.DateTimeFormats.formatStandard(
+                            date.atZone(ZoneId.systemDefault()).toLocalDateTime()));
                     } catch (Exception e) {
                         setText(item);
                     }
@@ -266,13 +268,15 @@ public class ReturnOrderController {
         }
 
         returnOrderIdLabel.setText(returnOrder.returnOrderId);
-        memberNameLabel.setText(returnOrder.memberName != null ? returnOrder.memberName : com.cashier.i18n.I18nManager.getInstance().get("statistics.no_data"));
+        memberNameLabel.setText(returnOrder.memberName != null ? returnOrder.memberName : com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Statistics.NO_DATA));
         totalAmountLabel.setText(CurrencyUtil.format(returnOrder.totalAmount.doubleValue()));
         statusLabel.setText(returnOrder.getStatusText());
         operatorNameLabel.setText(returnOrder.operatorName != null && !returnOrder.operatorName.isEmpty()
             ? returnOrder.operatorName
-            : com.cashier.i18n.I18nManager.getInstance().get("common.none"));
-        returnDateLabel.setText(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(returnOrder.returnDate));
+            : com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Common.NONE));
+        returnDateLabel.setText(returnOrder.returnDate != null
+            ? com.cashier.util.DateTimeFormats.formatStandard(returnOrder.returnDate.atZone(ZoneId.systemDefault()).toLocalDateTime())
+            : "");
         returnReasonTextArea.setText(returnOrder.returnReason != null ? returnOrder.returnReason : "");
         notesTextArea.setText(returnOrder.notes != null ? returnOrder.notes : "");
 
@@ -314,6 +318,9 @@ public class ReturnOrderController {
                 case "已批准": statusCode = "APPROVED"; break;
                 case "已拒绝": statusCode = "REJECTED"; break;
                 case "已完成": statusCode = "COMPLETED"; break;
+                default:
+                    logger.warn("未知退货订单状态筛选: {}", status);
+                    return;
             }
             returnOrderList.addAll(ReturnOrderDAO.findByStatus(statusCode));
         }
@@ -333,8 +340,7 @@ public class ReturnOrderController {
                 if (order.returnDate == null) {
                     return true;
                 }
-                LocalDate returnDate = order.returnDate.toInstant()
-                    .atZone(ZoneId.systemDefault()).toLocalDate();
+                LocalDate returnDate = order.returnDate.atZone(ZoneId.systemDefault()).toLocalDate();
                 return (startDate != null && returnDate.isBefore(startDate))
                     || (endDate != null && returnDate.isAfter(endDate));
             });
@@ -402,7 +408,7 @@ public class ReturnOrderController {
     @FXML
     public void handleExport() {
         if (returnOrderList.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.no_export_data"));
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.INFO), com.cashier.i18n.I18nManager.getInstance().get("runtime.no_export_data"));
             return;
         }
 
@@ -418,13 +424,13 @@ public class ReturnOrderController {
             i18n.get("return_order.reason")
         );
         List<String[]> data = new java.util.ArrayList<>();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
         for (ReturnOrder order : returnOrderList) {
-            data.add(new String[]{
+                data.add(new String[]{
                 order.returnOrderId,
-                order.memberName != null ? order.memberName : i18n.get("common.none"),
-                sdf.format(order.returnDate),
+                order.memberName != null ? order.memberName : i18n.get(I18nKeys.Common.NONE),
+                com.cashier.util.DateTimeFormats.formatStandard(
+                    order.returnDate != null ? order.returnDate.atZone(ZoneId.systemDefault()).toLocalDateTime() : java.time.LocalDateTime.now()),
                 CurrencyUtil.format(order.totalAmount.doubleValue()),
                 order.getStatusText(),
                 order.operatorName,
@@ -438,22 +444,22 @@ public class ReturnOrderController {
             headers,
             data,
             com.cashier.util.ExportUtil.ExportFormat.EXCEL,
-            i18n.get("nav.return_order")
+            i18n.get(I18nKeys.Nav.RETURN_ORDER)
         );
 
         if (filePath != null) {
-            showAlert(Alert.AlertType.INFORMATION, com.cashier.i18n.I18nManager.getInstance().get("success.export"),
+            showAlert(Alert.AlertType.INFORMATION, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Success.EXPORT),
                     com.cashier.i18n.I18nManager.getInstance().get("runtime.exported_to", filePath));
             logger.info("退货订单导出成功: {}", filePath);
         } else {
-            showAlert(Alert.AlertType.ERROR, com.cashier.i18n.I18nManager.getInstance().get("error.export_data"), com.cashier.i18n.I18nManager.getInstance().get("runtime.export_log_short"));
+            showAlert(Alert.AlertType.ERROR, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.EXPORT_DATA), com.cashier.i18n.I18nManager.getInstance().get("runtime.export_log_short"));
         }
     }
 
     @FXML
     public void handleViewOriginalTransaction() {
         if (selectedReturnOrder == null || selectedReturnOrder.originalTransactionId == null) {
-            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.select_return_order"));
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.INFO), com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_RETURN_ORDER));
             return;
         }
 
@@ -467,19 +473,19 @@ public class ReturnOrderController {
                     transaction.timestamp,
                     transaction.operatorName != null && !transaction.operatorName.isEmpty()
                         ? transaction.operatorName
-                        : com.cashier.i18n.I18nManager.getInstance().get("common.none"),
+                        : com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Common.NONE),
                     com.cashier.util.I18nUiUtils.paymentMethod(transaction.paymentMethod),
                     String.format("%.2f", transaction.totalAmount),
                     transaction.memberName != null ? transaction.memberName
-                        : com.cashier.i18n.I18nManager.getInstance().get("common.none")
+                        : com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Common.NONE)
                 );
                 showInformationOnlyAlert(com.cashier.i18n.I18nManager.getInstance().get("runtime.original_transaction"), details);
             } else {
-                showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.original_transaction_missing"));
+                showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.INFO), com.cashier.i18n.I18nManager.getInstance().get("runtime.original_transaction_missing"));
             }
         } catch (Exception e) {
             logger.error("查询原交易失败", e);
-            showAlert(Alert.AlertType.ERROR, com.cashier.i18n.I18nManager.getInstance().get("label.error"),
+            showAlert(Alert.AlertType.ERROR, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.ERROR),
                     com.cashier.i18n.I18nManager.getInstance().get("runtime.original_transaction_query_failed", e.getMessage()));
         }
     }
@@ -487,7 +493,7 @@ public class ReturnOrderController {
     @FXML
     public void handlePrintReturnReceipt() {
         if (selectedReturnOrder == null) {
-            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.select_return_order"));
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.INFO), com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_RETURN_ORDER));
             return;
         }
 
@@ -495,7 +501,7 @@ public class ReturnOrderController {
         List<ReturnOrderItem> returnItems = ReturnOrderItemDAO.findByReturnOrderId(selectedReturnOrder.returnOrderId);
         
         if (returnItems == null || returnItems.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.return_items_empty"));
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.INFO), com.cashier.i18n.I18nManager.getInstance().get("runtime.return_items_empty"));
             return;
         }
 
@@ -522,13 +528,13 @@ public class ReturnOrderController {
     @FXML
     public void handleCompleteReturn() {
         if (selectedReturnOrder == null) {
-            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.select_return_order"));
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.INFO), com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_RETURN_ORDER));
             return;
         }
 
         // 只有已批准的退货单才能完成
         if (!"APPROVED".equals(selectedReturnOrder.status)) {
-            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.return_only_approved"));
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.INFO), com.cashier.i18n.I18nManager.getInstance().get("runtime.return_only_approved"));
             return;
         }
 
@@ -541,13 +547,13 @@ public class ReturnOrderController {
             selectedReturnOrder.returnOrderId,
             String.format("%.2f", selectedReturnOrder.totalAmount),
             selectedReturnOrder.memberName != null ? selectedReturnOrder.memberName
-                : com.cashier.i18n.I18nManager.getInstance().get("common.none")
+                : com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Common.NONE)
         ));
 
         ButtonType confirmButton = new ButtonType(
-            com.cashier.i18n.I18nManager.getInstance().get("common.ok"), ButtonBar.ButtonData.OK_DONE);
+            com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Common.OK), ButtonBar.ButtonData.OK_DONE);
         ButtonType cancelButton = new ButtonType(
-            com.cashier.i18n.I18nManager.getInstance().get("common.cancel"), ButtonBar.ButtonData.CANCEL_CLOSE);
+            com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Common.CANCEL), ButtonBar.ButtonData.CANCEL_CLOSE);
         confirmAlert.getButtonTypes().setAll(confirmButton, cancelButton);
 
         if (confirmAlert.showAndWait().orElse(cancelButton) != confirmButton) {
@@ -558,7 +564,7 @@ public class ReturnOrderController {
         boolean result = ReturnService.completeReturnOrder(selectedReturnOrder.returnOrderId);
 
         if (result) {
-            showAlert(Alert.AlertType.INFORMATION, com.cashier.i18n.I18nManager.getInstance().get("label.success"),
+            showAlert(Alert.AlertType.INFORMATION, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.SUCCESS),
                 com.cashier.i18n.I18nManager.getInstance().get("runtime.return_complete_success",
                     selectedReturnOrder.returnOrderId, String.format("%.2f", selectedReturnOrder.totalAmount)));
             
@@ -567,7 +573,7 @@ public class ReturnOrderController {
             clearDetail();
             logger.info("退货订单完成: {}", selectedReturnOrder.returnOrderId);
         } else {
-            showAlert(Alert.AlertType.ERROR, com.cashier.i18n.I18nManager.getInstance().get("label.failed"), com.cashier.i18n.I18nManager.getInstance().get("runtime.return_complete_failed"));
+            showAlert(Alert.AlertType.ERROR, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.FAILED), com.cashier.i18n.I18nManager.getInstance().get("runtime.return_complete_failed"));
         }
     }
 
@@ -578,7 +584,7 @@ public class ReturnOrderController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         ButtonType okButton = new ButtonType(
-            com.cashier.i18n.I18nManager.getInstance().get("common.ok"), ButtonBar.ButtonData.OK_DONE);
+            com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Common.OK), ButtonBar.ButtonData.OK_DONE);
         alert.getButtonTypes().setAll(okButton);
         alert.showAndWait();
     }
@@ -589,7 +595,7 @@ public class ReturnOrderController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         ButtonType okButton = new ButtonType(
-            com.cashier.i18n.I18nManager.getInstance().get("common.ok"), ButtonBar.ButtonData.OK_DONE);
+            com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Common.OK), ButtonBar.ButtonData.OK_DONE);
         alert.getButtonTypes().setAll(okButton);
         alert.showAndWait();
     }

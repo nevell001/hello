@@ -3,7 +3,6 @@ package com.cashier.model;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Time;
-import java.util.List;
 
 /**
  * 挂单模型

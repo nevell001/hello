@@ -1,5 +1,7 @@
 package com.cashier.util;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.i18n.I18nManager;
 import javafx.scene.control.MenuItem;
 
@@ -75,53 +77,53 @@ public class SearchManager {
     static {
         // 收银管理
         NAVIGATION_ITEMS.add(new SearchResult("cart", SearchType.NAVIGATION.getDisplayName(),
-                i18n.get("nav.cart"), i18n.get("search.desc.cart"), "F1", null));
+                i18n.get(I18nKeys.Nav.CART), i18n.get("search.desc.cart"), "F1", null));
         NAVIGATION_ITEMS.add(new SearchResult("shift", SearchType.NAVIGATION.getDisplayName(),
-                i18n.get("nav.shift"), i18n.get("search.desc.shift"), "F6", null));
+                i18n.get(I18nKeys.Nav.SHIFT), i18n.get("search.desc.shift"), "F6", null));
 
         // 商品管理
         NAVIGATION_ITEMS.add(new SearchResult("inventory", SearchType.NAVIGATION.getDisplayName(),
-                i18n.get("nav.inventory"), i18n.get("search.desc.inventory"), "F2", null));
+                i18n.get(I18nKeys.Nav.INVENTORY), i18n.get("search.desc.inventory"), "F2", null));
         NAVIGATION_ITEMS.add(new SearchResult("inventory_check", SearchType.NAVIGATION.getDisplayName(),
-                i18n.get("nav.inventory_check"), i18n.get("search.desc.inventory_check"), "", null));
+                i18n.get(I18nKeys.Nav.INVENTORY_CHECK), i18n.get("search.desc.inventory_check"), "", null));
 
         // 客户管理
         NAVIGATION_ITEMS.add(new SearchResult("members", SearchType.NAVIGATION.getDisplayName(),
-                i18n.get("nav.members"), i18n.get("search.desc.members"), "F7", null));
+                i18n.get(I18nKeys.Nav.MEMBERS), i18n.get("search.desc.members"), "F7", null));
         NAVIGATION_ITEMS.add(new SearchResult("return_order", SearchType.NAVIGATION.getDisplayName(),
-                i18n.get("nav.return_order"), i18n.get("search.desc.return_order"), "", null));
+                i18n.get(I18nKeys.Nav.RETURN_ORDER), i18n.get("search.desc.return_order"), "", null));
 
         // 采购管理
         NAVIGATION_ITEMS.add(new SearchResult("supplier", SearchType.NAVIGATION.getDisplayName(),
-                i18n.get("nav.supplier"), i18n.get("search.desc.supplier"), "", null));
+                i18n.get(I18nKeys.Nav.SUPPLIER), i18n.get("search.desc.supplier"), "", null));
         NAVIGATION_ITEMS.add(new SearchResult("purchase_order", SearchType.NAVIGATION.getDisplayName(),
-                i18n.get("nav.purchase_order"), i18n.get("search.desc.purchase_order"), "", null));
+                i18n.get(I18nKeys.Nav.PURCHASE_ORDER), i18n.get("search.desc.purchase_order"), "", null));
         NAVIGATION_ITEMS.add(new SearchResult("purchase_approval", SearchType.NAVIGATION.getDisplayName(),
-                i18n.get("nav.purchase_approval"), i18n.get("search.desc.purchase_approval"), "", null));
+                i18n.get(I18nKeys.Nav.PURCHASE_APPROVAL), i18n.get("search.desc.purchase_approval"), "", null));
         NAVIGATION_ITEMS.add(new SearchResult("purchase_inbound", SearchType.NAVIGATION.getDisplayName(),
-                i18n.get("nav.purchase_inbound"), i18n.get("search.desc.purchase_inbound"), "", null));
+                i18n.get(I18nKeys.Nav.PURCHASE_INBOUND), i18n.get("search.desc.purchase_inbound"), "", null));
 
         // 数据统计
         NAVIGATION_ITEMS.add(new SearchResult("transactions", SearchType.NAVIGATION.getDisplayName(),
-                i18n.get("nav.transactions"), i18n.get("search.desc.transactions"), "", null));
+                i18n.get(I18nKeys.Nav.TRANSACTIONS), i18n.get("search.desc.transactions"), "", null));
         NAVIGATION_ITEMS.add(new SearchResult("statistics", SearchType.NAVIGATION.getDisplayName(),
-                i18n.get("nav.statistics"), i18n.get("search.desc.statistics"), "Ctrl+T", null));
+                i18n.get(I18nKeys.Nav.STATISTICS), i18n.get("search.desc.statistics"), "Ctrl+T", null));
         NAVIGATION_ITEMS.add(new SearchResult("promotions", SearchType.NAVIGATION.getDisplayName(),
-                i18n.get("nav.promotions"), i18n.get("search.desc.promotions"), "F9", null));
+                i18n.get(I18nKeys.Nav.PROMOTIONS), i18n.get("search.desc.promotions"), "F9", null));
 
         // 报表
         NAVIGATION_ITEMS.add(new SearchResult("purchase_report", SearchType.NAVIGATION.getDisplayName(),
-                i18n.get("nav.purchase_report"), i18n.get("search.desc.purchase_report"), "", null));
+                i18n.get(I18nKeys.Nav.PURCHASE_REPORT), i18n.get("search.desc.purchase_report"), "", null));
         NAVIGATION_ITEMS.add(new SearchResult("inventory_report", SearchType.NAVIGATION.getDisplayName(),
-                i18n.get("nav.inventory_report"), i18n.get("search.desc.inventory_report"), "", null));
+                i18n.get(I18nKeys.Nav.INVENTORY_REPORT), i18n.get("search.desc.inventory_report"), "", null));
         NAVIGATION_ITEMS.add(new SearchResult("profit_report", SearchType.NAVIGATION.getDisplayName(),
-                i18n.get("nav.profit_report"), i18n.get("search.desc.profit_report"), "", null));
+                i18n.get(I18nKeys.Nav.PROFIT_REPORT), i18n.get("search.desc.profit_report"), "", null));
 
         // 系统设置
         NAVIGATION_ITEMS.add(new SearchResult("user_management", SearchType.NAVIGATION.getDisplayName(),
-                i18n.get("nav.user_management"), i18n.get("search.desc.user_management"), "", null));
+                i18n.get(I18nKeys.Nav.USER_MANAGEMENT), i18n.get("search.desc.user_management"), "", null));
         NAVIGATION_ITEMS.add(new SearchResult("settings", SearchType.NAVIGATION.getDisplayName(),
-                i18n.get("nav.settings"), i18n.get("search.desc.settings"), "", null));
+                i18n.get(I18nKeys.Nav.SETTINGS), i18n.get("search.desc.settings"), "", null));
 
         // 功能快捷方式
         NAVIGATION_ITEMS.add(new SearchResult("backup", SearchType.FUNCTION.getDisplayName(),

@@ -1,5 +1,7 @@
 package com.cashier.controller;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.dao.UserDAO;
 import com.cashier.i18n.I18nManager;
 import com.cashier.model.User;
@@ -10,6 +12,7 @@ import com.cashier.util.LoggerFactoryUtil;
 import com.cashier.util.FormValidator;
 
 import java.sql.SQLException;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import javafx.beans.property.SimpleStringProperty;
@@ -22,9 +25,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-
-import java.text.SimpleDateFormat;
-import java.util.Map;
 
 /**
  * 用户管理控制器
@@ -142,11 +142,11 @@ public class UserController {
         roleColumn.setCellValueFactory(cellData ->
             new SimpleStringProperty(localizeRole(cellData.getValue().role)));
         
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        java.time.format.DateTimeFormatter sdf = com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME_MINUTE;
         createTimeColumn.setCellValueFactory(cellData ->
-            new SimpleStringProperty(sdf.format(cellData.getValue().createTime)));
+            new SimpleStringProperty(java.time.LocalDateTime.ofInstant(cellData.getValue().createTime.toInstant(), ZoneId.systemDefault()).format(sdf)));
         lastLoginColumn.setCellValueFactory(cellData ->
-            new SimpleStringProperty(sdf.format(cellData.getValue().lastLoginTime)));
+            new SimpleStringProperty(java.time.LocalDateTime.ofInstant(cellData.getValue().lastLoginTime.toInstant(), ZoneId.systemDefault()).format(sdf)));
         statusColumn.setCellValueFactory(cellData ->
             new SimpleStringProperty(I18nManager.getInstance().get(
                 cellData.getValue().active ? "user.enabled" : "user.disabled")));
@@ -250,7 +250,7 @@ public class UserController {
         grid.getColumnConstraints().addAll(labelColumn, fieldColumn);
 
         TextField idField = new TextField();
-        CheckBox autoIdCheckBox = new CheckBox(I18nManager.getInstance().get("product.edit.auto_generate"));
+        CheckBox autoIdCheckBox = new CheckBox(I18nManager.getInstance().get(I18nKeys.ProductEdit.AUTO_GENERATE));
         TextField usernameField = new TextField();
         PasswordField passwordField = new PasswordField();
         TextField nameField = new TextField();
@@ -318,78 +318,99 @@ public class UserController {
         content.getChildren().addAll(titleLabel, grid);
         dialog.getDialogPane().setContent(content);
 
-        ButtonType okButtonType = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get("common.ok"), ButtonBar.ButtonData.OK_DONE);
-        ButtonType cancelButtonType = new ButtonType(I18nManager.getInstance().get("common.cancel"), ButtonBar.ButtonData.CANCEL_CLOSE);
+        ButtonType okButtonType = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Common.OK), ButtonBar.ButtonData.OK_DONE);
+        ButtonType cancelButtonType = new ButtonType(I18nManager.getInstance().get(I18nKeys.Common.CANCEL), ButtonBar.ButtonData.CANCEL_CLOSE);
         dialog.getDialogPane().getButtonTypes().addAll(okButtonType, cancelButtonType);
         dialog.getDialogPane().lookupButton(okButtonType).getStyleClass().addAll("primary-button", "button-normal");
         dialog.getDialogPane().lookupButton(cancelButtonType).getStyleClass().addAll("secondary-button", "button-normal");
 
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == okButtonType) {
-                User newUser = user != null ? user : new User();
+        dialog.setResultConverter(dialogButton -> dialogButton == okButtonType
+            ? buildUserFromDialog(user, autoIdCheckBox, idField, usernameField, passwordField, nameField, roleComboBox)
+            : null);
 
-                // 验证ID（仅当手动输入时）
-                if (user == null && !autoIdCheckBox.isSelected() && !idField.getText().trim().isEmpty()) {
-                    try {
-                        int id = FormValidator.parseInt(idField.getText().trim());
-                        if (id <= 0) {
-                            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.id_positive"));
-                            return null;
-                        }
-                        newUser.id = id;
-                    } catch (NumberFormatException e) {
-                        showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.id_invalid"));
-                        return null;
-                    }
-                }
+        dialog.showAndWait().ifPresent(result -> saveUserDialogResult(result, user == null));
+    }
 
-                if (user == null) {
-                    newUser.username = usernameField.getText().trim();
-                }
+    private User buildUserFromDialog(
+            User existingUser,
+            CheckBox autoIdCheckBox,
+            TextField idField,
+            TextField usernameField,
+            PasswordField passwordField,
+            TextField nameField,
+            ComboBox<String> roleComboBox) {
 
-                // 只有在新用户或输入了新密码时才哈希密码
-                String passwordInput = passwordField.getText().trim();
-                if (user == null || !passwordInput.isEmpty()) {
-                    newUser.password = PasswordUtil.hashPassword(passwordInput);
-                }
-
-                newUser.name = nameField.getText().trim();
-
-                newUser.role = roleComboBox.getSelectionModel().getSelectedItem();
-
-                return newUser;
-            }
+        User newUser = existingUser != null ? existingUser : new User();
+        if (!applyManualUserIdIfNeeded(newUser, existingUser, autoIdCheckBox, idField)) {
             return null;
-        });
+        }
 
-        dialog.showAndWait().ifPresent(result -> {
-            try {
-                if (user == null) {
-                    // 添加新用户
-                    if (UserDAO.insert(result)) {
-                        audit("USER_CREATED", result.username);
-                        users.put(result.username, result);
-                        loadUsers();
-                        updateStatus(I18nManager.getInstance().get("user.added"));
-                    } else {
-                        showError(I18nManager.getInstance().get("runtime.user_add_failed"));
-                    }
-                } else {
-                    // 更新现有用户
-                    if (UserDAO.update(result)) {
-                        audit("USER_UPDATED", result.username);
-                        users.put(result.username, result);
-                        loadUsers();
-                        updateStatus(I18nManager.getInstance().get("user.updated"));
-                    } else {
-                        showError(I18nManager.getInstance().get("runtime.user_update_failed"));
-                    }
-                }
-            } catch (SQLException e) {
-                logger.error("保存用户失败", e);
-                showError(I18nManager.getInstance().get("runtime.user_save_failed", e.getMessage()));
+        if (existingUser == null) {
+            newUser.username = usernameField.getText().trim();
+        }
+
+        String passwordInput = passwordField.getText().trim();
+        if (existingUser == null || !passwordInput.isEmpty()) {
+            newUser.password = PasswordUtil.hashPassword(passwordInput);
+        }
+
+        newUser.name = nameField.getText().trim();
+        newUser.role = roleComboBox.getSelectionModel().getSelectedItem();
+        return newUser;
+    }
+
+    private boolean applyManualUserIdIfNeeded(User newUser, User existingUser, CheckBox autoIdCheckBox, TextField idField) {
+        if (existingUser != null || autoIdCheckBox.isSelected() || idField.getText().trim().isEmpty()) {
+            return true;
+        }
+
+        try {
+            int id = FormValidator.parseInt(idField.getText().trim());
+            if (id <= 0) {
+                showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.id_positive"));
+                return false;
             }
-        });
+            newUser.id = id;
+            return true;
+        } catch (NumberFormatException e) {
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.id_invalid"));
+            return false;
+        }
+    }
+
+    private void saveUserDialogResult(User result, boolean isNewUser) {
+        try {
+            if (isNewUser) {
+                saveNewUser(result);
+            } else {
+                updateExistingUser(result);
+            }
+        } catch (SQLException e) {
+            logger.error("保存用户失败", e);
+            showError(I18nManager.getInstance().get("runtime.user_save_failed", e.getMessage()));
+        }
+    }
+
+    private void saveNewUser(User result) throws SQLException {
+        if (UserDAO.insert(result)) {
+            audit("USER_CREATED", result.username);
+            users.put(result.username, result);
+            loadUsers();
+            updateStatus(I18nManager.getInstance().get("user.added"));
+        } else {
+            showError(I18nManager.getInstance().get("runtime.user_add_failed"));
+        }
+    }
+
+    private void updateExistingUser(User result) throws SQLException {
+        if (UserDAO.update(result)) {
+            audit("USER_UPDATED", result.username);
+            users.put(result.username, result);
+            loadUsers();
+            updateStatus(I18nManager.getInstance().get("user.updated"));
+        } else {
+            showError(I18nManager.getInstance().get("runtime.user_update_failed"));
+        }
     }
 
     private Label createUserFormLabel(String text) {
@@ -453,7 +474,7 @@ public class UserController {
             }
 
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle(I18nManager.getInstance().get("common.confirm"));
+            alert.setTitle(I18nManager.getInstance().get(I18nKeys.Common.CONFIRM));
             alert.setHeaderText(null);
             alert.setContentText(I18nManager.getInstance().get("runtime.user_delete_confirm", selected.name));
 
@@ -547,7 +568,7 @@ public class UserController {
             }
 
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle(I18nManager.getInstance().get("common.confirm"));
+            alert.setTitle(I18nManager.getInstance().get(I18nKeys.Common.CONFIRM));
             alert.setHeaderText(null);
             alert.setContentText(I18nManager.getInstance().get("runtime.user_disable_confirm", selected.name));
 
@@ -647,7 +668,7 @@ public class UserController {
     private void showError(String message) {
         com.cashier.util.StatusBarManager.updateError(message);
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(I18nManager.getInstance().get("label.error"));
+        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Label.ERROR));
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();

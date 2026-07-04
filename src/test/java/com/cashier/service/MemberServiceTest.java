@@ -8,7 +8,6 @@ import com.cashier.model.RechargeRecord;
 import org.junit.jupiter.api.*;
 
 import java.math.BigDecimal;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
@@ -317,9 +316,9 @@ class MemberServiceTest extends DatabaseTestBase {
     @DisplayName("测试获取会员统计信息")
     void testGetMemberStatistics() throws Exception {
         // 创建多个会员
-        Member member1 = createMember("13900000001", "会员1", 500.0, 100.0);
-        Member member2 = createMember("13900000002", "会员2", 1500.0, 200.0);
-        Member member3 = createMember("13900000003", "会员3", 3000.0, 600.0);
+        createMember("13900000001", "会员1", 500.0, 100.0);
+        createMember("13900000002", "会员2", 1500.0, 200.0);
+        createMember("13900000003", "会员3", 3000.0, 600.0);
 
         // 获取统计信息
         Map<String, Object> stats = MemberService.getMemberStatistics();

@@ -5,7 +5,6 @@ import com.cashier.dao.ProductDAORefactored;
 import com.cashier.i18n.I18nManager;
 import com.cashier.model.Product;
 import com.cashier.util.CurrencyUtil;
-import com.cashier.util.StatusBarManager;
 import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
 import com.cashier.util.FormValidator;

@@ -7,7 +7,6 @@ import com.cashier.util.LoggerFactoryUtil;
 import org.slf4j.Logger;
 
 import java.math.BigDecimal;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;

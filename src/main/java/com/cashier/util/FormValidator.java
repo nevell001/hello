@@ -2,7 +2,6 @@ package com.cashier.util;
 
 import javafx.scene.control.*;
 import javafx.scene.control.TextFormatter;
-import javafx.scene.layout.Region;
 import org.slf4j.Logger;
 
 import java.util.function.Predicate;
@@ -13,6 +12,7 @@ import java.util.regex.Pattern;
  * 提供实时表单验证功能
  */
 public class FormValidator {
+    private static final String VALIDATION_ERROR_STYLE = "validation-error";
     private static final Logger logger = LoggerFactoryUtil.getLogger(FormValidator.class);
 
     /**
@@ -170,7 +170,7 @@ public class FormValidator {
         String value = control.getText();
 
         // 清除之前的错误样式
-        control.getStyleClass().remove("validation-error");
+        control.getStyleClass().remove(VALIDATION_ERROR_STYLE);
         if (errorLabel != null) {
             errorLabel.setVisible(false);
         }
@@ -184,7 +184,7 @@ public class FormValidator {
         for (ValidationRule rule : rules) {
             if (!rule.test(value)) {
                 // 显示错误状态
-                control.getStyleClass().add("validation-error");
+                control.getStyleClass().add(VALIDATION_ERROR_STYLE);
                 if (errorLabel != null) {
                     errorLabel.setText(rule.getErrorMessage());
                     errorLabel.setVisible(true);
@@ -207,7 +207,7 @@ public class FormValidator {
         String value = control.getText();
 
         // 清除之前的错误样式
-        control.getStyleClass().remove("validation-error");
+        control.getStyleClass().remove(VALIDATION_ERROR_STYLE);
         if (errorLabel != null) {
             errorLabel.setVisible(false);
         }
@@ -220,7 +220,7 @@ public class FormValidator {
         // 执行验证
         for (ValidationRule rule : rules) {
             if (!rule.test(value)) {
-                control.getStyleClass().add("validation-error");
+                control.getStyleClass().add(VALIDATION_ERROR_STYLE);
                 if (errorLabel != null) {
                     errorLabel.setText(rule.getErrorMessage());
                     errorLabel.setVisible(true);
@@ -243,7 +243,7 @@ public class FormValidator {
         Object value = control.getValue();
 
         // 清除之前的错误样式
-        control.getStyleClass().remove("validation-error");
+        control.getStyleClass().remove(VALIDATION_ERROR_STYLE);
         if (errorLabel != null) {
             errorLabel.setVisible(false);
         }
@@ -258,7 +258,7 @@ public class FormValidator {
         // 执行验证
         for (ValidationRule rule : rules) {
             if (!rule.test(valueStr)) {
-                control.getStyleClass().add("validation-error");
+                control.getStyleClass().add(VALIDATION_ERROR_STYLE);
                 if (errorLabel != null) {
                     errorLabel.setText(rule.getErrorMessage());
                     errorLabel.setVisible(true);
@@ -303,14 +303,14 @@ public class FormValidator {
 
         // 文本变化时验证（仅在已有错误时）
         control.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (control.getStyleClass().contains("validation-error")) {
+            if (control.getStyleClass().contains(VALIDATION_ERROR_STYLE)) {
                 validate(control, errorLabel, rules);
             }
         });
 
         // 返回清理函数
         return () -> {
-            control.getStyleClass().remove("validation-error");
+            control.getStyleClass().remove(VALIDATION_ERROR_STYLE);
             if (errorLabel != null) {
                 errorLabel.setVisible(false);
             }
@@ -332,13 +332,13 @@ public class FormValidator {
         });
 
         control.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (control.getStyleClass().contains("validation-error")) {
+            if (control.getStyleClass().contains(VALIDATION_ERROR_STYLE)) {
                 validate(control, errorLabel, rules);
             }
         });
 
         return () -> {
-            control.getStyleClass().remove("validation-error");
+            control.getStyleClass().remove(VALIDATION_ERROR_STYLE);
             if (errorLabel != null) {
                 errorLabel.setVisible(false);
             }
@@ -360,13 +360,13 @@ public class FormValidator {
         });
 
         control.valueProperty().addListener((obs, oldVal, newVal) -> {
-            if (control.getStyleClass().contains("validation-error")) {
+            if (control.getStyleClass().contains(VALIDATION_ERROR_STYLE)) {
                 validate(control, errorLabel, rules);
             }
         });
 
         return () -> {
-            control.getStyleClass().remove("validation-error");
+            control.getStyleClass().remove(VALIDATION_ERROR_STYLE);
             if (errorLabel != null) {
                 errorLabel.setVisible(false);
             }

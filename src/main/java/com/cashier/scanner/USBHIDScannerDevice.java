@@ -13,6 +13,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class USBHIDScannerDevice implements ScannerDevice {
     
     private static final Logger logger = LoggerFactoryUtil.getLogger(USBHIDScannerDevice.class);
+    private static final String MAX_SCAN_LENGTH_KEY = "maxScanLength";
     
     private final String deviceId;
     private final String deviceName;
@@ -36,7 +37,7 @@ public class USBHIDScannerDevice implements ScannerDevice {
         configuration.put("stopBits", "1");
         configuration.put("parity", "none");
         configuration.put("autoEnter", "true");
-        configuration.put("maxScanLength", String.valueOf(maxScanLength));
+        configuration.put(MAX_SCAN_LENGTH_KEY, String.valueOf(maxScanLength));
     }
     
     @Override
@@ -127,16 +128,16 @@ public class USBHIDScannerDevice implements ScannerDevice {
     public void setConfiguration(Map<String, String> config) {
         if (config != null) {
             configuration.putAll(config);
-            if (config.containsKey("maxScanLength")) {
+            if (config.containsKey(MAX_SCAN_LENGTH_KEY)) {
                 try {
-                    int configuredMaxLength = Integer.parseInt(config.get("maxScanLength"));
+                    int configuredMaxLength = Integer.parseInt(config.get(MAX_SCAN_LENGTH_KEY));
                     if (configuredMaxLength > 0) {
                         maxScanLength = configuredMaxLength;
                     } else {
-                        logger.warn("无效的扫码长度限制: {}", config.get("maxScanLength"));
+                        logger.warn("无效的扫码长度限制: {}", config.get(MAX_SCAN_LENGTH_KEY));
                     }
                 } catch (NumberFormatException e) {
-                    logger.warn("无效的扫码长度限制: {}", config.get("maxScanLength"));
+                    logger.warn("无效的扫码长度限制: {}", config.get(MAX_SCAN_LENGTH_KEY));
                 }
             }
         }

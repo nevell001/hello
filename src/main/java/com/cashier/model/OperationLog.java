@@ -1,14 +1,13 @@
 package com.cashier.model;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
 
 public class OperationLog {
     public String logId;         // 日志ID
     public String username;      // 用户名
     public String operation;     // 操作类型
     public String details;       // 操作详情
-    public Date timestamp;       // 操作时间
+    public Instant timestamp;       // 操作时间
     public String ipAddress;     // IP地址（预留）
     public String logLevel;      // INFO/WARN/ERROR
     public String category;      // AUTH/TRANSACTION/INVENTORY等
@@ -20,7 +19,7 @@ public class OperationLog {
         this.username = "";
         this.operation = "";
         this.details = "";
-        this.timestamp = new Date();
+        this.timestamp = Instant.now();
         this.ipAddress = "";
         this.logLevel = "INFO";
         this.category = "SYSTEM";
@@ -33,7 +32,7 @@ public class OperationLog {
         this.username = username;
         this.operation = operation;
         this.details = details;
-        this.timestamp = new Date();
+        this.timestamp = Instant.now();
         this.ipAddress = "";
     }
 
@@ -54,7 +53,7 @@ public class OperationLog {
         return details;
     }
 
-    public Date getTimestamp() {
+    public Instant getTimestamp() {
         return timestamp;
     }
 

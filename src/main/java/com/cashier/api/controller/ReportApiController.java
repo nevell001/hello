@@ -1,9 +1,7 @@
 package com.cashier.api.controller;
 
-import com.cashier.api.ApiServer;
 import com.cashier.dao.TransactionDAO;
 import com.cashier.model.Transaction;
-import com.cashier.service.TransactionService;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import org.slf4j.Logger;
@@ -11,7 +9,6 @@ import com.cashier.util.LoggerFactoryUtil;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -104,7 +101,7 @@ public class ReportApiController {
     public static void monthlySales(Context ctx) {
         try {
             String monthStr = ctx.queryParam("month");
-            if (monthStr == null) monthStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
+            if (monthStr == null) monthStr = LocalDate.now().format(com.cashier.util.DateTimeFormats.MONTH);
             
             List<Transaction> transactions = TransactionDAO.findAll();
             

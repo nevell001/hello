@@ -1,5 +1,7 @@
 package com.cashier.controller;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.i18n.I18nManager;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.InventoryCheckDAO;
@@ -11,6 +13,8 @@ import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
 
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -19,12 +23,10 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
-import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -110,7 +112,7 @@ public class InventoryCheckController {
         // 设置状态筛选
         statusFilterCombo.getItems().addAll("all", "pending", "checking", "completed");
         com.cashier.util.I18nUiUtils.configureComboBox(statusFilterCombo, value ->
-            "all".equals(value) ? I18nManager.getInstance().get("filter.all")
+            "all".equals(value) ? I18nManager.getInstance().get(I18nKeys.Filter.ALL)
                 : com.cashier.util.I18nUiUtils.inventoryCheckStatus(value));
         statusFilterCombo.setValue("all");
 
@@ -222,7 +224,7 @@ public class InventoryCheckController {
         if (selected != null) {
             showCheckDialog(selected);
         } else {
-            showWarning(I18nManager.getInstance().get("runtime.select_inventory_check"));
+            showWarning(I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_INVENTORY_CHECK));
         }
     }
 
@@ -248,7 +250,7 @@ public class InventoryCheckController {
 
             TextField checkNoField = new TextField();
             checkNoField.setEditable(false);
-            checkNoField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("product.edit.auto_generate"));
+            checkNoField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ProductEdit.AUTO_GENERATE));
             checkNoField.getStyleClass().add("form-input");
 
             DatePicker checkDatePicker = new DatePicker();
@@ -269,16 +271,16 @@ public class InventoryCheckController {
             GridPane.setHgrow(checkTypeCombo, javafx.scene.layout.Priority.ALWAYS);
 
             TextArea remarkArea = new TextArea();
-            remarkArea.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("restock.reason"));
+            remarkArea.setPromptText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Restock.REASON));
             remarkArea.setPrefRowCount(2);
             remarkArea.getStyleClass().add("form-text-area");
 
             // 商品列表表格
             TableView<CheckItemWrapper> itemTable = new TableView<>();
             itemTable.setEditable(true);
-            itemTable.setPlaceholder(new Label(I18nManager.getInstance().get("message.data.empty")));
+            itemTable.setPlaceholder(new Label(I18nManager.getInstance().get(I18nKeys.Message.DATA_EMPTY)));
 
-            TableColumn<CheckItemWrapper, String> productNameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_approval.product_name"));
+            TableColumn<CheckItemWrapper, String> productNameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnApproval.PRODUCT_NAME));
             productNameCol.setPrefWidth(200);
             productNameCol.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getProductName()));
 
@@ -378,12 +380,12 @@ public class InventoryCheckController {
             gridPane.add(checkDatePicker, 1, 1);
             gridPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.inventory_check_type")), 0, 2);
             gridPane.add(checkTypeCombo, 1, 2);
-            gridPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("return_order_list.notes_label")), 0, 3);
+            gridPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnOrderList.NOTES_LABEL)), 0, 3);
             gridPane.add(remarkArea, 1, 3);
 
             // 按钮
-            Button saveButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("shortcut.save"));
-            Button cancelButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("return_order.cancel"));
+            Button saveButton = new Button(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Shortcut.SAVE));
+            Button cancelButton = new Button(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnOrder.CANCEL));
             saveButton.getStyleClass().addAll("primary-button", "button-normal");
             cancelButton.getStyleClass().addAll("secondary-button", "button-normal");
             saveButton.setMinWidth(110);
@@ -457,7 +459,7 @@ public class InventoryCheckController {
 
             root.getChildren().addAll(
                 gridPane,
-                new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.product_details")),
+                new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.PRODUCT_DETAILS)),
                 addProductButton,
                 itemTable,
                 diffLabel,
@@ -503,7 +505,7 @@ public class InventoryCheckController {
             // 商品表格
             TableView<Product> productTable = new TableView<>();
             productTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-            productTable.setPlaceholder(new Label(I18nManager.getInstance().get("message.data.empty")));
+            productTable.setPlaceholder(new Label(I18nManager.getInstance().get(I18nKeys.Message.DATA_EMPTY)));
             
             // 添加复选框列
             TableColumn<Product, Boolean> selectColumn = new TableColumn<>();
@@ -545,7 +547,7 @@ public class InventoryCheckController {
                 Platform.runLater(() -> productTable.refresh());
             });
             
-            TableColumn<Product, String> nameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_approval.product_name"));
+            TableColumn<Product, String> nameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnApproval.PRODUCT_NAME));
             nameCol.setPrefWidth(200);
             nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
 
@@ -557,7 +559,7 @@ public class InventoryCheckController {
             categoryCol.setPrefWidth(100);
             categoryCol.setCellValueFactory(new PropertyValueFactory<>("category"));
 
-            TableColumn<Product, Number> stockCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("product.stock"));
+            TableColumn<Product, Number> stockCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Product.STOCK));
             stockCol.setPrefWidth(80);
             stockCol.setCellValueFactory(new PropertyValueFactory<>("quantity"));
 
@@ -578,7 +580,7 @@ public class InventoryCheckController {
                 .filter(c -> c != null && !c.isEmpty())
                 .collect(Collectors.toSet());
             ObservableList<String> categoryList = FXCollections.observableArrayList();
-            String allCategories = I18nManager.getInstance().get("filter.all_categories");
+            String allCategories = I18nManager.getInstance().get(I18nKeys.Filter.ALL_CATEGORIES);
             categoryList.add(allCategories);
             categoryList.addAll(categories);
             categoryCombo.setItems(categoryList);
@@ -614,7 +616,7 @@ public class InventoryCheckController {
             });
 
             // 全选/取消全选按钮
-            Button selectAllButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("shortcut.select_all"));
+            Button selectAllButton = new Button(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Shortcut.SELECT_ALL));
             selectAllButton.setOnAction(e -> {
                 ObservableList<Product> items = productTable.getItems();
                 productTable.getSelectionModel().selectAll();
@@ -633,7 +635,7 @@ public class InventoryCheckController {
             addButton.setOnAction(e -> {
                 ObservableList<Product> selectedProducts = productTable.getSelectionModel().getSelectedItems();
                 if (selectedProducts == null || selectedProducts.isEmpty()) {
-                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.select_product_first"));
+                    showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_PRODUCT_FIRST));
                     return;
                 }
                 
@@ -660,7 +662,7 @@ public class InventoryCheckController {
                 }
             });
 
-            Button cancelButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("return_order.cancel"));
+            Button cancelButton = new Button(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnOrder.CANCEL));
             cancelButton.getStyleClass().addAll("secondary-button", "button-normal");
             cancelButton.setOnAction(e -> selectorStage.close());
 
@@ -724,10 +726,10 @@ public class InventoryCheckController {
      */
     private String generateCheckNo() {
         try {
-            return InventoryCheckDAO.generateNextCheckNo(new java.text.SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+            return InventoryCheckDAO.generateNextCheckNo(LocalDate.now(ZoneId.systemDefault()).format(com.cashier.util.DateTimeFormats.DATE));
         } catch (SQLException ex) {
             logger.warn("生成盘点单号失败，使用本地时间兜底", ex);
-            return "IC" + new java.text.SimpleDateFormat("yyyyMMdd").format(new Date()) + "0001";
+            return "IC" + LocalDate.now(ZoneId.systemDefault()).format(com.cashier.util.DateTimeFormats.COMPACT_DATE) + "0001";
         }
     }
 
@@ -756,7 +758,7 @@ public class InventoryCheckController {
                 }
             }
         } else {
-            showWarning(I18nManager.getInstance().get("runtime.select_inventory_check"));
+            showWarning(I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_INVENTORY_CHECK));
         }
     }
 
@@ -769,7 +771,7 @@ public class InventoryCheckController {
         if (selected != null) {
             showCheckDetailDialog(selected);
         } else {
-            showWarning(I18nManager.getInstance().get("runtime.select_inventory_check"));
+            showWarning(I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_INVENTORY_CHECK));
         }
     }
 
@@ -793,7 +795,7 @@ public class InventoryCheckController {
             infoPane.add(new Label(check.getCheckTypeDisplayName()), 1, 2);
             infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.inventory_check_operator")), 0, 3);
             infoPane.add(new Label(check.operator), 1, 3);
-            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("return_order_list.status_label")), 0, 4);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnOrderList.STATUS_LABEL)), 0, 4);
             infoPane.add(new Label(check.getStatusDisplayName()), 1, 4);
             infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("cart.total_quantity")), 0, 5);
             infoPane.add(new Label(String.valueOf(check.totalItems)), 1, 5);
@@ -802,7 +804,7 @@ public class InventoryCheckController {
 
             // 商品明细
             TableView<InventoryCheckItem> itemTable = new TableView<>();
-            TableColumn<InventoryCheckItem, String> nameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_approval.product_name"));
+            TableColumn<InventoryCheckItem, String> nameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnApproval.PRODUCT_NAME));
             nameCol.setPrefWidth(200);
             nameCol.setCellValueFactory(new PropertyValueFactory<>("productName"));
 
@@ -827,12 +829,12 @@ public class InventoryCheckController {
             List<InventoryCheckItem> items = InventoryCheckItemDAO.findByCheckId(check.id);
             itemTable.setItems(FXCollections.observableArrayList(items));
 
-            Button closeButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.close"));
+            Button closeButton = new Button(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.CLOSE));
 
             root.getChildren().addAll(
                 new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.inventory_check_info")),
                 infoPane,
-                new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.product_details")),
+                new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.PRODUCT_DETAILS)),
                 itemTable,
                 closeButton
             );
@@ -891,7 +893,7 @@ public class InventoryCheckController {
                 }
             }
         } else {
-            showWarning(I18nManager.getInstance().get("runtime.select_inventory_check"));
+            showWarning(I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_INVENTORY_CHECK));
         }
     }
 
@@ -955,7 +957,7 @@ public class InventoryCheckController {
     private void showError(String message) {
         com.cashier.util.StatusBarManager.updateError(message);
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(I18nManager.getInstance().get("label.error"));
+        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Label.ERROR));
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
@@ -963,6 +965,6 @@ public class InventoryCheckController {
 
     private void showWarning(String message) {
         com.cashier.util.FXUtils.showWarningAlert(
-            I18nManager.getInstance().get("common.warning"), message);
+            I18nManager.getInstance().get(I18nKeys.Common.WARNING), message);
     }
 }

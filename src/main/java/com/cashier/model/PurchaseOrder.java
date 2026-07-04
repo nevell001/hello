@@ -1,5 +1,7 @@
 package com.cashier.model;
 
+import com.cashier.i18n.I18nKeys;
+
 import java.sql.Timestamp;
 import java.math.BigDecimal;
 
@@ -46,13 +48,13 @@ public class PurchaseOrder {
     public String getStatusDisplayName() {
         switch (status) {
             case "pending":
-                return com.cashier.i18n.I18nManager.getInstance().get("runtime.status.pending_approval");
+                return com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.STATUS_PENDING_APPROVAL);
             case "approved":
-                return com.cashier.i18n.I18nManager.getInstance().get("runtime.status.approved");
+                return com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.STATUS_APPROVED);
             case "rejected":
-                return com.cashier.i18n.I18nManager.getInstance().get("runtime.status.rejected");
+                return com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.STATUS_REJECTED);
             case "completed":
-                return com.cashier.i18n.I18nManager.getInstance().get("runtime.status.completed");
+                return com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.STATUS_COMPLETED);
             default:
                 return status;
         }

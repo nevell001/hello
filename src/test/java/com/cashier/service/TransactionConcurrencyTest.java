@@ -2,7 +2,6 @@ package com.cashier.service;
 
 import com.cashier.dao.MemberDAO;
 import com.cashier.dao.DAOFactory;
-import com.cashier.dao.TransactionDAO;
 import com.cashier.util.DatabaseTestBase;
 import com.cashier.model.CartItem;
 import com.cashier.model.Member;

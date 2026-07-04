@@ -1,5 +1,7 @@
 package com.cashier.controller;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.i18n.I18nManager;
 import com.cashier.dao.TransactionDAO;
 import com.cashier.model.Transaction;
@@ -15,7 +17,6 @@ import javafx.scene.control.*;
 import javafx.scene.chart.*;
 
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
@@ -181,7 +182,7 @@ public class StatisticsController {
             allTransactions = TransactionDAO.findAll();
         } catch (SQLException e) {
             logger.error("加载交易数据失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
             allTransactions = new java.util.ArrayList<>();
         }
         logger.info("StatisticsController: 加载了 {} 条交易记录", allTransactions.size());
@@ -229,6 +230,8 @@ public class StatisticsController {
             case "自定义":
                 // 不自动设置日期
                 break;
+            default:
+                break;
         }
     }
 
@@ -241,12 +244,12 @@ public class StatisticsController {
         LocalDate endDate = endDatePicker.getValue();
 
         if (startDate == null || endDate == null) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.select_date_range"));
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_DATE_RANGE));
             return;
         }
 
         if (startDate.isAfter(endDate)) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.invalid_date_range"));
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.INVALID_DATE_RANGE));
             return;
         }
 
@@ -276,12 +279,11 @@ public class StatisticsController {
      */
     private List<Transaction> filterTransactionsByDate(LocalDate startDate, LocalDate endDate) {
         List<Transaction> filtered = new ArrayList<>();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        java.time.format.DateTimeFormatter sdf = com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME;
 
         for (Transaction t : allTransactions) {
             try {
-                Date date = sdf.parse(t.timestamp);
-                LocalDate localDate = date.toInstant()
+                java.time.LocalDate localDate = java.time.LocalDateTime.parse(t.timestamp, sdf)
                     .atZone(ZoneId.systemDefault())
                     .toLocalDate();
 
@@ -340,6 +342,9 @@ public class StatisticsController {
                 case "银行卡":
                     cardSales += t.getFinalAmount().doubleValue();
                     break;
+                default:
+                    logger.debug("跳过未知支付方式统计: {}", t.paymentMethod);
+                    break;
             }
 
             // 会员统计
@@ -356,7 +361,7 @@ public class StatisticsController {
                     // 分类统计
                     String category = item.category;
                     if (category == null || category.isEmpty()) {
-                        category = I18nManager.getInstance().get("report.uncategorized");
+                        category = I18nManager.getInstance().get(I18nKeys.Report.UNCATEGORIZED);
                     }
                     categoryCountMap.put(category, categoryCountMap.getOrDefault(category, 0) + item.quantity);
                     categoryAmountMap.put(category, categoryAmountMap.getOrDefault(category, 0.0) + item.getPrice().multiply(BigDecimal.valueOf(item.quantity)).doubleValue());
@@ -365,12 +370,10 @@ public class StatisticsController {
 
             // 小时统计
             try {
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                Date date = sdf.parse(t.timestamp);
-                // 使用 Calendar API 替代已过时的 Date.getHours()
-                Calendar cal = Calendar.getInstance();
-                cal.setTime(date);
-                int hour = cal.get(Calendar.HOUR_OF_DAY);
+                java.time.format.DateTimeFormatter sdf = com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME;
+                int hour = java.time.LocalDateTime.parse(t.timestamp, sdf)
+                    .atZone(ZoneId.systemDefault())
+                    .getHour();
                 hourCountMap.put(hour, hourCountMap.getOrDefault(hour, 0) + 1);
                 hourAmountMap.put(hour, hourAmountMap.getOrDefault(hour, 0.0) + t.getFinalAmount().doubleValue());
             } catch (Exception e) {
@@ -395,8 +398,8 @@ public class StatisticsController {
             topProductCountLabel.setText(String.valueOf(productCountMap.get(topProduct)));
             topProductAmountLabel.setText(CurrencyUtil.format(productAmountMap.get(topProduct)));
         } else {
-            topProductLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("statistics.no_data"));
-            topProductCountLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("member.edit.points_hint"));
+            topProductLabel.setText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Statistics.NO_DATA));
+            topProductCountLabel.setText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.MemberEdit.POINTS_HINT));
             topProductAmountLabel.setText(CurrencyUtil.format(0));
         }
 
@@ -458,9 +461,9 @@ public class StatisticsController {
         ChoiceDialog<String> formatDialog = new ChoiceDialog<>(
             "Excel", "Excel", "PDF"
         );
-        formatDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("label.export_format"));
-        formatDialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get("label.please_select_format"));
-        formatDialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.format_label"));
+        formatDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.EXPORT_FORMAT));
+        formatDialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.PLEASE_SELECT_FORMAT));
+        formatDialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.FORMAT_LABEL));
 
         formatDialog.showAndWait().ifPresent(format -> {
             com.cashier.util.ExportUtil.ExportFormat exportFormat =
@@ -532,19 +535,19 @@ public class StatisticsController {
 
             if (filePath != null) {
                 com.cashier.util.StatusBarManager.updateSuccess(
-                    com.cashier.i18n.I18nManager.getInstance().get("success.export"));
+                    com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Success.EXPORT));
                 Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                successAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("success.export"));
+                successAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Success.EXPORT));
                 successAlert.setHeaderText(null);
-                successAlert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_success_path") + "\n" + filePath);
+                successAlert.setContentText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.EXPORT_SUCCESS_PATH) + "\n" + filePath);
                 successAlert.showAndWait();
                 logger.info("统计数据导出成功: {}", filePath);
             } else {
-                showError(com.cashier.i18n.I18nManager.getInstance().get("error.export_failed"));
+                showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.EXPORT_FAILED));
             }
         } catch (Exception e) {
             logger.error("导出统计数据失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_failed_detail", e.getMessage()));
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.EXPORT_FAILED_DETAIL, e.getMessage()));
         }
     }
 
@@ -555,7 +558,7 @@ public class StatisticsController {
     private void showError(String message) {
         com.cashier.util.StatusBarManager.updateError(message);
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(I18nManager.getInstance().get("label.error"));
+        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Label.ERROR));
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
@@ -584,16 +587,16 @@ public class StatisticsController {
         ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList();
         
         if (cashSales > 0) {
-            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get("runtime.payment.cash"), cashSales));
+            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get(I18nKeys.Runtime.PAYMENT_CASH), cashSales));
         }
         if (wechatSales > 0) {
-            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get("runtime.payment.wechat"), wechatSales));
+            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get(I18nKeys.Runtime.PAYMENT_WECHAT), wechatSales));
         }
         if (alipaySales > 0) {
-            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get("runtime.payment.alipay"), alipaySales));
+            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get(I18nKeys.Runtime.PAYMENT_ALIPAY), alipaySales));
         }
         if (cardSales > 0) {
-            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get("runtime.payment.card"), cardSales));
+            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get(I18nKeys.Runtime.PAYMENT_CARD), cardSales));
         }
         
         paymentMethodPieChart.setData(pieChartData);
@@ -614,12 +617,12 @@ public class StatisticsController {
     private void updateSalesTrendLineChart(List<Transaction> transactions) {
         // 按日期统计销售额
         Map<String, Double> dailySalesMap = new TreeMap<>();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        java.time.format.DateTimeFormatter formatter = com.cashier.util.DateTimeFormats.DATE;
         
         for (Transaction t : transactions) {
             try {
-                Date date = sdf.parse(t.timestamp);
-                String dateStr = sdf.format(date);
+                java.time.LocalDate date = java.time.LocalDate.parse(t.timestamp, formatter);
+                String dateStr = date.format(formatter);
                 dailySalesMap.put(dateStr, dailySalesMap.getOrDefault(dateStr, 0.0) + t.getFinalAmount().doubleValue());
             } catch (Exception e) {
                 // 解析失败，跳过
@@ -628,7 +631,7 @@ public class StatisticsController {
         
         // 创建数据系列
         XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.setName(I18nManager.getInstance().get("chart.series.sales"));
+        series.setName(I18nManager.getInstance().get(I18nKeys.Chart.SERIES_SALES));
         
         for (Map.Entry<String, Double> entry : dailySalesMap.entrySet()) {
             series.getData().add(new XYChart.Data<>(entry.getKey(), entry.getValue()));
@@ -637,8 +640,8 @@ public class StatisticsController {
         salesTrendLineChart.getData().clear();
         salesTrendLineChart.getData().add(series);
         salesTrendLineChart.setTitle(com.cashier.i18n.I18nManager.getInstance().get("statistics.sales_trend"));
-        salesTrendLineChart.getXAxis().setLabel(I18nManager.getInstance().get("chart.date"));
-        salesTrendLineChart.getYAxis().setLabel(I18nManager.getInstance().get("chart.series.sales"));
+        salesTrendLineChart.getXAxis().setLabel(I18nManager.getInstance().get(I18nKeys.Chart.DATE));
+        salesTrendLineChart.getYAxis().setLabel(I18nManager.getInstance().get(I18nKeys.Chart.SERIES_SALES));
         salesTrendLineChart.setCreateSymbols(true);
         salesTrendLineChart.setLegendVisible(true);
     }
@@ -649,7 +652,7 @@ public class StatisticsController {
     private void updateCategorySalesBarChart(Map<String, Integer> categoryCountMap, Map<String, Double> categoryAmountMap) {
         // 创建数据系列
         XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.setName(I18nManager.getInstance().get("chart.series.sales"));
+        series.setName(I18nManager.getInstance().get(I18nKeys.Chart.SERIES_SALES));
         
         // 按销售额排序
         List<Map.Entry<String, Double>> sortedCategories = new ArrayList<>(categoryAmountMap.entrySet());
@@ -665,8 +668,8 @@ public class StatisticsController {
         categorySalesBarChart.getData().clear();
         categorySalesBarChart.getData().add(series);
         categorySalesBarChart.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.chart.category_sales"));
-        categorySalesBarChart.getXAxis().setLabel(I18nManager.getInstance().get("chart.category"));
-        categorySalesBarChart.getYAxis().setLabel(I18nManager.getInstance().get("chart.series.sales"));
+        categorySalesBarChart.getXAxis().setLabel(I18nManager.getInstance().get(I18nKeys.Chart.CATEGORY));
+        categorySalesBarChart.getYAxis().setLabel(I18nManager.getInstance().get(I18nKeys.Chart.SERIES_SALES));
         categorySalesBarChart.setLegendVisible(true);
     }
 

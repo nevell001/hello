@@ -1,6 +1,7 @@
 package com.cashier.component;
 
-import com.cashier.controller.base.BaseController;
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.i18n.I18nManager;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -55,23 +56,23 @@ public class DataTable<T> extends VBox {
         // 创建工具栏
         if (showToolbar) {
             searchField = new TextField();
-            searchField.setPromptText(i18n.get("common.search"));
+            searchField.setPromptText(i18n.get(I18nKeys.Common.SEARCH));
             searchField.setPrefWidth(200);
             searchField.getStyleClass().add("search-input");
 
-            searchButton = new Button(i18n.get("common.search"));
+            searchButton = new Button(i18n.get(I18nKeys.Common.SEARCH));
             searchButton.getStyleClass().addAll("primary-button");
 
             refreshButton = new Button(i18n.get("common.refresh"));
             refreshButton.getStyleClass().addAll("secondary-button");
 
-            addButton = new Button(i18n.get("common.add"));
+            addButton = new Button(i18n.get(I18nKeys.Common.ADD));
             addButton.getStyleClass().addAll("primary-button");
 
-            editButton = new Button(i18n.get("common.edit"));
+            editButton = new Button(i18n.get(I18nKeys.Common.EDIT));
             editButton.getStyleClass().addAll("secondary-button");
 
-            deleteButton = new Button(i18n.get("common.delete"));
+            deleteButton = new Button(i18n.get(I18nKeys.Common.DELETE));
             deleteButton.getStyleClass().addAll("danger-button");
 
             exportButton = new Button(i18n.get("menu.file.export"));

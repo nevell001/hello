@@ -439,7 +439,8 @@ public class DataService {
             }
     
             // 使用时间戳创建备份文件名
-            String timestamp = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(new java.util.Date());
+            String timestamp = java.time.LocalDateTime.now(java.time.ZoneId.systemDefault())
+                .format(com.cashier.util.DateTimeFormats.BACKUP_TIMESTAMP);
             File backupFile = new File(backupDir, DatabaseManager.getBackupFilePrefix() + "_" + timestamp + ".sql");
     
             boolean success = DatabaseManager.backup(backupFile);

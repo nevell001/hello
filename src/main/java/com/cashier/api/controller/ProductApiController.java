@@ -1,6 +1,5 @@
 package com.cashier.api.controller;
 
-import com.cashier.api.ApiServer;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
 import com.cashier.model.Product;
@@ -126,19 +125,7 @@ public class ProductApiController {
                 return;
             }
             
-            if (request.name != null) product.name = request.name;
-            if (request.price != null) product.price = request.price;
-            if (request.quantity != null) product.quantity = request.quantity;
-            if (request.category != null) product.category = request.category;
-            if (request.barcode != null) product.barcode = request.barcode;
-            if (request.unit != null) product.unit = request.unit;
-            if (request.description != null) product.description = request.description;
-            if (request.brand != null) product.brand = request.brand;
-            if (request.supplier != null) product.supplier = request.supplier;
-            if (request.spec != null) product.spec = request.spec;
-            if (request.minStock != null) product.minStock = request.minStock;
-            if (request.cost != null) product.cost = request.cost;
-            if (request.productCode != null) product.productCode = request.productCode;
+            applyProductUpdates(product, request);
             
             productDAO.update(product);
             
@@ -149,6 +136,34 @@ public class ProductApiController {
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
                .json(Map.of("success", false, "message", "更新商品失败: " + e.getMessage()));
         }
+    }
+
+    private static void applyProductUpdates(Product product, ProductRequest request) {
+        updateTextFields(product, request);
+        updateStockFields(product, request);
+        updatePriceFields(product, request);
+    }
+
+    private static void updateTextFields(Product product, ProductRequest request) {
+        if (request.name != null) product.name = request.name;
+        if (request.category != null) product.category = request.category;
+        if (request.barcode != null) product.barcode = request.barcode;
+        if (request.unit != null) product.unit = request.unit;
+        if (request.description != null) product.description = request.description;
+        if (request.brand != null) product.brand = request.brand;
+        if (request.supplier != null) product.supplier = request.supplier;
+        if (request.spec != null) product.spec = request.spec;
+        if (request.productCode != null) product.productCode = request.productCode;
+    }
+
+    private static void updateStockFields(Product product, ProductRequest request) {
+        if (request.quantity != null) product.quantity = request.quantity;
+        if (request.minStock != null) product.minStock = request.minStock;
+    }
+
+    private static void updatePriceFields(Product product, ProductRequest request) {
+        if (request.price != null) product.price = request.price;
+        if (request.cost != null) product.cost = request.cost;
     }
     
     /**

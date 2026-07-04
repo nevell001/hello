@@ -8,8 +8,10 @@ import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import org.slf4j.Logger;
 
+import com.cashier.util.DateTimeFormats;
+import java.time.LocalDate;
+
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,8 +35,8 @@ public class InvoiceApiController {
             List<Invoice> invoices;
             
             if (startDate != null && endDate != null) {
-                Date start = java.sql.Date.valueOf(startDate);
-                Date end = java.sql.Date.valueOf(endDate);
+                LocalDate start = LocalDate.parse(startDate, DateTimeFormats.DATE);
+                LocalDate end = LocalDate.parse(endDate, DateTimeFormats.DATE);
                 invoices = InvoiceService.getInvoicesByDateRange(start, end);
             } else {
                 invoices = InvoiceService.getAllInvoices();
@@ -253,9 +255,11 @@ public class InvoiceApiController {
             String startDate = ctx.queryParam("startDate");
             String endDate = ctx.queryParam("endDate");
             
-            Date start = startDate != null ? java.sql.Date.valueOf(startDate) : new Date(System.currentTimeMillis() - 30L * 24 * 60 * 60 * 1000);
-            Date end = endDate != null ? java.sql.Date.valueOf(endDate) : new Date();
-            
+            LocalDate start = startDate != null ? LocalDate.parse(startDate, DateTimeFormats.DATE)
+                                                  : LocalDate.now().minusDays(30);
+            LocalDate end = endDate != null ? LocalDate.parse(endDate, DateTimeFormats.DATE)
+                                            : LocalDate.now();
+
             List<Invoice> invoices = InvoiceService.getInvoicesByDateRange(start, end);
             
             int totalCount = invoices.size();
@@ -269,6 +273,9 @@ public class InvoiceApiController {
                     case "ISSUED": issuedCount++; break;
                     case "PRINTED": printedCount++; break;
                     case "VOIDED": voidedCount++; break;
+                    default:
+                        logger.debug("跳过未知发票状态统计: {}", i.status);
+                        break;
                 }
                 
                 if (!"VOIDED".equals(i.status)) {
@@ -283,8 +290,8 @@ public class InvoiceApiController {
             result.put("printedCount", printedCount);
             result.put("voidedCount", voidedCount);
             result.put("totalAmount", totalAmount);
-            result.put("startDate", startDate);
-            result.put("endDate", endDate);
+            result.put("startDate", start.format(DateTimeFormats.DATE));
+            result.put("endDate", end.format(DateTimeFormats.DATE));
             
             ctx.json(result);
         } catch (Exception e) {

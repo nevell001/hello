@@ -1,6 +1,7 @@
 package com.cashier.controller;
 
-import com.cashier.controller.MainController;
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.dao.ShiftDAO;
 import com.cashier.i18n.I18nManager;
 import com.cashier.dao.TransactionDAO;
@@ -13,6 +14,7 @@ import com.cashier.util.LoggerFactoryUtil;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.time.ZoneId;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -21,7 +23,6 @@ import javafx.scene.chart.*;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -152,9 +153,10 @@ public class ShiftController {
             new SimpleStringProperty(cellData.getValue().operatorName));
         timeColumn.setCellValueFactory(cellData -> {
             Shift s = cellData.getValue();
-            SimpleDateFormat sdf = new SimpleDateFormat("MM-dd HH:mm");
+            java.time.format.DateTimeFormatter sdf = com.cashier.util.DateTimeFormats.SHIFT_TIME;
             return new SimpleStringProperty(I18nManager.getInstance().get("shift.time_range",
-                sdf.format(s.startTime), sdf.format(s.endTime)));
+                sdf.format(s.startTime != null ? s.startTime.atZone(java.time.ZoneId.systemDefault()).toLocalDateTime() : java.time.LocalDateTime.now()),
+                sdf.format(s.endTime != null ? s.endTime.atZone(java.time.ZoneId.systemDefault()).toLocalDateTime() : java.time.LocalDateTime.now())));
         });
         durationColumn.setCellValueFactory(cellData ->
             new SimpleStringProperty(cellData.getValue().getDurationText()));
@@ -196,7 +198,7 @@ public class ShiftController {
             allShifts = ShiftDAO.findAll();
         } catch (SQLException e) {
             logger.error("加载交接班数据失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
             allShifts = new java.util.ArrayList<>();
         }
         shiftList = FXCollections.observableArrayList(allShifts);
@@ -280,16 +282,16 @@ public class ShiftController {
             javafx.collections.FXCollections.observableArrayList();
 
         if (totalCash.compareTo(BigDecimal.ZERO) > 0) {
-            pieChartData.add(new javafx.scene.chart.PieChart.Data(I18nManager.getInstance().get("runtime.payment.cash"), totalCash.doubleValue()));
+            pieChartData.add(new javafx.scene.chart.PieChart.Data(I18nManager.getInstance().get(I18nKeys.Runtime.PAYMENT_CASH), totalCash.doubleValue()));
         }
         if (totalWechat.compareTo(BigDecimal.ZERO) > 0) {
-            pieChartData.add(new javafx.scene.chart.PieChart.Data(I18nManager.getInstance().get("runtime.payment.wechat"), totalWechat.doubleValue()));
+            pieChartData.add(new javafx.scene.chart.PieChart.Data(I18nManager.getInstance().get(I18nKeys.Runtime.PAYMENT_WECHAT), totalWechat.doubleValue()));
         }
         if (totalAlipay.compareTo(BigDecimal.ZERO) > 0) {
-            pieChartData.add(new javafx.scene.chart.PieChart.Data(I18nManager.getInstance().get("runtime.payment.alipay"), totalAlipay.doubleValue()));
+            pieChartData.add(new javafx.scene.chart.PieChart.Data(I18nManager.getInstance().get(I18nKeys.Runtime.PAYMENT_ALIPAY), totalAlipay.doubleValue()));
         }
         if (totalCard.compareTo(BigDecimal.ZERO) > 0) {
-            pieChartData.add(new javafx.scene.chart.PieChart.Data(I18nManager.getInstance().get("runtime.payment.card"), totalCard.doubleValue()));
+            pieChartData.add(new javafx.scene.chart.PieChart.Data(I18nManager.getInstance().get(I18nKeys.Runtime.PAYMENT_CARD), totalCard.doubleValue()));
         }
 
         paymentMethodPieChart.setData(pieChartData);
@@ -319,15 +321,15 @@ public class ShiftController {
      * @param shift 交接班记录
      */
     private void showShiftDetail(Shift shift) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        java.time.format.DateTimeFormatter sdf = com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME;
         I18nManager i18n = I18nManager.getInstance();
 
         StringBuilder detail = new StringBuilder();
         detail.append(i18n.get("shift.detail_title")).append("\n\n");
         detail.append(i18n.get("shift.detail_id")).append(shift.shiftId).append("\n");
         detail.append(i18n.get("shift.detail_operator")).append(shift.operatorName).append("\n");
-        detail.append(i18n.get("shift.detail_start")).append(shift.startTime != null ? sdf.format(shift.startTime) : i18n.get("shift.not_started")).append("\n");
-        detail.append(i18n.get("shift.detail_end")).append(shift.endTime != null ? sdf.format(shift.endTime) : i18n.get("shift.not_ended")).append("\n");
+        detail.append(i18n.get("shift.detail_start")).append(shift.startTime != null ? shift.startTime.atZone(java.time.ZoneId.systemDefault()).format(sdf) : i18n.get("shift.not_started")).append("\n");
+        detail.append(i18n.get("shift.detail_end")).append(shift.endTime != null ? shift.endTime.atZone(java.time.ZoneId.systemDefault()).format(sdf) : i18n.get("shift.not_ended")).append("\n");
         detail.append(i18n.get("shift.detail_duration")).append(shift.getDurationText()).append("\n\n");
 
         detail.append(i18n.get("shift.revenue_stats")).append("\n");
@@ -351,7 +353,7 @@ public class ShiftController {
         }
 
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(I18nManager.getInstance().get("label.transaction_detail"));
+        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Label.TRANSACTION_DETAIL));
         alert.setHeaderText(null);
         alert.setContentText(detail.toString());
         alert.getDialogPane().setPrefWidth(500);
@@ -387,9 +389,9 @@ public class ShiftController {
             .filter(s -> {
                 // 日期筛选
                 if (startDatePicker.getValue() != null || endDatePicker.getValue() != null) {
-                    java.time.LocalDate shiftDate = s.startTime.toInstant()
-                        .atZone(java.time.ZoneId.systemDefault())
-                        .toLocalDate();
+                    java.time.LocalDate shiftDate = s.startTime != null
+                        ? s.startTime.atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+                        : null;
 
                     if (startDatePicker.getValue() != null && shiftDate.isBefore(startDatePicker.getValue())) {
                         return false;
@@ -426,9 +428,9 @@ public class ShiftController {
         ChoiceDialog<String> formatDialog = new ChoiceDialog<>(
             "Excel", "Excel", "PDF"
         );
-        formatDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("label.export_format"));
-        formatDialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get("label.please_select_format"));
-        formatDialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.format_label"));
+        formatDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.EXPORT_FORMAT));
+        formatDialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.PLEASE_SELECT_FORMAT));
+        formatDialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.FORMAT_LABEL));
 
         formatDialog.showAndWait().ifPresent(format -> {
             com.cashier.util.ExportUtil.ExportFormat exportFormat =
@@ -452,12 +454,12 @@ public class ShiftController {
 
             // 准备数据
             java.util.List<String[]> data = new java.util.ArrayList<>();
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            java.time.format.DateTimeFormatter sdf = com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME;
 
             for (Shift s : shiftList) {
                 // 格式化时间，处理 NULL 值
-                String startTimeStr = (s.startTime != null) ? sdf.format(s.startTime) : "未开始";
-                String endTimeStr = (s.endTime != null) ? sdf.format(s.endTime) : "未结束";
+                String startTimeStr = (s.startTime != null) ? sdf.format(s.startTime.atZone(java.time.ZoneId.systemDefault()).toLocalDateTime()) : "未开始";
+                String endTimeStr = (s.endTime != null) ? sdf.format(s.endTime.atZone(java.time.ZoneId.systemDefault()).toLocalDateTime()) : "未结束";
                 
                 // 计算班次时长，处理 NULL 值
                 String durationText = "未完成";
@@ -492,17 +494,17 @@ public class ShiftController {
 
             if (filePath != null) {
                 Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                successAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("success.export"));
+                successAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Success.EXPORT));
                 successAlert.setHeaderText(null);
-                successAlert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_success_path") + "\n" + filePath);
+                successAlert.setContentText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.EXPORT_SUCCESS_PATH) + "\n" + filePath);
                 successAlert.showAndWait();
                 updateStatus("导出成功");
             } else {
-                showError(com.cashier.i18n.I18nManager.getInstance().get("error.export_failed"));
+                showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.EXPORT_FAILED));
             }
         } catch (Exception e) {
             logger.error("导出交接班记录失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_failed_detail", e.getMessage()));
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.EXPORT_FAILED_DETAIL, e.getMessage()));
         }
     }
 
@@ -564,7 +566,7 @@ public class ShiftController {
 
         // 确认开班
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle(I18nManager.getInstance().get("common.confirm"));
+        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Common.CONFIRM));
         alert.setHeaderText(null);
         alert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.shift_start_confirm"));
 
@@ -585,7 +587,7 @@ public class ShiftController {
                 transactions = TransactionDAO.findAll();
             } catch (SQLException e) {
                 logger.error("加载交易记录失败", e);
-                showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+                showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
                 return;
             }
 
@@ -597,14 +599,15 @@ public class ShiftController {
             }
 
             // 生成班次ID
-            String shiftId = "SHIFT" + new java.text.SimpleDateFormat("yyyyMMddHHmmss").format(new java.util.Date());
+            String shiftId = "SHIFT" + java.time.LocalDateTime.now(java.time.ZoneId.systemDefault())
+                .format(com.cashier.util.DateTimeFormats.COMPACT_DATE_TIME);
 
             // 创建新班次
             Shift shift = new Shift(
                 shiftId,
                 currentUser.username,
                 currentUser.name,
-                new java.util.Date(),
+                java.time.Instant.now(),
                 totalRevenue,
                 totalTransactions
             );
@@ -614,7 +617,7 @@ public class ShiftController {
                 ShiftDAO.insert(shift);
             } catch (SQLException e) {
                 logger.error("保存班次失败", e);
-                showError(com.cashier.i18n.I18nManager.getInstance().get("error.save_data") + ": " + e.getMessage());
+                showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.SAVE_DATA) + ": " + e.getMessage());
                 return;
             }
 
@@ -628,7 +631,7 @@ public class ShiftController {
             MainController.updateShiftInfoGlobal();
 
         } catch (Exception e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
             logger.error("开班失败", e);
         }
     }
@@ -644,7 +647,7 @@ try {
             activeShift = ShiftDAO.findActiveShift();
         } catch (SQLException e) {
             logger.error("获取活跃班次失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
             return;
         }
 
@@ -655,7 +658,7 @@ try {
 
         // 确认交班
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle(I18nManager.getInstance().get("common.confirm"));
+        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Common.CONFIRM));
         alert.setHeaderText(null);
         alert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.shift_end_confirm"));
 
@@ -670,12 +673,12 @@ try {
                 allTransactions = TransactionDAO.findAll();
             } catch (SQLException e) {
                 logger.error("加载交易记录失败", e);
-                showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+                showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
                 return;
             }
 
             // 筛选本班次的交易记录（在班次开始时间之后的交易）
-            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            java.time.format.DateTimeFormatter sdf = com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME;
             List<Transaction> shiftTransactions = new java.util.ArrayList<>();
             BigDecimal cashRevenue = BigDecimal.ZERO;
             BigDecimal wechatRevenue = BigDecimal.ZERO;
@@ -685,8 +688,10 @@ try {
 
             for (Transaction t : allTransactions) {
                 try {
-                    java.util.Date transactionTime = sdf.parse(t.timestamp);
-                    if (transactionTime.after(activeShift.startTime) || transactionTime.equals(activeShift.startTime)) {
+                    java.time.LocalDateTime transactionTime = java.time.LocalDateTime.parse(t.timestamp, sdf);
+                    java.time.ZonedDateTime transactionZoned = transactionTime.atZone(java.time.ZoneId.systemDefault());
+                    java.time.ZonedDateTime shiftStartZoned = activeShift.startTime.atZone(java.time.ZoneId.systemDefault());
+                    if (transactionZoned.toInstant().isAfter(shiftStartZoned.toInstant()) || transactionZoned.toInstant().equals(shiftStartZoned.toInstant())) {
                         shiftTransactions.add(t);
                         totalRevenue = totalRevenue.add(t.getFinalAmount());
 
@@ -717,7 +722,7 @@ try {
                 ShiftDAO.update(activeShift);
             } catch (SQLException e) {
                 logger.error("更新班次失败", e);
-                showError(com.cashier.i18n.I18nManager.getInstance().get("error.save_data") + ": " + e.getMessage());
+                showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.SAVE_DATA) + ": " + e.getMessage());
                 return;
             }
 
@@ -729,7 +734,7 @@ try {
             I18nManager i18n = I18nManager.getInstance();
             String sym = CurrencyUtil.getSymbol();
             String detail = String.format(
-                i18n.get("success.shift_end") + "\n\n" +
+                i18n.get(I18nKeys.Success.SHIFT_END) + "\n\n" +
                 i18n.get("label.shift_id") + ": %s\n" +
                 i18n.get("label.operator") + ": %s\n" +
                 i18n.get("label.shift_duration") + ": %s\n" +
@@ -752,7 +757,7 @@ try {
             );
 
             Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-            successAlert.setTitle(i18n.get("success.shift_end"));
+            successAlert.setTitle(i18n.get(I18nKeys.Success.SHIFT_END));
             successAlert.setHeaderText(null);
             successAlert.setContentText(detail);
             successAlert.getDialogPane().setPrefWidth(500);
@@ -765,7 +770,7 @@ try {
             handleLogout();
 
         } catch (Exception e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
             logger.error("交班失败", e);
         }
     }
@@ -791,7 +796,7 @@ try {
                 }
             });
         } catch (Exception e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
         }
     }
 
@@ -802,7 +807,7 @@ try {
     private void showError(String message) {
         com.cashier.util.StatusBarManager.updateError(message);
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(I18nManager.getInstance().get("label.error"));
+        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Label.ERROR));
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
@@ -815,7 +820,7 @@ try {
     private void showSuccess(String message) {
         com.cashier.util.StatusBarManager.updateSuccess(message);
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(I18nManager.getInstance().get("label.success"));
+        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Label.SUCCESS));
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();

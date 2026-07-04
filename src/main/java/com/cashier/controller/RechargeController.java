@@ -1,5 +1,7 @@
 package com.cashier.controller;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.i18n.I18nManager;
 import com.cashier.service.DataService;
 import com.cashier.model.Member;
@@ -165,7 +167,7 @@ public class RechargeController {
             String amountText = amountField.getText().trim();
             if (amountText.isEmpty()) {
                 newBalanceLabel.setText(CurrencyUtil.format(member.getBalance().doubleValue()));
-                bonusPointsLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("member.edit.points_hint"));
+                bonusPointsLabel.setText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.MemberEdit.POINTS_HINT));
                 okButton.setDisable(true);
                 return;
             }
@@ -173,7 +175,7 @@ public class RechargeController {
             double amount = FormValidator.parseDouble(amountText, 0);
             if (amount <= 0) {
                 newBalanceLabel.setText(CurrencyUtil.format(member.getBalance().doubleValue()));
-                bonusPointsLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("member.edit.points_hint"));
+                bonusPointsLabel.setText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.MemberEdit.POINTS_HINT));
                 okButton.setDisable(true);
                 return;
             }
@@ -190,7 +192,7 @@ public class RechargeController {
 
         } catch (NumberFormatException e) {
             newBalanceLabel.setText(CurrencyUtil.format(member.getBalance().doubleValue()));
-            bonusPointsLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("member.edit.points_hint"));
+            bonusPointsLabel.setText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.MemberEdit.POINTS_HINT));
             okButton.setDisable(true);
         }
     }
@@ -267,7 +269,7 @@ public class RechargeController {
     private void showError(String message) {
         StatusBarManager.updateError(message);
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(I18nManager.getInstance().get("label.error"));
+        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Label.ERROR));
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();

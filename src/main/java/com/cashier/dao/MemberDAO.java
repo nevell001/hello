@@ -4,7 +4,6 @@ import com.cashier.model.Member;
 import com.cashier.util.DatabaseManager;
 
 import java.sql.*;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -150,8 +149,7 @@ public class MemberDAO {
      */
     private static String generateMemberCode() throws SQLException {
         // 格式: MEM + yyyyMMdd + 4位递增序号
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-        String dateStr = sdf.format(new java.util.Date());
+        String dateStr = java.time.LocalDate.now(java.time.ZoneId.systemDefault()).format(com.cashier.util.DateTimeFormats.COMPACT_DATE);
         
         String sql = "SELECT member_code FROM members WHERE member_code LIKE ? ORDER BY member_code DESC LIMIT 1";
         try (Connection conn = DatabaseManager.getConnection();

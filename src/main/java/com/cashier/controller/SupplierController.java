@@ -1,5 +1,7 @@
 package com.cashier.controller;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.dao.SupplierDAO;
 import com.cashier.i18n.I18nManager;
 import com.cashier.model.Supplier;
@@ -8,7 +10,6 @@ import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
 
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +19,6 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -124,7 +124,7 @@ public class SupplierController {
             }
         } catch (SQLException e) {
             logger.error("加载供应商数据失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
             suppliers = new HashMap<>();
         }
         supplierList = FXCollections.observableArrayList(suppliers.values());
@@ -193,7 +193,7 @@ public class SupplierController {
 
             // 表单字段
             TextField codeField = new TextField();
-            codeField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("product.edit.auto_generate"));
+            codeField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ProductEdit.AUTO_GENERATE));
             codeField.setEditable(false);
             codeField.setPrefWidth(300);
 
@@ -252,7 +252,7 @@ public class SupplierController {
             gridPane.add(addressField, 1, 4);
             gridPane.add(new Label(I18nManager.getInstance().get("runtime.supplier_level")), 0, 5);
             gridPane.add(rankCombo, 1, 5);
-            gridPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("return_order_list.notes_label")), 0, 6);
+            gridPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnOrderList.NOTES_LABEL)), 0, 6);
             gridPane.add(remarkArea, 1, 6);
 
             // 创建对话框
@@ -263,11 +263,11 @@ public class SupplierController {
             dialogStage.setResizable(false);
 
             // 按钮
-            Button saveButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("shortcut.save"));
+            Button saveButton = new Button(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Shortcut.SAVE));
             saveButton.setPrefWidth(80);
             saveButton.setDefaultButton(true);
 
-            Button cancelButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("return_order.cancel"));
+            Button cancelButton = new Button(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnOrder.CANCEL));
             cancelButton.setPrefWidth(80);
             cancelButton.setCancelButton(true);
 
@@ -296,7 +296,7 @@ public class SupplierController {
                         dialogStage.close();
                     } catch (SQLException ex) {
                         logger.error("更新供应商失败", ex);
-                        showError(com.cashier.i18n.I18nManager.getInstance().get("error.save_data") + ": " + ex.getMessage());
+                        showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.SAVE_DATA) + ": " + ex.getMessage());
                     }
                 } else {
                     try {
@@ -306,7 +306,7 @@ public class SupplierController {
                         dialogStage.close();
                     } catch (SQLException ex) {
                         logger.error("添加供应商失败", ex);
-                        showError(com.cashier.i18n.I18nManager.getInstance().get("error.save_data") + ": " + ex.getMessage());
+                        showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.SAVE_DATA) + ": " + ex.getMessage());
                     }
                 }
             });
@@ -329,7 +329,7 @@ public class SupplierController {
 
         } catch (Exception e) {
             logger.error("显示供应商对话框失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -337,8 +337,8 @@ public class SupplierController {
      * 生成供应商编号
      */
     private String generateSupplierCode() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-        String dateStr = sdf.format(new Date());
+        String dateStr = java.time.LocalDate.now(java.time.ZoneId.systemDefault())
+            .format(com.cashier.util.DateTimeFormats.COMPACT_DATE);
         String prefix = "S" + dateStr;
 
         int count = 0;
@@ -363,7 +363,7 @@ public class SupplierController {
         Supplier selected = supplierTable.getSelectionModel().getSelectedItem();
         if (selected != null) {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle(I18nManager.getInstance().get("common.confirm"));
+            alert.setTitle(I18nManager.getInstance().get(I18nKeys.Common.CONFIRM));
             alert.setHeaderText(null);
             alert.setContentText(I18nManager.getInstance().get("runtime.supplier_delete_confirm", selected.name));
 
@@ -376,7 +376,7 @@ public class SupplierController {
                     updateStatus("供应商删除成功: " + selected.name);
                 } catch (SQLException e) {
                     logger.error("删除供应商失败", e);
-                    showError(com.cashier.i18n.I18nManager.getInstance().get("error.delete_data") + ": " + e.getMessage());
+                    showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.DELETE_DATA) + ": " + e.getMessage());
                 }
             }
         }
@@ -433,7 +433,7 @@ public class SupplierController {
     private void showError(String message) {
         com.cashier.util.StatusBarManager.updateError(message);
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(I18nManager.getInstance().get("label.error"));
+        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Label.ERROR));
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();

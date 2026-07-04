@@ -247,81 +247,100 @@ public class MemberEditController {
      * @return 如果输入有效返回true，否则返回false
      */
     private boolean isInputValid() {
-        String errorMessage = "";
+        StringBuilder errorMessage = new StringBuilder();
 
-        // 验证会员编号（仅当手动输入时）
-        if (!autoCodeCheckBox.isSelected() && memberCodeField.getText().trim().isEmpty()) {
-            errorMessage += i18n("member.validation.code_required");
-        }
-
-        // 验证手机号
-        String phone = phoneField.getText().trim();
-        if (phone.isEmpty()) {
-            errorMessage += i18n("member.validation.phone_required");
-        } else if (!phone.matches("\\d{11}")) {
-            errorMessage += i18n("member.validation.phone_invalid");
-        } else if (member == null && members.containsKey(phone)) {
-            errorMessage += i18n("member.validation.phone_exists");
-        }
-
-        // 验证姓名
-        if (nameField.getText().trim().isEmpty()) {
-            errorMessage += i18n("member.validation.name_required");
-        }
-
-        // 验证积分
-        String pointsText = pointsField.getText().trim();
-        if (pointsText.isEmpty()) {
-            errorMessage += i18n("member.validation.points_required");
-        } else {
-            try {
-                double points = Double.parseDouble(pointsText);
-                if (points < 0) {
-                    errorMessage += i18n("member.validation.points_negative");
-                }
-            } catch (IllegalArgumentException e) {
-                errorMessage += i18n("member.validation.points_invalid");
-            }
-        }
-
-        // 验证折扣
-        try {
-            double discount = Double.parseDouble(discountField.getText().trim());
-            if (discount < 0 || discount > 10) {
-                errorMessage += i18n("member.validation.discount_range");
-            }
-        } catch (IllegalArgumentException e) {
-            errorMessage += i18n("member.validation.discount_invalid");
-        }
-
-        // 验证余额
-        String balanceText = balanceField.getText().trim();
-        if (balanceText.isEmpty()) {
-            errorMessage += i18n("member.validation.balance_required");
-        } else {
-            try {
-                double balance = Double.parseDouble(balanceText);
-                if (balance < 0) {
-                    errorMessage += i18n("member.validation.balance_negative");
-                }
-            } catch (IllegalArgumentException e) {
-                errorMessage += i18n("member.validation.balance_invalid");
-            }
-        }
-
-        // 验证生日格式
-        String birthday = birthdayField.getText().trim();
-        if (!birthday.isEmpty() && !birthday.matches("\\d{2}-\\d{2}")) {
-            errorMessage += i18n("member.validation.birthday_invalid");
-        }
+        validateMemberCode(errorMessage);
+        validatePhone(errorMessage);
+        validateName(errorMessage);
+        validatePoints(errorMessage);
+        validateDiscount(errorMessage);
+        validateBalance(errorMessage);
+        validateBirthday(errorMessage);
 
         if (errorMessage.isEmpty()) {
             errorLabel.setText("");
             return true;
-        } else {
-            errorLabel.setText(errorMessage);
-            return false;
         }
+
+        errorLabel.setText(errorMessage.toString());
+        return false;
+    }
+
+    private void validateMemberCode(StringBuilder errorMessage) {
+        if (!autoCodeCheckBox.isSelected() && memberCodeField.getText().trim().isEmpty()) {
+            appendValidationError(errorMessage, "member.validation.code_required");
+        }
+    }
+
+    private void validatePhone(StringBuilder errorMessage) {
+        String phone = phoneField.getText().trim();
+        if (phone.isEmpty()) {
+            appendValidationError(errorMessage, "member.validation.phone_required");
+        } else if (!phone.matches("\\d{11}")) {
+            appendValidationError(errorMessage, "member.validation.phone_invalid");
+        } else if (member == null && members.containsKey(phone)) {
+            appendValidationError(errorMessage, "member.validation.phone_exists");
+        }
+    }
+
+    private void validateName(StringBuilder errorMessage) {
+        if (nameField.getText().trim().isEmpty()) {
+            appendValidationError(errorMessage, "member.validation.name_required");
+        }
+    }
+
+    private void validatePoints(StringBuilder errorMessage) {
+        String pointsText = pointsField.getText().trim();
+        if (pointsText.isEmpty()) {
+            appendValidationError(errorMessage, "member.validation.points_required");
+        } else {
+            try {
+                double points = Double.parseDouble(pointsText);
+                if (points < 0) {
+                    appendValidationError(errorMessage, "member.validation.points_negative");
+                }
+            } catch (IllegalArgumentException e) {
+                appendValidationError(errorMessage, "member.validation.points_invalid");
+            }
+        }
+    }
+
+    private void validateDiscount(StringBuilder errorMessage) {
+        try {
+            double discount = Double.parseDouble(discountField.getText().trim());
+            if (discount < 0 || discount > 10) {
+                appendValidationError(errorMessage, "member.validation.discount_range");
+            }
+        } catch (IllegalArgumentException e) {
+            appendValidationError(errorMessage, "member.validation.discount_invalid");
+        }
+    }
+
+    private void validateBalance(StringBuilder errorMessage) {
+        String balanceText = balanceField.getText().trim();
+        if (balanceText.isEmpty()) {
+            appendValidationError(errorMessage, "member.validation.balance_required");
+        } else {
+            try {
+                double balance = Double.parseDouble(balanceText);
+                if (balance < 0) {
+                    appendValidationError(errorMessage, "member.validation.balance_negative");
+                }
+            } catch (IllegalArgumentException e) {
+                appendValidationError(errorMessage, "member.validation.balance_invalid");
+            }
+        }
+    }
+
+    private void validateBirthday(StringBuilder errorMessage) {
+        String birthday = birthdayField.getText().trim();
+        if (!birthday.isEmpty() && !birthday.matches("\\d{2}-\\d{2}")) {
+            appendValidationError(errorMessage, "member.validation.birthday_invalid");
+        }
+    }
+
+    private void appendValidationError(StringBuilder errorMessage, String key) {
+        errorMessage.append(i18n(key));
     }
 
     private String i18n(String key) {

@@ -22,6 +22,8 @@ import java.util.stream.Collectors;
  */
 public class BackupApiController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(BackupApiController.class);
+    private static final String BACKUP_ID_FIELD = "backupId";
+    private static final String CONTENT_TYPE_FIELD = "contentType";
     
     /**
      * 执行备份
@@ -32,7 +34,7 @@ public class BackupApiController {
         try {
             Map<?, ?> body = ctx.bodyAsClass(Map.class);
             
-            String contentTypeStr = getString(body, "contentType", "FULL");
+            String contentTypeStr = getString(body, CONTENT_TYPE_FIELD, "FULL");
             String targetStr = getString(body, "target", "LOCAL");
             String operator = getString(body, "operator", "system");
             
@@ -93,7 +95,7 @@ public class BackupApiController {
      * GET /api/backup/:backupId
      */
     public static void getBackup(Context ctx) {
-        String backupId = ctx.pathParam("backupId");
+        String backupId = ctx.pathParam(BACKUP_ID_FIELD);
         
         try {
             BackupRecord record = BackupDAO.findById(backupId);
@@ -125,7 +127,7 @@ public class BackupApiController {
      * POST /api/backup/:backupId/restore
      */
     public static void restoreBackup(Context ctx) {
-        String backupId = ctx.pathParam("backupId");
+        String backupId = ctx.pathParam(BACKUP_ID_FIELD);
         
         try {
             boolean success = BackupService.restoreBackup(backupId);
@@ -149,7 +151,7 @@ public class BackupApiController {
      * GET /api/backup/:backupId/download
      */
     public static void downloadBackup(Context ctx) {
-        String backupId = ctx.pathParam("backupId");
+        String backupId = ctx.pathParam(BACKUP_ID_FIELD);
         
         try {
             BackupRecord record = BackupDAO.findById(backupId);
@@ -248,42 +250,10 @@ public class BackupApiController {
     public static void updateConfig(Context ctx) {
         try {
             Map<?, ?> body = ctx.bodyAsClass(Map.class);
-            
             BackupConfig config = BackupService.getConfig();
-            
-            if (body.containsKey("autoBackupEnabled")) {
-                config.autoBackupEnabled = Boolean.parseBoolean(String.valueOf(body.get("autoBackupEnabled")));
-            }
-            if (body.containsKey("target")) {
-                config.target = BackupRecord.BackupTarget.fromString(getString(body, "target", null));
-            }
-            if (body.containsKey("contentType")) {
-                config.contentType = BackupRecord.BackupContentType.valueOf(getString(body, "contentType", null));
-            }
-            if (body.containsKey("backupIntervalHours")) {
-                config.backupIntervalHours = getInt(body, "backupIntervalHours", config.backupIntervalHours);
-            }
-            if (body.containsKey("retentionDays")) {
-                config.retentionDays = getInt(body, "retentionDays", config.retentionDays);
-            }
-            if (body.containsKey("maxBackupCount")) {
-                config.maxBackupCount = getInt(body, "maxBackupCount", config.maxBackupCount);
-            }
-            if (body.containsKey("localBackupPath")) {
-                config.localBackupPath = getString(body, "localBackupPath", null);
-            }
-            
-            // 云存储配置
-            if (body.containsKey("aliyunEndpoint")) config.aliyunEndpoint = getString(body, "aliyunEndpoint", null);
-            if (body.containsKey("aliyunBucket")) config.aliyunBucket = getString(body, "aliyunBucket", null);
-            if (body.containsKey("aliyunAccessKey")) config.aliyunAccessKey = getString(body, "aliyunAccessKey", null);
-            if (body.containsKey("aliyunSecretKey")) config.aliyunSecretKey = getString(body, "aliyunSecretKey", null);
-            
-            if (body.containsKey("tencentRegion")) config.tencentRegion = getString(body, "tencentRegion", null);
-            if (body.containsKey("tencentBucket")) config.tencentBucket = getString(body, "tencentBucket", null);
-            if (body.containsKey("tencentSecretId")) config.tencentSecretId = getString(body, "tencentSecretId", null);
-            if (body.containsKey("tencentSecretKey")) config.tencentSecretKey = getString(body, "tencentSecretKey", null);
-            
+            applyBasicBackupConfig(body, config);
+            applyAliyunConfig(body, config);
+            applyTencentConfig(body, config);
             BackupService.updateConfig(config);
             
             ctx.json(Map.of(
@@ -298,6 +268,48 @@ public class BackupApiController {
                 "error", "更新失败: " + e.getMessage()
             ));
         }
+    }
+
+    private static void applyBasicBackupConfig(Map<?, ?> body, BackupConfig config) {
+        if (body.containsKey("autoBackupEnabled")) {
+            config.autoBackupEnabled = Boolean.parseBoolean(String.valueOf(body.get("autoBackupEnabled")));
+        }
+        if (body.containsKey("target")) {
+            config.target = BackupRecord.BackupTarget.fromString(getString(body, "target", null));
+        }
+        if (body.containsKey(CONTENT_TYPE_FIELD)) {
+            config.contentType = BackupRecord.BackupContentType.valueOf(getString(body, CONTENT_TYPE_FIELD, null));
+        }
+        if (body.containsKey("backupIntervalHours")) {
+            config.backupIntervalHours = getInt(body, "backupIntervalHours", config.backupIntervalHours);
+        }
+        if (body.containsKey("retentionDays")) {
+            config.retentionDays = getInt(body, "retentionDays", config.retentionDays);
+        }
+        if (body.containsKey("maxBackupCount")) {
+            config.maxBackupCount = getInt(body, "maxBackupCount", config.maxBackupCount);
+        }
+        if (body.containsKey("localBackupPath")) {
+            config.localBackupPath = getString(body, "localBackupPath", null);
+        }
+    }
+
+    private static void applyAliyunConfig(Map<?, ?> body, BackupConfig config) {
+        config.aliyunEndpoint = getStringIfPresent(body, "aliyunEndpoint", config.aliyunEndpoint);
+        config.aliyunBucket = getStringIfPresent(body, "aliyunBucket", config.aliyunBucket);
+        config.aliyunAccessKey = getStringIfPresent(body, "aliyunAccessKey", config.aliyunAccessKey);
+        config.aliyunSecretKey = getStringIfPresent(body, "aliyunSecretKey", config.aliyunSecretKey);
+    }
+
+    private static void applyTencentConfig(Map<?, ?> body, BackupConfig config) {
+        config.tencentRegion = getStringIfPresent(body, "tencentRegion", config.tencentRegion);
+        config.tencentBucket = getStringIfPresent(body, "tencentBucket", config.tencentBucket);
+        config.tencentSecretId = getStringIfPresent(body, "tencentSecretId", config.tencentSecretId);
+        config.tencentSecretKey = getStringIfPresent(body, "tencentSecretKey", config.tencentSecretKey);
+    }
+
+    private static String getStringIfPresent(Map<?, ?> body, String key, String currentValue) {
+        return body.containsKey(key) ? getString(body, key, null) : currentValue;
     }
     
     /**
@@ -343,10 +355,10 @@ public class BackupApiController {
      */
     public static Map<String, Object> toBackupRecordData(BackupRecord record) {
         Map<String, Object> data = new HashMap<>();
-        data.put("backupId", record.backupId);
+        data.put(BACKUP_ID_FIELD, record.backupId);
         data.put("backupType", record.backupType.getDisplayName());
         data.put("target", record.target.getDisplayName());
-        data.put("contentType", record.contentType.getDisplayName());
+        data.put(CONTENT_TYPE_FIELD, record.contentType.getDisplayName());
         data.put("fileName", record.fileName);
         data.put("fileSize", record.getFormattedFileSize());
         data.put("status", record.status.getDisplayName());
@@ -374,7 +386,7 @@ public class BackupApiController {
         Map<String, Object> data = new HashMap<>();
         data.put("autoBackupEnabled", config.autoBackupEnabled);
         data.put("target", config.target.getDisplayName());
-        data.put("contentType", config.contentType.getDisplayName());
+        data.put(CONTENT_TYPE_FIELD, config.contentType.getDisplayName());
         data.put("backupIntervalHours", config.backupIntervalHours);
         data.put("retentionDays", config.retentionDays);
         data.put("maxBackupCount", config.maxBackupCount);

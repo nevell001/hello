@@ -14,6 +14,7 @@ public class ApiConfig {
     private static final Logger logger = LoggerFactoryUtil.getLogger(ApiConfig.class);
     
     private static final String CONFIG_FILE = "config/api.properties";
+    private static final String DEFAULT_TOKEN_SECRET = "default_secret_key";
     
     // API 涉及库存、退款、备份等敏感操作，必须由部署者显式开启。
     private static boolean enabled = false;
@@ -21,13 +22,13 @@ public class ApiConfig {
     private static String host = "127.0.0.1";
     private static String corsOrigins = "*";
     private static int tokenExpireHours = 24;
-    private static String tokenSecret = "default_secret_key";
+    private static String tokenSecret = DEFAULT_TOKEN_SECRET;
     
     static {
         loadConfig();
 
         // 安全检查：警告使用默认密钥
-        if (tokenSecret.equals("default_secret_key")) {
+        if (tokenSecret.equals(DEFAULT_TOKEN_SECRET)) {
             logger.warn("========================================");
             logger.warn("安全警告: 使用默认 TOKEN_SECRET 密钥！");
             logger.warn("请设置环境变量 TOKEN_SECRET 或在 api.properties 中配置");
@@ -70,8 +71,8 @@ public class ApiConfig {
                 host = props.getProperty("api.host", "127.0.0.1");
 
                 // 只有在环境变量未设置时才从配置文件读取
-                if (tokenSecret.equals("default_secret_key")) {
-                    tokenSecret = props.getProperty("token.secret", "default_secret_key");
+                if (tokenSecret.equals(DEFAULT_TOKEN_SECRET)) {
+                    tokenSecret = props.getProperty("token.secret", DEFAULT_TOKEN_SECRET);
                 }
                 if (corsOrigins.equals("*")) {
                     corsOrigins = props.getProperty("cors.allowed.origins", "*");
@@ -127,7 +128,7 @@ public class ApiConfig {
      */
     public static boolean isProductionReady() {
         boolean ready = isSecurityConfigurationValid(tokenSecret, corsOrigins);
-        if (tokenSecret == null || tokenSecret.equals("default_secret_key") || tokenSecret.length() < 32) {
+        if (tokenSecret == null || tokenSecret.equals(DEFAULT_TOKEN_SECRET) || tokenSecret.length() < 32) {
             logger.error("生产环境检查失败: TOKEN_SECRET 不安全");
         }
         if (corsOrigins == null || corsOrigins.isBlank() || corsOrigins.contains("*")) {
@@ -138,7 +139,7 @@ public class ApiConfig {
 
     static boolean isSecurityConfigurationValid(String secret, String allowedOrigins) {
         return secret != null
-            && !secret.equals("default_secret_key")
+            && !secret.equals(DEFAULT_TOKEN_SECRET)
             && secret.length() >= 32
             && allowedOrigins != null
             && !allowedOrigins.isBlank()

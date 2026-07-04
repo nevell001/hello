@@ -1,12 +1,13 @@
 package com.cashier.installer;
 
+import com.cashier.constant.SystemPropertyKeys;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -493,6 +494,6 @@ public class Installer {
     }
     
     private boolean isWindows() {
-        return System.getProperty("os.name").toLowerCase().contains("win");
+        return System.getProperty(SystemPropertyKeys.OS_NAME).toLowerCase().contains("win");
     }
 }

@@ -1,8 +1,10 @@
 package com.cashier.model;
 
+import com.cashier.i18n.I18nKeys;
+
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.Date;
+import java.time.Instant;
+import java.time.ZoneId;
 
 /**
  * 退货订单模型类
@@ -13,24 +15,24 @@ public class ReturnOrder {
     public String originalTransactionId;  // 原交易ID
     public Integer memberId;  // 会员ID（可选）
     public String memberName;  // 会员名称
-    public Date returnDate;  // 退货日期
+    public Instant returnDate;  // 退货日期
     public String returnReason;  // 退货原因
     public BigDecimal totalAmount;  // 退货总金额
     public String status;  // 状态：PENDING（待审批）、APPROVED（已批准）、REJECTED（已拒绝）、COMPLETED（已完成）
     public String paymentMethod;  // 退款方式：CASH（现金）、WECHAT（微信）、ALIPAY（支付宝）、CARD（银行卡）
     public String operatorName;  // 操作员
     public String approverName;  // 审批人
-    public Date approvalDate;  // 审批日期
+    public Instant approvalDate;  // 审批日期
     public String approvalComment;  // 审批意见
-    public Date completedDate;  // 完成日期
+    public Instant completedDate;  // 完成日期
     public String notes;  // 备注
-    public Date createTime;  // 创建时间
-    public Date updateTime;  // 更新时间
+    public Instant createTime;  // 创建时间
+    public Instant updateTime;  // 更新时间
 
     public ReturnOrder() {
-        this.returnDate = new Date();
-        this.createTime = new Date();
-        this.updateTime = new Date();
+        this.returnDate = Instant.now();
+        this.createTime = Instant.now();
+        this.updateTime = Instant.now();
         this.status = "PENDING";
         this.totalAmount = BigDecimal.ZERO;
     }
@@ -60,12 +62,13 @@ public class ReturnOrder {
         return memberName;
     }
 
-    public Date getReturnDate() {
+    public Instant getReturnDate() {
         return returnDate;
     }
 
     public String getReturnDateFormatted() {
-        return returnDate != null ? new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(returnDate) : "";
+        return returnDate != null ? returnDate.atZone(ZoneId.systemDefault())
+            .toLocalDateTime().format(com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME) : "";
     }
 
     public String getReturnReason() {
@@ -96,7 +99,7 @@ public class ReturnOrder {
         return approverName;
     }
 
-    public Date getApprovalDate() {
+    public Instant getApprovalDate() {
         return approvalDate;
     }
 
@@ -104,7 +107,7 @@ public class ReturnOrder {
         return approvalComment;
     }
 
-    public Date getCompletedDate() {
+    public Instant getCompletedDate() {
         return completedDate;
     }
 
@@ -112,24 +115,24 @@ public class ReturnOrder {
         return notes;
     }
 
-    public Date getCreateTime() {
+    public Instant getCreateTime() {
         return createTime;
     }
 
-    public Date getUpdateTime() {
+    public Instant getUpdateTime() {
         return updateTime;
     }
 
     public String getStatusText() {
         switch (status) {
             case "PENDING":
-                return com.cashier.i18n.I18nManager.getInstance().get("runtime.status.pending_approval");
+                return com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.STATUS_PENDING_APPROVAL);
             case "APPROVED":
-                return com.cashier.i18n.I18nManager.getInstance().get("runtime.status.approved");
+                return com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.STATUS_APPROVED);
             case "REJECTED":
-                return com.cashier.i18n.I18nManager.getInstance().get("runtime.status.rejected");
+                return com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.STATUS_REJECTED);
             case "COMPLETED":
-                return com.cashier.i18n.I18nManager.getInstance().get("runtime.status.completed");
+                return com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.STATUS_COMPLETED);
             default:
                 return status;
         }
@@ -138,13 +141,13 @@ public class ReturnOrder {
     public String getPaymentMethodText() {
         switch (paymentMethod) {
             case "CASH":
-                return com.cashier.i18n.I18nManager.getInstance().get("runtime.payment.cash");
+                return com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.PAYMENT_CASH);
             case "WECHAT":
-                return com.cashier.i18n.I18nManager.getInstance().get("runtime.payment.wechat");
+                return com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.PAYMENT_WECHAT);
             case "ALIPAY":
-                return com.cashier.i18n.I18nManager.getInstance().get("runtime.payment.alipay");
+                return com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.PAYMENT_ALIPAY);
             case "CARD":
-                return com.cashier.i18n.I18nManager.getInstance().get("runtime.payment.card");
+                return com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.PAYMENT_CARD);
             default:
                 return paymentMethod;
         }

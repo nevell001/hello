@@ -1,5 +1,7 @@
 package com.cashier.util;
 
+import com.cashier.constant.SystemPropertyKeys;
+
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -18,9 +20,10 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -29,7 +32,7 @@ import java.util.List;
  */
 public class ExportUtil {
     private static final Logger logger = LoggerFactoryUtil.getLogger(ExportUtil.class);
-    private static final String EXPORT_DIR = System.getProperty("user.dir") + File.separator + "exports";
+    private static final String EXPORT_DIR = System.getProperty(SystemPropertyKeys.USER_DIR) + File.separator + "exports";
 
     /**
      * 导出格式枚举
@@ -59,7 +62,8 @@ public class ExportUtil {
             }
 
             // 生成文件名
-            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+            String timestamp = LocalDateTime.now(ZoneId.systemDefault())
+                .format(com.cashier.util.DateTimeFormats.BACKUP_TIMESTAMP);
             String fileName = title + "_" + timestamp;
 
             String filePath;
@@ -187,7 +191,7 @@ public class ExportUtil {
      */
     private static PDFont loadChineseFont(PDDocument document) throws IOException {
         // 1. 优先尝试系统字体（TTC 文件使用 File 对象加载）
-        String os = System.getProperty("os.name", "").toLowerCase();
+        String os = System.getProperty(SystemPropertyKeys.OS_NAME, "").toLowerCase();
         String[] systemFontPaths;
 
         if (os.contains("mac")) {

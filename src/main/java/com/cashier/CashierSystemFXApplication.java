@@ -1,10 +1,12 @@
 package com.cashier;
 
+import com.cashier.constant.DatabaseConfigKeys;
+import com.cashier.constant.SystemPropertyKeys;
+
 import com.cashier.controller.LoginController;
 import com.cashier.controller.MainController;
 import com.cashier.controller.PosModeController;
 import com.cashier.constant.FXConstants;
-import com.cashier.constant.SpacingConstants;
 import com.cashier.service.DataService;
 import com.cashier.model.User;
 import com.cashier.util.FXMLUtils;
@@ -707,7 +709,7 @@ public class CashierSystemFXApplication extends Application {
      * 如果配置不存在，显示配置向导
      */
     private void checkDatabaseConfiguration() {
-        java.nio.file.Path configPath = java.nio.file.Paths.get("config", "database.properties");
+        java.nio.file.Path configPath = java.nio.file.Paths.get("config", DatabaseConfigKeys.DATABASE_PROPERTIES_FILE);
 
         if (!java.nio.file.Files.exists(configPath)) {
             logger.info("数据库配置不存在，启动配置向导");
@@ -745,7 +747,7 @@ public class CashierSystemFXApplication extends Application {
     public static void main(String[] args) {
         // Windows DPI 缩放支持
         // 确保应用程序在高 DPI 显示器上正确缩放
-        if (System.getProperty("os.name", "").toLowerCase().contains("win")) {
+        if (System.getProperty(SystemPropertyKeys.OS_NAME, "").toLowerCase().contains("win")) {
             // 设置系统 DPI 感知
             System.setProperty("sun.java2d.dpiaware", "true");
             System.setProperty("sun.java2d.dpiaware", "true");

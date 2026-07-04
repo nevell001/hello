@@ -155,6 +155,10 @@ public class BackupService {
                 case LOGS:
                     addLogsBackup(zos);
                     break;
+                    
+                default:
+                    logger.warn("未知备份内容类型: {}", record.contentType);
+                    break;
             }
         }
 
@@ -324,81 +328,116 @@ public class BackupService {
      */
     public static boolean restoreBackup(String backupId) throws SQLException, IOException {
         BackupRecord record = BackupDAO.findById(backupId);
-        
-        if (record == null || !record.status.isSuccess()) {
-            logger.warn("无法恢复备份: {}", backupId);
-            return false;
-        }
-        
-        if (record.localPath == null || record.localPath.isBlank()) {
-            logger.warn("备份文件路径为空: {}", backupId);
+
+        File backupFile = validateRestorableBackup(backupId, record);
+        if (backupFile == null) {
             return false;
         }
 
-        File backupFile = new File(record.localPath);
-        
-        if (!backupFile.exists()) {
-            logger.warn("备份文件不存在: {}", record.localPath);
+        if (!verifyBackupChecksum(backupId, record, backupFile)) {
             return false;
         }
 
-        if (record.checksum != null && !record.checksum.isBlank()) {
-            try {
-                String actualChecksum = calculateChecksum(backupFile);
-                if (!record.checksum.equalsIgnoreCase(actualChecksum)) {
-                    logger.error("备份校验失败: {}, expected={}, actual={}", backupId, record.checksum, actualChecksum);
-                    return false;
-                }
-            } catch (Exception e) {
-                throw new IOException("备份校验失败: " + backupId, e);
-            }
-        }
-        
         Path workspaceRoot = Paths.get("").toAbsolutePath().normalize();
         Path tempRestoreDir = Files.createTempDirectory("cashier_restore_");
-        Path databaseBackupFile = null;
 
-        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(backupFile))) {
-            ZipEntry entry;
-            while ((entry = zis.getNextEntry()) != null) {
-                String entryName = entry.getName();
-
-                if (entry.isDirectory()) {
-                    Path directoryPath = resolveZipEntryPath(workspaceRoot, entryName);
-                    Files.createDirectories(directoryPath);
-                } else {
-                    Path destPath;
-                    if ("database/backup.sql".equals(entryName)) {
-                        destPath = tempRestoreDir.resolve("backup.sql").normalize();
-                        databaseBackupFile = destPath;
-                    } else {
-                        destPath = resolveZipEntryPath(workspaceRoot, entryName);
-                    }
-
-                    Files.createDirectories(destPath.getParent());
-                    Files.copy(zis, destPath, StandardCopyOption.REPLACE_EXISTING);
-                }
-                
-                zis.closeEntry();
-            }
-
-            if (databaseBackupFile != null && Files.exists(databaseBackupFile)) {
-                boolean databaseRestored = DatabaseManager.restore(databaseBackupFile.toFile());
-                if (!databaseRestored) {
-                    logger.error("数据库备份恢复失败: {}", backupId);
-                    return false;
-                }
+        try {
+            Path databaseBackupFile = extractBackupArchive(backupFile, workspaceRoot, tempRestoreDir);
+            if (!restoreDatabaseBackup(backupId, databaseBackupFile)) {
+                return false;
             }
         } finally {
             deleteDirectoryQuietly(tempRestoreDir);
         }
-        
-        // 广播恢复事件
-        SyncManager.getInstance().broadcastSyncEvent(SyncEventType.BACKUP_RESTORED,
-            Map.of("backupId", backupId));
-        
+
+        broadcastBackupRestored(backupId);
         logger.info("备份恢复完成: {}", backupId);
         return true;
+    }
+
+    private static File validateRestorableBackup(String backupId, BackupRecord record) {
+        if (record == null || !record.status.isSuccess()) {
+            logger.warn("无法恢复备份: {}", backupId);
+            return null;
+        }
+        if (record.localPath == null || record.localPath.isBlank()) {
+            logger.warn("备份文件路径为空: {}", backupId);
+            return null;
+        }
+
+        File backupFile = new File(record.localPath);
+        if (!backupFile.exists()) {
+            logger.warn("备份文件不存在: {}", record.localPath);
+            return null;
+        }
+        return backupFile;
+    }
+
+    private static boolean verifyBackupChecksum(String backupId, BackupRecord record, File backupFile)
+            throws IOException {
+        if (record.checksum == null || record.checksum.isBlank()) {
+            return true;
+        }
+        try {
+            String actualChecksum = calculateChecksum(backupFile);
+            if (!record.checksum.equalsIgnoreCase(actualChecksum)) {
+                logger.error("备份校验失败: {}, expected={}, actual={}", backupId, record.checksum, actualChecksum);
+                return false;
+            }
+            return true;
+        } catch (Exception e) {
+            throw new IOException("备份校验失败: " + backupId, e);
+        }
+    }
+
+    private static Path extractBackupArchive(File backupFile, Path workspaceRoot, Path tempRestoreDir)
+            throws IOException {
+        Path databaseBackupFile = null;
+        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(backupFile))) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                databaseBackupFile = extractBackupEntry(zis, entry, workspaceRoot, tempRestoreDir, databaseBackupFile);
+                zis.closeEntry();
+            }
+        }
+        return databaseBackupFile;
+    }
+
+    private static Path extractBackupEntry(
+            ZipInputStream zis,
+            ZipEntry entry,
+            Path workspaceRoot,
+            Path tempRestoreDir,
+            Path databaseBackupFile) throws IOException {
+        String entryName = entry.getName();
+        if (entry.isDirectory()) {
+            Files.createDirectories(resolveZipEntryPath(workspaceRoot, entryName));
+            return databaseBackupFile;
+        }
+
+        Path destPath = "database/backup.sql".equals(entryName)
+            ? tempRestoreDir.resolve("backup.sql").normalize()
+            : resolveZipEntryPath(workspaceRoot, entryName);
+        Files.createDirectories(destPath.getParent());
+        Files.copy(zis, destPath, StandardCopyOption.REPLACE_EXISTING);
+        return "database/backup.sql".equals(entryName) ? destPath : databaseBackupFile;
+    }
+
+    private static boolean restoreDatabaseBackup(String backupId, Path databaseBackupFile) throws IOException {
+        if (databaseBackupFile == null || !Files.exists(databaseBackupFile)) {
+            return true;
+        }
+        boolean databaseRestored = DatabaseManager.restore(databaseBackupFile.toFile());
+        if (!databaseRestored) {
+            logger.error("数据库备份恢复失败: {}", backupId);
+            return false;
+        }
+        return true;
+    }
+
+    private static void broadcastBackupRestored(String backupId) {
+        SyncManager.getInstance().broadcastSyncEvent(SyncEventType.BACKUP_RESTORED,
+            Map.of("backupId", backupId));
     }
 
     static Path resolveZipEntryPath(Path targetRoot, String entryName) throws IOException {

@@ -49,19 +49,19 @@ public class ReturnOrderDAO {
                 stmt.setNull(3, Types.INTEGER);
             }
             stmt.setString(4, returnOrder.memberName);
-            stmt.setTimestamp(5, new Timestamp(returnOrder.returnDate.getTime()));
+            stmt.setTimestamp(5, returnOrder.returnDate != null ? Timestamp.from(returnOrder.returnDate) : null);
             stmt.setString(6, returnOrder.returnReason);
             stmt.setBigDecimal(7, returnOrder.totalAmount);
             stmt.setString(8, returnOrder.status);
             stmt.setString(9, returnOrder.paymentMethod);
             stmt.setString(10, returnOrder.operatorName);
             stmt.setString(11, returnOrder.approverName);
-            stmt.setTimestamp(12, returnOrder.approvalDate != null ? new Timestamp(returnOrder.approvalDate.getTime()) : null);
+            stmt.setTimestamp(12, returnOrder.approvalDate != null ? Timestamp.from(returnOrder.approvalDate) : null);
             stmt.setString(13, returnOrder.approvalComment);
-            stmt.setTimestamp(14, returnOrder.completedDate != null ? new Timestamp(returnOrder.completedDate.getTime()) : null);
+            stmt.setTimestamp(14, returnOrder.completedDate != null ? Timestamp.from(returnOrder.completedDate) : null);
             stmt.setString(15, returnOrder.notes);
-            stmt.setTimestamp(16, new Timestamp(returnOrder.createTime.getTime()));
-            stmt.setTimestamp(17, new Timestamp(returnOrder.updateTime.getTime()));
+            stmt.setTimestamp(16, returnOrder.createTime != null ? Timestamp.from(returnOrder.createTime) : null);
+            stmt.setTimestamp(17, returnOrder.updateTime != null ? Timestamp.from(returnOrder.updateTime) : null);
 
             return stmt.executeUpdate() > 0;
         }
@@ -100,18 +100,18 @@ public class ReturnOrderDAO {
                 stmt.setNull(2, Types.INTEGER);
             }
             stmt.setString(3, returnOrder.memberName);
-            stmt.setTimestamp(4, new Timestamp(returnOrder.returnDate.getTime()));
+            stmt.setTimestamp(4, returnOrder.returnDate != null ? Timestamp.from(returnOrder.returnDate) : null);
             stmt.setString(5, returnOrder.returnReason);
             stmt.setBigDecimal(6, returnOrder.totalAmount);
             stmt.setString(7, returnOrder.status);
             stmt.setString(8, returnOrder.paymentMethod);
             stmt.setString(9, returnOrder.operatorName);
             stmt.setString(10, returnOrder.approverName);
-            stmt.setTimestamp(11, returnOrder.approvalDate != null ? new Timestamp(returnOrder.approvalDate.getTime()) : null);
+            stmt.setTimestamp(11, returnOrder.approvalDate != null ? Timestamp.from(returnOrder.approvalDate) : null);
             stmt.setString(12, returnOrder.approvalComment);
-            stmt.setTimestamp(13, returnOrder.completedDate != null ? new Timestamp(returnOrder.completedDate.getTime()) : null);
+            stmt.setTimestamp(13, returnOrder.completedDate != null ? Timestamp.from(returnOrder.completedDate) : null);
             stmt.setString(14, returnOrder.notes);
-            stmt.setTimestamp(15, new Timestamp(new Date().getTime()));
+            stmt.setTimestamp(15, Timestamp.from(java.time.Instant.now()));
             stmt.setInt(16, returnOrder.id);
 
             return stmt.executeUpdate() > 0;
@@ -316,7 +316,7 @@ public class ReturnOrderDAO {
             logger.error("生成退货单号失败", e);
         }
 
-        String prefix = "R" + new java.text.SimpleDateFormat("yyyyMMdd").format(new Date());
+        String prefix = "R" + java.time.LocalDate.now(java.time.ZoneId.systemDefault()).format(com.cashier.util.DateTimeFormats.COMPACT_DATE);
         return prefix + "0001";
     }
 
@@ -327,7 +327,7 @@ public class ReturnOrderDAO {
      * @throws SQLException 数据库操作异常
      */
     public static String generateNextReturnOrderId(Connection conn) throws SQLException {
-        String prefix = "R" + new java.text.SimpleDateFormat("yyyyMMdd").format(new Date());
+        String prefix = "R" + java.time.LocalDate.now(java.time.ZoneId.systemDefault()).format(com.cashier.util.DateTimeFormats.COMPACT_DATE);
         String sql = "SELECT return_order_id FROM return_orders WHERE return_order_id LIKE ? ORDER BY return_order_id DESC LIMIT 1";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -355,7 +355,8 @@ public class ReturnOrderDAO {
         int memberId = rs.getInt("member_id");
         returnOrder.memberId = rs.wasNull() ? null : memberId;
         returnOrder.memberName = rs.getString("member_name");
-        returnOrder.returnDate = new Date(rs.getTimestamp("return_date").getTime());
+        Timestamp returnDateTs = rs.getTimestamp("return_date");
+        returnOrder.returnDate = returnDateTs != null ? returnDateTs.toInstant() : null;
         returnOrder.returnReason = rs.getString("return_reason");
         returnOrder.totalAmount = rs.getBigDecimal("total_amount");
         returnOrder.status = rs.getString("status");
@@ -364,16 +365,18 @@ public class ReturnOrderDAO {
         returnOrder.approverName = rs.getString("approver_name");
         
         Timestamp approvalDate = rs.getTimestamp("approval_date");
-        returnOrder.approvalDate = approvalDate != null ? new Date(approvalDate.getTime()) : null;
+        returnOrder.approvalDate = approvalDate != null ? approvalDate.toInstant() : null;
         
         returnOrder.approvalComment = rs.getString("approval_comment");
         
         Timestamp completedDate = rs.getTimestamp("completed_date");
-        returnOrder.completedDate = completedDate != null ? new Date(completedDate.getTime()) : null;
+        returnOrder.completedDate = completedDate != null ? completedDate.toInstant() : null;
         
         returnOrder.notes = rs.getString("notes");
-        returnOrder.createTime = new Date(rs.getTimestamp("create_time").getTime());
-        returnOrder.updateTime = new Date(rs.getTimestamp("update_time").getTime());
+        Timestamp createTs = rs.getTimestamp("create_time");
+        Timestamp updateTs = rs.getTimestamp("update_time");
+        returnOrder.createTime = createTs != null ? createTs.toInstant() : null;
+        returnOrder.updateTime = updateTs != null ? updateTs.toInstant() : null;
         
         return returnOrder;
     }

@@ -7,7 +7,6 @@ import com.cashier.util.DatabaseManager;
 import com.cashier.util.LoggerFactoryUtil;
 import org.slf4j.Logger;
 
-import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
@@ -74,7 +73,7 @@ public class ReturnService {
 
                 returnOrder.status = approved ? "APPROVED" : "REJECTED";
                 returnOrder.approverName = approverName;
-                returnOrder.approvalDate = new Date();
+                returnOrder.approvalDate = java.time.Instant.now();
                 returnOrder.approvalComment = approvalComment;
 
                 if (!ReturnOrderDAO.updateWithConnection(conn, returnOrder)) {
@@ -104,7 +103,7 @@ public class ReturnService {
                 log.details = String.format("审批退货单: %s, 金额: %.2f",
                     returnOrderId, returnOrder.totalAmount);
                 log.ipAddress = "localhost";
-                log.timestamp = new Date();
+                log.timestamp = java.time.Instant.now();
                 log.category = "REFUND";
                 log.operation = "RETURN_APPROVAL";
                 log.result = "SUCCESS";
@@ -138,7 +137,7 @@ public class ReturnService {
                 }
 
                 returnOrder.status = "COMPLETED";
-                returnOrder.completedDate = new Date();
+                returnOrder.completedDate = java.time.Instant.now();
 
                 if (!ReturnOrderDAO.updateWithConnection(conn, returnOrder)) {
                     return false;
@@ -247,6 +246,9 @@ public class ReturnService {
                     break;
                 case "COMPLETED":
                     stats.completedOrders++;
+                    break;
+                default:
+                    logger.debug("跳过未知退货订单状态统计: {}", order.status);
                     break;
             }
         }

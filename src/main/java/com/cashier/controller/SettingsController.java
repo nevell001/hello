@@ -1,5 +1,7 @@
 package com.cashier.controller;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.constant.FXConstants;
 import com.cashier.service.DataService;
 import com.cashier.service.PaymentService;
@@ -20,7 +22,6 @@ import com.cashier.util.LoggerFactoryUtil;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -220,7 +221,7 @@ public class SettingsController {
 
         // 初始化货币下拉框
         currencyComboBox.setItems(javafx.collections.FXCollections.observableArrayList(
-            i18n.get("currency.cny"),
+            i18n.get(I18nKeys.Currency.CNY),
             i18n.get("currency.usd"),
             i18n.get("currency.jpy"),
             i18n.get("currency.krw"),
@@ -230,18 +231,18 @@ public class SettingsController {
 
         // 初始化主题下拉框
         themeComboBox.setItems(javafx.collections.FXCollections.observableArrayList(
-            i18n.get("menu.theme.light"),
-            i18n.get("menu.theme.dark"),
-            i18n.get("menu.theme.lisuan")
+            i18n.get(I18nKeys.Menu.Theme.LIGHT),
+            i18n.get(I18nKeys.Menu.Theme.DARK),
+            i18n.get(I18nKeys.Menu.Theme.LISUAN)
         ));
-        themeComboBox.getSelectionModel().select(i18n.get("menu.theme.lisuan"));
+        themeComboBox.getSelectionModel().select(i18n.get(I18nKeys.Menu.Theme.LISUAN));
 
         // 初始化字号下拉框
         fontSizeComboBox.setItems(javafx.collections.FXCollections.observableArrayList(
-            i18n.get("settings.font_size_small"),
-            i18n.get("settings.font_size_medium"),
-            i18n.get("settings.font_size_large"),
-            i18n.get("settings.font_size_extra_large")
+            i18n.get(I18nKeys.Settings.FONT_SIZE_SMALL),
+            i18n.get(I18nKeys.Settings.FONT_SIZE_MEDIUM),
+            i18n.get(I18nKeys.Settings.FONT_SIZE_LARGE),
+            i18n.get(I18nKeys.Settings.FONT_SIZE_EXTRA_LARGE)
         ));
         fontSizeComboBox.getSelectionModel().select(1); // 默认选中中等
 
@@ -489,7 +490,7 @@ public class SettingsController {
             logger.info("重启应用完成");
         } catch (Exception e) {
             logger.error("重启应用失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
         }
     }
 
@@ -503,9 +504,9 @@ public class SettingsController {
             return FXConstants.DEFAULT_THEME;
         }
         I18nManager i18n = I18nManager.getInstance();
-        if (themeName.equals(i18n.get("menu.theme.light")) || "浅色主题".equals(themeName)) return "light";
-        if (themeName.equals(i18n.get("menu.theme.dark")) || "深色主题".equals(themeName)) return "dark";
-        if (themeName.equals(i18n.get("menu.theme.lisuan")) || "LiSuan主题".equals(themeName) || "IntelliJ主题".equals(themeName)) return "lisuan";
+        if (themeName.equals(i18n.get(I18nKeys.Menu.Theme.LIGHT)) || "浅色主题".equals(themeName)) return "light";
+        if (themeName.equals(i18n.get(I18nKeys.Menu.Theme.DARK)) || "深色主题".equals(themeName)) return "dark";
+        if (themeName.equals(i18n.get(I18nKeys.Menu.Theme.LISUAN)) || "LiSuan主题".equals(themeName) || "IntelliJ主题".equals(themeName)) return "lisuan";
         return FXConstants.DEFAULT_THEME;
     }
 
@@ -516,18 +517,18 @@ public class SettingsController {
      */
     private String convertThemeCodeToName(String themeCode) {
         if (themeCode == null) {
-            return I18nManager.getInstance().get("menu.theme.lisuan");
+            return I18nManager.getInstance().get(I18nKeys.Menu.Theme.LISUAN);
         }
         switch (themeCode) {
             case "light":
-                return I18nManager.getInstance().get("menu.theme.light");
+                return I18nManager.getInstance().get(I18nKeys.Menu.Theme.LIGHT);
             case "dark":
-                return I18nManager.getInstance().get("menu.theme.dark");
+                return I18nManager.getInstance().get(I18nKeys.Menu.Theme.DARK);
             case "lisuan":
             case "intellij":
-                return I18nManager.getInstance().get("menu.theme.lisuan");
+                return I18nManager.getInstance().get(I18nKeys.Menu.Theme.LISUAN);
             default:
-                return I18nManager.getInstance().get("menu.theme.lisuan");
+                return I18nManager.getInstance().get(I18nKeys.Menu.Theme.LISUAN);
         }
     }
 
@@ -580,20 +581,20 @@ public class SettingsController {
      */
     private String convertFontSizeCodeToName(String fontSizeCode) {
         if (fontSizeCode == null) {
-            return I18nManager.getInstance().get("settings.font_size_medium");
+            return I18nManager.getInstance().get(I18nKeys.Settings.FONT_SIZE_MEDIUM);
         }
         I18nManager i18n = I18nManager.getInstance();
         switch (fontSizeCode) {
             case "small":
-                return i18n.get("settings.font_size_small");
+                return i18n.get(I18nKeys.Settings.FONT_SIZE_SMALL);
             case "medium":
-                return i18n.get("settings.font_size_medium");
+                return i18n.get(I18nKeys.Settings.FONT_SIZE_MEDIUM);
             case "large":
-                return i18n.get("settings.font_size_large");
+                return i18n.get(I18nKeys.Settings.FONT_SIZE_LARGE);
             case "extra-large":
-                return i18n.get("settings.font_size_extra_large");
+                return i18n.get(I18nKeys.Settings.FONT_SIZE_EXTRA_LARGE);
             default:
-                return i18n.get("settings.font_size_medium");
+                return i18n.get(I18nKeys.Settings.FONT_SIZE_MEDIUM);
         }
     }
 
@@ -607,10 +608,10 @@ public class SettingsController {
             return "medium";
         }
         I18nManager i18n = I18nManager.getInstance();
-        String small = i18n.get("settings.font_size_small");
-        String medium = i18n.get("settings.font_size_medium");
-        String large = i18n.get("settings.font_size_large");
-        String extraLarge = i18n.get("settings.font_size_extra_large");
+        String small = i18n.get(I18nKeys.Settings.FONT_SIZE_SMALL);
+        String medium = i18n.get(I18nKeys.Settings.FONT_SIZE_MEDIUM);
+        String large = i18n.get(I18nKeys.Settings.FONT_SIZE_LARGE);
+        String extraLarge = i18n.get(I18nKeys.Settings.FONT_SIZE_EXTRA_LARGE);
 
         if (fontSizeName.equals(small)) {
             return "small";
@@ -630,11 +631,11 @@ public class SettingsController {
     private String convertCurrencyCodeToName(String currencyCode) {
         I18nManager i18n = I18nManager.getInstance();
         if (currencyCode == null) {
-            return i18n.get("currency.cny");
+            return i18n.get(I18nKeys.Currency.CNY);
         }
         switch (currencyCode) {
             case "CNY":
-                return i18n.get("currency.cny");
+                return i18n.get(I18nKeys.Currency.CNY);
             case "USD":
                 return i18n.get("currency.usd");
             case "JPY":
@@ -644,7 +645,7 @@ public class SettingsController {
             case "EUR":
                 return i18n.get("currency.eur");
             default:
-                return i18n.get("currency.cny");
+                return i18n.get(I18nKeys.Currency.CNY);
         }
     }
 
@@ -758,7 +759,7 @@ public class SettingsController {
             showError(e.getMessage());
         } catch (Exception e) {
             logger.error("保存支付配置失败", e);
-            showError(I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
+            showError(I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
         }
     }
 
@@ -856,7 +857,7 @@ public class SettingsController {
 
         } catch (Exception e) {
             logger.error("复制 Logo 文件失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.save_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.SAVE_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -925,7 +926,7 @@ public class SettingsController {
                 showSuccess(com.cashier.i18n.I18nManager.getInstance().get("runtime.backup_success"));
             }
         } catch (Exception e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
         }
     }
 
@@ -963,8 +964,9 @@ public class SettingsController {
         // 添加备份选项
         ObservableList<String> options = FXCollections.observableArrayList();
         for (File file : sqlFiles) {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            String timeStr = sdf.format(new Date(file.lastModified()));
+            String timeStr = java.time.Instant.ofEpochMilli(file.lastModified())
+                .atZone(java.time.ZoneId.systemDefault())
+                .format(com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME);
             options.add(file.getName() + " (" + timeStr + ")");
         }
         dialog.getItems().addAll(options);
@@ -972,7 +974,7 @@ public class SettingsController {
         java.util.Optional<String> selectedBackup = dialog.showAndWait();
         if (selectedBackup.isEmpty()) {
             com.cashier.util.StatusBarManager.updateWarning(
-                I18nManager.getInstance().get("status.cancelled"));
+                I18nManager.getInstance().get(I18nKeys.Status.CANCELLED));
             return;
         }
 
@@ -996,10 +998,10 @@ public class SettingsController {
                     loadSettings();
                 } else {
                     com.cashier.util.StatusBarManager.updateWarning(
-                        I18nManager.getInstance().get("status.cancelled"));
+                        I18nManager.getInstance().get(I18nKeys.Status.CANCELLED));
                 }
             } catch (Exception e) {
-                showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
+                showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
             }
         });
     }
@@ -1010,7 +1012,7 @@ public class SettingsController {
     @FXML
     public void handleResetAll() {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle(I18nManager.getInstance().get("common.confirm"));
+        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Common.CONFIRM));
         alert.setHeaderText(null);
         alert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.settings_reset_confirm"));
 
@@ -1136,9 +1138,9 @@ public class SettingsController {
         String selectedLanguage = languageComboBox.getSelectionModel().getSelectedItem();
         settings.put("language", selectedLanguage != null ? selectedLanguage : "简体中文");
         String selectedTheme = themeComboBox.getSelectionModel().getSelectedItem();
-        settings.put("theme", selectedTheme != null ? selectedTheme : I18nManager.getInstance().get("menu.theme.lisuan"));
+        settings.put("theme", selectedTheme != null ? selectedTheme : I18nManager.getInstance().get(I18nKeys.Menu.Theme.LISUAN));
         String selectedCurrency = currencyComboBox.getSelectionModel().getSelectedItem();
-        settings.put("currency", selectedCurrency != null ? selectedCurrency : I18nManager.getInstance().get("currency.cny"));
+        settings.put("currency", selectedCurrency != null ? selectedCurrency : I18nManager.getInstance().get(I18nKeys.Currency.CNY));
 
         // 打印设置
         settings.put("enablePrint", String.valueOf(enablePrintCheckBox.isSelected()));
@@ -1166,7 +1168,7 @@ public class SettingsController {
         DataService.saveSettings(settings);
 
         // 保存主题偏好（单独存储到主题偏好表）
-        String themeName = settings.getOrDefault("theme", I18nManager.getInstance().get("menu.theme.lisuan"));
+        String themeName = settings.getOrDefault("theme", I18nManager.getInstance().get(I18nKeys.Menu.Theme.LISUAN));
         String themeCode = convertThemeNameToCode(themeName);
         String username = (currentUser != null) ? currentUser.username : "default";
         DataService.saveThemePreference(username, themeCode);
@@ -1193,7 +1195,7 @@ public class SettingsController {
     private void showSuccess(String message) {
         com.cashier.util.StatusBarManager.updateSuccess(message);
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(I18nManager.getInstance().get("label.success"));
+        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Label.SUCCESS));
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
@@ -1206,7 +1208,7 @@ public class SettingsController {
     private void showError(String message) {
         com.cashier.util.StatusBarManager.updateError(message);
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(I18nManager.getInstance().get("label.error"));
+        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Label.ERROR));
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
@@ -1221,7 +1223,7 @@ public class SettingsController {
             java.awt.Desktop.getDesktop().browse(new java.net.URI("https://www.tanshuapi.com/market/detail-77"));
         } catch (Exception e) {
             logger.error("打开网页失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
         }
     }
 
@@ -1234,7 +1236,7 @@ public class SettingsController {
             java.awt.Desktop.getDesktop().browse(new java.net.URI("https://www.juhe.cn/docs/api/id/489"));
         } catch (Exception e) {
             logger.error("打开网页失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
         }
     }
 
@@ -1247,7 +1249,7 @@ public class SettingsController {
             java.awt.Desktop.getDesktop().browse(new java.net.URI("https://www.tianapi.com/apiview/138"));
         } catch (Exception e) {
             logger.error("打开网页失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
         }
     }
 
@@ -1320,8 +1322,8 @@ public class SettingsController {
                         showSuccess(com.cashier.i18n.I18nManager.getInstance().get("runtime.csv_import_success"));
                     } else {
                         importProgressBar.setProgress(1);
-                        importStatusLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("error.import_data"));
-                        showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + result.get("error"));
+                        importStatusLabel.setText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.IMPORT_DATA));
+                        showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + result.get("error"));
                     }
                     
                     // 延迟隐藏进度条
@@ -1338,8 +1340,8 @@ public class SettingsController {
                 logger.error("从 CSV 导入数据失败", e);
                 javafx.application.Platform.runLater(() -> {
                     importProgressBar.setVisible(false);
-                    importStatusLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("error.import_data"));
-                    showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
+                    importStatusLabel.setText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.IMPORT_DATA));
+                    showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
                 });
             }
         }).start();

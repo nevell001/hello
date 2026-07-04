@@ -1,5 +1,7 @@
 package com.cashier.controller;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.dao.CategoryDAO;
 import com.cashier.i18n.I18nManager;
 import com.cashier.dao.DAOFactory;
@@ -220,7 +222,7 @@ public class ProductEditController {
 
         if (product != null) {
             // 编辑模式
-            titleLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("product.edit"));
+            titleLabel.setText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ProductEdit.EDIT));
             productCodeField.setText(product.productCode);
             autoCodeCheckBox.setSelected(false);
             productCodeField.setDisable(false);
@@ -293,141 +295,130 @@ public class ProductEditController {
     @FXML
     public void handleSave() {
         logger.info("开始处理保存操作，product是否为null: {}", (product == null));
-        
-        if (isInputValid()) {
-            logger.info("输入验证通过");
-            try {
-                        if (product == null) {
-                            // 添加新商品
-                            product = new Product(
-                                nameField.getText().trim(),
-                                FormValidator.parseDouble(priceField.getText().trim()),
-                                0  // 库存数量默认为0，通过进销存管理
-                            );
-            
-                            // 自动生成商品编号
-                            if (autoCodeCheckBox.isSelected()) {
-                                product.productCode = generateProductCode();
-                            } else {
-                                product.productCode = productCodeField.getText().trim();
-                            }
-            
-                            // 更新商品信息
-                            product.minStock = FormValidator.parseInt(minStockField.getText().trim());
-                            product.category = categoryComboBox.getSelectionModel().getSelectedItem();
-                            if (product.category == null || product.category.trim().isEmpty()) {
-                                product.category = "默认分类";
-                            }
-                            product.barcode = barcodeField.getText() != null ? barcodeField.getText().trim() : "";
-                            product.unit = unitComboBox.getSelectionModel().getSelectedItem();
-                            if (product.unit == null || product.unit.trim().isEmpty()) {
-                                product.unit = "个";
-                            }
-                            product.description = descriptionField.getText() != null ? descriptionField.getText().trim() : "";
-                            product.brand = brandField.getText() != null ? brandField.getText().trim() : "";
-                            product.supplier = supplierComboBox.getSelectionModel().getSelectedItem();
-                            product.spec = specField.getText() != null ? specField.getText().trim() : "";
-                            product.cost = costField.getText() != null && !costField.getText().trim().isEmpty()
-                                ? new BigDecimal(costField.getText().trim())
-                                : product.getPrice().multiply(new BigDecimal("0.7"));
-            
-                            // 检查商品名称是否已存在
-                            Product existingProduct = productDAO.findByName(product.name);
-                            if (existingProduct != null) {
-                                errorLabel.setText(I18nManager.getInstance().get("runtime.product_name_duplicate"));
-                                logger.warn("商品名称已存在: {}", product.name);
-                                return;
-                            }
-                            
-                            // 插入数据库
-                            boolean success = productDAO.insert(product);
-                            if (!success) {
-                                errorLabel.setText(I18nManager.getInstance().get("runtime.product_add_retry"));
-                                return;
-                            }
+        if (!isInputValid()) {
+            return;
+        }
 
-                            // 添加成功，显示提示
-                            StatusBarManager.updateSuccess("商品添加成功: " + product.name);
-                            logger.info("商品添加成功: {} ({})", product.name, product.productCode);
-
-                            // 显示成功提示
-                            javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
-                            alert.setTitle(I18nManager.getInstance().get("label.success"));
-                            alert.setHeaderText(null);
-                            alert.setContentText(I18nManager.getInstance().get("runtime.product_added"));
-                            alert.showAndWait();
-
-                        } else {
-                            // 编辑现有商品（不修改库存数量）
-                            logger.info("编辑现有商品，商品ID: {}, 原名称: {}", product.id, product.name);
-                            
-                            product.name = nameField.getText().trim();
-                            product.price = new BigDecimal(priceField.getText().trim());
-            
-                            // 更新商品编号（如果不是自动生成）
-                            if (!autoCodeCheckBox.isSelected()) {
-                                product.productCode = productCodeField.getText().trim();
-                            }
-                            
-                            // 检查商品名称是否已存在（排除当前商品）
-                            Product existingProduct = productDAO.findByName(product.name);
-                            if (existingProduct != null && existingProduct.id != product.id) {
-                                errorLabel.setText(I18nManager.getInstance().get("runtime.product_name_duplicate"));
-                                logger.warn("商品名称已存在: {}", product.name);
-                                return;
-                            }
-            
-                            // 更新商品信息
-                            product.minStock = FormValidator.parseInt(minStockField.getText().trim());
-                            product.category = categoryComboBox.getSelectionModel().getSelectedItem();
-                            if (product.category == null || product.category.trim().isEmpty()) {
-                                product.category = "默认分类";
-                            }
-                            product.barcode = barcodeField.getText() != null ? barcodeField.getText().trim() : "";
-                            product.unit = unitComboBox.getSelectionModel().getSelectedItem();
-                            if (product.unit == null || product.unit.trim().isEmpty()) {
-                                product.unit = "个";
-                            }
-                            product.description = descriptionField.getText() != null ? descriptionField.getText().trim() : "";
-                            product.brand = brandField.getText() != null ? brandField.getText().trim() : "";
-                            product.supplier = supplierComboBox.getSelectionModel().getSelectedItem();
-                            product.spec = specField.getText() != null ? specField.getText().trim() : "";
-                            product.cost = costField.getText() != null && !costField.getText().trim().isEmpty()
-                                ? new BigDecimal(costField.getText().trim())
-                                : product.getPrice().multiply(new BigDecimal("0.7"));
-                            logger.info("准备更新商品到数据库: id={}, name={}, price={}", product.id, product.name, product.price);
-                            
-                            // 更新数据库
-                            boolean success = productDAO.update(product);
-                            logger.info("数据库更新结果: {}", success);
-                            
-                            if (!success) {
-                                errorLabel.setText(I18nManager.getInstance().get("runtime.product_update_retry"));
-                                logger.error("更新商品失败");
-                                return;
-                            }
-
-                            // 更新成功，显示提示
-                            StatusBarManager.updateSuccess("商品更新成功: " + product.name);
-                            logger.info("商品更新成功: {} ({})", product.name, product.productCode);
-
-                            // 显示成功提示
-                            javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
-                            alert.setTitle(I18nManager.getInstance().get("label.success"));
-                            alert.setHeaderText(null);
-                            alert.setContentText(I18nManager.getInstance().get("runtime.product_updated"));
-                            alert.showAndWait();
-                        }
-
-                // 操作成功，关闭对话框
+        logger.info("输入验证通过");
+        try {
+            boolean saved = product == null ? createProduct() : updateProduct();
+            if (saved) {
                 okClicked = true;
                 dialogStage.close();
-
-            } catch (SQLException e) {
-                logger.error("保存商品失败", e);
-                errorLabel.setText(I18nManager.getInstance().get("runtime.product_save_failed", e.getMessage()));
             }
+        } catch (SQLException e) {
+            logger.error("保存商品失败", e);
+            errorLabel.setText(I18nManager.getInstance().get("runtime.product_save_failed", e.getMessage()));
         }
+    }
+
+    private boolean createProduct() throws SQLException {
+        product = new Product(
+            nameField.getText().trim(),
+            FormValidator.parseDouble(priceField.getText().trim()),
+            0
+        );
+        product.productCode = resolveProductCodeForNewProduct();
+        applyFormValues(product);
+
+        if (isDuplicateProductName(product.name, product.id)) {
+            showDuplicateProductNameError(product.name);
+            return false;
+        }
+
+        if (!productDAO.insert(product)) {
+            errorLabel.setText(I18nManager.getInstance().get("runtime.product_add_retry"));
+            return false;
+        }
+
+        StatusBarManager.updateSuccess("商品添加成功: " + product.name);
+        showSuccessAlert("runtime.product_added");
+        logger.info("商品添加成功: {} ({})", product.name, product.productCode);
+        return true;
+    }
+
+    private boolean updateProduct() throws SQLException {
+        logger.info("编辑现有商品，商品ID: {}, 原名称: {}", product.id, product.name);
+
+        product.name = nameField.getText().trim();
+        product.price = new BigDecimal(priceField.getText().trim());
+        if (!autoCodeCheckBox.isSelected()) {
+            product.productCode = productCodeField.getText().trim();
+        }
+        applyFormValues(product);
+
+        if (isDuplicateProductName(product.name, product.id)) {
+            showDuplicateProductNameError(product.name);
+            return false;
+        }
+
+        logger.info("准备更新商品到数据库: id={}, name={}, price={}", product.id, product.name, product.price);
+        boolean success = productDAO.update(product);
+        logger.info("数据库更新结果: {}", success);
+
+        if (!success) {
+            errorLabel.setText(I18nManager.getInstance().get("runtime.product_update_retry"));
+            logger.error("更新商品失败");
+            return false;
+        }
+
+        StatusBarManager.updateSuccess("商品更新成功: " + product.name);
+        showSuccessAlert("runtime.product_updated");
+        logger.info("商品更新成功: {} ({})", product.name, product.productCode);
+        return true;
+    }
+
+    private void applyFormValues(Product target) {
+        target.minStock = FormValidator.parseInt(minStockField.getText().trim());
+        target.category = selectedOrDefault(categoryComboBox, "默认分类");
+        target.barcode = trimText(barcodeField);
+        target.unit = selectedOrDefault(unitComboBox, "个");
+        target.description = trimText(descriptionField);
+        target.brand = trimText(brandField);
+        target.supplier = supplierComboBox.getSelectionModel().getSelectedItem();
+        target.spec = trimText(specField);
+        target.cost = parseCostOrDefault(target);
+    }
+
+    private String resolveProductCodeForNewProduct() {
+        return autoCodeCheckBox.isSelected()
+            ? generateProductCode()
+            : productCodeField.getText().trim();
+    }
+
+    private BigDecimal parseCostOrDefault(Product target) {
+        String costText = costField.getText();
+        if (costText != null && !costText.trim().isEmpty()) {
+            return new BigDecimal(costText.trim());
+        }
+        return target.getPrice().multiply(Product.DEFAULT_COST_RATE);
+    }
+
+    private boolean isDuplicateProductName(String productName, int currentProductId) throws SQLException {
+        Product existingProduct = productDAO.findByName(productName);
+        return existingProduct != null && existingProduct.id != currentProductId;
+    }
+
+    private void showDuplicateProductNameError(String productName) {
+        errorLabel.setText(I18nManager.getInstance().get("runtime.product_name_duplicate"));
+        logger.warn("商品名称已存在: {}", productName);
+    }
+
+    private void showSuccessAlert(String dialogMessageKey) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Label.SUCCESS));
+        alert.setHeaderText(null);
+        alert.setContentText(I18nManager.getInstance().get(dialogMessageKey));
+        alert.showAndWait();
+    }
+
+    private String selectedOrDefault(ComboBox<String> comboBox, String defaultValue) {
+        String selected = comboBox.getSelectionModel().getSelectedItem();
+        return selected == null || selected.trim().isEmpty() ? defaultValue : selected;
+    }
+
+    private String trimText(TextInputControl input) {
+        return input.getText() == null ? "" : input.getText().trim();
     }
 
     /**
@@ -445,74 +436,91 @@ public class ProductEditController {
     private boolean isInputValid() {
         logger.info("开始验证输入，product是否为null: {}", (product == null));
 
-        String errorMessage = "";
+        StringBuilder errorMessage = new StringBuilder();
 
-        // 验证商品编号（仅当手动输入时才验证）
-        if (!autoCodeCheckBox.isSelected()) {
-            if (productCodeField.getText().trim().isEmpty()) {
-                errorMessage += I18nManager.getInstance().get("product.validation.code_required") + "\n";
-            } else {
-                // 验证商品编号是否已存在
-                try {
-                    Product existingProduct = productDAO.findByProductCode(productCodeField.getText().trim());
-                    if (existingProduct != null && (product == null || existingProduct.id != product.id)) {
-                        errorMessage += I18nManager.getInstance().get("product.validation.code_duplicate") + "\n";
-                    }
-                } catch (SQLException e) {
-                    logger.error("验证商品编号失败", e);
-                    errorMessage += I18nManager.getInstance().get("product.validation.code_check_failed") + "\n";
-                }
-            }
-        }
-
-        // 验证商品名称
-        if (nameField.getText().trim().isEmpty()) {
-            errorMessage += I18nManager.getInstance().get("product.validation.name_required") + "\n";
-        } else if (product == null && inventoryMap.containsKey(nameField.getText().trim())) {
-            errorMessage += I18nManager.getInstance().get("product.validation.name_duplicate") + "\n";
-        }
-
-        // 验证单价
-        try {
-            double price = FormValidator.parseDouble(priceField.getText().trim());
-            if (price <= 0) {
-                errorMessage += I18nManager.getInstance().get("product.validation.price_positive") + "\n";
-            }
-        } catch (IllegalArgumentException e) {
-            errorMessage += I18nManager.getInstance().get("product.validation.price_invalid") + "\n";
-        }
-
-        // 验证最低库存
-        try {
-            int minStock = FormValidator.parseInt(minStockField.getText().trim());
-            if (minStock < 0) {
-                errorMessage += I18nManager.getInstance().get("product.validation.min_stock_nonnegative") + "\n";
-            }
-        } catch (IllegalArgumentException e) {
-            errorMessage += I18nManager.getInstance().get("product.validation.min_stock_invalid") + "\n";
-        }
-
-        // 验证成本价
-        if (!costField.getText().trim().isEmpty()) {
-            try {
-                double cost = FormValidator.parseDouble(costField.getText().trim());
-                if (cost < 0) {
-                    errorMessage += I18nManager.getInstance().get("product.validation.cost_nonnegative") + "\n";
-                }
-            } catch (IllegalArgumentException e) {
-                errorMessage += I18nManager.getInstance().get("product.validation.cost_invalid") + "\n";
-            }
-        }
+        validateProductCode(errorMessage);
+        validateProductName(errorMessage);
+        validatePositivePrice(errorMessage);
+        validateMinStock(errorMessage);
+        validateCost(errorMessage);
 
         if (errorMessage.isEmpty()) {
             errorLabel.setText("");
             logger.info("输入验证通过");
             return true;
-        } else {
-            errorLabel.setText(errorMessage);
-            logger.info("输入验证失败: {}", errorMessage);
-            return false;
         }
+
+        errorLabel.setText(errorMessage.toString());
+        logger.info("输入验证失败: {}", errorMessage);
+        return false;
+    }
+
+    private void validateProductCode(StringBuilder errorMessage) {
+        if (autoCodeCheckBox.isSelected()) {
+            return;
+        }
+
+        if (productCodeField.getText().trim().isEmpty()) {
+            appendValidationError(errorMessage, "product.validation.code_required");
+            return;
+        }
+
+        try {
+            Product existingProduct = productDAO.findByProductCode(productCodeField.getText().trim());
+            if (existingProduct != null && (product == null || existingProduct.id != product.id)) {
+                appendValidationError(errorMessage, "product.validation.code_duplicate");
+            }
+        } catch (SQLException e) {
+            logger.error("验证商品编号失败", e);
+            appendValidationError(errorMessage, "product.validation.code_check_failed");
+        }
+    }
+
+    private void validateProductName(StringBuilder errorMessage) {
+        if (nameField.getText().trim().isEmpty()) {
+            appendValidationError(errorMessage, "product.validation.name_required");
+        } else if (product == null && inventoryMap.containsKey(nameField.getText().trim())) {
+            appendValidationError(errorMessage, "product.validation.name_duplicate");
+        }
+    }
+
+    private void validatePositivePrice(StringBuilder errorMessage) {
+        try {
+            double price = FormValidator.parseDouble(priceField.getText().trim());
+            if (price <= 0) {
+                appendValidationError(errorMessage, "product.validation.price_positive");
+            }
+        } catch (IllegalArgumentException e) {
+            appendValidationError(errorMessage, "product.validation.price_invalid");
+        }
+    }
+
+    private void validateMinStock(StringBuilder errorMessage) {
+        try {
+            int minStock = FormValidator.parseInt(minStockField.getText().trim());
+            if (minStock < 0) {
+                appendValidationError(errorMessage, "product.validation.min_stock_nonnegative");
+            }
+        } catch (IllegalArgumentException e) {
+            appendValidationError(errorMessage, "product.validation.min_stock_invalid");
+        }
+    }
+
+    private void validateCost(StringBuilder errorMessage) {
+        if (!costField.getText().trim().isEmpty()) {
+            try {
+                double cost = FormValidator.parseDouble(costField.getText().trim());
+                if (cost < 0) {
+                    appendValidationError(errorMessage, "product.validation.cost_nonnegative");
+                }
+            } catch (IllegalArgumentException e) {
+                appendValidationError(errorMessage, "product.validation.cost_invalid");
+            }
+        }
+    }
+
+    private void appendValidationError(StringBuilder errorMessage, String messageKey) {
+        errorMessage.append(I18nManager.getInstance().get(messageKey)).append('\n');
     }
 
     /**

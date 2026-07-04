@@ -1,5 +1,9 @@
 package com.cashier.controller;
 
+import com.cashier.constant.SystemPropertyKeys;
+
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.CashierSystemFXApplication;
 import com.cashier.constant.AppConstants;
 import com.cashier.dao.ShiftDAO;
@@ -21,8 +25,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.Scene;
@@ -32,9 +34,12 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -198,6 +203,7 @@ private Button shiftBtn;
             case NORMAL -> {
                 // 默认状态只保留 status-text
             }
+            default -> logger.warn("未知状态栏级别: {}", nextLevel);
         }
     }
 
@@ -223,103 +229,110 @@ private Button shiftBtn;
      * @param scene 场景
      */
     private void setupSceneShortcuts(javafx.scene.Scene scene) {
-        // 功能键
-        scene.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
-            if (event.getCode() == KeyCode.F1) {
+        scene.addEventHandler(KeyEvent.KEY_PRESSED, this::handleFunctionShortcut);
+        scene.addEventHandler(KeyEvent.KEY_PRESSED, this::handleControlShortcut);
+    }
+
+    private void handleFunctionShortcut(KeyEvent event) {
+        switch (event.getCode()) {
+            case F1:
                 handleInventory();
                 event.consume();
-            } else if (event.getCode() == KeyCode.F5) {
-                // 刷新当前标签页
+                break;
+            case F5:
                 refreshCurrentTab();
                 event.consume();
-            } else if (event.getCode() == KeyCode.F7) {
+                break;
+            case F7:
                 handleMembers();
                 event.consume();
-            } else if (event.getCode() == KeyCode.F8) {
+                break;
+            case F8:
                 handleCheckout();
                 event.consume();
-            } else if (event.getCode() == KeyCode.F9) {
+                break;
+            case F9:
                 handlePromotions();
                 event.consume();
-            } else if (event.getCode() == KeyCode.F10) {
+                break;
+            case F10:
                 handleInventoryAlert();
                 event.consume();
-            } else if (event.getCode() == KeyCode.F11) {
+                break;
+            case F11:
                 handleDataBackup();
                 event.consume();
-            } else if (event.getCode() == KeyCode.F12) {
+                break;
+            case F12:
                 handleDataRestore();
                 event.consume();
-            } else if (event.getCode() == KeyCode.ESCAPE) {
-                // 清空搜索或关闭当前标签页
-                Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
-                String welcomeTab = I18nManager.getInstance().get("main.welcome");
-                if (selectedTab != null && !selectedTab.getText().equals(welcomeTab)) {
-                    tabPane.getTabs().remove(selectedTab);
-                    openTabs.remove(selectedTab.getText());
-                    event.consume();
-                }
-            }
-        });
+                break;
+            case ESCAPE:
+                closeCurrentTabIfPossible(event);
+                break;
+            default:
+                break;
+        }
+    }
 
-        // Ctrl 组合键
-        scene.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
-            if (event.isControlDown()) {
-                if (event.getCode() == KeyCode.N) {
-                    handleInventory();
-                    event.consume();
-                } else if (event.getCode() == KeyCode.S) {
-                    updateStatus("数据已保存");
-                    event.consume();
-                } else if (event.getCode() == KeyCode.F) {
-                    showPlaceholder("搜索", "🔍", "搜索功能正在开发中...");
-                    event.consume();
-                } else if (event.getCode() == KeyCode.D) {
-                    handleExportData();
-                    event.consume();
-                } else if (event.getCode() == KeyCode.R) {
-                    updateStatus("已刷新");
-                    event.consume();
-                } else if (event.getCode() == KeyCode.Q) {
-                    handleExit();
-                    event.consume();
-                } else if (event.getCode() == KeyCode.A) {
-                    // 全选
-                    event.consume();
-                } else if (event.getCode() == KeyCode.E) {
-                    showPlaceholder("编辑", "✏️", "编辑功能正在开发中...");
-                    event.consume();
-                } else if (event.getCode() == KeyCode.B) {
-                    showPlaceholder("批量操作", "📋", "批量操作功能正在开发中...");
-                    event.consume();
-                } else if (event.getCode() == KeyCode.M) {
-                    handleMembers();
-                    event.consume();
-                } else if (event.getCode() == KeyCode.T) {
-                    handleStatistics();
-                    event.consume();
-                } else if (event.getCode() == KeyCode.DIGIT1) {
-                    handleInventory();
-                    event.consume();
-                } else if (event.getCode() == KeyCode.DIGIT2) {
-                    handleCart();
-                    event.consume();
-                } else if (event.getCode() == KeyCode.DIGIT3) {
-                    handleTransactions();
-                    event.consume();
-                } else if (event.getCode() == KeyCode.DIGIT4) {
-                    handleSettings();
-                    event.consume();
-                } else if (event.getCode() == KeyCode.SLASH) {
-                    handleShortcutHelp();
-                    event.consume();
-                } else if (event.getCode() == KeyCode.F && event.isShiftDown()) {
-                    // Ctrl+Shift+F - 全局搜索
-                    handleGlobalSearch();
-                    event.consume();
-                }
+    private void handleControlShortcut(KeyEvent event) {
+        if (!event.isControlDown()) {
+            return;
+        }
+
+        if (handleControlNavigationShortcut(event)) {
+            return;
+        }
+
+        handleControlActionShortcut(event);
+    }
+
+    private boolean handleControlNavigationShortcut(KeyEvent event) {
+        switch (event.getCode()) {
+            case N, DIGIT1 -> consumeShortcut(event, this::handleInventory);
+            case M -> consumeShortcut(event, this::handleMembers);
+            case T -> consumeShortcut(event, this::handleStatistics);
+            case DIGIT2 -> consumeShortcut(event, this::handleCart);
+            case DIGIT3 -> consumeShortcut(event, this::handleTransactions);
+            case DIGIT4 -> consumeShortcut(event, this::handleSettings);
+            default -> {
+                return false;
             }
-        });
+        }
+        return true;
+    }
+
+    private void handleControlActionShortcut(KeyEvent event) {
+        switch (event.getCode()) {
+            case S -> consumeShortcut(event, () -> updateStatus("数据已保存"));
+            case F -> consumeShortcut(event, event.isShiftDown()
+                ? this::handleGlobalSearch
+                : () -> showPlaceholder("搜索", "🔍", "搜索功能正在开发中..."));
+            case D -> consumeShortcut(event, this::handleExportData);
+            case R -> consumeShortcut(event, () -> updateStatus("已刷新"));
+            case Q -> consumeShortcut(event, this::handleExit);
+            case A -> event.consume();
+            case E -> consumeShortcut(event, () -> showPlaceholder("编辑", "✏️", "编辑功能正在开发中..."));
+            case B -> consumeShortcut(event, () -> showPlaceholder("批量操作", "📋", "批量操作功能正在开发中..."));
+            case SLASH -> consumeShortcut(event, this::handleShortcutHelp);
+            default -> {
+            }
+        }
+    }
+
+    private void closeCurrentTabIfPossible(KeyEvent event) {
+        Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
+        String welcomeTab = I18nManager.getInstance().get("main.welcome");
+        if (selectedTab != null && !selectedTab.getText().equals(welcomeTab)) {
+            tabPane.getTabs().remove(selectedTab);
+            openTabs.remove(selectedTab.getText());
+            event.consume();
+        }
+    }
+
+    private void consumeShortcut(KeyEvent event, Runnable action) {
+        action.run();
+        event.consume();
     }
 
     /**
@@ -424,8 +437,8 @@ private Button shiftBtn;
      * 更新时间
      */
     private void updateTime() {
-        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
-        currentTimeLabel.setText(timeFormat.format(new Date()));
+        currentTimeLabel.setText(LocalDateTime.now(ZoneId.systemDefault())
+            .format(com.cashier.util.DateTimeFormats.TIME));
         // 同时更新班次信息
         updateShiftInfo();
     }
@@ -434,8 +447,8 @@ private Button shiftBtn;
      * 更新日期
      */
     private void updateDate() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd EEEE");
-        dateLabel.setText(dateFormat.format(new Date()));
+        dateLabel.setText(LocalDate.now(ZoneId.systemDefault())
+            .format(com.cashier.util.DateTimeFormats.FULL_DATE));
     }
 
     /**
@@ -446,8 +459,8 @@ private Button shiftBtn;
             Shift activeShift = ShiftDAO.findActiveShift();
             if (activeShift != null) {
                 // 有活跃班次
-                SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
-                String startTime = timeFormat.format(activeShift.startTime);
+                String startTime = LocalDateTime.ofInstant(activeShift.startTime, ZoneId.systemDefault())
+                    .format(com.cashier.util.DateTimeFormats.TIME_HOUR_MINUTE);
                 currentShiftLabel.setText(I18nManager.getInstance().get("runtime.shift_summary",
                         activeShift.shiftId, activeShift.operatorName, startTime));
             } else {
@@ -498,13 +511,13 @@ private Button shiftBtn;
         // 检查是否有活跃班次
         if (com.cashier.service.DataService.hasActiveShift()) {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.confirm_exit"));
+            alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.CONFIRM_EXIT));
             alert.setHeaderText(null);
             alert.setContentText(I18nManager.getInstance().get("runtime.logout_active_shift"));
             
             ButtonType yesButton = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get("runtime.end_shift_first"), ButtonBar.ButtonData.YES);
             ButtonType noButton = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get("runtime.exit_directly"), ButtonBar.ButtonData.NO);
-            ButtonType cancelButton = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get("return_order.cancel"), ButtonBar.ButtonData.CANCEL_CLOSE);
+            ButtonType cancelButton = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnOrder.CANCEL), ButtonBar.ButtonData.CANCEL_CLOSE);
             
             alert.getButtonTypes().setAll(yesButton, noButton, cancelButton);
             
@@ -522,7 +535,7 @@ private Button shiftBtn;
             });
         } else {
             // 没有活跃班次，直接退出
-            if (FXUtils.showConfirmAlert(I18nManager.getInstance().get("runtime.confirm_exit"), I18nManager.getInstance().get("runtime.logout_confirm"))) {
+            if (FXUtils.showConfirmAlert(I18nManager.getInstance().get(I18nKeys.Runtime.CONFIRM_EXIT), I18nManager.getInstance().get("runtime.logout_confirm"))) {
                 if (application != null) {
                     application.logoutToLoginView();
                 }
@@ -535,13 +548,13 @@ private Button shiftBtn;
         // 检查是否有活跃班次
         if (com.cashier.service.DataService.hasActiveShift()) {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.confirm_exit"));
+            alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.CONFIRM_EXIT));
             alert.setHeaderText(null);
             alert.setContentText(I18nManager.getInstance().get("runtime.exit_active_shift"));
             
             ButtonType yesButton = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get("runtime.end_shift_first"), ButtonBar.ButtonData.YES);
             ButtonType noButton = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get("runtime.exit_directly"), ButtonBar.ButtonData.NO);
-            ButtonType cancelButton = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get("return_order.cancel"), ButtonBar.ButtonData.CANCEL_CLOSE);
+            ButtonType cancelButton = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnOrder.CANCEL), ButtonBar.ButtonData.CANCEL_CLOSE);
             
             alert.getButtonTypes().setAll(yesButton, noButton, cancelButton);
             
@@ -579,10 +592,10 @@ private Button shiftBtn;
             controller.setCurrentUser(currentUser);
             
             // 创建内容标签页
-            createContentTab(I18nManager.getInstance().get("nav.user_management"), root);
+            createContentTab(I18nManager.getInstance().get(I18nKeys.Nav.USER_MANAGEMENT), root);
             
         } catch (IOException e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -593,7 +606,7 @@ private Button shiftBtn;
         
         try {
             // 创建备份目录
-            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+            String timestamp = LocalDateTime.now(ZoneId.systemDefault()).format(com.cashier.util.DateTimeFormats.BACKUP_TIMESTAMP);
             String backupPath = "backup_" + timestamp;
             
             // 执行备份
@@ -611,7 +624,7 @@ private Button shiftBtn;
         updateStatus("数据恢复");
         
         // 列出可用的备份目录
-        File projectDir = new File(System.getProperty("user.dir"));
+        File projectDir = new File(System.getProperty(SystemPropertyKeys.USER_DIR));
         File[] backupDirs = projectDir.listFiles((dir, name) -> 
             name.startsWith("backup_") && dir.isDirectory()
         );
@@ -633,8 +646,9 @@ private Button shiftBtn;
         // 添加备份选项
         ObservableList<String> options = FXCollections.observableArrayList();
         for (File dir : backupDirs) {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            String timeStr = sdf.format(new Date(dir.lastModified()));
+            String timeStr = LocalDateTime.ofInstant(
+                java.time.Instant.ofEpochMilli(dir.lastModified()), ZoneId.systemDefault())
+                .format(com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME);
             options.add(dir.getName() + " (" + timeStr + ")");
         }
         dialog.getItems().addAll(options);
@@ -694,7 +708,7 @@ private Button shiftBtn;
             dialogStage.show();
         } catch (IOException e) {
             logger.error("加载快捷键帮助界面失败", e);
-            FXUtils.showErrorAlert(com.cashier.i18n.I18nManager.getInstance().get("label.error"), "无法打开快捷键帮助");
+            FXUtils.showErrorAlert(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.ERROR), "无法打开快捷键帮助");
         }
     }
 
@@ -727,7 +741,7 @@ private Button shiftBtn;
             dialogStage.showAndWait();
         } catch (IOException e) {
             logger.error("加载全局搜索界面失败", e);
-            FXUtils.showErrorAlert(com.cashier.i18n.I18nManager.getInstance().get("label.error"), "无法打开全局搜索");
+            FXUtils.showErrorAlert(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.ERROR), "无法打开全局搜索");
         }
     }
 
@@ -767,7 +781,7 @@ private Button shiftBtn;
             "- JDK " + AppConstants.MIN_JDK_VERSION + "/21\n\n" +
             "许可证: " + AppConstants.LICENSE;
 
-        showInformationOnlyAlert(com.cashier.i18n.I18nManager.getInstance().get("menu.help.about"), about);
+        showInformationOnlyAlert(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Menu.Help.ABOUT), about);
     }
 
     private void showInformationOnlyAlert(String title, String message) {
@@ -796,10 +810,10 @@ private Button shiftBtn;
             controller.setCurrentUser(currentUser);
             
             // 创建内容标签页
-            createContentTab(I18nManager.getInstance().get("nav.inventory"), root);
+            createContentTab(I18nManager.getInstance().get(I18nKeys.Nav.INVENTORY), root);
             
         } catch (IOException e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -810,7 +824,7 @@ private Button shiftBtn;
         setActiveButton(cartBtn);
 
         try {
-            String title = I18nManager.getInstance().get("nav.cart");
+            String title = I18nManager.getInstance().get(I18nKeys.Nav.CART);
             if (selectOpenTab(title)) {
                 logger.debug("MainController: 购物车标签页已打开，直接切换");
                 focusSelectedCartSearchField();
@@ -836,10 +850,10 @@ private Button shiftBtn;
 
         } catch (IOException e) {
             logger.error("加载购物车界面失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + getErrorMessage(e));
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + getErrorMessage(e));
         } catch (Exception e) {
             logger.error("加载购物车界面时发生异常", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + getErrorMessage(e));
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + getErrorMessage(e));
         }
     }
 
@@ -850,7 +864,7 @@ private Button shiftBtn;
         setActiveButton(checkoutBtn);
         
         try {
-            String title = I18nManager.getInstance().get("nav.cart");
+            String title = I18nManager.getInstance().get(I18nKeys.Nav.CART);
             if (selectOpenTab(title)) {
                 focusSelectedCartSearchField();
                 return;
@@ -871,10 +885,10 @@ private Button shiftBtn;
             
         } catch (IOException e) {
             logger.error("加载结账界面失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + getErrorMessage(e));
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + getErrorMessage(e));
         } catch (Exception e) {
             logger.error("加载结账界面时发生异常", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + getErrorMessage(e));
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + getErrorMessage(e));
         }
     }
 
@@ -905,10 +919,10 @@ private Button shiftBtn;
             TransactionController controller = loader.getController();
 
             // 创建内容标签页
-            createContentTab(I18nManager.getInstance().get("nav.transactions"), root);
+            createContentTab(I18nManager.getInstance().get(I18nKeys.Nav.TRANSACTIONS), root);
 
         } catch (IOException e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -927,10 +941,10 @@ private Button shiftBtn;
             MemberController controller = loader.getController();
             
             // 创建内容标签页
-            createContentTab(I18nManager.getInstance().get("nav.members"), root);
+            createContentTab(I18nManager.getInstance().get(I18nKeys.Nav.MEMBERS), root);
             
         } catch (IOException e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -949,10 +963,10 @@ private Button shiftBtn;
             SupplierController controller = loader.getController();
 
             // 创建内容标签页
-            createContentTab(I18nManager.getInstance().get("nav.supplier"), root);
+            createContentTab(I18nManager.getInstance().get(I18nKeys.Nav.SUPPLIER), root);
 
         } catch (IOException e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -971,10 +985,10 @@ private Button shiftBtn;
             PurchaseOrderController controller = loader.getController();
 
             // 创建内容标签页
-            createContentTab(I18nManager.getInstance().get("nav.purchase_order"), root);
+            createContentTab(I18nManager.getInstance().get(I18nKeys.Nav.PURCHASE_ORDER), root);
 
         } catch (IOException e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -994,10 +1008,10 @@ private Button shiftBtn;
             controller.setCurrentUser(currentUser);
 
             // 创建内容标签页
-            createContentTab(I18nManager.getInstance().get("nav.purchase_approval"), root);
+            createContentTab(I18nManager.getInstance().get(I18nKeys.Nav.PURCHASE_APPROVAL), root);
 
         } catch (IOException e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -1017,10 +1031,10 @@ private Button shiftBtn;
             controller.setCurrentUser(currentUser);
 
             // 创建内容标签页
-            createContentTab(I18nManager.getInstance().get("nav.purchase_inbound"), root);
+            createContentTab(I18nManager.getInstance().get(I18nKeys.Nav.PURCHASE_INBOUND), root);
 
         } catch (IOException e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -1039,10 +1053,10 @@ private Button shiftBtn;
             InventoryCheckController controller = loader.getController();
 
             // 创建内容标签页
-            createContentTab(I18nManager.getInstance().get("nav.inventory_check"), root);
+            createContentTab(I18nManager.getInstance().get(I18nKeys.Nav.INVENTORY_CHECK), root);
 
         } catch (IOException e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -1061,10 +1075,10 @@ private Button shiftBtn;
             StatisticsController controller = loader.getController();
 
             // 创建内容标签页
-            createContentTab(I18nManager.getInstance().get("nav.statistics"), root);
+            createContentTab(I18nManager.getInstance().get(I18nKeys.Nav.STATISTICS), root);
 
         } catch (IOException e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -1104,7 +1118,7 @@ private Button shiftBtn;
             });
 
         } catch (IOException e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -1123,10 +1137,10 @@ private Button shiftBtn;
             PurchaseReportController controller = loader.getController();
 
             // 创建内容标签页
-            createContentTab(I18nManager.getInstance().get("nav.purchase_report"), root);
+            createContentTab(I18nManager.getInstance().get(I18nKeys.Nav.PURCHASE_REPORT), root);
 
         } catch (IOException e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -1145,10 +1159,10 @@ private Button shiftBtn;
             InventoryReportController controller = loader.getController();
 
             // 创建内容标签页
-            createContentTab(I18nManager.getInstance().get("nav.inventory_report"), root);
+            createContentTab(I18nManager.getInstance().get(I18nKeys.Nav.INVENTORY_REPORT), root);
 
         } catch (IOException e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -1167,10 +1181,10 @@ private Button shiftBtn;
             ProfitReportController controller = loader.getController();
 
             // 创建内容标签页
-            createContentTab(I18nManager.getInstance().get("nav.profit_report"), root);
+            createContentTab(I18nManager.getInstance().get(I18nKeys.Nav.PROFIT_REPORT), root);
 
         } catch (IOException e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -1192,7 +1206,7 @@ private Button shiftBtn;
             createContentTab(I18nManager.getInstance().get("nav.return_report"), root);
 
         } catch (IOException e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -1211,10 +1225,10 @@ private Button shiftBtn;
             PromotionController controller = loader.getController();
 
             // 创建内容标签页
-            createContentTab(I18nManager.getInstance().get("nav.promotions"), root);
+            createContentTab(I18nManager.getInstance().get(I18nKeys.Nav.PROMOTIONS), root);
 
         } catch (IOException e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -1225,7 +1239,7 @@ private Button shiftBtn;
         setActiveButton(shiftBtn);
 
         try {
-            String title = I18nManager.getInstance().get("nav.shift");
+            String title = I18nManager.getInstance().get(I18nKeys.Nav.SHIFT);
             if (selectOpenTab(title)) {
                 return;
             }
@@ -1242,7 +1256,7 @@ private Button shiftBtn;
             createContentTab(title, root);
 
         } catch (IOException e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -1253,7 +1267,7 @@ private Button shiftBtn;
         setActiveButton(settingsBtn);
 
         try {
-            String title = I18nManager.getInstance().get("nav.settings");
+            String title = I18nManager.getInstance().get(I18nKeys.Nav.SETTINGS);
             if (selectOpenTab(title)) {
                 return;
             }
@@ -1270,7 +1284,7 @@ private Button shiftBtn;
             createContentTab(title, root);
 
         } catch (IOException e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -1289,7 +1303,7 @@ private Button shiftBtn;
             createContentTab(title, root);
         } catch (IOException e) {
             logger.error("加载审计日志页面失败", e);
-            showError(I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -1305,10 +1319,10 @@ private Button shiftBtn;
 
             ReturnOrderController controller = loader.getController();
 
-            createContentTab(I18nManager.getInstance().get("nav.return_order"), root);
+            createContentTab(I18nManager.getInstance().get(I18nKeys.Nav.RETURN_ORDER), root);
 
         } catch (IOException e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -1327,7 +1341,7 @@ private Button shiftBtn;
             createContentTab(I18nManager.getInstance().get("nav.return_approval"), root);
 
         } catch (IOException e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -1806,7 +1820,7 @@ private Button shiftBtn;
     
         
     
-                        alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("label.error"));
+                        alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.ERROR));
     
         
     

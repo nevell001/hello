@@ -10,8 +10,8 @@ import org.slf4j.Logger;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.util.*;
+import java.time.LocalDateTime;
 
 /**
  * 交易服务类
@@ -230,7 +230,7 @@ public class TransactionService {
 
         Transaction transaction = new Transaction();
         transaction.transactionId = transactionId;
-        transaction.timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        transaction.timestamp = com.cashier.util.DateTimeFormats.formatStandard(LocalDateTime.now());
         transaction.items = new ArrayList<>();
 
         for (CartItem item : cartItems) {
@@ -293,9 +293,8 @@ public class TransactionService {
         new java.util.concurrent.atomic.AtomicLong(0);
 
     public static String generateOrderNumber() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");
-        return "ORD" + sdf.format(new Date()) + String.format("%04d",
-            orderSequence.getAndIncrement() % 10000);
+        String ts = com.cashier.util.DateTimeFormats.COMPACT_DATE_TIME_MILLIS.format(LocalDateTime.now());
+        return "ORD" + ts + String.format("%04d", orderSequence.getAndIncrement() % 10000);
     }
 
     /**

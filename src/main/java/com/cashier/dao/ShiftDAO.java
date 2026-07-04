@@ -27,8 +27,8 @@ public class ShiftDAO {
             pstmt.setString(1, shift.shiftId);
             pstmt.setString(2, shift.username);
             pstmt.setString(3, shift.operatorName);
-            pstmt.setLong(4, shift.startTime.getTime());
-            pstmt.setLong(5, shift.endTime.getTime());
+            pstmt.setLong(4, shift.startTime != null ? shift.startTime.toEpochMilli() : 0L);
+            pstmt.setLong(5, shift.endTime != null ? shift.endTime.toEpochMilli() : 0L);
             pstmt.setBigDecimal(6, shift.openingRevenue);
             pstmt.setBigDecimal(7, shift.closingRevenue);
             pstmt.setBigDecimal(8, shift.shiftRevenue);
@@ -57,7 +57,7 @@ public class ShiftDAO {
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setLong(1, shift.endTime.getTime());
+            pstmt.setLong(1, shift.endTime != null ? shift.endTime.toEpochMilli() : 0L);
             pstmt.setBigDecimal(2, shift.closingRevenue);
             pstmt.setBigDecimal(3, shift.shiftRevenue);
             pstmt.setInt(4, shift.closingTransactionCount);
@@ -208,8 +208,8 @@ public class ShiftDAO {
                 pstmt.setString(1, shift.shiftId);
                 pstmt.setString(2, shift.username);
                 pstmt.setString(3, shift.operatorName);
-                pstmt.setLong(4, shift.startTime.getTime());
-                pstmt.setLong(5, shift.endTime.getTime());
+                pstmt.setLong(4, shift.startTime != null ? shift.startTime.toEpochMilli() : 0L);
+                pstmt.setLong(5, shift.endTime != null ? shift.endTime.toEpochMilli() : 0L);
                 pstmt.setBigDecimal(6, shift.openingRevenue);
                 pstmt.setBigDecimal(7, shift.closingRevenue);
                 pstmt.setBigDecimal(8, shift.shiftRevenue);
@@ -240,16 +240,16 @@ public class ShiftDAO {
         // 正确处理 NULL 值
         long startTime = rs.getLong("start_time");
         if (rs.wasNull()) {
-            shift.startTime = null;
+                shift.startTime = null;
         } else {
-            shift.startTime = new java.util.Date(startTime);
+            shift.startTime = java.time.Instant.ofEpochMilli(startTime);
         }
 
         long endTime = rs.getLong("end_time");
         if (rs.wasNull()) {
             shift.endTime = null;
         } else {
-            shift.endTime = new java.util.Date(endTime);
+            shift.endTime = java.time.Instant.ofEpochMilli(endTime);
         }
 
         shift.openingRevenue = rs.getBigDecimal("opening_revenue");

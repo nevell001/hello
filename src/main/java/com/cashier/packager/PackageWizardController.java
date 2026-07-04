@@ -1,7 +1,9 @@
 package com.cashier.packager;
 
+import com.cashier.constant.DatabaseConfigKeys;
+import com.cashier.constant.SystemPropertyKeys;
+
 import com.cashier.util.LoggerFactoryUtil;
-import javafx.animation.FadeTransition;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -12,8 +14,6 @@ import org.slf4j.Logger;
 
 import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -84,7 +84,7 @@ public class PackageWizardController {
      * 优先使用 PATH 中的 mvn.cmd (Windows) 或 mvn (Linux/Mac)
      */
     private String findMavenCommand() {
-        String osName = System.getProperty("os.name").toLowerCase();
+        String osName = System.getProperty(SystemPropertyKeys.OS_NAME).toLowerCase();
         String mavenCmd = osName.contains("win") ? "mvn.cmd" : "mvn";
 
         // 首先检查 PATH 中的 Maven
@@ -236,10 +236,10 @@ public class PackageWizardController {
         dirChooserCheckBox.setSelected(true);
 
         // 默认输出目录
-        outputDirField.setText(System.getProperty("user.dir") + "\\target\\dist");
+        outputDirField.setText(System.getProperty(SystemPropertyKeys.USER_DIR) + "\\target\\dist");
 
         // 默认图标路径
-        String defaultIconPath = System.getProperty("user.dir") + "\\src\\main\\resources\\images\\logos\\app-icon.ico";
+        String defaultIconPath = System.getProperty(SystemPropertyKeys.USER_DIR) + "\\src\\main\\resources\\images\\logos\\app-icon.ico";
         File iconFile = new File(defaultIconPath);
         if (iconFile.exists()) {
             iconPathField.setText(defaultIconPath);
@@ -273,6 +273,9 @@ public class PackageWizardController {
                 dbPortField.setText("3306");
                 dbNameField.setText("lisuan_system");
                 dbUsernameField.setText("");
+                break;
+            default:
+                logger.warn("未知数据库类型选项: {}", selected);
                 break;
         }
     }
@@ -454,6 +457,9 @@ public class PackageWizardController {
                     return false;
                 }
                 break;
+            default:
+                logger.warn("未知打包向导步骤: {}", currentStep);
+                break;
         }
         return true;
     }
@@ -516,7 +522,7 @@ public class PackageWizardController {
                         appendLog("使用 Maven: " + mavenCmd + "\n");
 
                         ProcessBuilder mvnCompile = new ProcessBuilder(mavenCmd, "compile", "-q");
-                        mvnCompile.directory(new File(System.getProperty("user.dir")));
+                        mvnCompile.directory(new File(System.getProperty(SystemPropertyKeys.USER_DIR)));
                         mvnCompile.redirectErrorStream(true);
 
                         Process compileProcess = mvnCompile.start();
@@ -533,7 +539,7 @@ public class PackageWizardController {
                         appendLog("[2/3] 正在打包 JAR...");
 
                         ProcessBuilder mvnPackage = new ProcessBuilder(mavenCmd, "package", "-DskipTests", "-q");
-                        mvnPackage.directory(new File(System.getProperty("user.dir")));
+                        mvnPackage.directory(new File(System.getProperty(SystemPropertyKeys.USER_DIR)));
                         mvnPackage.redirectErrorStream(true);
 
                         Process packageProcess = mvnPackage.start();
@@ -655,17 +661,17 @@ public class PackageWizardController {
             configDir.mkdirs();
         }
 
-        File configFile = new File(configDir, "database.properties");
+        File configFile = new File(configDir, DatabaseConfigKeys.DATABASE_PROPERTIES_FILE);
         String url = String.format("jdbc:mysql://%s:%s/%s?sslMode=PREFERRED&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8",
                 dbHostField.getText().trim(),
                 dbPortField.getText().trim(),
                 dbNameField.getText().trim());
 
         Properties props = new Properties();
-        props.setProperty("db.url", url);
-        props.setProperty("db.username", dbUsernameField.getText().trim());
-        props.setProperty("db.password", dbPasswordField.getText().trim());
-        props.setProperty("db.pool.size", "10");
+        props.setProperty(DatabaseConfigKeys.URL, url);
+        props.setProperty(DatabaseConfigKeys.USERNAME, dbUsernameField.getText().trim());
+        props.setProperty(DatabaseConfigKeys.PASSWORD, dbPasswordField.getText().trim());
+        props.setProperty(DatabaseConfigKeys.POOL_SIZE, "10");
         props.setProperty("db.connection.timeout", "30000");
         props.setProperty("db.idle.timeout", "600000");
         props.setProperty("db.max.lifetime", "1800000");
@@ -720,7 +726,7 @@ public class PackageWizardController {
         // 设置环境变量，告诉脚本不要等待用户输入
         psBuilder.environment().put("FROM_JAVA", "1");
 
-        psBuilder.directory(new File(System.getProperty("user.dir")));
+        psBuilder.directory(new File(System.getProperty(SystemPropertyKeys.USER_DIR)));
         psBuilder.redirectErrorStream(true);
 
         appendLog("执行命令: powershell -ExecutionPolicy Bypass -File " + ps1Script.getName() + "\n");

@@ -7,8 +7,9 @@ import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
 
 import java.sql.*;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -310,15 +311,15 @@ public class InvoiceDAO {
     /**
      * 按日期范围查询
      */
-    public static List<Invoice> findByDateRange(Date startDate, Date endDate) throws SQLException {
+    public static List<Invoice> findByDateRange(LocalDate startDate, LocalDate endDate) throws SQLException {
         String sql = "SELECT * FROM invoices WHERE create_time BETWEEN ? AND ? ORDER BY create_time DESC";
         List<Invoice> invoices = new ArrayList<>();
         
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
-            pstmt.setTimestamp(1, new Timestamp(startDate.getTime()));
-            pstmt.setTimestamp(2, new Timestamp(endDate.getTime()));
+            pstmt.setTimestamp(1, Timestamp.from(startDate.atStartOfDay(ZoneId.systemDefault()).toInstant()));
+            pstmt.setTimestamp(2, Timestamp.from(endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant()));
             
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {

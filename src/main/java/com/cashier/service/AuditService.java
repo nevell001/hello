@@ -5,7 +5,7 @@ import com.cashier.model.OperationLog;
 import com.cashier.util.LoggerFactoryUtil;
 import org.slf4j.Logger;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.regex.Pattern;
 
 /**
@@ -40,7 +40,7 @@ public final class AuditService {
         audit.logLevel = defaultValue(level, "INFO");
         audit.details = sanitize(details);
         audit.affectedRecords = Math.max(affectedRecords, 0);
-        audit.timestamp = new Date();
+        audit.timestamp = Instant.now();
         audit.ipAddress = "local";
 
         try {

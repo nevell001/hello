@@ -1,5 +1,7 @@
 package com.cashier.util;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.i18n.I18nManager;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
@@ -23,35 +25,35 @@ public class StatusBarManager {
     }
 
     private static final Map<String, String> LEGACY_STATUS_KEYS = Map.ofEntries(
-        Map.entry("就绪", "status.ready"),
+        Map.entry("就绪", I18nKeys.Status.READY),
         Map.entry("数据已保存", "status_message.data_saved"),
         Map.entry("已刷新", "status_message.refreshed"),
-        Map.entry("用户管理", "nav.user_management"),
+        Map.entry("用户管理", I18nKeys.Nav.USER_MANAGEMENT),
         Map.entry("数据备份", "menu.data.backup"),
         Map.entry("数据恢复", "menu.data.restore"),
         Map.entry("导出数据", "status_message.export_data"),
         Map.entry("已切换到浅色主题", "status_message.theme_light"),
         Map.entry("已切换到深色主题", "status_message.theme_dark"),
         Map.entry("已切换到 LiSuan 主题", "status_message.theme_lisuan"),
-        Map.entry("关于", "menu.help.about"),
-        Map.entry("商品管理", "nav.inventory"),
-        Map.entry("交易记录", "nav.transactions"),
-        Map.entry("会员管理", "nav.members"),
-        Map.entry("供应商管理", "nav.supplier"),
-        Map.entry("采购订单", "nav.purchase_order"),
-        Map.entry("采购审批", "nav.purchase_approval"),
-        Map.entry("采购入库", "nav.purchase_inbound"),
-        Map.entry("库存盘点", "nav.inventory_check"),
-        Map.entry("数据统计", "nav.statistics"),
+        Map.entry("关于", I18nKeys.Menu.Help.ABOUT),
+        Map.entry("商品管理", I18nKeys.Nav.INVENTORY),
+        Map.entry("交易记录", I18nKeys.Nav.TRANSACTIONS),
+        Map.entry("会员管理", I18nKeys.Nav.MEMBERS),
+        Map.entry("供应商管理", I18nKeys.Nav.SUPPLIER),
+        Map.entry("采购订单", I18nKeys.Nav.PURCHASE_ORDER),
+        Map.entry("采购审批", I18nKeys.Nav.PURCHASE_APPROVAL),
+        Map.entry("采购入库", I18nKeys.Nav.PURCHASE_INBOUND),
+        Map.entry("库存盘点", I18nKeys.Nav.INVENTORY_CHECK),
+        Map.entry("数据统计", I18nKeys.Nav.STATISTICS),
         Map.entry("库存预警", "status_message.inventory_alert"),
-        Map.entry("采购报表", "nav.purchase_report"),
-        Map.entry("库存报表", "nav.inventory_report"),
-        Map.entry("利润分析", "nav.profit_report"),
+        Map.entry("采购报表", I18nKeys.Nav.PURCHASE_REPORT),
+        Map.entry("库存报表", I18nKeys.Nav.INVENTORY_REPORT),
+        Map.entry("利润分析", I18nKeys.Nav.PROFIT_REPORT),
         Map.entry("退货报表", "nav.return_report"),
-        Map.entry("促销管理", "nav.promotions"),
-        Map.entry("交接班", "nav.shift"),
-        Map.entry("系统设置", "nav.settings"),
-        Map.entry("退货订单", "nav.return_order"),
+        Map.entry("促销管理", I18nKeys.Nav.PROMOTIONS),
+        Map.entry("交接班", I18nKeys.Nav.SHIFT),
+        Map.entry("系统设置", I18nKeys.Nav.SETTINGS),
+        Map.entry("退货订单", I18nKeys.Nav.RETURN_ORDER),
         Map.entry("退货审批", "nav.return_approval"),
         Map.entry("无需刷新", "status_message.no_refresh_needed"),
         Map.entry("盘点单更新成功", "status_message.inventory_check_updated"),
@@ -63,16 +65,34 @@ public class StatusBarManager {
         Map.entry("已刷新可入库订单", "status_message.inbound_orders_refreshed"),
         Map.entry("收银台已加载", "status_message.pos_loaded"),
         Map.entry("交接班操作完成", "status_message.shift_completed"),
-        Map.entry("导出成功", "success.export"),
+        Map.entry("导出成功", I18nKeys.Success.EXPORT),
         Map.entry("已刷新待审批订单", "status_message.approval_orders_refreshed"),
         Map.entry("采购订单更新成功", "status_message.purchase_order_updated"),
         Map.entry("采购订单创建成功", "status_message.purchase_order_created"),
         Map.entry("采购订单删除成功", "status_message.purchase_order_deleted"),
         Map.entry("供应商添加成功", "status_message.supplier_created")
     );
+    private static final Map<String, String> PREFIXED_STATUS_KEYS = Map.ofEntries(
+        Map.entry("无法刷新: ", "status_message.refresh_failed"),
+        Map.entry("已刷新: ", "status_message.refreshed_item"),
+        Map.entry("商品删除成功: ", "status_message.product_deleted"),
+        Map.entry("商品添加成功: ", "status_message.product_created"),
+        Map.entry("商品更新成功: ", "status_message.product_updated"),
+        Map.entry("供应商添加成功: ", "status_message.supplier_created_named"),
+        Map.entry("供应商更新成功: ", "status_message.supplier_updated"),
+        Map.entry("供应商删除成功: ", "status_message.supplier_deleted"),
+        Map.entry("入库成功: ", "status_message.inbound_success"),
+        Map.entry("盘点完成: ", "status_message.inventory_check_completed"),
+        Map.entry("订单已提交审批: ", "status_message.order_submitted"),
+        Map.entry("会员添加成功: ", "status_message.member_created"),
+        Map.entry("会员更新成功: ", "status_message.member_updated"),
+        Map.entry("快速入库成功: ", "status_message.quick_restock"),
+        Map.entry("订单通过: ", "status_message.order_approved"),
+        Map.entry("订单拒绝: ", "status_message.order_rejected")
+    );
 
     private static final StringProperty statusProperty =
-        new SimpleStringProperty(I18nManager.getInstance().get("status.ready"));
+        new SimpleStringProperty(I18nManager.getInstance().get(I18nKeys.Status.READY));
     private static final ObjectProperty<StatusLevel> statusLevelProperty =
         new SimpleObjectProperty<>(StatusLevel.NORMAL);
 
@@ -137,7 +157,7 @@ public class StatusBarManager {
      * 清除状态栏（恢复默认状态）
      */
     public static void clearStatus() {
-        updateStatus(I18nManager.getInstance().get("status.ready"), StatusLevel.NORMAL);
+        updateStatus(I18nManager.getInstance().get(I18nKeys.Status.READY), StatusLevel.NORMAL);
     }
 
     private static String localizeStatus(String status) {
@@ -150,44 +170,11 @@ public class StatusBarManager {
             return I18nManager.getInstance().get(key);
         }
 
-        String localized = localizePrefixedStatus(status, "无法刷新: ", "status_message.refresh_failed");
-        if (localized != null) return localized;
-        localized = localizePrefixedStatus(status, "已刷新: ", "status_message.refreshed_item");
-        if (localized != null) return localized;
-        localized = localizePrefixedStatus(status, "商品删除成功: ", "status_message.product_deleted");
-        if (localized != null) return localized;
-        localized = localizePrefixedStatus(status, "商品添加成功: ", "status_message.product_created");
-        if (localized != null) return localized;
-        localized = localizePrefixedStatus(status, "商品更新成功: ", "status_message.product_updated");
-        if (localized != null) return localized;
-        localized = localizePrefixedStatus(status, "供应商添加成功: ", "status_message.supplier_created_named");
-        if (localized != null) return localized;
-        localized = localizePrefixedStatus(status, "供应商更新成功: ", "status_message.supplier_updated");
-        if (localized != null) return localized;
-        localized = localizePrefixedStatus(status, "供应商删除成功: ", "status_message.supplier_deleted");
-        if (localized != null) return localized;
-        localized = localizePrefixedStatus(status, "入库成功: ", "status_message.inbound_success");
-        if (localized != null) return localized;
-        localized = localizePrefixedStatus(status, "盘点完成: ", "status_message.inventory_check_completed");
-        if (localized != null) return localized;
-        localized = localizePrefixedStatus(status, "订单已提交审批: ", "status_message.order_submitted");
-        if (localized != null) return localized;
-        localized = localizePrefixedStatus(status, "会员添加成功: ", "status_message.member_created");
-        if (localized != null) return localized;
-        localized = localizePrefixedStatus(status, "会员更新成功: ", "status_message.member_updated");
-        if (localized != null) return localized;
-
-        if (status.startsWith("快速入库成功: ")) {
-            return I18nManager.getInstance().get("status_message.quick_restock",
-                status.substring("快速入库成功: ".length()));
-        }
-        if (status.startsWith("订单通过: ")) {
-            return I18nManager.getInstance().get("status_message.order_approved",
-                status.substring("订单通过: ".length()));
-        }
-        if (status.startsWith("订单拒绝: ")) {
-            return I18nManager.getInstance().get("status_message.order_rejected",
-                status.substring("订单拒绝: ".length()));
+        for (Map.Entry<String, String> entry : PREFIXED_STATUS_KEYS.entrySet()) {
+            String localized = localizePrefixedStatus(status, entry.getKey(), entry.getValue());
+            if (localized != null) {
+                return localized;
+            }
         }
 
         return status;

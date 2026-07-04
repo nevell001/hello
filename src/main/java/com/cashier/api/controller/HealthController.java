@@ -2,7 +2,6 @@ package com.cashier.api.controller;
 
 import com.cashier.util.DatabaseManager;
 import io.javalin.http.Context;
-import io.javalin.http.HttpStatus;
 import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
 

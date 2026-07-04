@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
+
 import java.util.*;
 
 /**
@@ -273,7 +273,8 @@ public class MemberService {
     }
 
     private static String generateRechargeRecordId() {
-        return "REC" + new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date())
+        return "REC" + java.time.LocalDateTime.now(java.time.ZoneId.systemDefault())
+            .format(com.cashier.util.DateTimeFormats.COMPACT_DATE_TIME_MILLIS)
             + UUID.randomUUID().toString().replace("-", "").substring(0, 6).toUpperCase();
     }
 

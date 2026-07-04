@@ -1,7 +1,6 @@
 package com.cashier.api.sync;
 
 import com.cashier.api.ApiServer;
-import com.cashier.dao.UserDAO;
 import com.cashier.model.User;
 import io.javalin.websocket.WsConnectContext;
 import io.javalin.websocket.WsCloseContext;

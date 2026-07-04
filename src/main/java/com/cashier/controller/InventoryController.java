@@ -1,5 +1,7 @@
 package com.cashier.controller;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.controller.base.BaseController;
 import com.cashier.dao.CategoryDAO;
 import com.cashier.dao.DAOFactory;
@@ -155,9 +157,9 @@ public class InventoryController extends BaseController<Product> {
             if (p.quantity <= 0) {
                 return new SimpleStringProperty(i18n.get("inventory.status.out_of_stock"));
             } else if (p.quantity < p.minStock) {
-                return new SimpleStringProperty(i18n.get("inventory.status.low_stock"));
+                return new SimpleStringProperty(i18n.get(I18nKeys.Inventory.Status.LOW_STOCK));
             } else {
-                return new SimpleStringProperty(i18n.get("inventory.status.normal"));
+                return new SimpleStringProperty(i18n.get(I18nKeys.Inventory.Status.NORMAL));
             }
         });
 
@@ -215,7 +217,7 @@ public class InventoryController extends BaseController<Product> {
             }
         } catch (SQLException e) {
             logger.error("加载商品数据失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
             inventoryMap = new HashMap<>();
         }
         inventoryList = FXCollections.observableArrayList(inventoryMap.values());
@@ -269,7 +271,7 @@ public class InventoryController extends BaseController<Product> {
         if (selected != null) {
             showEditDialog(selected);
         } else {
-            showWarning(i18n.get("runtime.select_product_first"));
+            showWarning(i18n.get(I18nKeys.Runtime.SELECT_PRODUCT_FIRST));
         }
     }
 
@@ -286,7 +288,7 @@ public class InventoryController extends BaseController<Product> {
         if (!requireInventoryManagement()) return;
         ObservableList<Product> selected = getSelectedItems(inventoryTable);
         if (selected.isEmpty()) {
-            showWarning(i18n.get("runtime.select_product_first"));
+            showWarning(i18n.get(I18nKeys.Runtime.SELECT_PRODUCT_FIRST));
             return;
         }
 
@@ -300,11 +302,11 @@ public class InventoryController extends BaseController<Product> {
                     }
                 } catch (SQLException e) {
                     logger.error("删除商品失败", e);
-                    showError(com.cashier.i18n.I18nManager.getInstance().get("error.delete_data") + ": " + e.getMessage());
+                    showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.DELETE_DATA) + ": " + e.getMessage());
                 }
             }
         } else {
-            if (confirm(i18n.get("dialog.confirm"), String.format("确定要批量删除选中的 %d 个商品吗？", selected.size()))) {
+            if (confirm(i18n.get(I18nKeys.Dialog.CONFIRM), String.format("确定要批量删除选中的 %d 个商品吗？", selected.size()))) {
                 try {
                     int successCount = 0;
                     for (Product product : selected) {
@@ -316,7 +318,7 @@ public class InventoryController extends BaseController<Product> {
                     showSuccess(i18n.get("runtime.products_deleted", successCount));
                 } catch (SQLException e) {
                     logger.error("批量删除商品失败", e);
-                    showError(com.cashier.i18n.I18nManager.getInstance().get("error.delete_data") + ": " + e.getMessage());
+                    showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.DELETE_DATA) + ": " + e.getMessage());
                 }
             }
         }
@@ -335,7 +337,7 @@ public class InventoryController extends BaseController<Product> {
             ProductEditController controller = loader.getController();
 
             Stage dialogStage = new Stage();
-            dialogStage.setTitle(item == null ? i18n.get("product.add") : i18n.get("product.edit"));
+            dialogStage.setTitle(item == null ? i18n.get("product.add") : i18n.get(I18nKeys.ProductEdit.EDIT));
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(inventoryTable.getScene().getWindow());
             dialogStage.setResizable(false);
@@ -355,7 +357,7 @@ public class InventoryController extends BaseController<Product> {
                 return true;
             }
         } catch (IOException e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
         return false;
     }
@@ -397,10 +399,10 @@ public class InventoryController extends BaseController<Product> {
                         controller.getRestockQuantity());
                 }
             } catch (IOException e) {
-                showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+                showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
             }
         } else {
-            showWarning(i18n.get("runtime.select_product_first"));
+            showWarning(i18n.get(I18nKeys.Runtime.SELECT_PRODUCT_FIRST));
         }
     }
 
@@ -419,7 +421,7 @@ public class InventoryController extends BaseController<Product> {
                 inventoryList.setAll(results);
             } catch (SQLException e) {
                 logger.error("搜索商品失败", e);
-                showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
+                showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
             }
         }
         updateCountLabel();
@@ -490,7 +492,7 @@ public class InventoryController extends BaseController<Product> {
         nameCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().name));
         nameCol.setPrefWidth(150);
 
-        TableColumn<Category, String> descCol = new TableColumn<>(i18n.get("common.description"));
+        TableColumn<Category, String> descCol = new TableColumn<>(i18n.get(I18nKeys.Common.DESCRIPTION));
         descCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().description));
         descCol.setPrefWidth(250);
 
@@ -509,9 +511,9 @@ public class InventoryController extends BaseController<Product> {
         // 创建按钮面板
         HBox buttonPanel = new HBox(10);
         buttonPanel.setAlignment(Pos.CENTER_RIGHT);
-        Button addBtn = new Button(i18n.get("common.add"));
-        Button editBtn = new Button(i18n.get("common.edit"));
-        Button deleteBtn = new Button(i18n.get("common.delete"));
+        Button addBtn = new Button(i18n.get(I18nKeys.Common.ADD));
+        Button editBtn = new Button(i18n.get(I18nKeys.Common.EDIT));
+        Button deleteBtn = new Button(i18n.get(I18nKeys.Common.DELETE));
 
         addBtn.getStyleClass().add("primary-button");
         editBtn.getStyleClass().add("info-button");
@@ -525,7 +527,7 @@ public class InventoryController extends BaseController<Product> {
             if (sel != null) {
                 showEditCategoryDialog(sel, categoryList);
             } else {
-                showWarning(i18n.get("runtime.select_product_first"));
+                showWarning(i18n.get(I18nKeys.Runtime.SELECT_PRODUCT_FIRST));
             }
         });
         deleteBtn.setOnAction(event -> {
@@ -533,7 +535,7 @@ public class InventoryController extends BaseController<Product> {
             if (sel != null) {
                 showDeleteCategoryDialog(sel, categoryList);
             } else {
-                showWarning(i18n.get("runtime.select_product_first"));
+                showWarning(i18n.get(I18nKeys.Runtime.SELECT_PRODUCT_FIRST));
             }
         });
 
@@ -552,7 +554,7 @@ public class InventoryController extends BaseController<Product> {
     private void showAddCategoryDialog(ObservableList<Category> categoryList) {
         Dialog<ButtonType> dialog = new Dialog<>();
         prepareInventoryDialog(dialog, 520);
-        dialog.setTitle(i18n.get("common.add"));
+        dialog.setTitle(i18n.get(I18nKeys.Common.ADD));
         GridPane grid = new GridPane();
         grid.setHgap(10); grid.setVgap(10);
         grid.setPadding(new Insets(20));
@@ -566,7 +568,7 @@ public class InventoryController extends BaseController<Product> {
         grid.add(codeField, 1, 0);
         grid.add(new Label(i18n.get("category.name") + ":"), 0, 1);
         grid.add(nameField, 1, 1);
-        grid.add(new Label(i18n.get("common.description") + ":"), 0, 2);
+        grid.add(new Label(i18n.get(I18nKeys.Common.DESCRIPTION) + ":"), 0, 2);
         grid.add(descField, 1, 2);
 
         dialog.getDialogPane().setContent(grid);
@@ -581,7 +583,7 @@ public class InventoryController extends BaseController<Product> {
                         categoryList.add(cat);
                     }
                 } catch (SQLException e) {
-                    showError(com.cashier.i18n.I18nManager.getInstance().get("error.save_data") + ": " + e.getMessage());
+                    showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.SAVE_DATA) + ": " + e.getMessage());
                 }
             }
         });
@@ -590,7 +592,7 @@ public class InventoryController extends BaseController<Product> {
     private void showEditCategoryDialog(Category category, ObservableList<Category> categoryList) {
         Dialog<ButtonType> dialog = new Dialog<>();
         prepareInventoryDialog(dialog, 520);
-        dialog.setTitle(i18n.get("common.edit"));
+        dialog.setTitle(i18n.get(I18nKeys.Common.EDIT));
         GridPane grid = new GridPane();
         grid.setHgap(10); grid.setVgap(10);
         grid.setPadding(new Insets(20));
@@ -605,7 +607,7 @@ public class InventoryController extends BaseController<Product> {
         grid.add(codeField, 1, 0);
         grid.add(new Label(i18n.get("category.name") + ":"), 0, 1);
         grid.add(nameField, 1, 1);
-        grid.add(new Label(i18n.get("common.description") + ":"), 0, 2);
+        grid.add(new Label(i18n.get(I18nKeys.Common.DESCRIPTION) + ":"), 0, 2);
         grid.add(descField, 1, 2);
 
         dialog.getDialogPane().setContent(grid);
@@ -620,7 +622,7 @@ public class InventoryController extends BaseController<Product> {
                         categoryList.set(categoryList.indexOf(category), category);
                     }
                 } catch (SQLException e) {
-                    showError(com.cashier.i18n.I18nManager.getInstance().get("error.save_data") + ": " + e.getMessage());
+                    showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.SAVE_DATA) + ": " + e.getMessage());
                 }
             }
         });
@@ -633,7 +635,7 @@ public class InventoryController extends BaseController<Product> {
                     categoryList.remove(category);
                 }
             } catch (SQLException e) {
-                showError(com.cashier.i18n.I18nManager.getInstance().get("error.delete_data") + ": " + e.getMessage());
+                showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.DELETE_DATA) + ": " + e.getMessage());
             }
         }
     }
@@ -653,11 +655,11 @@ public class InventoryController extends BaseController<Product> {
         dialog.setTitle(i18n.get("inventory.unit_management"));
 
         TableView<Unit> unitTable = new TableView<>();
-        TableColumn<Unit, String> nameCol = new TableColumn<>(i18n.get("unit.name"));
+        TableColumn<Unit, String> nameCol = new TableColumn<>(i18n.get(I18nKeys.Unit.NAME));
         nameCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().name));
         nameCol.setPrefWidth(150);
 
-        TableColumn<Unit, String> descCol = new TableColumn<>(i18n.get("common.description"));
+        TableColumn<Unit, String> descCol = new TableColumn<>(i18n.get(I18nKeys.Common.DESCRIPTION));
         descCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().description));
         descCol.setPrefWidth(250);
 
@@ -674,9 +676,9 @@ public class InventoryController extends BaseController<Product> {
 
         HBox buttonPanel = new HBox(10);
         buttonPanel.setAlignment(Pos.CENTER_RIGHT);
-        Button addBtn = new Button(i18n.get("common.add"));
-        Button editBtn = new Button(i18n.get("common.edit"));
-        Button deleteBtn = new Button(i18n.get("common.delete"));
+        Button addBtn = new Button(i18n.get(I18nKeys.Common.ADD));
+        Button editBtn = new Button(i18n.get(I18nKeys.Common.EDIT));
+        Button deleteBtn = new Button(i18n.get(I18nKeys.Common.DELETE));
 
         addBtn.getStyleClass().add("primary-button");
         editBtn.getStyleClass().add("info-button");
@@ -690,7 +692,7 @@ public class InventoryController extends BaseController<Product> {
             if (sel != null) {
                 showEditUnitDialog(sel, unitList);
             } else {
-                showWarning(i18n.get("runtime.select_product_first"));
+                showWarning(i18n.get(I18nKeys.Runtime.SELECT_PRODUCT_FIRST));
             }
         });
         deleteBtn.setOnAction(event -> {
@@ -698,7 +700,7 @@ public class InventoryController extends BaseController<Product> {
             if (sel != null) {
                 showDeleteUnitDialog(sel, unitList);
             } else {
-                showWarning(i18n.get("runtime.select_product_first"));
+                showWarning(i18n.get(I18nKeys.Runtime.SELECT_PRODUCT_FIRST));
             }
         });
 
@@ -717,7 +719,7 @@ public class InventoryController extends BaseController<Product> {
     private void showAddUnitDialog(ObservableList<Unit> unitList) {
         Dialog<ButtonType> dialog = new Dialog<>();
         prepareInventoryDialog(dialog, 520);
-        dialog.setTitle(i18n.get("common.add"));
+        dialog.setTitle(i18n.get(I18nKeys.Common.ADD));
         GridPane grid = new GridPane();
         grid.setHgap(10); grid.setVgap(10);
         grid.setPadding(new Insets(20));
@@ -726,9 +728,9 @@ public class InventoryController extends BaseController<Product> {
         TextField nameField = new TextField();
         TextField descField = new TextField();
 
-        grid.add(new Label(i18n.get("unit.name") + ":"), 0, 0);
+        grid.add(new Label(i18n.get(I18nKeys.Unit.NAME) + ":"), 0, 0);
         grid.add(nameField, 1, 0);
-        grid.add(new Label(i18n.get("common.description") + ":"), 0, 1);
+        grid.add(new Label(i18n.get(I18nKeys.Common.DESCRIPTION) + ":"), 0, 1);
         grid.add(descField, 1, 1);
 
         dialog.getDialogPane().setContent(grid);
@@ -742,7 +744,7 @@ public class InventoryController extends BaseController<Product> {
                         unitList.add(unit);
                     }
                 } catch (SQLException e) {
-                    showError(com.cashier.i18n.I18nManager.getInstance().get("error.save_data") + ": " + e.getMessage());
+                    showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.SAVE_DATA) + ": " + e.getMessage());
                 }
             }
         });
@@ -751,7 +753,7 @@ public class InventoryController extends BaseController<Product> {
     private void showEditUnitDialog(Unit unit, ObservableList<Unit> unitList) {
         Dialog<ButtonType> dialog = new Dialog<>();
         prepareInventoryDialog(dialog, 520);
-        dialog.setTitle(i18n.get("common.edit"));
+        dialog.setTitle(i18n.get(I18nKeys.Common.EDIT));
         GridPane grid = new GridPane();
         grid.setHgap(10); grid.setVgap(10);
         grid.setPadding(new Insets(20));
@@ -761,9 +763,9 @@ public class InventoryController extends BaseController<Product> {
         nameField.setEditable(false);
         TextField descField = new TextField(unit.description);
 
-        grid.add(new Label(i18n.get("unit.name") + ":"), 0, 0);
+        grid.add(new Label(i18n.get(I18nKeys.Unit.NAME) + ":"), 0, 0);
         grid.add(nameField, 1, 0);
-        grid.add(new Label(i18n.get("common.description") + ":"), 0, 1);
+        grid.add(new Label(i18n.get(I18nKeys.Common.DESCRIPTION) + ":"), 0, 1);
         grid.add(descField, 1, 1);
 
         dialog.getDialogPane().setContent(grid);
@@ -777,7 +779,7 @@ public class InventoryController extends BaseController<Product> {
                         unitList.set(unitList.indexOf(unit), unit);
                     }
                 } catch (SQLException e) {
-                    showError(com.cashier.i18n.I18nManager.getInstance().get("error.save_data") + ": " + e.getMessage());
+                    showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.SAVE_DATA) + ": " + e.getMessage());
                 }
             }
         });
@@ -790,7 +792,7 @@ public class InventoryController extends BaseController<Product> {
                     unitList.remove(unit);
                 }
             } catch (SQLException e) {
-                showError(com.cashier.i18n.I18nManager.getInstance().get("error.delete_data") + ": " + e.getMessage());
+                showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.DELETE_DATA) + ": " + e.getMessage());
             }
         }
     }

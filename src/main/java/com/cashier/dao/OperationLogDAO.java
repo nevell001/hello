@@ -189,7 +189,7 @@ public class OperationLogDAO {
         log.username = rs.getString("username");
         log.operation = rs.getString("operation");
         log.details = rs.getString("details");
-        log.timestamp = new java.util.Date(rs.getLong("timestamp"));
+        log.timestamp = java.time.Instant.ofEpochMilli(rs.getLong("timestamp"));
         log.ipAddress = rs.getString("ip_address");
         log.logLevel = rs.getString("log_level");
         log.category = rs.getString("log_category");
@@ -207,7 +207,7 @@ public class OperationLogDAO {
         pstmt.setString(2, log.operation);
         pstmt.setString(3, log.details);
         pstmt.setString(4, log.ipAddress);
-        pstmt.setLong(5, log.timestamp.getTime());
+        pstmt.setLong(5, log.timestamp.toEpochMilli());
         pstmt.setString(6, log.logLevel);
         pstmt.setString(7, log.category);
         pstmt.setString(8, log.result);

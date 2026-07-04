@@ -1,11 +1,10 @@
 package com.cashier.printer;
 
 import org.slf4j.Logger;
+import com.cashier.util.DateTimeFormats;
 import com.cashier.util.LoggerFactoryUtil;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Map;
 
 /**
  * 打印工具类
@@ -14,8 +13,6 @@ import java.util.Map;
 public class PrintUtil {
     
     private static final Logger logger = LoggerFactoryUtil.getLogger(PrintUtil.class);
-    
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     
     /**
      * 打印销售小票
@@ -43,7 +40,7 @@ public class PrintUtil {
             template.setVariable("storeName", storeName);
             template.setVariable("cashierName", cashierName);
             template.setVariable("transactionId", transactionId);
-            template.setVariable("transactionTime", DATE_FORMAT.format(new Date()));
+            template.setVariable("transactionTime", formatNow());
             template.setVariable("items", items);
             template.setVariable("totalQuantity", String.valueOf(totalQuantity));
             template.setVariable("totalAmount", String.format("%.2f", totalAmount));
@@ -124,7 +121,7 @@ public class PrintUtil {
             
             template.setVariable("storeName", storeName);
             template.setVariable("cashierName", cashierName);
-            template.setVariable("rechargeTime", DATE_FORMAT.format(new Date()));
+            template.setVariable("rechargeTime", formatNow());
             template.setVariable("memberName", memberName);
             template.setVariable("memberPhone", memberPhone);
             template.setVariable("memberLevel", memberLevel);
@@ -197,7 +194,7 @@ public class PrintUtil {
         try {
             PrintTemplate template = PrintTemplate.createSalesReportTemplate();
             
-            template.setVariable("reportTime", DATE_FORMAT.format(new Date()));
+            template.setVariable("reportTime", formatNow());
             template.setVariable("timeRange", timeRange);
             template.setVariable("totalRevenue", String.format("%.2f", totalRevenue));
             template.setVariable("totalQuantity", String.valueOf(totalQuantity));
@@ -221,5 +218,10 @@ public class PrintUtil {
      */
     public static boolean openCashDrawer() {
         return PrinterManager.getInstance().openCashDrawer();
+    }
+
+    private static String formatNow() {
+        return java.time.LocalDateTime.now(java.time.ZoneId.systemDefault())
+            .format(DateTimeFormats.STANDARD_DATE_TIME);
     }
 }

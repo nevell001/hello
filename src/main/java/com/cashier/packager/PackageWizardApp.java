@@ -8,7 +8,6 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.util.Objects;
-import java.util.ResourceBundle;
 
 /**
  * 图形界面打包向导启动类

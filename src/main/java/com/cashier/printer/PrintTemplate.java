@@ -7,6 +7,8 @@ import java.util.Map;
  * 用于生成各种单据的打印内容
  */
 public class PrintTemplate {
+    private static final String THICK_SEPARATOR = "================================\n";
+    private static final String THIN_SEPARATOR = "--------------------------------\n";
     
     /**
      * 模板类型
@@ -78,16 +80,16 @@ public class PrintTemplate {
      */
     public static PrintTemplate createReceiptTemplate() {
         String template = 
-            "================================\n" +
+            THICK_SEPARATOR +
             "          收银小票           \n" +
-            "================================\n" +
+            THICK_SEPARATOR +
             "门店名称: {{storeName}}\n" +
             "收银员: {{cashierName}}\n" +
             "交易号: {{transactionId}}\n" +
             "交易时间: {{transactionTime}}\n" +
-            "--------------------------------\n" +
+            THIN_SEPARATOR +
             "{{items}}\n" +
-            "--------------------------------\n" +
+            THIN_SEPARATOR +
             "商品数量: {{totalQuantity}}\n" +
             "商品金额: ¥{{totalAmount}}\n" +
             "折扣金额: ¥{{discountAmount}}\n" +
@@ -95,11 +97,11 @@ public class PrintTemplate {
             "实收金额: ¥{{paidAmount}}\n" +
             "找零金额: ¥{{changeAmount}}\n" +
             "支付方式: {{paymentMethod}}\n" +
-            "--------------------------------\n" +
+            THIN_SEPARATOR +
             "会员信息: {{memberInfo}}\n" +
-            "--------------------------------\n" +
+            THIN_SEPARATOR +
             "谢谢惠顾，欢迎下次光临！\n" +
-            "================================\n";
+            THICK_SEPARATOR;
         
         return new PrintTemplate(PrintTaskType.RECEIPT, template);
     }
@@ -109,21 +111,21 @@ public class PrintTemplate {
      */
     public static PrintTemplate createInboundTemplate() {
         String template = 
-            "================================\n" +
+            THICK_SEPARATOR +
             "          入库单据           \n" +
-            "================================\n" +
+            THICK_SEPARATOR +
             "入库单号: {{inboundNo}}\n" +
             "采购订单号: {{orderNo}}\n" +
             "入库日期: {{inboundDate}}\n" +
             "操作员: {{operator}}\n" +
-            "--------------------------------\n" +
+            THIN_SEPARATOR +
             "{{items}}\n" +
-            "--------------------------------\n" +
+            THIN_SEPARATOR +
             "入库总数量: {{totalQuantity}}\n" +
             "入库总金额: ¥{{totalAmount}}\n" +
-            "--------------------------------\n" +
+            THIN_SEPARATOR +
             "备注: {{remark}}\n" +
-            "================================\n";
+            THICK_SEPARATOR;
         
         return new PrintTemplate(PrintTaskType.INBOUND, template);
     }
@@ -133,26 +135,26 @@ public class PrintTemplate {
      */
     public static PrintTemplate createMemberReceiptTemplate() {
         String template = 
-            "================================\n" +
+            THICK_SEPARATOR +
             "          会员充值收据         \n" +
-            "================================\n" +
+            THICK_SEPARATOR +
             "门店名称: {{storeName}}\n" +
             "收银员: {{cashierName}}\n" +
             "充值时间: {{rechargeTime}}\n" +
-            "--------------------------------\n" +
+            THIN_SEPARATOR +
             "会员姓名: {{memberName}}\n" +
             "会员手机: {{memberPhone}}\n" +
             "会员等级: {{memberLevel}}\n" +
-            "--------------------------------\n" +
+            THIN_SEPARATOR +
             "充值金额: ¥{{rechargeAmount}}\n" +
             "赠送积分: {{bonusPoints}}\n" +
             "支付方式: {{paymentMethod}}\n" +
-            "--------------------------------\n" +
+            THIN_SEPARATOR +
             "充值后余额: ¥{{newBalance}}\n" +
             "充值后积分: {{newPoints}}\n" +
-            "--------------------------------\n" +
+            THIN_SEPARATOR +
             "谢谢惠顾，欢迎下次光临！\n" +
-            "================================\n";
+            THICK_SEPARATOR;
         
         return new PrintTemplate(PrintTaskType.MEMBER_RECEIPT, template);
     }
@@ -162,21 +164,21 @@ public class PrintTemplate {
      */
     public static PrintTemplate createInventoryReportTemplate() {
         String template = 
-            "================================\n" +
+            THICK_SEPARATOR +
             "          库存盘点报表         \n" +
-            "================================\n" +
+            THICK_SEPARATOR +
             "盘点单号: {{checkNo}}\n" +
             "盘点日期: {{checkDate}}\n" +
             "盘点类型: {{checkType}}\n" +
             "操作员: {{operator}}\n" +
-            "--------------------------------\n" +
+            THIN_SEPARATOR +
             "{{items}}\n" +
-            "--------------------------------\n" +
+            THIN_SEPARATOR +
             "盘点商品总数: {{totalItems}}\n" +
             "差异商品数: {{diffItems}}\n" +
-            "--------------------------------\n" +
+            THIN_SEPARATOR +
             "备注: {{remark}}\n" +
-            "================================\n";
+            THICK_SEPARATOR;
         
         return new PrintTemplate(PrintTaskType.INVENTORY_REPORT, template);
     }
@@ -186,19 +188,19 @@ public class PrintTemplate {
      */
     public static PrintTemplate createSalesReportTemplate() {
         String template = 
-            "================================\n" +
+            THICK_SEPARATOR +
             "          销售统计报表         \n" +
-            "================================\n" +
+            THICK_SEPARATOR +
             "统计时间: {{reportTime}}\n" +
             "时间范围: {{timeRange}}\n" +
-            "--------------------------------\n" +
+            THIN_SEPARATOR +
             "销售总额: ¥{{totalRevenue}}\n" +
             "销售数量: {{totalQuantity}}\n" +
             "交易次数: {{transactionCount}}\n" +
             "平均客单价: ¥{{avgTicket}}\n" +
-            "--------------------------------\n" +
+            THIN_SEPARATOR +
             "{{details}}\n" +
-            "================================\n";
+            THICK_SEPARATOR;
         
         return new PrintTemplate(PrintTaskType.SALES_REPORT, template);
     }

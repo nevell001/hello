@@ -1,5 +1,7 @@
 package com.cashier.controller;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.i18n.I18nManager;
 import com.cashier.CashierSystemFXApplication;
 import com.cashier.model.User;
@@ -26,8 +28,7 @@ import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.Map;
 
 /**
  * POS模式控制器
@@ -35,6 +36,30 @@ import java.util.Date;
  */
 public class PosModeController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(PosModeController.class);
+    private static final Map<Character, String> PINYIN_FIRST_LETTER = Map.ofEntries(
+        Map.entry('白', "B"),
+        Map.entry('蔡', "C"), Map.entry('陈', "C"), Map.entry('程', "C"), Map.entry('崔', "C"), Map.entry('常', "C"),
+        Map.entry('戴', "D"), Map.entry('邓', "D"), Map.entry('丁', "D"), Map.entry('董', "D"), Map.entry('杜', "D"), Map.entry('段', "D"),
+        Map.entry('范', "F"), Map.entry('方', "F"), Map.entry('冯', "F"), Map.entry('傅', "F"),
+        Map.entry('高', "G"), Map.entry('葛', "G"), Map.entry('龚', "G"), Map.entry('郭', "G"), Map.entry('顾', "G"),
+        Map.entry('韩', "H"), Map.entry('郝', "H"), Map.entry('何', "H"), Map.entry('贺', "H"), Map.entry('侯', "H"), Map.entry('胡', "H"), Map.entry('黄', "H"),
+        Map.entry('贾', "J"), Map.entry('姜', "J"), Map.entry('江', "J"), Map.entry('蒋', "J"), Map.entry('金', "J"),
+        Map.entry('康', "K"), Map.entry('孔', "K"),
+        Map.entry('赖', "L"), Map.entry('雷', "L"), Map.entry('黎', "L"), Map.entry('李', "L"), Map.entry('梁', "L"), Map.entry('廖', "L"),
+        Map.entry('林', "L"), Map.entry('刘', "L"), Map.entry('龙', "L"), Map.entry('罗', "L"), Map.entry('卢', "L"), Map.entry('陆', "L"), Map.entry('吕', "L"),
+        Map.entry('马', "M"), Map.entry('毛', "M"), Map.entry('孟', "M"),
+        Map.entry('潘', "P"), Map.entry('彭', "P"),
+        Map.entry('钱', "Q"), Map.entry('乔', "Q"), Map.entry('秦', "Q"), Map.entry('邱', "Q"),
+        Map.entry('任', "R"),
+        Map.entry('沈', "S"), Map.entry('史', "S"), Map.entry('石', "S"), Map.entry('宋', "S"), Map.entry('苏', "S"), Map.entry('孙', "S"), Map.entry('邵', "S"),
+        Map.entry('谭', "T"), Map.entry('汤', "T"), Map.entry('唐', "T"), Map.entry('田', "T"),
+        Map.entry('万', "W"), Map.entry('汪', "W"), Map.entry('王', "W"), Map.entry('魏', "W"), Map.entry('文', "W"), Map.entry('吴', "W"), Map.entry('武', "W"),
+        Map.entry('夏', "X"), Map.entry('萧', "X"), Map.entry('谢', "X"), Map.entry('熊', "X"), Map.entry('徐', "X"), Map.entry('许', "X"), Map.entry('薛', "X"),
+        Map.entry('阎', "Y"), Map.entry('杨', "Y"), Map.entry('姚', "Y"), Map.entry('叶', "Y"), Map.entry('易', "Y"), Map.entry('尹', "Y"),
+        Map.entry('于', "Y"), Map.entry('余', "Y"), Map.entry('袁', "Y"),
+        Map.entry('曾', "Z"), Map.entry('张', "Z"), Map.entry('赵', "Z"), Map.entry('郑', "Z"), Map.entry('钟', "Z"), Map.entry('周', "Z"),
+        Map.entry('朱', "Z"), Map.entry('邹', "Z")
+    );
 
     @FXML
     private Label userNameLabel;
@@ -141,28 +166,7 @@ public class PosModeController {
      * 这是一个简化的映射表，覆盖常见姓氏
      */
     private String getPinyinFirstLetter(char c) {
-        return switch (c) {
-            case '白' -> "B";
-            case '蔡', '陈', '程', '崔', '常' -> "C";
-            case '戴', '邓', '丁', '董', '杜', '段' -> "D";
-            case '范', '方', '冯', '傅' -> "F";
-            case '高', '葛', '龚', '郭', '顾' -> "G";
-            case '韩', '郝', '何', '贺', '侯', '胡', '黄' -> "H";
-            case '贾', '姜', '江', '蒋', '金' -> "J";
-            case '康', '孔' -> "K";
-            case '赖', '雷', '黎', '李', '梁', '廖', '林', '刘', '龙', '罗', '卢', '陆', '吕' -> "L";
-            case '马', '毛', '孟' -> "M";
-            case '潘', '彭' -> "P";
-            case '钱', '乔', '秦', '邱' -> "Q";
-            case '任' -> "R";
-            case '沈', '史', '石', '宋', '苏', '孙', '邵' -> "S";
-            case '谭', '汤', '唐', '田' -> "T";
-            case '万', '汪', '王', '魏', '文', '吴', '武' -> "W";
-            case '夏', '萧', '谢', '熊', '徐', '许', '薛' -> "X";
-            case '阎', '杨', '姚', '叶', '易', '尹', '于', '余', '袁' -> "Y";
-            case '曾', '张', '赵', '郑', '钟', '周', '朱', '邹' -> "Z";
-            default -> String.valueOf(c);
-        };
+        return PINYIN_FIRST_LETTER.getOrDefault(c, String.valueOf(c));
     }
 
     /**
@@ -204,6 +208,7 @@ public class PosModeController {
             case NORMAL -> {
                 // 默认状态只保留 status-text
             }
+            default -> logger.warn("未知状态栏级别: {}", nextLevel);
         }
     }
 
@@ -237,7 +242,7 @@ public class PosModeController {
 
         } catch (IOException e) {
             logger.error("加载收银台失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -299,16 +304,16 @@ public class PosModeController {
      * 更新时间
      */
     private void updateTime() {
-        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
-        timeLabel.setText(timeFormat.format(new Date()));
+        timeLabel.setText(java.time.LocalDateTime.now(java.time.ZoneId.systemDefault())
+            .format(com.cashier.util.DateTimeFormats.TIME));
     }
 
     /**
      * 更新日期
      */
     private void updateDate() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        dateLabel.setText(dateFormat.format(new Date()));
+        dateLabel.setText(java.time.LocalDateTime.now(java.time.ZoneId.systemDefault())
+            .format(com.cashier.util.DateTimeFormats.DATE));
     }
 
     /**
@@ -333,7 +338,7 @@ public class PosModeController {
 
         } catch (IOException e) {
             logger.error("加载交接班界面失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -348,7 +353,7 @@ public class PosModeController {
             if (!cartEmpty) {
                 // 购物车不为空，提示确认
                 Alert alert = new Alert(Alert.AlertType.WARNING);
-                alert.setTitle(I18nManager.getInstance().get("common.confirm"));
+                alert.setTitle(I18nManager.getInstance().get(I18nKeys.Common.CONFIRM));
                 alert.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get("runtime.cart_not_empty"));
                 String message = com.cashier.i18n.I18nManager.getInstance().get("runtime.cart_exit_confirm");
                 StatusBarManager.updateWarning(message);
@@ -375,7 +380,7 @@ public class PosModeController {
     private void showError(String message) {
         com.cashier.util.StatusBarManager.updateError(message);
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(I18nManager.getInstance().get("label.error"));
+        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Label.ERROR));
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();

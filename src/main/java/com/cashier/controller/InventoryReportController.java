@@ -1,5 +1,7 @@
 package com.cashier.controller;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.i18n.I18nManager;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
@@ -19,7 +21,6 @@ import javafx.scene.layout.*;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
@@ -277,7 +278,7 @@ public class InventoryReportController {
 
         // 分类库存价值对比柱状图
         categoryStockValueBarChart.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.chart.category_stock_value"));
-        categoryStockValueBarChart.getXAxis().setLabel(I18nManager.getInstance().get("chart.category"));
+        categoryStockValueBarChart.getXAxis().setLabel(I18nManager.getInstance().get(I18nKeys.Chart.CATEGORY));
         categoryStockValueBarChart.getYAxis().setLabel(I18nManager.getInstance().get("chart.stock_value"));
         categoryStockValueBarChart.setLegendVisible(false);
     }
@@ -304,13 +305,13 @@ public class InventoryReportController {
             categoryList.addAll(allCategories);
             categoryComboBox.setItems(categoryList);
             com.cashier.util.I18nUiUtils.configureComboBox(categoryComboBox, value ->
-                "全部分类".equals(value) ? I18nManager.getInstance().get("filter.all_categories") : value);
+                "全部分类".equals(value) ? I18nManager.getInstance().get(I18nKeys.Filter.ALL_CATEGORIES) : value);
             categoryComboBox.getSelectionModel().select(0);
 
             logger.info("成功加载 {} 个商品，{} 条交易记录", allProducts.size(), allTransactions.size());
         } catch (SQLException e) {
             logger.error("加载数据失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
             allProducts = new ArrayList<>();
             allTransactions = new ArrayList<>();
             allCategories = new TreeSet<>();
@@ -359,6 +360,8 @@ public class InventoryReportController {
             case "自定义":
                 // 不自动设置日期
                 break;
+            default:
+                break;
         }
     }
 
@@ -371,12 +374,12 @@ public class InventoryReportController {
         LocalDate endDate = endDatePicker.getValue();
 
         if (startDate == null || endDate == null) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.select_date_range"));
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_DATE_RANGE));
             return;
         }
 
         if (startDate.isAfter(endDate)) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.invalid_date_range"));
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.INVALID_DATE_RANGE));
             return;
         }
 
@@ -475,7 +478,7 @@ public class InventoryReportController {
             // 商品记录
             productRecords.add(new InventoryReportRecord(
                 product.name,
-                product.category != null ? product.category : I18nManager.getInstance().get("report.uncategorized"),
+                product.category != null ? product.category : I18nManager.getInstance().get(I18nKeys.Report.UNCATEGORIZED),
                 product.quantity,
                 stockValue,
                 salesQuantity,
@@ -485,7 +488,7 @@ public class InventoryReportController {
             ));
 
             // 更新分类统计
-            String category = product.category != null ? product.category : I18nManager.getInstance().get("report.uncategorized");
+            String category = product.category != null ? product.category : I18nManager.getInstance().get(I18nKeys.Report.UNCATEGORIZED);
             categoryQuantityMap.put(category, categoryQuantityMap.getOrDefault(category, 0) + product.quantity);
             categoryAmountMap.put(category, categoryAmountMap.getOrDefault(category, 0.0) + stockValue);
 
@@ -493,7 +496,7 @@ public class InventoryReportController {
             if (salesQuantity < slowSalesThreshold) {
                 slowSalesRecords.add(new InventoryReportRecord(
                     product.name,
-                    product.category != null ? product.category : I18nManager.getInstance().get("report.uncategorized"),
+                    product.category != null ? product.category : I18nManager.getInstance().get(I18nKeys.Report.UNCATEGORIZED),
                     product.quantity,
                     salesQuantity,
                     lastSaleDate
@@ -504,7 +507,7 @@ public class InventoryReportController {
             if (inventoryDays > inventoryDaysThreshold) {
                 overstockRecords.add(new InventoryReportRecord(
                     product.name,
-                    product.category != null ? product.category : I18nManager.getInstance().get("report.uncategorized"),
+                    product.category != null ? product.category : I18nManager.getInstance().get(I18nKeys.Report.UNCATEGORIZED),
                     product.quantity,
                     stockValue,
                     inventoryDays
@@ -537,14 +540,10 @@ public class InventoryReportController {
      */
     private int calculateSalesQuantity(String productName, LocalDate startDate, LocalDate endDate) {
         int salesQuantity = 0;
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
         for (Transaction transaction : allTransactions) {
             try {
-                Date date = sdf.parse(transaction.timestamp);
-                LocalDate localDate = date.toInstant()
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDate();
+                LocalDate localDate = com.cashier.util.DateTimeFormats.parseStandard(transaction.timestamp).toLocalDate();
 
                 if (!localDate.isBefore(startDate) && !localDate.isAfter(endDate)) {
                     if (transaction.items != null) {
@@ -568,17 +567,16 @@ public class InventoryReportController {
      */
     private String getLastSaleDate(String productName) {
         String lastSaleDate = I18nManager.getInstance().get("report.never_sold");
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        Date maxDate = null;
+        LocalDate maxDate = null;
 
         for (Transaction transaction : allTransactions) {
             if (transaction.items != null) {
                 for (var item : transaction.items) {
                     if (item.name.equals(productName)) {
                         try {
-                            Date date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(transaction.timestamp);
-                            if (maxDate == null || date.after(maxDate)) {
-                                maxDate = date;
+                            LocalDate localDate = com.cashier.util.DateTimeFormats.parseStandard(transaction.timestamp).toLocalDate();
+                            if (maxDate == null || localDate.isAfter(maxDate)) {
+                                maxDate = localDate;
                             }
                         } catch (Exception e) {
                             // 日期解析失败，跳过
@@ -589,7 +587,7 @@ public class InventoryReportController {
         }
 
         if (maxDate != null) {
-            lastSaleDate = sdf.format(maxDate);
+            lastSaleDate = maxDate.format(com.cashier.util.DateTimeFormats.DATE);
         }
 
         return lastSaleDate;
@@ -670,10 +668,10 @@ public class InventoryReportController {
         ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList();
 
         if (normalCount > 0) {
-            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get("inventory.status.normal"), normalCount));
+            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get(I18nKeys.Inventory.Status.NORMAL), normalCount));
         }
         if (lowStockCount > 0) {
-            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get("inventory.status.low_stock"), lowStockCount));
+            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get(I18nKeys.Inventory.Status.LOW_STOCK), lowStockCount));
         }
         if (slowSalesCount > 0) {
             pieChartData.add(new PieChart.Data(I18nManager.getInstance().get("inventory_report.status.slow"), slowSalesCount));
@@ -733,9 +731,9 @@ public class InventoryReportController {
         ChoiceDialog<String> exportDialog = new ChoiceDialog<>(
             "商品统计", "商品统计", "滞销商品", "库存积压"
         );
-        exportDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.select_export_content"));
-        exportDialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get("runtime.select_export_content_header"));
-        exportDialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_content_label"));
+        exportDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_EXPORT_CONTENT));
+        exportDialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_EXPORT_CONTENT_HEADER));
+        exportDialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.EXPORT_CONTENT_LABEL));
 
         exportDialog.showAndWait().ifPresent(exportType -> {
             if (exportType.equals("商品统计")) {
@@ -761,9 +759,9 @@ public class InventoryReportController {
         ChoiceDialog<String> formatDialog = new ChoiceDialog<>(
             "Excel", "Excel", "PDF"
         );
-        formatDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("label.export_format"));
-        formatDialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get("label.please_select_format"));
-        formatDialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.format_label"));
+        formatDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.EXPORT_FORMAT));
+        formatDialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.PLEASE_SELECT_FORMAT));
+        formatDialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.FORMAT_LABEL));
 
         formatDialog.showAndWait().ifPresent(format -> {
             com.cashier.util.ExportUtil.ExportFormat exportFormat =
@@ -802,19 +800,19 @@ public class InventoryReportController {
 
                 if (filePath != null) {
                     com.cashier.util.StatusBarManager.updateSuccess(
-                        com.cashier.i18n.I18nManager.getInstance().get("success.export"));
+                        com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Success.EXPORT));
                     Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                    successAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("success.export"));
+                    successAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Success.EXPORT));
                     successAlert.setHeaderText(null);
-                    successAlert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_success_path") + "\n" + filePath);
+                    successAlert.setContentText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.EXPORT_SUCCESS_PATH) + "\n" + filePath);
                     successAlert.showAndWait();
                     logger.info("库存商品统计报表导出成功: {}", filePath);
                 } else {
-                    showError(com.cashier.i18n.I18nManager.getInstance().get("error.export_failed"));
+                    showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.EXPORT_FAILED));
                 }
             } catch (Exception e) {
                 logger.error("导出库存商品统计报表失败", e);
-                showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_failed_detail", e.getMessage()));
+                showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.EXPORT_FAILED_DETAIL, e.getMessage()));
             }
         });
     }
@@ -832,9 +830,9 @@ public class InventoryReportController {
         ChoiceDialog<String> formatDialog = new ChoiceDialog<>(
             "Excel", "Excel", "PDF"
         );
-        formatDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("label.export_format"));
-        formatDialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get("label.please_select_format"));
-        formatDialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.format_label"));
+        formatDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.EXPORT_FORMAT));
+        formatDialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.PLEASE_SELECT_FORMAT));
+        formatDialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.FORMAT_LABEL));
 
         formatDialog.showAndWait().ifPresent(format -> {
             com.cashier.util.ExportUtil.ExportFormat exportFormat =
@@ -871,19 +869,19 @@ public class InventoryReportController {
 
                 if (filePath != null) {
                     com.cashier.util.StatusBarManager.updateSuccess(
-                        com.cashier.i18n.I18nManager.getInstance().get("success.export"));
+                        com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Success.EXPORT));
                     Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                    successAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("success.export"));
+                    successAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Success.EXPORT));
                     successAlert.setHeaderText(null);
-                    successAlert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_success_path") + "\n" + filePath);
+                    successAlert.setContentText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.EXPORT_SUCCESS_PATH) + "\n" + filePath);
                     successAlert.showAndWait();
                     logger.info("滞销商品报表导出成功: {}", filePath);
                 } else {
-                    showError(com.cashier.i18n.I18nManager.getInstance().get("error.export_failed"));
+                    showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.EXPORT_FAILED));
                 }
             } catch (Exception e) {
                 logger.error("导出滞销商品报表失败", e);
-                showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_failed_detail", e.getMessage()));
+                showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.EXPORT_FAILED_DETAIL, e.getMessage()));
             }
         });
     }
@@ -901,9 +899,9 @@ public class InventoryReportController {
         ChoiceDialog<String> formatDialog = new ChoiceDialog<>(
             "Excel", "Excel", "PDF"
         );
-        formatDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("label.export_format"));
-        formatDialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get("label.please_select_format"));
-        formatDialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.format_label"));
+        formatDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.EXPORT_FORMAT));
+        formatDialog.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.PLEASE_SELECT_FORMAT));
+        formatDialog.setContentText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.FORMAT_LABEL));
 
         formatDialog.showAndWait().ifPresent(format -> {
             com.cashier.util.ExportUtil.ExportFormat exportFormat =
@@ -943,19 +941,19 @@ public class InventoryReportController {
 
                 if (filePath != null) {
                     com.cashier.util.StatusBarManager.updateSuccess(
-                        com.cashier.i18n.I18nManager.getInstance().get("success.export"));
+                        com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Success.EXPORT));
                     Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                    successAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("success.export"));
+                    successAlert.setTitle(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Success.EXPORT));
                     successAlert.setHeaderText(null);
-                    successAlert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_success_path") + "\n" + filePath);
+                    successAlert.setContentText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.EXPORT_SUCCESS_PATH) + "\n" + filePath);
                     successAlert.showAndWait();
                     logger.info("库存积压报表导出成功: {}", filePath);
                 } else {
-                    showError(com.cashier.i18n.I18nManager.getInstance().get("error.export_failed"));
+                    showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.EXPORT_FAILED));
                 }
             } catch (Exception e) {
                 logger.error("导出库存积压报表失败", e);
-                showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_failed_detail", e.getMessage()));
+                showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.EXPORT_FAILED_DETAIL, e.getMessage()));
             }
         });
     }
@@ -966,7 +964,7 @@ public class InventoryReportController {
     private void showError(String message) {
         com.cashier.util.StatusBarManager.updateError(message);
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(I18nManager.getInstance().get("label.error"));
+        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Label.ERROR));
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();

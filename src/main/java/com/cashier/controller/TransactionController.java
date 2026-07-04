@@ -1,6 +1,7 @@
 package com.cashier.controller;
 
-import com.cashier.controller.CreateReturnOrderDialogController;
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.dao.TransactionDAO;
 import com.cashier.i18n.I18nManager;
 import com.cashier.model.Transaction;
@@ -26,9 +27,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.text.SimpleDateFormat;
 import java.util.List;
-import java.util.Map;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
@@ -196,7 +195,7 @@ public class TransactionController {
             allTransactions = TransactionDAO.findAll();
         } catch (SQLException e) {
             logger.error("加载交易数据失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
             allTransactions = new java.util.ArrayList<>();
         }
         transactionList = FXCollections.observableArrayList(allTransactions);
@@ -250,7 +249,7 @@ public class TransactionController {
         detail.append(i18n.get("transaction.payment_label"))
             .append(com.cashier.util.I18nUiUtils.paymentMethod(transaction.paymentMethod)).append("\n");
         detail.append(i18n.get("transaction.member_phone")).append(
-            transaction.memberPhone == null || transaction.memberPhone.isEmpty() ? i18n.get("common.none") : transaction.memberPhone
+            transaction.memberPhone == null || transaction.memberPhone.isEmpty() ? i18n.get(I18nKeys.Common.NONE) : transaction.memberPhone
         ).append("\n\n");
 
         detail.append(i18n.get("transaction.item_list")).append("\n");
@@ -274,7 +273,7 @@ public class TransactionController {
         detail.append(i18n.get("transaction.paid_amount")).append(CurrencyUtil.format(transaction.finalAmount.doubleValue())).append("\n");
 
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(I18nManager.getInstance().get("label.transaction_detail"));
+        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Label.TRANSACTION_DETAIL));
         alert.setHeaderText(null);
         alert.setContentText(detail.toString());
         alert.getDialogPane().setPrefWidth(500);
@@ -288,7 +287,7 @@ public class TransactionController {
     public void handleCreateReturn() {
         Transaction selected = transactionTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.select_return_transaction"));
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.INFO), com.cashier.i18n.I18nManager.getInstance().get("runtime.select_return_transaction"));
             return;
         }
 
@@ -296,7 +295,7 @@ public class TransactionController {
             // 获取交易明细
             List<Product> items = selected.getItems();
             if (items == null || items.isEmpty()) {
-                showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.transaction_detail_missing"));
+                showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.INFO), com.cashier.i18n.I18nManager.getInstance().get("runtime.transaction_detail_missing"));
                 return;
             }
 
@@ -326,13 +325,13 @@ public class TransactionController {
 
             // 如果提交成功，刷新交易列表
             if (controller.isSubmitted()) {
-                showAlert(Alert.AlertType.INFORMATION, I18nManager.getInstance().get("label.success"), I18nManager.getInstance().get("success.create_return"));
+                showAlert(Alert.AlertType.INFORMATION, I18nManager.getInstance().get(I18nKeys.Label.SUCCESS), I18nManager.getInstance().get("success.create_return"));
                 loadTransactions();
             }
 
         } catch (Exception e) {
             logger.error("打开退货订单对话框失败", e);
-            showAlert(Alert.AlertType.ERROR, I18nManager.getInstance().get("label.error"), I18nManager.getInstance().get("runtime.return_dialog_failed", e.getMessage()));
+            showAlert(Alert.AlertType.ERROR, I18nManager.getInstance().get(I18nKeys.Label.ERROR), I18nManager.getInstance().get("runtime.return_dialog_failed", e.getMessage()));
         }
     }
 
@@ -402,9 +401,8 @@ public class TransactionController {
                 // 日期筛选
                 if (startDatePicker.getValue() != null || endDatePicker.getValue() != null) {
                     try {
-                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                        java.util.Date date = sdf.parse(t.timestamp);
-                        java.time.LocalDate localDate = date.toInstant()
+                        java.time.LocalDate localDate = java.time.LocalDateTime.parse(t.timestamp,
+                                com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME)
                             .atZone(java.time.ZoneId.systemDefault())
                             .toLocalDate();
 
@@ -452,8 +450,8 @@ public class TransactionController {
         ChoiceDialog<String> formatDialog = new ChoiceDialog<>(
             "Excel", "Excel", "PDF"
         );
-        formatDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("label.export_format"));
-        formatDialog.setHeaderText(I18nManager.getInstance().get("label.please_select_format"));
+        formatDialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.EXPORT_FORMAT));
+        formatDialog.setHeaderText(I18nManager.getInstance().get(I18nKeys.Label.PLEASE_SELECT_FORMAT));
         formatDialog.setContentText(I18nManager.getInstance().get("label.format") + ":");
 
         formatDialog.showAndWait().ifPresent(format -> {
@@ -477,7 +475,7 @@ public class TransactionController {
 
             // 准备数据
             java.util.List<String[]> data = new java.util.ArrayList<>();
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            java.time.format.DateTimeFormatter sdf = com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME;
 
             for (Transaction t : transactionList) {
                 // 构建商品列表字符串
@@ -497,11 +495,11 @@ public class TransactionController {
                 // 处理时间格式
                 String timestampStr;
                 try {
-                    // 尝试将时间戳转换为 Date
+                    // 尝试将时间戳转换为 DateTime
                     if (t.timestamp != null && !t.timestamp.isEmpty()) {
                         long time = FormValidator.parseLong(t.timestamp);
-                        java.util.Date date = new java.util.Date(time);
-                        timestampStr = sdf.format(date);
+                        java.time.Instant instant = java.time.Instant.ofEpochMilli(time);
+                        timestampStr = java.time.ZonedDateTime.ofInstant(instant, java.time.ZoneId.systemDefault()).format(sdf);
                     } else {
                         timestampStr = "";
                     }
@@ -533,19 +531,19 @@ public class TransactionController {
 
             if (filePath != null) {
                 com.cashier.util.StatusBarManager.updateSuccess(
-                    I18nManager.getInstance().get("success.export"));
+                    I18nManager.getInstance().get(I18nKeys.Success.EXPORT));
                 Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                successAlert.setTitle(I18nManager.getInstance().get("success.export"));
+                successAlert.setTitle(I18nManager.getInstance().get(I18nKeys.Success.EXPORT));
                 successAlert.setHeaderText(null);
                 successAlert.setContentText(I18nManager.getInstance().get("success.export_file") + ":\n" + filePath);
                 successAlert.showAndWait();
-                updateStatus(I18nManager.getInstance().get("success.export"));
+                updateStatus(I18nManager.getInstance().get(I18nKeys.Success.EXPORT));
             } else {
-                showError(I18nManager.getInstance().get("error.export_failed"));
+                showError(I18nManager.getInstance().get(I18nKeys.Error.EXPORT_FAILED));
             }
         } catch (Exception e) {
             logger.error("导出交易记录失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.export_failed_detail", e.getMessage()));
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.EXPORT_FAILED_DETAIL, e.getMessage()));
         }
     }
 
@@ -598,7 +596,7 @@ public class TransactionController {
     private void showError(String message) {
         com.cashier.util.StatusBarManager.updateError(message);
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(I18nManager.getInstance().get("label.error"));
+        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Label.ERROR));
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();

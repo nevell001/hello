@@ -5,7 +5,6 @@ import com.cashier.service.InvoicePrintService;
 import com.cashier.model.Invoice;
 import com.cashier.model.InvoiceItem;
 import com.cashier.dao.InvoiceDAO;
-import com.cashier.api.ApiConfig;
 import com.cashier.api.sync.SyncManager;
 import com.cashier.api.sync.SyncEventType;
 import com.cashier.util.LoggerFactoryUtil;
@@ -14,6 +13,8 @@ import org.slf4j.Logger;
 
 import java.net.Socket;
 import java.net.InetSocketAddress;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -25,6 +26,12 @@ public class PrintApiController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(PrintApiController.class);
     
     private static final int DEFAULT_PAPER_WIDTH = 48; // 80mm 纸张约48字符
+    private static final String DEVICE_ID_FIELD = "deviceId";
+    private static final String DEVICE_NAME_FIELD = "deviceName";
+    private static final String CONNECTED_FIELD = "connected";
+    private static final String PAPER_WIDTH_FIELD = "paperWidth";
+    private static final String INVOICE_ID_FIELD = "invoiceId";
+    private static final String PRINTER_NOT_FOUND_PREFIX = "打印机不存在: ";
     
     /**
      * 获取所有打印机列表
@@ -37,17 +44,17 @@ public class PrintApiController {
         List<Map<String, Object>> printerList = devices.stream()
             .map(device -> {
                 Map<String, Object> info = new HashMap<>();
-                info.put("deviceId", device.getDeviceId());
-                info.put("deviceName", device.getDeviceName());
+                info.put(DEVICE_ID_FIELD, device.getDeviceId());
+                info.put(DEVICE_NAME_FIELD, device.getDeviceName());
                 info.put("deviceType", device.getDeviceType().getDisplayName());
                 info.put("status", device.getStatus().getDisplayName());
-                info.put("connected", device.isConnected());
+                info.put(CONNECTED_FIELD, device.isConnected());
                 
                 if (device instanceof NetworkPrinterDevice) {
                     NetworkPrinterDevice netPrinter = (NetworkPrinterDevice) device;
                     info.put("hostAddress", netPrinter.getHostAddress());
                     info.put("port", netPrinter.getPort());
-                    info.put("paperWidth", netPrinter.getPaperWidth());
+                    info.put(PAPER_WIDTH_FIELD, netPrinter.getPaperWidth());
                 }
                 
                 return info;
@@ -74,8 +81,8 @@ public class PrintApiController {
         List<Map<String, Object>> printerList = connected.stream()
             .map(device -> {
                 Map<String, Object> info = new HashMap<>();
-                info.put("deviceId", device.getDeviceId());
-                info.put("deviceName", device.getDeviceName());
+                info.put(DEVICE_ID_FIELD, device.getDeviceId());
+                info.put(DEVICE_NAME_FIELD, device.getDeviceName());
                 info.put("deviceType", device.getDeviceType().getDisplayName());
                 info.put("status", device.getStatus().getDisplayName());
                 
@@ -109,17 +116,17 @@ public class PrintApiController {
         if (device == null) {
             ctx.status(404).json(Map.of(
                 "success", false,
-                "error", "打印机不存在: " + deviceId
+                "error", PRINTER_NOT_FOUND_PREFIX + deviceId
             ));
             return;
         }
         
         Map<String, Object> info = new HashMap<>();
-        info.put("deviceId", device.getDeviceId());
-        info.put("deviceName", device.getDeviceName());
+        info.put(DEVICE_ID_FIELD, device.getDeviceId());
+        info.put(DEVICE_NAME_FIELD, device.getDeviceName());
         info.put("deviceType", device.getDeviceType().getDisplayName());
         info.put("status", device.getStatus().getDisplayName());
-        info.put("connected", device.isConnected());
+        info.put(CONNECTED_FIELD, device.isConnected());
         info.put("configuration", device.getConfiguration());
         
         PrinterStatus status = device.checkStatus();
@@ -135,7 +142,7 @@ public class PrintApiController {
             NetworkPrinterDevice netPrinter = (NetworkPrinterDevice) device;
             info.put("hostAddress", netPrinter.getHostAddress());
             info.put("port", netPrinter.getPort());
-            info.put("paperWidth", netPrinter.getPaperWidth());
+            info.put(PAPER_WIDTH_FIELD, netPrinter.getPaperWidth());
         }
         
         ctx.json(Map.of("success", true, "data", info));
@@ -175,8 +182,8 @@ public class PrintApiController {
                 printer.setConfiguration(config);
             }
             
-            if (body.containsKey("paperWidth")) {
-                printer.setPaperWidth(getInt(body, "paperWidth", DEFAULT_PAPER_WIDTH));
+            if (body.containsKey(PAPER_WIDTH_FIELD)) {
+                printer.setPaperWidth(getInt(body, PAPER_WIDTH_FIELD, DEFAULT_PAPER_WIDTH));
             }
             
             // 注册到管理器
@@ -189,8 +196,8 @@ public class PrintApiController {
             ctx.json(Map.of(
                 "success", true,
                 "data", Map.of(
-                    "deviceId", deviceId,
-                    "deviceName", name,
+                    DEVICE_ID_FIELD, deviceId,
+                    DEVICE_NAME_FIELD, name,
                     "hostAddress", host,
                     "port", port,
                     "initialized", initialized,
@@ -201,7 +208,7 @@ public class PrintApiController {
             
             // 广播打印机添加事件
             SyncManager.getInstance().broadcastSyncEvent(SyncEventType.PRINTER_ADDED, 
-                Map.of("deviceId", deviceId, "deviceName", name));
+                Map.of(DEVICE_ID_FIELD, deviceId, DEVICE_NAME_FIELD, name));
             
         } catch (Exception e) {
             logger.error("添加打印机失败", e);
@@ -224,7 +231,7 @@ public class PrintApiController {
         if (device == null) {
             ctx.status(404).json(Map.of(
                 "success", false,
-                "error", "打印机不存在: " + deviceId
+                "error", PRINTER_NOT_FOUND_PREFIX + deviceId
             ));
             return;
         }
@@ -234,16 +241,16 @@ public class PrintApiController {
         ctx.json(Map.of(
             "success", connected,
             "data", Map.of(
-                "deviceId", deviceId,
+                DEVICE_ID_FIELD, deviceId,
                 "status", device.getStatus().getDisplayName(),
-                "connected", device.isConnected()
+                CONNECTED_FIELD, device.isConnected()
             ),
             "message", connected ? "打印机连接成功" : "打印机连接失败"
         ));
         
         if (connected) {
             SyncManager.getInstance().broadcastSyncEvent(SyncEventType.PRINTER_CONNECTED, 
-                Map.of("deviceId", deviceId, "deviceName", device.getDeviceName()));
+                Map.of(DEVICE_ID_FIELD, deviceId, DEVICE_NAME_FIELD, device.getDeviceName()));
         }
     }
     
@@ -259,7 +266,7 @@ public class PrintApiController {
         if (device == null) {
             ctx.status(404).json(Map.of(
                 "success", false,
-                "error", "打印机不存在: " + deviceId
+                "error", PRINTER_NOT_FOUND_PREFIX + deviceId
             ));
             return;
         }
@@ -269,15 +276,15 @@ public class PrintApiController {
         ctx.json(Map.of(
             "success", disconnected,
             "data", Map.of(
-                "deviceId", deviceId,
+                DEVICE_ID_FIELD, deviceId,
                 "status", device.getStatus().getDisplayName(),
-                "connected", device.isConnected()
+                CONNECTED_FIELD, device.isConnected()
             ),
             "message", disconnected ? "打印机已断开" : "打印机断开失败"
         ));
         
         SyncManager.getInstance().broadcastSyncEvent(SyncEventType.PRINTER_DISCONNECTED, 
-            Map.of("deviceId", deviceId, "deviceName", device.getDeviceName()));
+            Map.of(DEVICE_ID_FIELD, deviceId, DEVICE_NAME_FIELD, device.getDeviceName()));
     }
     
     /**
@@ -292,7 +299,7 @@ public class PrintApiController {
         if (device == null) {
             ctx.status(404).json(Map.of(
                 "success", false,
-                "error", "打印机不存在: " + deviceId
+                "error", PRINTER_NOT_FOUND_PREFIX + deviceId
             ));
             return;
         }
@@ -306,7 +313,7 @@ public class PrintApiController {
         ));
         
         SyncManager.getInstance().broadcastSyncEvent(SyncEventType.PRINTER_REMOVED, 
-            Map.of("deviceId", deviceId, "deviceName", deviceName));
+            Map.of(DEVICE_ID_FIELD, deviceId, DEVICE_NAME_FIELD, deviceName));
     }
     
     /**
@@ -341,7 +348,7 @@ public class PrintApiController {
         if (device == null) {
             ctx.status(404).json(Map.of(
                 "success", false,
-                "error", "打印机不存在: " + deviceId
+                "error", PRINTER_NOT_FOUND_PREFIX + deviceId
             ));
             return;
         }
@@ -352,8 +359,8 @@ public class PrintApiController {
             ctx.json(Map.of(
                 "success", true,
                 "data", Map.of(
-                    "deviceId", deviceId,
-                    "connected", device.isConnected(),
+                    DEVICE_ID_FIELD, deviceId,
+                    CONNECTED_FIELD, device.isConnected(),
                     "status", device.getStatus().getDisplayName(),
                     "available", false
                 )
@@ -362,8 +369,8 @@ public class PrintApiController {
             ctx.json(Map.of(
                 "success", true,
                 "data", Map.of(
-                    "deviceId", deviceId,
-                    "connected", device.isConnected(),
+                    DEVICE_ID_FIELD, deviceId,
+                    CONNECTED_FIELD, device.isConnected(),
                     "status", status.getStatus().getDisplayName(),
                     "paperRemaining", status.getPaperRemaining(),
                     "inkRemaining", status.getInkRemaining(),
@@ -389,7 +396,7 @@ public class PrintApiController {
         if (device == null) {
             ctx.status(404).json(Map.of(
                 "success", false,
-                "error", "打印机不存在: " + deviceId
+                "error", PRINTER_NOT_FOUND_PREFIX + deviceId
             ));
             return;
         }
@@ -417,7 +424,7 @@ public class PrintApiController {
             content.append("端口: ").append(netPrinter.getPort()).append("\n");
         }
         
-        content.append("打印时间: ").append(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())).append("\n");
+        content.append("打印时间: ").append(com.cashier.util.DateTimeFormats.formatStandard(LocalDateTime.now(ZoneId.systemDefault()))).append("\n");
         content.append(EscPosUtils.createSeparator(DEFAULT_PAPER_WIDTH, '-')).append("\n");
         content.append("\n\n");
         
@@ -498,7 +505,7 @@ public class PrintApiController {
      */
     public static void printInvoice(Context ctx) {
         String deviceId = ctx.pathParam("id");
-        String invoiceId = ctx.pathParam("invoiceId");
+        String invoiceId = ctx.pathParam(INVOICE_ID_FIELD);
         
         try {
             Invoice invoice = InvoiceDAO.findById(invoiceId);
@@ -521,7 +528,7 @@ public class PrintApiController {
                 ctx.json(Map.of(
                     "success", true,
                     "data", Map.of(
-                        "invoiceId", invoiceId,
+                        INVOICE_ID_FIELD, invoiceId,
                         "filePath", filePath,
                         "printed", false
                     ),
@@ -544,13 +551,13 @@ public class PrintApiController {
                 
                 // 广播打印事件
                 SyncManager.getInstance().broadcastSyncEvent(SyncEventType.INVOICE_PRINTED, 
-                    Map.of("invoiceId", invoiceId, "invoiceNumber", invoice.invoiceNumber));
+                    Map.of(INVOICE_ID_FIELD, invoiceId, "invoiceNumber", invoice.invoiceNumber));
             }
             
             ctx.json(Map.of(
                 "success", true,
                 "data", Map.of(
-                    "invoiceId", invoiceId,
+                    INVOICE_ID_FIELD, invoiceId,
                     "invoiceNumber", invoice.invoiceNumber,
                     "filePath", filePath,
                     "printerId", device.getDeviceId(),
@@ -580,7 +587,9 @@ public class PrintApiController {
         
         sb.append("发票号码: ").append(invoice.invoiceNumber).append("\n");
         sb.append("发票代码: ").append(invoice.invoiceCode).append("\n");
-        sb.append("开票时间: ").append(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(invoice.createTime)).append("\n");
+        sb.append("开票时间: ").append(com.cashier.util.DateTimeFormats.formatStandard(
+            invoice.createTime.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
+        )).append("\n");
         
         sb.append(EscPosUtils.createSeparator(DEFAULT_PAPER_WIDTH, '-')).append("\n");
         sb.append("购买方: ").append(invoice.buyerName).append("\n");
@@ -693,7 +702,7 @@ public class PrintApiController {
                     "host", host,
                     "port", port,
                     "status", "在线",
-                    "deviceId", "NET-" + host + "-" + port
+                    DEVICE_ID_FIELD, "NET-" + host + "-" + port
                 ));
             }
         }

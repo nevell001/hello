@@ -1,5 +1,7 @@
 package com.cashier.controller;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
 import com.cashier.i18n.I18nManager;
@@ -19,7 +21,7 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
 import java.util.*;
 
 /**
@@ -96,7 +98,6 @@ public class InventoryAlertController {
     private InventoryAlertService alertService;
     private ObservableList<AlertItem> alertList;
     private Timer updateTimer;
-    private SimpleDateFormat dateFormat;
 
     /**
      * 库存预警数据项
@@ -144,8 +145,9 @@ public class InventoryAlertController {
 
         public void setLastAlertTime(Date time) {
             if (time != null) {
-                this.lastAlertTime.set(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(time));
-            }
+            this.lastAlertTime.set(com.cashier.util.DateTimeFormats.formatStandard(
+                time.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()));
+        }
         }
 
         public SimpleStringProperty nameProperty() {
@@ -210,7 +212,6 @@ public class InventoryAlertController {
         logger.info("InventoryAlertController: 初始化库存预警界面...");
         alertService = InventoryAlertService.getInstance();
         alertList = FXCollections.observableArrayList();
-        dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
         // 设置表格列
         setupTableColumns();
@@ -302,7 +303,9 @@ public class InventoryAlertController {
         alertCooldownLabel.setText(formatDuration(cooldownMs));
 
         if (lastCheckTime > 0) {
-            lastCheckTimeLabel.setText(I18nManager.getInstance().get("runtime.last_check", dateFormat.format(new Date(lastCheckTime))));
+            lastCheckTimeLabel.setText(I18nManager.getInstance().get("runtime.last_check",
+                com.cashier.util.DateTimeFormats.formatStandard(
+                    new java.util.Date(lastCheckTime).toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime())));
         } else {
             lastCheckTimeLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.last_check"));
         }
@@ -344,6 +347,9 @@ public class InventoryAlertController {
                             break;
                         case INFO:
                             infoCount++;
+                            break;
+                        default:
+                            logger.warn("未知库存预警级别: {}", alertItem.getLevel());
                             break;
                     }
                 }
@@ -418,7 +424,7 @@ public class InventoryAlertController {
     @FXML
     public void handleExport() {
         if (alertList.isEmpty()) {
-            FXUtils.showErrorAlert(com.cashier.i18n.I18nManager.getInstance().get("error.export_data"), "当前没有预警商品可导出！");
+            FXUtils.showErrorAlert(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.EXPORT_DATA), "当前没有预警商品可导出！");
             return;
         }
 
@@ -441,11 +447,11 @@ public class InventoryAlertController {
 
             ExportUtil.export("库存预警报告", headers, data,
                 com.cashier.util.ExportUtil.ExportFormat.EXCEL, "reports");
-            FXUtils.showInfoAlert(com.cashier.i18n.I18nManager.getInstance().get("success.export"), "库存预警报告已导出到 reports 目录！");
+            FXUtils.showInfoAlert(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Success.EXPORT), "库存预警报告已导出到 reports 目录！");
 
         } catch (Exception e) {
             logger.error("导出预警报告失败", e);
-            FXUtils.showErrorAlert(com.cashier.i18n.I18nManager.getInstance().get("error.export_data"), "导出预警报告失败：" + e.getMessage());
+            FXUtils.showErrorAlert(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.EXPORT_DATA), "导出预警报告失败：" + e.getMessage());
         }
     }
 

@@ -26,7 +26,7 @@ class ExportFeedbackPolicyTest {
             String controller = Files.readString(Path.of(file));
             assertTrue(controller.contains("if (filePath != null)"), file);
             assertTrue(controller.contains("StatusBarManager.updateSuccess"), file);
-            assertTrue(controller.contains("get(\"success.export\")"), file);
+            assertTrue(controller.contains("get(I18nKeys.Success.EXPORT)"), file);
         }
     }
 

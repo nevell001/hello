@@ -115,8 +115,8 @@ public class Member {
         if (birthday == null || birthday.isEmpty()) {
             return false;
         }
-        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("MM-dd");
-        String today = sdf.format(new java.util.Date());
+        String today = java.time.LocalDate.now(java.time.ZoneId.systemDefault())
+            .format(com.cashier.util.DateTimeFormats.BIRTHDAY);
         return today.equals(birthday);
     }
 

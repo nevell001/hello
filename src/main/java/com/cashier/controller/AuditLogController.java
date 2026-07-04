@@ -13,7 +13,7 @@ import javafx.scene.control.*;
 import javafx.util.StringConverter;
 import org.slf4j.Logger;
 
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Locale;
 
@@ -44,8 +44,11 @@ public class AuditLogController {
 
     @FXML
     private void initialize() {
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        timeColumn.setCellValueFactory(data -> new SimpleStringProperty(format.format(data.getValue().timestamp)));
+        timeColumn.setCellValueFactory(data -> new SimpleStringProperty(
+            data.getValue().timestamp != null
+                ? data.getValue().timestamp.atZone(ZoneId.systemDefault()).toLocalDateTime()
+                    .format(com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME)
+                : ""));
         usernameColumn.setCellValueFactory(data -> new SimpleStringProperty(
             data.getValue().username == null ? "-" : data.getValue().username));
         categoryColumn.setCellValueFactory(data -> new SimpleStringProperty(

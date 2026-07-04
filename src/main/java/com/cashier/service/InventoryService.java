@@ -20,7 +20,12 @@ import java.util.Locale;
  */
 public class InventoryService {
     private static final Logger logger = LoggerFactoryUtil.getLogger(InventoryService.class);
-    private static final ProductDAORefactored productDAO = DAOFactory.getInstance().getProductDAO();
+    private static ProductDAORefactored productDAO = DAOFactory.getInstance().getProductDAO();
+
+    // 用于测试
+    public static void setProductDAO(ProductDAORefactored dao) {
+        productDAO = dao;
+    }
 
     /**
      * 从数据库加载所有库存数据
@@ -178,8 +183,10 @@ public class InventoryService {
         try {
             Product product = productDAO.findById(productId);
             if (product == null) {
+                logger.warn("检查库存失败：商品不存在，ID={}", productId);
                 return false;
             }
+            logger.info("检查库存：商品={}, 需要={}, 现有={}", product.name, requiredQuantity, product.quantity);
             return product.quantity >= requiredQuantity;
         } catch (SQLException e) {
             logger.error("检查库存失败", e);

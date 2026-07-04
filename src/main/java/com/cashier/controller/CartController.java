@@ -1,11 +1,12 @@
 package com.cashier.controller;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.i18n.I18nManager;
 import com.cashier.dao.MemberDAO;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
 import com.cashier.dao.PromotionDAO;
-import com.cashier.dao.TransactionDAO;
 import com.cashier.model.CartItem;
 import com.cashier.model.Promotion;
 import com.cashier.service.DataService;
@@ -23,31 +24,23 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 import javafx.animation.Timeline;
 import javafx.animation.KeyFrame;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
 import javafx.util.Duration;
 import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
 import com.cashier.util.FormValidator;
 import com.cashier.util.QrCodeImageUtil;
 
-import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.sql.Connection;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -64,6 +57,9 @@ public class CartController {
     private static final String SCAN_SUCCESS_SOUND = "/sounds/scan_success.wav";
     private static final String SCAN_ERROR_SOUND = "/sounds/scan_error.wav";
     private static final String SCAN_NOT_FOUND_SOUND = "/sounds/scan_not_found.wav";
+    private static final String TEXT_SUCCESS_STYLE = "text-success";
+    private static final String TEXT_DANGER_STYLE = "text-danger";
+    private static final String QUICK_AMOUNT_BUTTON_STYLE = "-fx-font-size: 18px; -fx-font-weight: bold;";
     private static final long DUPLICATE_SCAN_SUPPRESSION_MILLIS = 300;
     private enum ScanMessageLevel {
         SUCCESS,
@@ -152,7 +148,6 @@ public class CartController {
     private Map<String, CartItem> cartMap = new HashMap<>();
     private Member currentMember;
     private User currentUser;
-    private String orderNumber;
     private BigDecimal alreadyPaidAmount = BigDecimal.ZERO; // 已支付金额
     private Promotion appliedPromotion; // 当前应用的促销
     private boolean paymentInProgress;
@@ -261,139 +256,115 @@ public class CartController {
      */
     private void setupSceneShortcuts(javafx.scene.Scene scene) {
         scene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, event -> {
-            // F1 - 添加商品
-            if (event.getCode() == javafx.scene.input.KeyCode.F1) {
-                handleAddProduct();
-                event.consume();
+            handleCartCommandShortcut(event);
+            if (!event.isConsumed()) {
+                handleCartFieldShortcut(event);
             }
-            // F2 - 挂单
-            else if (event.getCode() == javafx.scene.input.KeyCode.F2) {
-                handleHoldOrder();
-                event.consume();
-            }
-            // F3 - 恢复挂单
-            else if (event.getCode() == javafx.scene.input.KeyCode.F3) {
-                handleResumeOrder();
-                event.consume();
-            }
-            // F4 - 清空购物车
-            else if (event.getCode() == javafx.scene.input.KeyCode.F4) {
-                handleClearCart();
-                event.consume();
-            }
-            // Delete - 移除商品
-            else if (event.getCode() == javafx.scene.input.KeyCode.DELETE) {
-                handleRemoveProduct();
-                event.consume();
-            }
-            // Ctrl+L - 清空购物车
-            else if (event.isControlDown() && event.getCode() == javafx.scene.input.KeyCode.L) {
-                handleClearCart();
-                event.consume();
-            }
-            // Ctrl+F - 搜索商品
-            else if (event.isControlDown() && event.getCode() == javafx.scene.input.KeyCode.F) {
-                searchField.requestFocus();
-                event.consume();
-            }
-            // Ctrl+M - 查询会员
-            else if (event.isControlDown() && event.getCode() == javafx.scene.input.KeyCode.M) {
-                memberPhoneField.requestFocus();
-                event.consume();
-            }
-            // F8 - 现金支付
-            else if (event.getCode() == javafx.scene.input.KeyCode.F8) {
-                handleCashPayment();
-                event.consume();
-            }
-            // Ctrl+1 - 微信支付
-            else if (event.isControlDown() && event.getCode() == javafx.scene.input.KeyCode.DIGIT1) {
-                handleWechatPayment();
-                event.consume();
-            }
-            // Ctrl+2 - 支付宝支付
-            else if (event.isControlDown() && event.getCode() == javafx.scene.input.KeyCode.DIGIT2) {
-                handleAlipayPayment();
-                event.consume();
-            }
-            // Ctrl+3 - 银行卡支付
-            else if (event.isControlDown() && event.getCode() == javafx.scene.input.KeyCode.DIGIT3) {
-                handleCardPayment();
-                event.consume();
-            }
-            // Escape - 清空搜索框或会员手机号框
-            else if (event.getCode() == javafx.scene.input.KeyCode.ESCAPE) {
-                if (searchField.isFocused()) {
-                    searchField.clear();
-                    handleSearch();
-                    event.consume();
-                } else if (memberPhoneField.isFocused()) {
-                    memberPhoneField.clear();
-                    handleSearchMember();
-                    event.consume();
-                }
-            }
-            // Ctrl+/ - 显示快捷键帮助
-            else if (event.isControlDown() && event.getCode() == javafx.scene.input.KeyCode.SLASH) {
-                showShortcutHelp();
-                event.consume();
-            }
-            // 数字键 1-9 - 快速添加对应数量的商品（选中商品时）
-            else if (event.getCode().isDigitKey() && !event.isControlDown() && !event.isAltDown()) {
-                CartItem selected = cartTable.getSelectionModel().getSelectedItem();
-                if (selected != null && !searchField.isFocused() && !memberPhoneField.isFocused()) {
-                    int quantity = event.getText().charAt(0) - '0';
-                    if (quantity >= 1 && quantity <= 9) {
-                        updateCartItemQuantity(selected, quantity);
-                        event.consume();
-                    }
-                }
-            }
-            // 数字键 0 - 设置数量为0（移除商品）
-            else if (event.getCode() == javafx.scene.input.KeyCode.DIGIT0 && !event.isControlDown() && !event.isAltDown()) {
-                CartItem selected = cartTable.getSelectionModel().getSelectedItem();
-                if (selected != null && !searchField.isFocused() && !memberPhoneField.isFocused()) {
-                    updateCartItemQuantity(selected, 0);
-                    event.consume();
-                }
-            }
-            // + 键 - 增加选中商品数量
-            else if ((event.getCode() == javafx.scene.input.KeyCode.EQUALS || 
-                      event.getCode() == javafx.scene.input.KeyCode.PLUS) && 
-                      !event.isControlDown() && !event.isAltDown()) {
-                CartItem selected = cartTable.getSelectionModel().getSelectedItem();
-                if (selected != null && !searchField.isFocused() && !memberPhoneField.isFocused()) {
-                    updateCartItemQuantity(selected, selected.quantity + 1);
-                    event.consume();
-                }
-            }
-            // - 键 - 减少选中商品数量
-            else if ((event.getCode() == javafx.scene.input.KeyCode.MINUS || 
-                      event.getCode() == javafx.scene.input.KeyCode.SUBTRACT) && 
-                      !event.isControlDown() && !event.isAltDown()) {
-                CartItem selected = cartTable.getSelectionModel().getSelectedItem();
-                if (selected != null && !searchField.isFocused() && !memberPhoneField.isFocused() && selected.quantity > 1) {
-                    updateCartItemQuantity(selected, selected.quantity - 1);
-                    event.consume();
-                }
-            }
-            // PageUp - 增加数量（一次增加5）
-            else if (event.getCode() == javafx.scene.input.KeyCode.PAGE_UP && !event.isControlDown()) {
-                CartItem selected = cartTable.getSelectionModel().getSelectedItem();
-                if (selected != null && !searchField.isFocused() && !memberPhoneField.isFocused()) {
-                    updateCartItemQuantity(selected, Math.min(selected.quantity + 5, selected.product.quantity));
-                    event.consume();
-                }
-            }
-            // PageDown - 减少数量（一次减少5）
-            else if (event.getCode() == javafx.scene.input.KeyCode.PAGE_DOWN && !event.isControlDown()) {
-                CartItem selected = cartTable.getSelectionModel().getSelectedItem();
-                if (selected != null && !searchField.isFocused() && !memberPhoneField.isFocused() && selected.quantity > 5) {
-                    updateCartItemQuantity(selected, selected.quantity - 5);
-                    event.consume();
-                }
+            if (!event.isConsumed()) {
+                handleCartQuantityShortcut(event);
             }
         });
+    }
+
+    private void handleCartCommandShortcut(javafx.scene.input.KeyEvent event) {
+        if (event.isControlDown()) {
+            handleCartControlShortcut(event);
+        }
+
+        if (event.isConsumed()) {
+            return;
+        }
+
+        handleCartFunctionShortcut(event);
+    }
+
+    private void handleCartControlShortcut(javafx.scene.input.KeyEvent event) {
+        switch (event.getCode()) {
+            case L -> consumeShortcut(event, this::handleClearCart);
+            case F -> consumeShortcut(event, searchField::requestFocus);
+            case M -> consumeShortcut(event, memberPhoneField::requestFocus);
+            case DIGIT1 -> consumeShortcut(event, this::handleWechatPayment);
+            case DIGIT2 -> consumeShortcut(event, this::handleAlipayPayment);
+            case DIGIT3 -> consumeShortcut(event, this::handleCardPayment);
+            case SLASH -> consumeShortcut(event, this::showShortcutHelp);
+            default -> {
+            }
+        }
+    }
+
+    private void handleCartFunctionShortcut(javafx.scene.input.KeyEvent event) {
+        switch (event.getCode()) {
+            case F1 -> consumeShortcut(event, this::handleAddProduct);
+            case F2 -> consumeShortcut(event, this::handleHoldOrder);
+            case F3 -> consumeShortcut(event, this::handleResumeOrder);
+            case F4 -> consumeShortcut(event, this::handleClearCart);
+            case DELETE -> consumeShortcut(event, this::handleRemoveProduct);
+            case F8 -> consumeShortcut(event, this::handleCashPayment);
+            default -> {
+            }
+        }
+    }
+
+    private void handleCartFieldShortcut(javafx.scene.input.KeyEvent event) {
+        if (event.getCode() != javafx.scene.input.KeyCode.ESCAPE) {
+            return;
+        }
+
+        if (searchField.isFocused()) {
+            searchField.clear();
+            handleSearch();
+            event.consume();
+        } else if (memberPhoneField.isFocused()) {
+            memberPhoneField.clear();
+            handleSearchMember();
+            event.consume();
+        }
+    }
+
+    private void handleCartQuantityShortcut(javafx.scene.input.KeyEvent event) {
+        if (event.isControlDown() || event.isAltDown()) {
+            return;
+        }
+
+        CartItem selected = cartTable.getSelectionModel().getSelectedItem();
+        if (selected == null || searchField.isFocused() || memberPhoneField.isFocused()) {
+            return;
+        }
+
+        switch (event.getCode()) {
+            case DIGIT0 -> consumeShortcut(event, () -> updateCartItemQuantity(selected, 0));
+            case EQUALS, PLUS -> consumeShortcut(event, () -> updateCartItemQuantity(selected, selected.quantity + 1));
+            case MINUS, SUBTRACT -> {
+                if (selected.quantity > 1) {
+                    consumeShortcut(event, () -> updateCartItemQuantity(selected, selected.quantity - 1));
+                }
+            }
+            case PAGE_UP -> consumeShortcut(event,
+                () -> updateCartItemQuantity(selected, Math.min(selected.quantity + 5, selected.product.quantity)));
+            case PAGE_DOWN -> {
+                if (selected.quantity > 5) {
+                    consumeShortcut(event, () -> updateCartItemQuantity(selected, selected.quantity - 5));
+                }
+            }
+            default -> handleDigitQuantityShortcut(event, selected);
+        }
+    }
+
+    private void handleDigitQuantityShortcut(javafx.scene.input.KeyEvent event, CartItem selected) {
+        if (!event.getCode().isDigitKey() || event.getText().isEmpty()) {
+            return;
+        }
+
+        int quantity = event.getText().charAt(0) - '0';
+        if (quantity >= 1 && quantity <= 9) {
+            updateCartItemQuantity(selected, quantity);
+            event.consume();
+        }
+    }
+
+    private void consumeShortcut(javafx.scene.input.KeyEvent event, Runnable action) {
+        action.run();
+        event.consume();
     }
     
     /**
@@ -688,7 +659,7 @@ public class CartController {
     @FXML
     public void handleClearCart() {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle(I18nManager.getInstance().get("common.confirm"));
+        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Common.CONFIRM));
         alert.setHeaderText(null);
         alert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.clear_cart_confirm"));
 
@@ -808,12 +779,12 @@ public class CartController {
     @FXML
     public void handleCashPayment() {
         if (cartList.isEmpty()) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.cart_empty_payment"));
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.CART_EMPTY_PAYMENT));
             return;
         }
 
         if (!com.cashier.service.DataService.hasActiveShift()) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.no_active_shift"));
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.NO_ACTIVE_SHIFT));
             return;
         }
 
@@ -829,16 +800,16 @@ public class CartController {
         grid.setPadding(new javafx.geometry.Insets(25, 150, 15, 15));
 
         Label amountLabel = new Label(I18nManager.getInstance().get("runtime.amount_due", CurrencyUtil.format(finalAmount.doubleValue())));
-        amountLabel.getStyleClass().add("text-danger");
+        amountLabel.getStyleClass().add(TEXT_DANGER_STYLE);
         amountLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
 
         Label paidLabel = new Label(I18nManager.getInstance().get("runtime.amount_paid", CurrencyUtil.format(alreadyPaidAmount.doubleValue())));
-        paidLabel.getStyleClass().add("text-success");
+        paidLabel.getStyleClass().add(TEXT_SUCCESS_STYLE);
         paidLabel.setStyle("-fx-font-size: 18px;");
 
         BigDecimal initialRemaining = finalAmount.subtract(alreadyPaidAmount);
         Label remainingLabel = new Label(I18nManager.getInstance().get("runtime.amount_remaining", CurrencyUtil.format(initialRemaining.doubleValue())));
-        remainingLabel.getStyleClass().add("text-danger");
+        remainingLabel.getStyleClass().add(TEXT_DANGER_STYLE);
         remainingLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
 
         TextField receivedField = new TextField();
@@ -849,9 +820,9 @@ public class CartController {
         Label receivedLabel = new Label(I18nManager.getInstance().get("runtime.payment_this_time"));
         receivedLabel.setStyle("-fx-font-size: 18px;");
 
-        Label changeLabel = new Label(I18nManager.getInstance().get("runtime.change_amount", CurrencyUtil.format(0)));
-        changeLabel.getStyleClass().add("text-success");
-        changeLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        Label changeLabel = new Label(I18nManager.getInstance().get(I18nKeys.Runtime.CHANGE_AMOUNT, CurrencyUtil.format(0)));
+        changeLabel.getStyleClass().add(TEXT_SUCCESS_STYLE);
+        changeLabel.setStyle(QUICK_AMOUNT_BUTTON_STYLE);
 
         grid.add(amountLabel, 0, 0, 2, 1);
         grid.add(paidLabel, 0, 1, 2, 1);
@@ -863,7 +834,7 @@ public class CartController {
         String symbol = CurrencyUtil.getSymbol();
         Button btn100 = new Button(symbol + "100");
         btn100.setPrefSize(100, 60);
-        btn100.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        btn100.setStyle(QUICK_AMOUNT_BUTTON_STYLE);
         btn100.setOnAction(e -> {
             receivedField.setText("100");
             receivedField.requestFocus();
@@ -871,7 +842,7 @@ public class CartController {
 
         Button btn50 = new Button(symbol + "50");
         btn50.setPrefSize(100, 60);
-        btn50.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        btn50.setStyle(QUICK_AMOUNT_BUTTON_STYLE);
         btn50.setOnAction(e -> {
             receivedField.setText("50");
             receivedField.requestFocus();
@@ -879,7 +850,7 @@ public class CartController {
 
         Button btn20 = new Button(symbol + "20");
         btn20.setPrefSize(100, 60);
-        btn20.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        btn20.setStyle(QUICK_AMOUNT_BUTTON_STYLE);
         btn20.setOnAction(e -> {
             receivedField.setText("20");
             receivedField.requestFocus();
@@ -887,7 +858,7 @@ public class CartController {
 
         Button btn10 = new Button(symbol + "10");
         btn10.setPrefSize(100, 60);
-        btn10.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        btn10.setStyle(QUICK_AMOUNT_BUTTON_STYLE);
         btn10.setOnAction(e -> {
             receivedField.setText("10");
             receivedField.requestFocus();
@@ -895,7 +866,7 @@ public class CartController {
 
         Button btn5 = new Button(symbol + "5");
         btn5.setPrefSize(100, 60);
-        btn5.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        btn5.setStyle(QUICK_AMOUNT_BUTTON_STYLE);
         btn5.setOnAction(e -> {
             receivedField.setText("5");
             receivedField.requestFocus();
@@ -906,7 +877,7 @@ public class CartController {
 
         dialog.getDialogPane().setContent(grid);
 
-        ButtonType okButtonType = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get("dialog.confirm"), ButtonBar.ButtonData.OK_DONE);
+        ButtonType okButtonType = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Dialog.CONFIRM), ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(okButtonType, ButtonType.CANCEL);
 
         receivedField.textProperty().addListener((obs, oldVal, newVal) -> {
@@ -915,18 +886,18 @@ public class CartController {
                 BigDecimal totalPaid = alreadyPaidAmount.add(received);
                 BigDecimal remaining = finalAmount.subtract(totalPaid);
                 if (remaining.compareTo(BigDecimal.ZERO) <= 0) {
-                    changeLabel.setText(I18nManager.getInstance().get("runtime.change_amount", CurrencyUtil.format(remaining.abs().doubleValue())));
-                    changeLabel.getStyleClass().removeAll("text-success", "text-danger");
-                    changeLabel.getStyleClass().add("text-success");
+                    changeLabel.setText(I18nManager.getInstance().get(I18nKeys.Runtime.CHANGE_AMOUNT, CurrencyUtil.format(remaining.abs().doubleValue())));
+                    changeLabel.getStyleClass().removeAll(TEXT_SUCCESS_STYLE, TEXT_DANGER_STYLE);
+                    changeLabel.getStyleClass().add(TEXT_SUCCESS_STYLE);
                 } else {
                     changeLabel.setText(I18nManager.getInstance().get("runtime.remaining_amount", CurrencyUtil.format(remaining.doubleValue())));
-                    changeLabel.getStyleClass().removeAll("text-success", "text-danger");
-                    changeLabel.getStyleClass().add("text-danger");
+                    changeLabel.getStyleClass().removeAll(TEXT_SUCCESS_STYLE, TEXT_DANGER_STYLE);
+                    changeLabel.getStyleClass().add(TEXT_DANGER_STYLE);
                 }
             } catch (NumberFormatException e) {
                 BigDecimal remaining = finalAmount.subtract(alreadyPaidAmount);
                 if (remaining.compareTo(BigDecimal.ZERO) <= 0) {
-                    changeLabel.setText(I18nManager.getInstance().get("runtime.change_amount", CurrencyUtil.format(0)));
+                    changeLabel.setText(I18nManager.getInstance().get(I18nKeys.Runtime.CHANGE_AMOUNT, CurrencyUtil.format(0)));
                 } else {
                     changeLabel.setText(I18nManager.getInstance().get("runtime.remaining_amount", CurrencyUtil.format(remaining.doubleValue())));
                 }
@@ -1013,11 +984,11 @@ public class CartController {
      */
     private void executePayment(String paymentMethod, BigDecimal receivedAmount, BigDecimal changeAmount) {
         try {
-            Transaction transaction = createTransaction(paymentMethod, receivedAmount.doubleValue(), changeAmount.doubleValue());
+            Transaction transaction = createTransaction(paymentMethod);
             completeTransaction(transaction, paymentMethod, receivedAmount, changeAmount);
         } catch (Exception e) {
             logger.error("交易失败: " + e.getMessage(), e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
         }
     }
 
@@ -1042,18 +1013,18 @@ public class CartController {
             clear();
         } catch (Exception e) {
             logger.error("交易失败: " + e.getMessage(), e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
         }
     }
 
     private void startElectronicPayment(PaymentOrder.PaymentChannel channel, String paymentMethod) {
         if (paymentInProgress) return;
         if (cartList.isEmpty()) {
-            showError(i18n.get("runtime.cart_empty_payment"));
+            showError(i18n.get(I18nKeys.Runtime.CART_EMPTY_PAYMENT));
             return;
         }
         if (!DataService.hasActiveShift()) {
-            showError(i18n.get("runtime.no_active_shift"));
+            showError(i18n.get(I18nKeys.Runtime.NO_ACTIVE_SHIFT));
             return;
         }
         if (!PaymentService.isChannelAvailable(channel)) {
@@ -1063,7 +1034,7 @@ public class CartController {
         }
 
         try {
-            Transaction transaction = createTransaction(paymentMethod, 0, 0);
+            Transaction transaction = createTransaction(paymentMethod);
             String terminalId = currentUser != null ? currentUser.username : "desktop";
             PaymentOrder paymentOrder = PaymentService.createPaymentOrder(
                 transaction.transactionId, transaction.finalAmount, channel, terminalId);
@@ -1168,19 +1139,19 @@ public class CartController {
      */
     public void handlePayment(String paymentMethod) {
         if (cartList.isEmpty()) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.cart_empty_payment"));
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.CART_EMPTY_PAYMENT));
             return;
         }
 
         // 检查是否有活跃班次
         if (!com.cashier.service.DataService.hasActiveShift()) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.no_active_shift"));
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.NO_ACTIVE_SHIFT));
             return;
         }
 
         // 确认支付
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle(I18nManager.getInstance().get("common.confirm"));
+        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Common.CONFIRM));
         alert.setHeaderText(null);
         alert.setContentText(I18nManager.getInstance().get("runtime.payment_confirm",
                 localizePaymentMethod(paymentMethod), CurrencyUtil.format(getFinalAmount().doubleValue())));
@@ -1197,13 +1168,13 @@ public class CartController {
      * @param changeAmount 找零金额
      * @return 交易记录
      */
-    private Transaction createTransaction(String paymentMethod, double receivedAmount, double changeAmount) {
+    private Transaction createTransaction(String paymentMethod) {
         // 生成订单号
-        orderNumber = generateOrderNumber();
+        String orderNumber = generateOrderNumber();
 
         Transaction transaction = new Transaction();
         transaction.transactionId = orderNumber;
-        transaction.timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        transaction.timestamp = com.cashier.util.DateTimeFormats.formatStandard(LocalDateTime.now(ZoneId.systemDefault()));
         transaction.items = new ArrayList<>();
         
         // 合并相同商品的记录
@@ -1257,39 +1228,32 @@ public class CartController {
     }
 
     /**
-     * 保存交易记录
-     * @param transaction 交易记录
-     */
-    private void saveTransaction(Transaction transaction) {
-        try {
-            // 保存到数据库
-            TransactionDAO.insert(transaction);
-        } catch (Exception e) {
-            logger.error("保存交易到数据库失败", e);
-            // 使用 DataService 保存交易记录
-            try {
-                List<Transaction> transactions = DataService.loadTransactions();
-                transactions.add(transaction);
-                DataService.saveTransactions(transactions);
-            } catch (Exception ex) {
-                showError(com.cashier.i18n.I18nManager.getInstance().get("error.save_data") + ": " + ex.getMessage());
-            }
-        }
-    }
-
-    /**
      * 生成订单号
      * @return 订单号
      */
     private String generateOrderNumber() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");
-        return "ORD" + sdf.format(new Date());
+        String ts = com.cashier.util.DateTimeFormats.COMPACT_DATE_TIME_MILLIS.format(LocalDateTime.now(ZoneId.systemDefault()));
+        return "ORD" + ts;
     }
 
     /**
      * 更新统计信息
      */
     private void updateStatistics() {
+        CartTotals totals = calculateCartTotals();
+        BigDecimal discountRate = getCurrentMemberDiscountRate();
+        PromotionSelection promotionSelection = selectBestPromotion(totals.totalAmount());
+        appliedPromotion = promotionSelection.promotion();
+
+        BigDecimal amountAfterMemberDiscount = totals.totalAmount().multiply(discountRate);
+        BigDecimal finalAmount = amountAfterMemberDiscount.subtract(promotionSelection.discount()).max(BigDecimal.ZERO);
+        BigDecimal discountAmount = totals.totalAmount().subtract(finalAmount);
+
+        updateStatisticsLabels(totals, discountAmount, finalAmount, promotionSelection);
+        updatePaymentButtons();
+    }
+
+    private CartTotals calculateCartTotals() {
         int totalQuantity = 0;
         BigDecimal totalAmount = BigDecimal.ZERO;
 
@@ -1297,52 +1261,66 @@ public class CartController {
             totalQuantity += item.quantity;
             totalAmount = totalAmount.add(item.subtotal);
         }
+        return new CartTotals(totalQuantity, totalAmount);
+    }
 
-        BigDecimal discountRate = BigDecimal.ONE;  // 默认不打折
-        if (currentMember != null) {
-            discountRate = currentMember.getDiscountRate().divide(BigDecimal.TEN);
-        }
+    private BigDecimal getCurrentMemberDiscountRate() {
+        return currentMember != null
+            ? currentMember.getDiscountRate().divide(BigDecimal.TEN)
+            : BigDecimal.ONE;
+    }
 
-        appliedPromotion = null;
+    private PromotionSelection selectBestPromotion(BigDecimal totalAmount) {
+        Promotion bestPromotion = null;
         BigDecimal promotionDiscount = BigDecimal.ZERO;
         try {
             List<Promotion> promotions = PromotionDAO.findActive();
             logger.info("购物车加载到 {} 个活跃促销", promotions.size());
-            
+
             for (Promotion promotion : promotions) {
-                logger.info("购物车检查促销: {} (类型: {}, 门槛: {}, 优惠: {})", 
+                logger.info("购物车检查促销: {} (类型: {}, 门槛: {}, 优惠: {})",
                     promotion.name, promotion.type, promotion.threshold, promotion.discount);
-                
+
                 BigDecimal discount = promotion.calculateDiscount(totalAmount);
                 logger.info("购物车促销 {} 的折扣金额: {}", promotion.name, discount);
-                
+
                 if (discount.compareTo(promotionDiscount) > 0) {
                     promotionDiscount = discount;
-                    appliedPromotion = promotion;
+                    bestPromotion = promotion;
                     logger.info("购物车选择促销: {} (优惠金额: {})", promotion.name, discount);
                 }
             }
-            
+
             if (promotionDiscount.compareTo(BigDecimal.ZERO) > 0) {
-                logger.info("购物车最终应用促销: {}，优惠金额: {}", 
-                    appliedPromotion != null ? appliedPromotion.name : "无", promotionDiscount);
+                logger.info("购物车最终应用促销: {}，优惠金额: {}",
+                    bestPromotion != null ? bestPromotion.name : "无", promotionDiscount);
             }
         } catch (Exception e) {
             logger.error("购物车加载促销数据失败", e);
         }
+        return new PromotionSelection(bestPromotion, promotionDiscount);
+    }
 
-        BigDecimal amountAfterMemberDiscount = totalAmount.multiply(discountRate);
-        BigDecimal finalAmount = amountAfterMemberDiscount.subtract(promotionDiscount).max(BigDecimal.ZERO);
-        BigDecimal discountAmount = totalAmount.subtract(finalAmount);
-
-        totalQuantityLabel.setText(String.valueOf(totalQuantity));
-        totalAmountLabel.setText(CurrencyUtil.format(totalAmount.doubleValue()));
+    private void updateStatisticsLabels(
+            CartTotals totals,
+            BigDecimal discountAmount,
+            BigDecimal finalAmount,
+            PromotionSelection promotionSelection) {
+        totalQuantityLabel.setText(String.valueOf(totals.totalQuantity()));
+        totalAmountLabel.setText(CurrencyUtil.format(totals.totalAmount().doubleValue()));
         memberDiscountLabel.setText(I18nManager.getInstance().get("runtime.discount_rate",
                 currentMember != null ? currentMember.getDiscountRate().doubleValue() : 10.0));
-        
-        if (promotionDiscount.compareTo(BigDecimal.ZERO) > 0 && appliedPromotion != null) {
+
+        updateDiscountLabel(discountAmount, promotionSelection);
+        finalAmountLabel.setText(CurrencyUtil.format(finalAmount.doubleValue()));
+    }
+
+    private void updateDiscountLabel(BigDecimal discountAmount, PromotionSelection promotionSelection) {
+        BigDecimal promotionDiscount = promotionSelection.discount();
+        Promotion selectedPromotion = promotionSelection.promotion();
+        if (promotionDiscount.compareTo(BigDecimal.ZERO) > 0 && selectedPromotion != null) {
             discountLabel.setText(I18nManager.getInstance().get("runtime.promotion_discount_period",
-                    CurrencyUtil.format(discountAmount.doubleValue()), appliedPromotion.name,
+                    CurrencyUtil.format(discountAmount.doubleValue()), selectedPromotion.name,
                     CurrencyUtil.format(promotionDiscount.doubleValue())));
         } else if (promotionDiscount.compareTo(BigDecimal.ZERO) > 0) {
             discountLabel.setText(I18nManager.getInstance().get("runtime.promotion_discount",
@@ -1351,9 +1329,9 @@ public class CartController {
             discountLabel.setText(CurrencyUtil.format(discountAmount.doubleValue()));
             discountLabel.setText("-" + discountLabel.getText());
         }
-        
-        finalAmountLabel.setText(CurrencyUtil.format(finalAmount.doubleValue()));
-        
+    }
+
+    private void updatePaymentButtons() {
         // 更新支付按钮状态
         boolean hasItems = !cartList.isEmpty();
         cashButton.setDisable(!hasItems || paymentInProgress);
@@ -1362,6 +1340,12 @@ public class CartController {
         alipayButton.setDisable(!hasItems || paymentInProgress
             || !PaymentService.isChannelAvailable(PaymentOrder.PaymentChannel.ALIPAY));
         cardButton.setDisable(!hasItems || paymentInProgress);
+    }
+
+    private record CartTotals(int totalQuantity, BigDecimal totalAmount) {
+    }
+
+    private record PromotionSelection(Promotion promotion, BigDecimal discount) {
     }
 
     /**
@@ -1412,7 +1396,7 @@ public class CartController {
     private void showError(String message) {
         com.cashier.util.StatusBarManager.updateError(message);
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(I18nManager.getInstance().get("label.error"));
+        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Label.ERROR));
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
@@ -1425,7 +1409,7 @@ public class CartController {
     private void showInfo(String message) {
         com.cashier.util.StatusBarManager.updateStatus(message);
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(I18nManager.getInstance().get("common.tip"));
+        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Common.TIP));
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
@@ -1491,7 +1475,7 @@ public class CartController {
         }
 
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(i18n.get("label.success"));
+        alert.setTitle(i18n.get(I18nKeys.Label.SUCCESS));
         alert.setHeaderText(i18n.get("payment.success.header"));
         alert.setContentText(message);
         alert.showAndWait();
@@ -1502,10 +1486,10 @@ public class CartController {
 
     private String localizePaymentMethod(String paymentMethod) {
         String key = switch (paymentMethod) {
-            case "现金" -> "runtime.payment.cash";
-            case "微信" -> "runtime.payment.wechat";
-            case "支付宝" -> "runtime.payment.alipay";
-            case "银行卡" -> "runtime.payment.card";
+            case "现金" -> I18nKeys.Runtime.PAYMENT_CASH;
+            case "微信" -> I18nKeys.Runtime.PAYMENT_WECHAT;
+            case "支付宝" -> I18nKeys.Runtime.PAYMENT_ALIPAY;
+            case "银行卡" -> I18nKeys.Runtime.PAYMENT_CARD;
             default -> null;
         };
         return key == null ? paymentMethod : I18nManager.getInstance().get(key);
@@ -1581,16 +1565,13 @@ public class CartController {
      * @param message 消息内容
      * @param success 是否成功
      */
-    private void showScanMessage(String message, boolean success) {
-        showScanMessage(message, success ? ScanMessageLevel.SUCCESS : ScanMessageLevel.ERROR);
-    }
-
     private void showScanMessage(String message, ScanMessageLevel level) {
         // 在状态栏显示消息，不弹出提示框
         switch (level) {
             case SUCCESS -> com.cashier.util.StatusBarManager.updateSuccess(message);
             case WARNING -> com.cashier.util.StatusBarManager.updateWarning(message);
             case ERROR -> com.cashier.util.StatusBarManager.updateError(message);
+            default -> logger.warn("未知扫码消息级别: {}", level);
         }
         logger.debug("扫描消息: {}", message);
     }
@@ -1739,7 +1720,7 @@ public class CartController {
         try {
             if (!com.cashier.service.DataService.hasActiveShift()) {
                 Alert alert = new Alert(Alert.AlertType.WARNING);
-                alert.setTitle(I18nManager.getInstance().get("common.tip"));
+                alert.setTitle(I18nManager.getInstance().get(I18nKeys.Common.TIP));
                 alert.setHeaderText(null);
                 alert.setContentText(I18nManager.getInstance().get("runtime.start_shift_required"));
                 alert.showAndWait();

@@ -1,9 +1,10 @@
 package com.cashier.controller.base;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.i18n.I18nManager;
 import com.cashier.util.DialogBuilder;
 import com.cashier.util.FormValidator;
-import com.cashier.util.ResponsiveLayout;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.*;
@@ -113,7 +114,7 @@ public abstract class BaseController<T> {
      */
     protected boolean confirmDelete(String itemName) {
         return DialogBuilder.confirmation()
-                .title(i18n.get("dialog.confirm"))
+                .title(i18n.get(I18nKeys.Dialog.CONFIRM))
                 .content(i18n.get("dialog.delete.confirm_message"))
                 .showAndGetConfirm();
     }
@@ -123,7 +124,7 @@ public abstract class BaseController<T> {
      */
     protected boolean confirmDeleteWithName(String name) {
         return DialogBuilder.confirmation()
-                .title(i18n.get("dialog.confirm"))
+                .title(i18n.get(I18nKeys.Dialog.CONFIRM))
                 .content(i18n.get("dialog.delete.confirm_with_name", name))
                 .showAndGetConfirm();
     }
@@ -134,7 +135,7 @@ public abstract class BaseController<T> {
     protected void showSuccess(String message) {
         com.cashier.util.StatusBarManager.updateSuccess(message);
         DialogBuilder.information()
-                .title(i18n.get("label.success"))
+                .title(i18n.get(I18nKeys.Label.SUCCESS))
                 .content(message)
                 .show();
     }
@@ -145,7 +146,7 @@ public abstract class BaseController<T> {
     protected void showError(String message) {
         com.cashier.util.StatusBarManager.updateError(message);
         DialogBuilder.error()
-                .title(i18n.get("label.error"))
+                .title(i18n.get(I18nKeys.Label.ERROR))
                 .content(message)
                 .show();
     }
@@ -156,7 +157,7 @@ public abstract class BaseController<T> {
     protected void showWarning(String message) {
         com.cashier.util.StatusBarManager.updateWarning(message);
         DialogBuilder.warning()
-                .title(i18n.get("common.warning"))
+                .title(i18n.get(I18nKeys.Common.WARNING))
                 .content(message)
                 .show();
     }

@@ -1,7 +1,5 @@
 package com.cashier.api.sync;
 
-import com.cashier.dao.TransactionDAO;
-import com.cashier.dao.MemberDAO;
 import com.cashier.model.Product;
 import com.cashier.model.Transaction;
 import com.cashier.model.Member;
@@ -17,6 +15,8 @@ import java.util.Map;
  */
 public class SyncBroadcastService {
     private static final Logger logger = LoggerFactoryUtil.getLogger(SyncBroadcastService.class);
+    private static final String TRANSACTION_ID_FIELD = "transactionId";
+    private static final String PRODUCT_ID_FIELD = "productId";
     
     /**
      * 广播交易创建事件
@@ -24,7 +24,7 @@ public class SyncBroadcastService {
     public static void broadcastTransactionCreated(Transaction transaction) {
         try {
             Map<String, Object> data = new HashMap<>();
-            data.put("transactionId", transaction.transactionId);
+            data.put(TRANSACTION_ID_FIELD, transaction.transactionId);
             data.put("timestamp", transaction.timestamp);
             data.put("finalAmount", transaction.finalAmount != null ? transaction.finalAmount.toString() : "0");
             data.put("paymentMethod", transaction.paymentMethod);
@@ -44,7 +44,7 @@ public class SyncBroadcastService {
     public static void broadcastTransactionRefunded(String transactionId, String reason) {
         try {
             Map<String, Object> data = new HashMap<>();
-            data.put("transactionId", transactionId);
+            data.put(TRANSACTION_ID_FIELD, transactionId);
             data.put("reason", reason);
             data.put("refundedAt", System.currentTimeMillis());
             
@@ -62,7 +62,7 @@ public class SyncBroadcastService {
     public static void broadcastProductUpdated(Product product) {
         try {
             Map<String, Object> data = new HashMap<>();
-            data.put("productId", product.id);
+            data.put(PRODUCT_ID_FIELD, product.id);
             data.put("productCode", product.productCode);
             data.put("name", product.name);
             data.put("price", product.price != null ? product.price.toString() : "0");
@@ -83,7 +83,7 @@ public class SyncBroadcastService {
     public static void broadcastProductCreated(Product product) {
         try {
             Map<String, Object> data = new HashMap<>();
-            data.put("productId", product.id);
+            data.put(PRODUCT_ID_FIELD, product.id);
             data.put("productCode", product.productCode);
             data.put("name", product.name);
             data.put("price", product.price != null ? product.price.toString() : "0");
@@ -104,7 +104,7 @@ public class SyncBroadcastService {
     public static void broadcastProductDeleted(int productId, String productName) {
         try {
             Map<String, Object> data = new HashMap<>();
-            data.put("productId", productId);
+            data.put(PRODUCT_ID_FIELD, productId);
             data.put("name", productName);
             
             SyncManager.getInstance().broadcastSyncEvent(SyncEventType.PRODUCT_DELETED, data);
@@ -162,7 +162,7 @@ public class SyncBroadcastService {
     public static void broadcastInventoryChanged(int productId, String productName, int oldQuantity, int newQuantity) {
         try {
             Map<String, Object> data = new HashMap<>();
-            data.put("productId", productId);
+            data.put(PRODUCT_ID_FIELD, productId);
             data.put("name", productName);
             data.put("oldQuantity", oldQuantity);
             data.put("newQuantity", newQuantity);
@@ -183,7 +183,7 @@ public class SyncBroadcastService {
     public static void broadcastInventoryAlert(Product product) {
         try {
             Map<String, Object> data = new HashMap<>();
-            data.put("productId", product.id);
+            data.put(PRODUCT_ID_FIELD, product.id);
             data.put("name", product.name);
             data.put("currentQuantity", product.quantity);
             data.put("minStock", product.minStock);

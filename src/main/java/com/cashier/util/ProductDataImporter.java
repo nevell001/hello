@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * 商品数据导入工具类
@@ -30,6 +31,69 @@ import java.util.Map;
 public class ProductDataImporter {
     private static final Logger logger = LoggerFactoryUtil.getLogger(ProductDataImporter.class);
     private static final ProductDAORefactored productDAO = DAOFactory.getInstance().getProductDAO();
+    private static final String DEFAULT_CATEGORY = "默认分类";
+    private static final String DEFAULT_UNIT = "个";
+    private static final String BASIC_DATA_IMPORT_DESCRIPTION = "从基础数据导入";
+    private static final List<CategoryKeywords> NAME_CATEGORY_KEYWORDS = List.of(
+        new CategoryKeywords("药品类", List.of(
+            "胶囊", "片", "丸", "注射液", "颗粒", "口服液", "糖浆", "酊", "栓", "软膏",
+            "乳膏", "凝胶", "贴剂", "感冒", "止咳", "退烧", "止痛", "消炎"
+        )),
+        new CategoryKeywords("食品类", List.of(
+            "饼干", "薯片", "糖果", "巧克力", "饮料", "牛奶", "酸奶", "啤酒", "白酒",
+            "红酒", "米", "面", "油", "盐", "酱", "醋", "调味", "肉", "蛋", "菜",
+            "水果", "蔬菜", "熟食", "罐头", "方便面", "速冻", "冷冻", "零食", "坚果",
+            "果脯", "月饼", "汤圆", "粽子"
+        )),
+        new CategoryKeywords("日用百货类", List.of(
+            "牙膏", "牙刷", "洗发水", "沐浴露", "香皂", "洗衣液", "洗洁精", "洗衣粉",
+            "柔顺剂", "消毒液", "卫生纸", "纸巾", "湿巾", "纸尿裤", "卫生巾", "护垫",
+            "面膜", "爽肤水", "乳液", "面霜", "眼霜", "精华", "防晒", "粉底", "口红",
+            "睫毛膏", "眼影", "指甲油", "香水", "洗护"
+        )),
+        new CategoryKeywords("保健品类", List.of(
+            "人参", "阿胶", "燕窝", "枸杞", "冬虫夏草", "红枣", "西洋参", "钙片",
+            "维生素", "蛋白粉", "鱼油", "卵磷脂", "氨糖", "软骨素", "褪黑素", "叶酸",
+            "胶原蛋白", "酵素", "麦片", "燕麦片"
+        ))
+    );
+    private static final List<CategoryKeywords> SUPPLIER_CATEGORY_KEYWORDS = List.of(
+        new CategoryKeywords("药品类", List.of("制药", "医药", "药业")),
+        new CategoryKeywords("食品类", List.of("食品", "粮油", "饮料", "乳业", "糖酒", "茶")),
+        new CategoryKeywords("日用百货类", List.of("日化", "化妆", "洗涤", "清洁", "生活", "家居")),
+        new CategoryKeywords("保健品类", List.of("保健", "营养", "生物", "健康", "养生"))
+    );
+    private static final Map<String, String> UNIT_ALIASES = Map.ofEntries(
+        Map.entry("g", "克"),
+        Map.entry("克", "克"),
+        Map.entry("kg", "千克"),
+        Map.entry("千克", "千克"),
+        Map.entry("公斤", "千克"),
+        Map.entry("ml", "毫升"),
+        Map.entry("毫升", "毫升"),
+        Map.entry("l", "升"),
+        Map.entry("L", "升"),
+        Map.entry("升", "升"),
+        Map.entry("piece", "个"),
+        Map.entry("PCS", "个"),
+        Map.entry("pc", "个"),
+        Map.entry("box", "盒"),
+        Map.entry("盒", "盒"),
+        Map.entry("bottle", "瓶"),
+        Map.entry("瓶", "瓶"),
+        Map.entry("bag", "袋"),
+        Map.entry("袋", "袋"),
+        Map.entry("package", "包"),
+        Map.entry("包", "包"),
+        Map.entry("set", "套"),
+        Map.entry("套", "套"),
+        Map.entry("pair", "对"),
+        Map.entry("对", "对"),
+        Map.entry("tin", "听"),
+        Map.entry("听", "听"),
+        Map.entry("can", "罐"),
+        Map.entry("罐", "罐")
+    );
     
     // GitHub 商品条码库 URL
     private static final String GITHUB_BARCODE_URL = "https://raw.githubusercontent.com/EricLiuCN/barcode/master/";
@@ -45,6 +109,16 @@ public class ProductDataImporter {
     private int successCount = 0;
     private int skippedCount = 0;
     private int errorCount = 0;
+    private static final String KEY_SUCCESS = "success";
+    private static final String KEY_ERROR = "error";
+    private static final String KEY_MESSAGES = "messages";
+    private static final String KEY_TOTAL_PROCESSED = "totalProcessed";
+    private static final String KEY_SUCCESS_COUNT = "successCount";
+    private static final String KEY_SKIPPED_COUNT = "skippedCount";
+    private static final String KEY_ERROR_COUNT = "errorCount";
+
+    private record CategoryKeywords(String category, List<String> keywords) {
+    }
     
     /**
      * 从 GitHub 导入商品数据
@@ -97,20 +171,20 @@ public class ProductDataImporter {
                 messages.add(String.format("成功导入 %d 条商品", inserted));
             }
             
-            result.put("success", true);
-            result.put("totalProcessed", totalProcessed);
-            result.put("successCount", successCount);
-            result.put("skippedCount", skippedCount);
-            result.put("errorCount", errorCount);
-            result.put("messages", messages);
+            result.put(KEY_SUCCESS, true);
+            result.put(KEY_TOTAL_PROCESSED, totalProcessed);
+            result.put(KEY_SUCCESS_COUNT, successCount);
+            result.put(KEY_SKIPPED_COUNT, skippedCount);
+            result.put(KEY_ERROR_COUNT, errorCount);
+            result.put(KEY_MESSAGES, messages);
             
             logger.info("GitHub 数据导入完成 - 处理: {}, 成功: {}, 跳过: {}, 错误: {}", 
                 totalProcessed, successCount, skippedCount, errorCount);
             
         } catch (Exception e) {
             logger.error("GitHub 数据导入失败", e);
-            result.put("success", false);
-            result.put("error", e.getMessage());
+            result.put(KEY_SUCCESS, false);
+            result.put(KEY_ERROR, e.getMessage());
         }
         
         return result;
@@ -162,20 +236,20 @@ public class ProductDataImporter {
                 messages.add("无数据");
             }
             
-            result.put("success", true);
-            result.put("totalProcessed", totalProcessed);
-            result.put("successCount", successCount);
-            result.put("skippedCount", skippedCount);
-            result.put("errorCount", errorCount);
-            result.put("messages", messages);
+            result.put(KEY_SUCCESS, true);
+            result.put(KEY_TOTAL_PROCESSED, totalProcessed);
+            result.put(KEY_SUCCESS_COUNT, successCount);
+            result.put(KEY_SKIPPED_COUNT, skippedCount);
+            result.put(KEY_ERROR_COUNT, errorCount);
+            result.put(KEY_MESSAGES, messages);
             
             logger.info("CSV 文件导入完成 - 处理: {}, 成功: {}, 跳过: {}, 错误: {}", 
                 totalProcessed, successCount, skippedCount, errorCount);
             
         } catch (Exception e) {
             logger.error("CSV 文件导入失败", e);
-            result.put("success", false);
-            result.put("error", e.getMessage());
+            result.put(KEY_SUCCESS, false);
+            result.put(KEY_ERROR, e.getMessage());
         }
         
         return result;
@@ -383,67 +457,20 @@ public class ProductDataImporter {
         product.name = name;
         product.productCode = barcode;  // 商品编号默认使用条码
 
-        // 解析价格
-        if (parts.length > 2) {
-            product.price = parseBigDecimal(parts[2], BigDecimal.ZERO);
-        }
-
-        // 解析单位（添加验证和标准化）
-        if (parts.length > 3) {
-            String unitName = parts[3].trim();
-            if (!unitName.isEmpty()) {
-                // 标准化单位名称
-                product.unit = normalizeUnit(unitName);
-            } else {
-                product.unit = "个"; // 默认单位
-            }
-        } else {
-            product.unit = "个";
-        }
-
-        // 解析分类
-        if (parts.length > 4) {
-            String categoryName = parts[4].trim();
-            if (!categoryName.isEmpty()) {
-                product.category = categoryName;
-            } else {
-                product.category = "默认分类"; // 默认分类
-            }
-        } else {
-            product.category = "默认分类";
-        }
-
-        // 解析品牌
-        if (parts.length > 5) {
-            product.brand = parts[5].trim();
-        }
-
-        // 解析规格
-        if (parts.length > 6) {
-            product.spec = parts[6].trim();
-        }
-
-        // 解析供应商
-        if (parts.length > 7) {
-            product.supplier = parts[7].trim();
-        }
+        product.price = partValue(parts, 2)
+            .map(value -> parseBigDecimal(value, BigDecimal.ZERO))
+            .orElse(product.price);
+        product.unit = partValue(parts, 3).map(this::normalizeUnit).orElse(DEFAULT_UNIT);
+        product.category = partValue(parts, 4).orElse(DEFAULT_CATEGORY);
+        product.brand = trimmedPart(parts, 5).orElse(product.brand);
+        product.spec = trimmedPart(parts, 6).orElse(product.spec);
+        product.supplier = trimmedPart(parts, 7).orElse(product.supplier);
 
         // 如果分类为默认分类，尝试根据供应商和商品名称自动分类
-        if ("默认分类".equals(product.category)) {
-            if (product.supplier != null && !product.supplier.isEmpty()) {
-                product.category = classifyBySupplier(product.supplier);
-            } else if (product.name != null && !product.name.isEmpty()) {
-                product.category = classifyByName(product.name);
-            }
-        }
+        autoClassifyDefaultCategory(product);
 
         // 设置默认值（注意：库存数量设为 0，不调整库存）
-        product.quantity = 0;  // 导入时不设置库存数量
-        product.minStock = 10;
-        product.cost = product.getPrice().compareTo(BigDecimal.ZERO) > 0
-            ? product.getPrice().multiply(new BigDecimal("0.7"))
-            : BigDecimal.ZERO; // 默认成本价为售价的70%
-        product.description = "从基础数据导入";
+        applyDefaultImportFields(product, BASIC_DATA_IMPORT_DESCRIPTION);
 
         return product;
     }
@@ -453,60 +480,10 @@ public class ProductDataImporter {
      */
     private String classifyByName(String name) {
         if (name == null || name.isEmpty()) {
-            return "默认分类";
+            return DEFAULT_CATEGORY;
         }
 
-        // 药品类
-        if (name.contains("胶囊") || name.contains("片") || name.contains("丸") ||
-            name.contains("注射液") || name.contains("颗粒") || name.contains("口服液") ||
-            name.contains("糖浆") || name.contains("酊") || name.contains("栓") ||
-            name.contains("软膏") || name.contains("乳膏") || name.contains("凝胶") ||
-            name.contains("贴剂") || name.contains("感冒") || name.contains("止咳") ||
-            name.contains("退烧") || name.contains("止痛") || name.contains("消炎")) {
-            return "药品类";
-        }
-
-        // 食品类
-        if (name.contains("饼干") || name.contains("薯片") || name.contains("糖果") ||
-            name.contains("巧克力") || name.contains("饮料") || name.contains("牛奶") ||
-            name.contains("酸奶") || name.contains("啤酒") || name.contains("白酒") ||
-            name.contains("红酒") || name.contains("米") || name.contains("面") ||
-            name.contains("油") || name.contains("盐") || name.contains("酱") ||
-            name.contains("醋") || name.contains("调味") || name.contains("肉") ||
-            name.contains("蛋") || name.contains("菜") || name.contains("水果") ||
-            name.contains("蔬菜") || name.contains("熟食") || name.contains("罐头") ||
-            name.contains("方便面") || name.contains("速冻") || name.contains("冷冻") ||
-            name.contains("零食") || name.contains("坚果") || name.contains("果脯") ||
-            name.contains("月饼") || name.contains("汤圆") || name.contains("粽子")) {
-            return "食品类";
-        }
-
-        // 日用百货类
-        if (name.contains("牙膏") || name.contains("牙刷") || name.contains("洗发水") ||
-            name.contains("沐浴露") || name.contains("香皂") || name.contains("洗衣液") ||
-            name.contains("洗洁精") || name.contains("洗衣粉") || name.contains("柔顺剂") ||
-            name.contains("消毒液") || name.contains("卫生纸") || name.contains("纸巾") ||
-            name.contains("湿巾") || name.contains("纸尿裤") || name.contains("卫生巾") ||
-            name.contains("护垫") || name.contains("面膜") || name.contains("爽肤水") ||
-            name.contains("乳液") || name.contains("面霜") || name.contains("眼霜") ||
-            name.contains("精华") || name.contains("防晒") || name.contains("粉底") ||
-            name.contains("口红") || name.contains("睫毛膏") || name.contains("眼影") ||
-            name.contains("指甲油") || name.contains("香水") || name.contains("洗护")) {
-            return "日用百货类";
-        }
-
-        // 保健品类
-        if (name.contains("人参") || name.contains("阿胶") || name.contains("燕窝") ||
-            name.contains("枸杞") || name.contains("冬虫夏草") || name.contains("红枣") ||
-            name.contains("西洋参") || name.contains("钙片") || name.contains("维生素") ||
-            name.contains("蛋白粉") || name.contains("鱼油") || name.contains("卵磷脂") ||
-            name.contains("氨糖") || name.contains("软骨素") || name.contains("褪黑素") ||
-            name.contains("叶酸") || name.contains("胶原蛋白") || name.contains("酵素") ||
-            name.contains("麦片") || name.contains("燕麦片")) {
-            return "保健品类";
-        }
-
-        return "默认分类";
+        return matchCategory(name, NAME_CATEGORY_KEYWORDS);
     }
     
     /**
@@ -514,10 +491,7 @@ public class ProductDataImporter {
      * 格式: id,barcode,name,spec,unit,price,brand,supplier,made_in,created_at,updated_at,deleted_at
      */
     private Product parseCSVCommaLine(String line, Map<String, Category> categoryMap, Map<String, Unit> unitMap) {
-        // 去除引号
         line = line.replaceAll("\"", "");
-
-        // 按逗号分割
         String[] parts = line.split(",");
 
         if (parts.length < 3) {
@@ -537,67 +511,66 @@ public class ProductDataImporter {
         product.name = name;
         product.productCode = barcode; // 使用条码作为商品编号
 
-        // 解析规格
-        if (parts.length > 3) {
-            String spec = parts[3].trim();
-            if (!spec.isEmpty() && !spec.equals("NULL")) {
-                product.spec = spec;
-            }
-        }
-
-        // 解析单位（添加验证和标准化）
-        if (parts.length > 4) {
-            String unitName = parts[4].trim();
-            if (!unitName.isEmpty() && !unitName.equals("NULL")) {
-                // 标准化单位名称
-                product.unit = normalizeUnit(unitName);
-            } else {
-                product.unit = "个";
-            }
-        } else {
-            product.unit = "个";
-        }
-
-        // 解析价格
-        if (parts.length > 5) {
-            String priceStr = parts[5].trim();
-            if (!priceStr.isEmpty() && !priceStr.equals("NULL")) {
-                product.price = parseBigDecimal(priceStr, BigDecimal.ZERO);
-            }
-        }
-
-        // 解析品牌
-        if (parts.length > 6) {
-            String brand = parts[6].trim();
-            if (!brand.isEmpty() && !brand.equals("NULL")) {
-                product.brand = brand;
-            }
-        }
-
-        // 解析供应商
-        if (parts.length > 7) {
-            String supplier = parts[7].trim();
-            if (!supplier.isEmpty() && !supplier.equals("NULL")) {
-                product.supplier = supplier;
-            }
-        }
+        product.spec = csvValue(parts, 3).orElse(product.spec);
+        product.unit = csvValue(parts, 4).map(this::normalizeUnit).orElse(DEFAULT_UNIT);
+        product.price = csvValue(parts, 5)
+            .map(value -> parseBigDecimal(value, BigDecimal.ZERO))
+            .orElse(product.price);
+        product.brand = csvValue(parts, 6).orElse(product.brand);
+        product.supplier = csvValue(parts, 7).orElse(product.supplier);
 
         // 根据供应商自动分类
         if (product.supplier != null && !product.supplier.isEmpty()) {
             product.category = classifyBySupplier(product.supplier);
         } else {
-            product.category = "默认分类";
+            product.category = DEFAULT_CATEGORY;
         }
 
         // 设置默认值（注意：库存数量设为 0，不调整库存）
+        applyDefaultImportFields(product, "从EricLiuCN/barcode导入");
+
+        return product;
+    }
+
+    private void applyDefaultImportFields(Product product, String description) {
         product.quantity = 0;  // 导入时不设置库存数量
         product.minStock = 10;
         product.cost = product.getPrice().compareTo(BigDecimal.ZERO) > 0
-            ? product.getPrice().multiply(new BigDecimal("0.7"))
-            : BigDecimal.ZERO; // 默认成本价为售价的70%
-        product.description = "从EricLiuCN/barcode导入";
+            ? product.getPrice().multiply(Product.DEFAULT_COST_RATE)
+            : BigDecimal.ZERO;
+        product.description = description;
+    }
 
-        return product;
+    private void autoClassifyDefaultCategory(Product product) {
+        if (!DEFAULT_CATEGORY.equals(product.category)) {
+            return;
+        }
+        if (product.supplier != null && !product.supplier.isEmpty()) {
+            product.category = classifyBySupplier(product.supplier);
+            return;
+        }
+        if (product.name != null && !product.name.isEmpty()) {
+            product.category = classifyByName(product.name);
+        }
+    }
+
+    private Optional<String> partValue(String[] parts, int index) {
+        return trimmedPart(parts, index).filter(value -> !value.isEmpty());
+    }
+
+    private Optional<String> trimmedPart(String[] parts, int index) {
+        if (parts.length <= index) {
+            return Optional.empty();
+        }
+        return Optional.of(parts[index].trim());
+    }
+
+    private Optional<String> csvValue(String[] parts, int index) {
+        if (parts.length <= index) {
+            return Optional.empty();
+        }
+        String value = parts[index].trim();
+        return value.isEmpty() || "NULL".equals(value) ? Optional.empty() : Optional.of(value);
     }
 
     /**
@@ -605,105 +578,28 @@ public class ProductDataImporter {
      */
     private String classifyBySupplier(String supplier) {
         if (supplier == null || supplier.isEmpty()) {
-            return "默认分类";
+            return DEFAULT_CATEGORY;
         }
 
-        // 药品类
-        if (supplier.contains("制药") || supplier.contains("医药") || supplier.contains("药业")) {
-            return "药品类";
-        }
+        return matchCategory(supplier, SUPPLIER_CATEGORY_KEYWORDS);
+    }
 
-        // 食品类
-        if (supplier.contains("食品") || supplier.contains("粮油") || supplier.contains("饮料") ||
-            supplier.contains("乳业") || supplier.contains("糖酒") || supplier.contains("茶")) {
-            return "食品类";
-        }
-
-        // 日用百货类
-        if (supplier.contains("日化") || supplier.contains("化妆") || supplier.contains("洗涤") ||
-            supplier.contains("清洁") || supplier.contains("生活") || supplier.contains("家居")) {
-            return "日用百货类";
-        }
-
-        // 保健品类
-        if (supplier.contains("保健") || supplier.contains("营养") || supplier.contains("生物") ||
-            supplier.contains("健康") || supplier.contains("养生")) {
-            return "保健品类";
-        }
-
-        return "默认分类";
+    private String matchCategory(String value, List<CategoryKeywords> categoryKeywords) {
+        return categoryKeywords.stream()
+            .filter(rule -> rule.keywords().stream().anyMatch(value::contains))
+            .map(CategoryKeywords::category)
+            .findFirst()
+            .orElse(DEFAULT_CATEGORY);
     }
 
     /**
      * 标准化单位名称
      */
     private String normalizeUnit(String unitName) {
-        // 移除多余空格
         unitName = unitName.trim();
-
-        // 标准化常见单位
-        switch (unitName) {
-            case "g":
-            case "克":
-                return "克";
-            case "kg":
-            case "千克":
-            case "公斤":
-                return "千克";
-            case "ml":
-            case "毫升":
-                return "毫升";
-            case "l":
-            case "L":
-            case "升":
-                return "升";
-            case "piece":
-            case "PCS":
-            case "pc":
-                return "个";
-            case "box":
-            case "盒":
-                return "盒";
-            case "bottle":
-            case "瓶":
-                return "瓶";
-            case "bag":
-            case "袋":
-                return "袋";
-            case "package":
-            case "包":
-                return "包";
-            case "set":
-            case "套":
-                return "套";
-            case "pair":
-            case "对":
-                return "对";
-            case "tin":
-            case "听":
-                return "听";
-            case "can":
-            case "罐":
-                return "罐";
-            default:
-                return unitName;
-        }
+        return UNIT_ALIASES.getOrDefault(unitName, unitName);
     }
     
-    /**
-     * 解析双精度数值
-     */
-    private double parseDouble(String value, double defaultValue) {
-        if (value == null || value.trim().isEmpty() || value.trim().equals("NULL")) {
-            return defaultValue;
-        }
-        try {
-            return Double.parseDouble(value.trim());
-        } catch (NumberFormatException e) {
-            return defaultValue;
-        }
-    }
-
     /**
      * 解析 BigDecimal 数值
      */

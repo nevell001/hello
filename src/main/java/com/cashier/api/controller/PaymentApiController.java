@@ -4,14 +4,14 @@ import com.cashier.model.PaymentOrder;
 import com.cashier.model.RefundRecord;
 import com.cashier.dao.PaymentDAO;
 import com.cashier.service.PaymentService;
-import com.cashier.api.sync.SyncManager;
-import com.cashier.api.sync.SyncEventType;
 import com.cashier.util.LoggerFactoryUtil;
 import io.javalin.http.Context;
 import org.slf4j.Logger;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -21,6 +21,8 @@ import java.util.stream.Collectors;
  */
 public class PaymentApiController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(PaymentApiController.class);
+    private static final String PAYMENT_ID_FIELD = "paymentId";
+    private static final String OUT_TRADE_NO_FIELD = "out_trade_no";
     
     /**
      * 创建支付订单
@@ -54,7 +56,7 @@ public class PaymentApiController {
             ctx.json(Map.of(
                 "success", true,
                 "data", Map.of(
-                    "paymentId", order.paymentId,
+                    PAYMENT_ID_FIELD, order.paymentId,
                     "merchantOrderNo", order.merchantOrderNo,
                     "amount", order.amount,
                     "channel", order.channel.getDisplayName(),
@@ -80,7 +82,7 @@ public class PaymentApiController {
      * GET /api/payment/:paymentId/status
      */
     public static void queryStatus(Context ctx) {
-        String paymentId = ctx.pathParam("paymentId");
+        String paymentId = ctx.pathParam(PAYMENT_ID_FIELD);
         
         try {
             PaymentOrder order = PaymentService.queryPaymentStatus(paymentId);
@@ -119,7 +121,7 @@ public class PaymentApiController {
             
             List<Map<String, Object>> orderList = orders.stream()
                 .map(order -> Map.<String, Object>of(
-                    "paymentId", order.paymentId,
+                    PAYMENT_ID_FIELD, order.paymentId,
                     "channel", order.channel.getDisplayName(),
                     "amount", order.amount,
                     "paidAmount", order.paidAmount != null ? order.paidAmount : 0,
@@ -159,14 +161,14 @@ public class PaymentApiController {
                 // 微信回调 XML
                 String xml = ctx.body();
                 // 简化解析（实际需要XML解析）
-                notifyData.put("out_trade_no", extractXmlValue(xml, "out_trade_no"));
+                notifyData.put(OUT_TRADE_NO_FIELD, extractXmlValue(xml, OUT_TRADE_NO_FIELD));
                 notifyData.put("transaction_id", extractXmlValue(xml, "transaction_id"));
                 notifyData.put("trade_status", extractXmlValue(xml, "result_code"));
                 notifyData.put("total_amount", extractXmlValue(xml, "total_fee"));
             } else {
                 // 支付宝回调
                 Map<String, List<String>> params = ctx.formParamMap();
-                notifyData.put("out_trade_no", params.containsKey("out_trade_no") ? params.get("out_trade_no").get(0) : "");
+                notifyData.put(OUT_TRADE_NO_FIELD, params.containsKey(OUT_TRADE_NO_FIELD) ? params.get(OUT_TRADE_NO_FIELD).get(0) : "");
                 notifyData.put("transaction_id", params.containsKey("trade_no") ? params.get("trade_no").get(0) : "");
                 notifyData.put("trade_status", params.containsKey("trade_status") ? params.get("trade_status").get(0) : "");
                 notifyData.put("total_amount", params.containsKey("total_amount") ? params.get("total_amount").get(0) : "0");
@@ -228,7 +230,7 @@ public class PaymentApiController {
      * Body: { "amount": 50.00, "reason": "商品质量问题", "operator": "张三" }
      */
     public static void applyRefund(Context ctx) {
-        String paymentId = ctx.pathParam("paymentId");
+        String paymentId = ctx.pathParam(PAYMENT_ID_FIELD);
         
         try {
             Map<?, ?> body = ctx.bodyAsClass(Map.class);
@@ -275,7 +277,7 @@ public class PaymentApiController {
             
             List<Map<String, Object>> orderList = orders.stream()
                 .map(order -> Map.<String, Object>of(
-                    "paymentId", order.paymentId,
+                    PAYMENT_ID_FIELD, order.paymentId,
                     "merchantOrderNo", order.merchantOrderNo,
                     "amount", order.amount,
                     "channel", order.channel.getDisplayName(),
@@ -331,16 +333,16 @@ public class PaymentApiController {
         String dateStr = ctx.queryParam("date");
         
         try {
-            Date date = dateStr != null ? 
-                new java.text.SimpleDateFormat("yyyy-MM-dd").parse(dateStr) : 
-                new Date();
+            LocalDate date = dateStr != null
+                ? LocalDate.parse(dateStr, com.cashier.util.DateTimeFormats.DATE)
+                : LocalDate.now(ZoneId.systemDefault());
             
-            Map<String, Object> stats = PaymentDAO.getDailyStats(date);
+            Map<String, Object> stats = PaymentDAO.getDailyStats(java.sql.Date.valueOf(date));
             
             ctx.json(Map.of(
                 "success", true,
                 "data", stats,
-                "date", new java.text.SimpleDateFormat("yyyy-MM-dd").format(date)
+                "date", date.format(com.cashier.util.DateTimeFormats.DATE)
             ));
             
         } catch (Exception e) {
@@ -431,7 +433,7 @@ public class PaymentApiController {
      */
     private static Map<String, Object> buildPaymentOrderData(PaymentOrder order) {
         Map<String, Object> data = new HashMap<>();
-        data.put("paymentId", order.paymentId);
+        data.put(PAYMENT_ID_FIELD, order.paymentId);
         data.put("merchantOrderNo", order.merchantOrderNo);
         data.put("transactionId", order.transactionId);
         data.put("amount", order.amount);

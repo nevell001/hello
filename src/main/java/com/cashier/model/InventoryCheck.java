@@ -1,5 +1,7 @@
 package com.cashier.model;
 
+import com.cashier.i18n.I18nKeys;
+
 import java.sql.Timestamp;
 
 /**
@@ -74,7 +76,7 @@ public class InventoryCheck {
             case "checking":
                 return com.cashier.i18n.I18nManager.getInstance().get("runtime.status.checking");
             case "completed":
-                return com.cashier.i18n.I18nManager.getInstance().get("runtime.status.completed");
+                return com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.STATUS_COMPLETED);
             default:
                 return status;
         }

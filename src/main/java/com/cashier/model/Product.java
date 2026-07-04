@@ -3,7 +3,7 @@ package com.cashier.model;
 import java.math.BigDecimal;
 
 public class Product {
-    private static final BigDecimal DEFAULT_COST_RATE = new BigDecimal("0.7");
+    public static final BigDecimal DEFAULT_COST_RATE = new BigDecimal("0.7");
 
     public int id;               // 商品ID（数据库自增主键）
     public String productCode;   // 商品编号（用户自定义编号）

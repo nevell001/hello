@@ -1,5 +1,7 @@
 package com.cashier.controller;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.i18n.I18nManager;
 import com.cashier.util.SearchManager;
 import com.cashier.util.SearchManager.SearchResult;
@@ -8,11 +10,9 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.util.List;
@@ -103,7 +103,7 @@ public class SearchController {
         selectedIndex = 0;
 
         if (query == null || query.trim().isEmpty()) {
-            resultCountLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("member.edit.points_hint"));
+            resultCountLabel.setText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.MemberEdit.POINTS_HINT));
             return;
         }
 

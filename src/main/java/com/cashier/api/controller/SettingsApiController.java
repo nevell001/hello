@@ -1,6 +1,5 @@
 package com.cashier.api.controller;
 
-import com.cashier.api.ApiServer;
 import com.cashier.util.LoggerFactoryUtil;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;

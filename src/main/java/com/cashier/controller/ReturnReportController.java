@@ -1,5 +1,7 @@
 package com.cashier.controller;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.i18n.I18nManager;
 import com.cashier.dao.*;
 import com.cashier.model.*;
@@ -16,7 +18,6 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import org.slf4j.Logger;
 
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
@@ -108,8 +109,10 @@ public class ReturnReportController {
                     setText(null);
                 } else {
                     try {
-                        Date date = new Date(FormValidator.parseLong(item));
-                        setText(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date));
+                        java.time.LocalDateTime dateTime = java.time.Instant.ofEpochMilli(FormValidator.parseLong(item))
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDateTime();
+                        setText(dateTime.format(com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME));
                     } catch (Exception e) {
                         setText(item);
                     }
@@ -186,13 +189,13 @@ public class ReturnReportController {
 
         // 退货趋势柱状图
         returnTrendBarChart.setTitle(com.cashier.i18n.I18nManager.getInstance().get("return_report.amount_trend"));
-        returnTrendBarChart.getXAxis().setLabel(I18nManager.getInstance().get("chart.date"));
-        returnTrendBarChart.getYAxis().setLabel(I18nManager.getInstance().get("chart.amount"));
+        returnTrendBarChart.getXAxis().setLabel(I18nManager.getInstance().get(I18nKeys.Chart.DATE));
+        returnTrendBarChart.getYAxis().setLabel(I18nManager.getInstance().get(I18nKeys.Chart.AMOUNT));
         returnTrendBarChart.setLegendVisible(false);
 
         // 分类退货柱状图
         categoryReturnBarChart.setTitle(com.cashier.i18n.I18nManager.getInstance().get("return_report.category_statistics"));
-        categoryReturnBarChart.getXAxis().setLabel(I18nManager.getInstance().get("chart.category"));
+        categoryReturnBarChart.getXAxis().setLabel(I18nManager.getInstance().get(I18nKeys.Chart.CATEGORY));
         categoryReturnBarChart.getYAxis().setLabel(I18nManager.getInstance().get("chart.return_amount"));
         categoryReturnBarChart.setLegendVisible(false);
     }
@@ -224,6 +227,8 @@ public class ReturnReportController {
             case "自定义日期":
                 // 不自动设置日期
                 break;
+            default:
+                break;
         }
 
         generateReport();
@@ -242,20 +247,19 @@ public class ReturnReportController {
     @FXML
     public void handleExport() {
         if (returnOrderList.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.no_export_data"));
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.INFO), com.cashier.i18n.I18nManager.getInstance().get("runtime.no_export_data"));
             return;
         }
 
         // 准备导出数据
         List<String> headers = List.of("退货单号", "会员名称", "退货日期", "退货金额", "状态", "操作员", "退货原因");
         List<String[]> data = new ArrayList<>();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
         for (ReturnOrder order : returnOrderList) {
             data.add(new String[]{
                 order.returnOrderId,
                 order.memberName != null ? order.memberName : "无",
-                sdf.format(order.returnDate),
+                order.returnDate != null ? order.returnDate.atZone(ZoneId.systemDefault()).toLocalDateTime().format(com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME) : "",
                 CurrencyUtil.format(order.totalAmount.doubleValue()),
                 order.getStatusText(),
                 order.operatorName,
@@ -273,11 +277,11 @@ public class ReturnReportController {
         );
 
         if (filePath != null) {
-            showAlert(Alert.AlertType.INFORMATION, com.cashier.i18n.I18nManager.getInstance().get("success.export"),
+            showAlert(Alert.AlertType.INFORMATION, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Success.EXPORT),
                     com.cashier.i18n.I18nManager.getInstance().get("runtime.exported_to", filePath));
             logger.info("退货报表导出成功: {}", filePath);
         } else {
-            showAlert(Alert.AlertType.ERROR, com.cashier.i18n.I18nManager.getInstance().get("error.export_data"), com.cashier.i18n.I18nManager.getInstance().get("runtime.export_log_short"));
+            showAlert(Alert.AlertType.ERROR, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.EXPORT_DATA), com.cashier.i18n.I18nManager.getInstance().get("runtime.export_log_short"));
         }
     }
 
@@ -289,12 +293,12 @@ public class ReturnReportController {
         Date end = endDate != null ? Date.from(endDate.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant()) : null;
 
         if (start == null || end == null) {
-            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.select_date_range_plain"));
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.INFO), com.cashier.i18n.I18nManager.getInstance().get("runtime.select_date_range_plain"));
             return;
         }
 
         if (start.after(end)) {
-            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.info"), com.cashier.i18n.I18nManager.getInstance().get("runtime.invalid_date_range_plain"));
+            showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.INFO), com.cashier.i18n.I18nManager.getInstance().get("runtime.invalid_date_range_plain"));
             return;
         }
 
@@ -325,7 +329,7 @@ public class ReturnReportController {
             logger.info("退货报表生成成功，统计期: {} 至 {}", startDate, endDate);
         } catch (Exception e) {
             logger.error("生成退货报表失败", e);
-            showAlert(Alert.AlertType.ERROR, com.cashier.i18n.I18nManager.getInstance().get("label.error"),
+            showAlert(Alert.AlertType.ERROR, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Label.ERROR),
                     com.cashier.i18n.I18nManager.getInstance().get("runtime.report_generate_failed", e.getMessage()));
         }
     }
@@ -334,17 +338,17 @@ public class ReturnReportController {
         ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList();
 
         if (stats.approvedOrders > 0) {
-            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get("runtime.status.approved"), stats.approvedOrders));
+            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get(I18nKeys.Runtime.STATUS_APPROVED), stats.approvedOrders));
         }
         if (stats.rejectedOrders > 0) {
-            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get("runtime.status.rejected"), stats.rejectedOrders));
+            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get(I18nKeys.Runtime.STATUS_REJECTED), stats.rejectedOrders));
         }
         if (stats.completedOrders > 0) {
-            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get("runtime.status.completed"), stats.completedOrders));
+            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get(I18nKeys.Runtime.STATUS_COMPLETED), stats.completedOrders));
         }
         int pending = stats.totalReturnOrders - stats.approvedOrders - stats.rejectedOrders - stats.completedOrders;
         if (pending > 0) {
-            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get("runtime.status.pending_approval"), pending));
+            pieChartData.add(new PieChart.Data(I18nManager.getInstance().get(I18nKeys.Runtime.STATUS_PENDING_APPROVAL), pending));
         }
 
         statusPieChart.setData(pieChartData);
@@ -352,20 +356,23 @@ public class ReturnReportController {
 
     private void updateReturnTrendChart(List<ReturnOrder> orders) {
         Map<String, Double> dailyReturns = new LinkedHashMap<>();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        java.time.format.DateTimeFormatter formatter = com.cashier.util.DateTimeFormats.DATE;
 
         // 初始化所有日期的数据
         LocalDate start = startDatePicker.getValue();
         LocalDate end = endDatePicker.getValue();
         LocalDate date = start;
         while (!date.isAfter(end)) {
-            dailyReturns.put(sdf.format(Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant())), 0.0);
+            dailyReturns.put(date.format(com.cashier.util.DateTimeFormats.DATE), 0.0);
             date = date.plusDays(1);
         }
 
         // 汇总每日退货金额
-        for (ReturnOrder order : orders) {
-            String dateKey = sdf.format(order.returnDate);
+            for (ReturnOrder order : orders) {
+            if (order.returnDate == null) {
+                continue;
+            }
+            String dateKey = order.returnDate.atZone(ZoneId.systemDefault()).format(formatter);
             dailyReturns.put(dateKey, dailyReturns.getOrDefault(dateKey, 0.0) + order.getTotalAmount().doubleValue());
         }
 
@@ -387,7 +394,7 @@ public class ReturnReportController {
             List<ReturnOrderItem> items = ReturnOrderItemDAO.findByReturnOrderId(order.returnOrderId);
             for (ReturnOrderItem item : items) {
                 String category = item.category != null && !item.category.isEmpty()
-                    ? item.category : I18nManager.getInstance().get("report.uncategorized");
+                    ? item.category : I18nManager.getInstance().get(I18nKeys.Report.UNCATEGORIZED);
                 categoryReturns.put(category, categoryReturns.getOrDefault(category, 0.0) + item.getReturnAmount().doubleValue());
             }
         }

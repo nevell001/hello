@@ -1,11 +1,12 @@
 package com.cashier.controller;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.CashierSystemFXApplication;
 import com.cashier.constant.AppConstants;
 import com.cashier.dao.UserDAO;
 import com.cashier.i18n.I18nManager;
 import com.cashier.model.User;
-import com.cashier.util.FXUtils;
 import com.cashier.util.PasswordUtil;
 import com.cashier.util.StatusBarManager;
 import org.slf4j.Logger;
@@ -15,11 +16,8 @@ import javafx.animation.FadeTransition;
 import javafx.animation.ScaleTransition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import java.time.Instant;
@@ -286,7 +284,7 @@ public class LoginController {
     @FXML
     public void handleAbout() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("menu.help.about"));
+        alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Menu.Help.ABOUT));
         alert.setHeaderText(AppConstants.APP_NAME + " v" + AppConstants.APP_VERSION);
         alert.setContentText(I18nManager.getInstance().get("runtime.about_content",
                 AppConstants.APP_SUBTITLE, AppConstants.JAVAFX_VERSION,

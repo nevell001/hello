@@ -17,7 +17,7 @@ class InventorySelectionFeedbackPolicyTest {
             "src/main/java/com/cashier/controller/InventoryController.java"
         ));
 
-        assertTrue(inventoryController.contains("showWarning(i18n.get(\"runtime.select_product_first\"))"));
+        assertTrue(inventoryController.contains("showWarning(i18n.get(I18nKeys.Runtime.SELECT_PRODUCT_FIRST))"));
         assertTrue(inventoryController.contains("if (selected.isEmpty())"));
         assertTrue(inventoryController.contains("Product selected = getSelectedItem(inventoryTable);"));
     }
@@ -32,7 +32,7 @@ class InventorySelectionFeedbackPolicyTest {
         assertTrue(inventoryController.contains("Category sel = categoryTable.getSelectionModel().getSelectedItem();"));
         assertTrue(inventoryController.contains("Unit sel = unitTable.getSelectionModel().getSelectedItem();"));
         assertTrue(countOccurrences(inventoryController,
-            "showWarning(i18n.get(\"runtime.select_product_first\"))") >= 5);
+            "showWarning(i18n.get(I18nKeys.Runtime.SELECT_PRODUCT_FIRST))") >= 5);
     }
 
     private int countOccurrences(String text, String needle) {

@@ -33,7 +33,7 @@ class SettingsBackupRestoreFeedbackPolicyTest {
         assertTrue(settingsController.contains("java.util.Optional<String> selectedBackup = dialog.showAndWait()"));
         assertTrue(settingsController.contains("if (selectedBackup.isEmpty())"));
         assertTrue(settingsController.contains("StatusBarManager.updateWarning"));
-        assertTrue(settingsController.contains("I18nManager.getInstance().get(\"status.cancelled\")"));
+        assertTrue(settingsController.contains("I18nManager.getInstance().get(I18nKeys.Status.CANCELLED)"));
         assertTrue(settingsController.contains("} else {\n                    com.cashier.util.StatusBarManager.updateWarning"));
     }
 

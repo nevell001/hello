@@ -9,22 +9,22 @@ public class I18n {
     // ========== 通用 ==========
     public static final String APP_NAME = "app.name";
     public static final String APP_VERSION = "app.version";
-    public static final String OK = "common.ok";
-    public static final String CANCEL = "common.cancel";
+    public static final String OK = I18nKeys.Common.OK;
+    public static final String CANCEL = I18nKeys.Common.CANCEL;
     public static final String SAVE = "common.save";
-    public static final String DELETE = "common.delete";
-    public static final String EDIT = "common.edit";
-    public static final String ADD = "common.add";
-    public static final String SEARCH = "common.search";
+    public static final String DELETE = I18nKeys.Common.DELETE;
+    public static final String EDIT = I18nKeys.Common.EDIT;
+    public static final String ADD = I18nKeys.Common.ADD;
+    public static final String SEARCH = I18nKeys.Common.SEARCH;
     public static final String FILTER = "common.filter";
     public static final String REFRESH = "common.refresh";
     public static final String CLOSE = "common.close";
-    public static final String CONFIRM = "common.confirm";
+    public static final String CONFIRM = I18nKeys.Common.CONFIRM;
     public static final String YES = "common.yes";
     public static final String NO = "common.no";
     public static final String SUCCESS = "common.success";
     public static final String ERROR = "common.error";
-    public static final String WARNING = "common.warning";
+    public static final String WARNING = I18nKeys.Common.WARNING;
     public static final String INFO = "common.info";
     public static final String LOADING = "common.loading";
     
@@ -39,7 +39,7 @@ public class I18n {
     public static final String MENU_VIEW = "menu.view";
     public static final String MENU_SETTINGS = "menu.settings";
     public static final String MENU_HELP = "menu.help";
-    public static final String MENU_HELP_ABOUT = "menu.help.about";
+    public static final String MENU_HELP_ABOUT = I18nKeys.Menu.Help.ABOUT;
     
     // ========== 登录 ==========
     public static final String LOGIN_TITLE = "login.title";
@@ -68,12 +68,12 @@ public class I18n {
     public static final String PRODUCT_ID = "product.id";
     public static final String PRODUCT_NAME = "product.name";
     public static final String PRODUCT_PRICE = "product.price";
-    public static final String PRODUCT_STOCK = "product.stock";
+    public static final String PRODUCT_STOCK = I18nKeys.Product.STOCK;
     public static final String PRODUCT_CATEGORY = "product.category";
     public static final String PRODUCT_BARCODE = "product.barcode";
     public static final String PRODUCT_UNIT = "product.unit";
     public static final String PRODUCT_ADD = "product.add";
-    public static final String PRODUCT_EDIT = "product.edit";
+    public static final String PRODUCT_EDIT = I18nKeys.ProductEdit.EDIT;
     public static final String PRODUCT_DELETE = "product.delete";
     public static final String PRODUCT_SEARCH = "product.search";
     public static final String PRODUCT_LOW_STOCK = "product.low_stock";
@@ -107,7 +107,7 @@ public class I18n {
     public static final String REPORT_PRODUCTS = "report.products";
     public static final String REPORT_MEMBERS = "report.members";
     public static final String REPORT_TOP_PRODUCTS = "report.top_products";
-    public static final String COMMON_TIP = "common.tip";
+    public static final String COMMON_TIP = I18nKeys.Common.TIP;
     
     // ========== 发票 ==========
     public static final String INVOICE_TITLE = "invoice.title";
@@ -132,21 +132,21 @@ public class I18n {
     public static final String STATUS_INACTIVE = "status.inactive";
     public static final String STATUS_PENDING = "status.pending";
     public static final String STATUS_COMPLETED = "status.completed";
-    public static final String STATUS_CANCELLED = "status.cancelled";
+    public static final String STATUS_CANCELLED = I18nKeys.Status.CANCELLED;
     
     // ========== 错误消息 ==========
-    public static final String ERROR_LOAD_DATA = "error.load_data";
-    public static final String ERROR_SAVE_DATA = "error.save_data";
-    public static final String ERROR_DELETE_DATA = "error.delete_data";
-    public static final String ERROR_EXPORT_DATA = "error.export_data";
-    public static final String ERROR_IMPORT_DATA = "error.import_data";
-    public static final String ERROR_EXPORT_FAILED = "error.export_failed";
+    public static final String ERROR_LOAD_DATA = I18nKeys.Error.LOAD_DATA;
+    public static final String ERROR_SAVE_DATA = I18nKeys.Error.SAVE_DATA;
+    public static final String ERROR_DELETE_DATA = I18nKeys.Error.DELETE_DATA;
+    public static final String ERROR_EXPORT_DATA = I18nKeys.Error.EXPORT_DATA;
+    public static final String ERROR_IMPORT_DATA = I18nKeys.Error.IMPORT_DATA;
+    public static final String ERROR_EXPORT_FAILED = I18nKeys.Error.EXPORT_FAILED;
 
     // ========== 成功消息 ==========
-    public static final String SUCCESS_EXPORT = "success.export";
+    public static final String SUCCESS_EXPORT = I18nKeys.Success.EXPORT;
     public static final String SUCCESS_EXPORT_FILE = "success.export_file";
     public static final String SUCCESS_CREATE_RETURN = "success.create_return";
-    public static final String SUCCESS_SHIFT_END = "success.shift_end";
+    public static final String SUCCESS_SHIFT_END = I18nKeys.Success.SHIFT_END;
 
     // ========== 通用标签 ==========
     public static final String LABEL_SHIFT_ID = "label.shift_id";
@@ -159,13 +159,13 @@ public class I18n {
     public static final String LABEL_WECHAT = "label.wechat";
     public static final String LABEL_ALIPAY = "label.alipay";
     public static final String LABEL_CARD = "label.card";
-    public static final String LABEL_TRANSACTION_DETAIL = "label.transaction_detail";
-    public static final String LABEL_EXPORT_FORMAT = "label.export_format";
-    public static final String LABEL_PLEASE_SELECT_FORMAT = "label.please_select_format";
+    public static final String LABEL_TRANSACTION_DETAIL = I18nKeys.Label.TRANSACTION_DETAIL;
+    public static final String LABEL_EXPORT_FORMAT = I18nKeys.Label.EXPORT_FORMAT;
+    public static final String LABEL_PLEASE_SELECT_FORMAT = I18nKeys.Label.PLEASE_SELECT_FORMAT;
     public static final String LABEL_FORMAT = "label.format";
-    public static final String LABEL_ERROR = "label.error";
-    public static final String LABEL_SUCCESS = "label.success";
-    public static final String LABEL_FAILED = "label.failed";
+    public static final String LABEL_ERROR = I18nKeys.Label.ERROR;
+    public static final String LABEL_SUCCESS = I18nKeys.Label.SUCCESS;
+    public static final String LABEL_FAILED = I18nKeys.Label.FAILED;
 
     /**
      * 获取翻译文本

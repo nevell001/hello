@@ -1,14 +1,15 @@
 package com.cashier.model;
 
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.Instant;
+import java.time.Duration;
 
 public class Shift {
     public String shiftId;           // 班次ID
     public String username;          // 操作员用户名
     public String operatorName;      // 操作员姓名
-    public Date startTime;           // 开始时间
-    public Date endTime;             // 结束时间
+    public Instant startTime;           // 开始时间
+    public Instant endTime;             // 结束时间
     public BigDecimal openingRevenue;    // 开机时的营业额
     public BigDecimal closingRevenue;    // 关机时的营业额
     public int openingTransactionCount;  // 开机时的交易数
@@ -27,8 +28,8 @@ public class Shift {
         this.shiftId = "";
         this.username = "";
         this.operatorName = "";
-        this.startTime = new Date();
-        this.endTime = new Date();
+        this.startTime = Instant.now();
+        this.endTime = Instant.now();
         this.openingRevenue = BigDecimal.ZERO;
         this.closingRevenue = BigDecimal.ZERO;
         this.openingTransactionCount = 0;
@@ -43,7 +44,7 @@ public class Shift {
     }
 
     public Shift(String shiftId, String username, String operatorName,
-                 Date startTime, BigDecimal openingRevenue, int openingTransactionCount) {
+                 Instant startTime, BigDecimal openingRevenue, int openingTransactionCount) {
         this();
         this.shiftId = shiftId;
         this.username = username;
@@ -57,7 +58,7 @@ public class Shift {
     }
 
     public Shift(String shiftId, String username, String operatorName,
-                 Date startTime, double openingRevenue, int openingTransactionCount) {
+                 Instant startTime, double openingRevenue, int openingTransactionCount) {
         this(shiftId, username, operatorName, startTime, BigDecimal.valueOf(openingRevenue), openingTransactionCount);
     }
 
@@ -67,7 +68,7 @@ public class Shift {
 
     // 结束班次
     public void endShift(BigDecimal closingRevenue, int closingTransactionCount) {
-        this.endTime = new Date();
+        this.endTime = Instant.now();
         this.closingRevenue = defaultDecimal(closingRevenue);
         this.closingTransactionCount = closingTransactionCount;
         this.shiftRevenue = this.closingRevenue.subtract(defaultDecimal(openingRevenue));
@@ -81,7 +82,7 @@ public class Shift {
     // 结束班次（带支付方式收入）
     public void endShift(BigDecimal closingRevenue, int closingTransactionCount,
                         BigDecimal cashRevenue, BigDecimal wechatRevenue, BigDecimal alipayRevenue, BigDecimal cardRevenue) {
-        this.endTime = new Date();
+        this.endTime = Instant.now();
         this.closingRevenue = defaultDecimal(closingRevenue);
         this.closingTransactionCount = closingTransactionCount;
         this.shiftRevenue = this.closingRevenue.subtract(defaultDecimal(openingRevenue));
@@ -103,7 +104,7 @@ public class Shift {
         if (startTime == null || endTime == null) {
             return 0;
         }
-        return (endTime.getTime() - startTime.getTime()) / (1000 * 60);
+        return Duration.between(startTime, endTime).toMinutes();
     }
 
     // 获取班次时长显示文本
@@ -130,11 +131,11 @@ public class Shift {
         return operatorName;
     }
 
-    public Date getStartTime() {
+    public Instant getStartTime() {
         return startTime;
     }
 
-    public Date getEndTime() {
+    public Instant getEndTime() {
         return endTime;
     }
 

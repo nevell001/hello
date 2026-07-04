@@ -1,10 +1,11 @@
 package com.cashier.controller;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.controller.base.BaseController;
 import com.cashier.dao.MemberDAO;
 import com.cashier.i18n.I18nManager;
 import com.cashier.model.Member;
-import com.cashier.util.DialogBuilder;
 import com.cashier.util.FXMLUtils;
 import com.cashier.util.StatusBarManager;
 import org.slf4j.Logger;
@@ -132,7 +133,7 @@ public class MemberController extends BaseController<Member> {
             }
         } catch (SQLException e) {
             logger.error("加载会员数据失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
             members = new java.util.HashMap<>();
         }
         memberList = FXCollections.observableArrayList(members.values());
@@ -225,7 +226,7 @@ public class MemberController extends BaseController<Member> {
                 }
             }
         } catch (IOException e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
         return false;
     }
@@ -247,7 +248,7 @@ public class MemberController extends BaseController<Member> {
         if (selected != null) {
             showEditDialog(selected);
         } else {
-            showWarning(i18n.get("runtime.select_member"));
+            showWarning(i18n.get(I18nKeys.Runtime.SELECT_MEMBER));
         }
     }
 
@@ -258,7 +259,7 @@ public class MemberController extends BaseController<Member> {
     public void handleDeleteMember() {
         ObservableList<Member> selected = getSelectedItems(memberTable);
         if (selected.isEmpty()) {
-            showWarning(i18n.get("runtime.select_member"));
+            showWarning(i18n.get(I18nKeys.Runtime.SELECT_MEMBER));
             return;
         }
 
@@ -332,7 +333,7 @@ public class MemberController extends BaseController<Member> {
                 showError(i18n.get("member.recharge.load_error") + ": " + e.getMessage());
             }
         } else {
-            showWarning(i18n.get("runtime.select_member"));
+            showWarning(i18n.get(I18nKeys.Runtime.SELECT_MEMBER));
         }
     }
 

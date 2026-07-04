@@ -1,5 +1,7 @@
 package com.cashier.model;
 
+import com.cashier.i18n.I18nKeys;
+
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -99,13 +101,13 @@ public class Transaction {
     public String getPaymentMethodText() {
         switch (paymentMethod) {
             case "CASH":
-                return com.cashier.i18n.I18nManager.getInstance().get("runtime.payment.cash");
+                return com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.PAYMENT_CASH);
             case "WECHAT":
-                return com.cashier.i18n.I18nManager.getInstance().get("runtime.payment.wechat");
+                return com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.PAYMENT_WECHAT);
             case "ALIPAY":
-                return com.cashier.i18n.I18nManager.getInstance().get("runtime.payment.alipay");
+                return com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.PAYMENT_ALIPAY);
             case "CARD":
-                return com.cashier.i18n.I18nManager.getInstance().get("runtime.payment.card");
+                return com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.PAYMENT_CARD);
             default:
                 return paymentMethod;
         }

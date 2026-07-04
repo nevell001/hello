@@ -1,5 +1,7 @@
 package com.cashier.util;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.i18n.I18nManager;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
@@ -47,11 +49,11 @@ public final class I18nUiUtils {
 
     public static String paymentMethod(String value) {
         String key = switch (value) {
-            case "全部" -> "filter.all";
-            case "现金", "CASH" -> "runtime.payment.cash";
-            case "微信", "WECHAT" -> "runtime.payment.wechat";
-            case "支付宝", "ALIPAY" -> "runtime.payment.alipay";
-            case "银行卡", "CARD" -> "runtime.payment.card";
+            case "全部" -> I18nKeys.Filter.ALL;
+            case "现金", "CASH" -> I18nKeys.Runtime.PAYMENT_CASH;
+            case "微信", "WECHAT" -> I18nKeys.Runtime.PAYMENT_WECHAT;
+            case "支付宝", "ALIPAY" -> I18nKeys.Runtime.PAYMENT_ALIPAY;
+            case "银行卡", "CARD" -> I18nKeys.Runtime.PAYMENT_CARD;
             default -> null;
         };
         return key == null ? value : I18nManager.getInstance().get(key);
@@ -60,10 +62,10 @@ public final class I18nUiUtils {
     public static String purchaseStatus(String value) {
         String normalized = value == null ? "" : value.toLowerCase();
         String key = switch (normalized) {
-            case "pending", "pending_approval", "待审批" -> "runtime.status.pending_approval";
-            case "approved", "已审批", "已批准" -> "runtime.status.approved";
-            case "completed", "已完成" -> "runtime.status.completed";
-            case "rejected", "已拒绝" -> "runtime.status.rejected";
+            case "pending", "pending_approval", "待审批" -> I18nKeys.Runtime.STATUS_PENDING_APPROVAL;
+            case "approved", "已审批", "已批准" -> I18nKeys.Runtime.STATUS_APPROVED;
+            case "completed", "已完成" -> I18nKeys.Runtime.STATUS_COMPLETED;
+            case "rejected", "已拒绝" -> I18nKeys.Runtime.STATUS_REJECTED;
             default -> null;
         };
         return key == null ? value : I18nManager.getInstance().get(key);
@@ -71,8 +73,8 @@ public final class I18nUiUtils {
 
     public static String inventoryStatus(String value) {
         String key = switch (value) {
-            case "正常" -> "inventory.status.normal";
-            case "库存不足" -> "inventory.status.low_stock";
+            case "正常" -> I18nKeys.Inventory.Status.NORMAL;
+            case "库存不足" -> I18nKeys.Inventory.Status.LOW_STOCK;
             case "滞销" -> "inventory_report.status.slow";
             case "积压" -> "inventory_report.status.overstock";
             default -> null;
@@ -85,7 +87,7 @@ public final class I18nUiUtils {
         String key = switch (normalized) {
             case "pending", "待盘点" -> "runtime.status.pending_check";
             case "checking", "盘点中" -> "runtime.status.checking";
-            case "completed", "已完成" -> "runtime.status.completed";
+            case "completed", "已完成" -> I18nKeys.Runtime.STATUS_COMPLETED;
             default -> null;
         };
         return key == null ? value : I18nManager.getInstance().get(key);

@@ -23,7 +23,7 @@ class PurchaseAndInventoryCheckSelectionFeedbackPolicyTest {
 
         for (String file : purchaseControllers) {
             String controller = Files.readString(Path.of(file));
-            assertTrue(controller.contains("showWarning(I18nManager.getInstance().get(\"runtime.select_purchase_order\"))"),
+            assertTrue(controller.contains("showWarning(I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_PURCHASE_ORDER))"),
                 file + " 的空选择操作应提示先选择采购订单");
             assertTrue(controller.contains("FXUtils.showWarningAlert"),
                 file + " 应使用警告弹窗同步状态栏");
@@ -37,7 +37,7 @@ class PurchaseAndInventoryCheckSelectionFeedbackPolicyTest {
             "src/main/java/com/cashier/controller/InventoryCheckController.java"
         ));
 
-        assertTrue(controller.contains("showWarning(I18nManager.getInstance().get(\"runtime.select_inventory_check\"))"));
+        assertTrue(controller.contains("showWarning(I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_INVENTORY_CHECK))"));
         assertTrue(controller.contains("FXUtils.showWarningAlert"));
     }
 

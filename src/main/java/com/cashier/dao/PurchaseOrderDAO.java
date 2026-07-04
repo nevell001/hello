@@ -4,7 +4,6 @@ import com.cashier.model.PurchaseOrder;
 import com.cashier.util.DatabaseManager;
 
 import java.sql.*;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 

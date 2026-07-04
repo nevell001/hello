@@ -1,6 +1,5 @@
 package com.cashier.util;
 
-import com.cashier.constant.FXConstants;
 import com.cashier.i18n.I18nManager;
 import javafx.scene.control.*;
 import javafx.scene.layout.Region;
@@ -12,7 +11,6 @@ import org.slf4j.Logger;
 
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 /**
  * 对话框构建器
@@ -246,52 +244,68 @@ public class DialogBuilder {
         }
 
         updateStatusBarForAlert();
+        Alert alert = createAlert();
+        Optional<ButtonType> result = alert.showAndWait();
+        result.ifPresent(this::runButtonAction);
+        return result.orElse(ButtonType.CANCEL);
+    }
 
-        I18nManager i18n = I18nManager.getInstance();
-
+    private Alert createAlert() {
         Alert alert = new Alert(alertType);
         alert.initModality(this.modality);
+        applyBasicText(alert);
+        applyButtons(alert);
+        applyDetails(alert);
+        applySizing(alert);
+        applyOwner(alert);
+        applyConfigurator(alert);
+        return alert;
+    }
 
-        // 设置标题
+    private void applyBasicText(Alert alert) {
         if (title != null) {
             alert.setTitle(title);
         }
-
-        // 设置头部
         if (headerText != null) {
             alert.setHeaderText(headerText);
         } else {
             alert.setHeaderText(null);
         }
-
-        // 设置内容
         if (contentText != null) {
             alert.setContentText(contentText);
         }
+    }
 
-        // 设置按钮文本
+    private void applyButtons(Alert alert) {
         if (okText != null) {
             alert.getButtonTypes().setAll(ButtonType.OK);
             // 由于 JavaFX 限制，这里简化处理
         }
+    }
 
-        // 设置可展开
+    private void applyDetails(Alert alert) {
         if (expandable && detailsText != null) {
-            // 创建详细信息区域作为可展开内容
-            TextArea textArea = new TextArea(detailsText);
-            textArea.setEditable(false);
-            textArea.setWrapText(true);
-            textArea.setMaxHeight(150);
-            alert.getDialogPane().setExpandableContent(textArea);
+            alert.getDialogPane().setExpandableContent(createDetailsTextArea());
             alert.getDialogPane().setExpanded(true);
+        } else if (detailsText != null) {
+            VBox content = new VBox();
+            content.getChildren().add(alert.getDialogPane().getContent());
+            content.getChildren().add(createDetailsTextArea());
+            alert.getDialogPane().setContent(content);
         }
+    }
 
-        // 设置可调整大小
+    private TextArea createDetailsTextArea() {
+        TextArea textArea = new TextArea(detailsText);
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+        textArea.setMaxHeight(150);
+        return textArea;
+    }
+
+    private void applySizing(Alert alert) {
         alert.setResizable(resizable);
-
-        // 设置尺寸
         if (width > 0 || height > 0) {
-            // 设置对话框尺寸的代码
             if (width > 0) {
                 alert.getDialogPane().setMinWidth(Region.USE_PREF_SIZE);
                 alert.getDialogPane().setPrefWidth(width);
@@ -301,47 +315,30 @@ public class DialogBuilder {
                 alert.getDialogPane().setPrefHeight(height);
             }
         }
+    }
 
-        // 设置所有者
+    private void applyOwner(Alert alert) {
         if (owner != null) {
             alert.initOwner(owner);
         }
+    }
 
-        // 设置详细信息（非展开模式）
-        if (detailsText != null && !expandable) {
-            // 创建详细信息区域
-            TextArea textArea = new TextArea(detailsText);
-            textArea.setEditable(false);
-            textArea.setWrapText(true);
-            textArea.setMaxHeight(150);
-            VBox content = new VBox();
-            content.getChildren().add(alert.getDialogPane().getContent());
-            content.getChildren().add(textArea);
-            alert.getDialogPane().setContent(content);
-        }
-
-        // 应用自定义配置
+    private void applyConfigurator(Alert alert) {
         if (configurator != null) {
             configurator.accept(alert);
         }
+    }
 
-        // 显示并等待
-        Optional<ButtonType> result = alert.showAndWait();
-
-        // 执行回调
-        result.ifPresent(buttonType -> {
-            if (ButtonType.OK.equals(buttonType) && onOkAction != null) {
-                onOkAction.run();
-            } else if (ButtonType.CANCEL.equals(buttonType) && onCancelAction != null) {
-                onCancelAction.run();
-            } else if (ButtonType.YES.equals(buttonType) && onYesAction != null) {
-                onYesAction.run();
-            } else if (ButtonType.NO.equals(buttonType) && onNoAction != null) {
-                onNoAction.run();
-            }
-        });
-
-        return result.orElse(ButtonType.CANCEL);
+    private void runButtonAction(ButtonType buttonType) {
+        if (ButtonType.OK.equals(buttonType) && onOkAction != null) {
+            onOkAction.run();
+        } else if (ButtonType.CANCEL.equals(buttonType) && onCancelAction != null) {
+            onCancelAction.run();
+        } else if (ButtonType.YES.equals(buttonType) && onYesAction != null) {
+            onYesAction.run();
+        } else if (ButtonType.NO.equals(buttonType) && onNoAction != null) {
+            onNoAction.run();
+        }
     }
 
     /**

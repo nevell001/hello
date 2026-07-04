@@ -1,5 +1,7 @@
 package com.cashier.controller;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.i18n.I18nManager;
 import com.cashier.dao.*;
 import com.cashier.model.*;
@@ -11,17 +13,13 @@ import com.cashier.util.LoggerFactoryUtil;
 
 import java.sql.SQLException;
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -40,6 +38,7 @@ import javafx.util.converter.IntegerStringConverter;
 @SuppressWarnings("unchecked")
 public class PurchaseInboundController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(PurchaseInboundController.class);
+    private static final java.security.SecureRandom SECURE_RANDOM = new java.security.SecureRandom();
 
     @FXML
     private TableView<PurchaseOrder> orderTable;
@@ -138,7 +137,7 @@ public class PurchaseInboundController {
             logger.info("可入库订单总数: {}", orders.size());
         } catch (SQLException e) {
             logger.error("加载可入库订单失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
             orders = new HashMap<>();
         }
         orderList = FXCollections.observableArrayList(orders.values());
@@ -174,7 +173,7 @@ public class PurchaseInboundController {
         if (selected != null) {
             showInboundDialog(selected);
         } else {
-            showWarning(I18nManager.getInstance().get("runtime.select_purchase_order"));
+            showWarning(I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_PURCHASE_ORDER));
         }
     }
 
@@ -195,11 +194,11 @@ public class PurchaseInboundController {
             GridPane infoPane = new GridPane();
             infoPane.setHgap(10);
             infoPane.setVgap(10);
-            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("checkout.order_number")), 0, 0);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Checkout.ORDER_NUMBER)), 0, 0);
             infoPane.add(new Label(order.orderNo), 1, 0);
-            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("product.edit.supplier")), 0, 1);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ProductEdit.SUPPLIER)), 0, 1);
             infoPane.add(new Label(order.supplierName), 1, 1);
-            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.purchase_date")), 0, 2);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.PURCHASE_DATE)), 0, 2);
             infoPane.add(new Label(order.purchaseDate), 1, 2);
 
             // 入库日期
@@ -211,7 +210,7 @@ public class PurchaseInboundController {
             itemTable.setEditable(true);
             itemTable.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 
-            TableColumn<InboundItemWrapper, String> productNameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_approval.product_name"));
+            TableColumn<InboundItemWrapper, String> productNameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnApproval.PRODUCT_NAME));
             productNameCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getProductName()));
 
             TableColumn<InboundItemWrapper, Number> orderQtyCol = new TableColumn<>(I18nManager.getInstance().get("purchase_inbound.order_quantity"));
@@ -238,11 +237,11 @@ public class PurchaseInboundController {
                 logger.debug("设置后的值: {}", e.getRowValue().thisInboundQuantity.get());
             });
 
-            TableColumn<InboundItemWrapper, String> unitPriceCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_approval.unit_price"));
+            TableColumn<InboundItemWrapper, String> unitPriceCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnApproval.UNIT_PRICE));
             unitPriceCol.setCellValueFactory(cellData ->
                 new SimpleStringProperty(String.format("%.2f", cellData.getValue().getUnitPrice())));
 
-            TableColumn<InboundItemWrapper, String> totalCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("runtime.subtotal"));
+            TableColumn<InboundItemWrapper, String> totalCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.SUBTOTAL));
             totalCol.setCellValueFactory(cellData ->
                 new SimpleStringProperty(String.format("%.2f",
                     cellData.getValue().getUnitPrice().multiply(BigDecimal.valueOf(cellData.getValue().thisInboundQuantity.get())))));
@@ -288,14 +287,14 @@ public class PurchaseInboundController {
 
             // 备注字段
             TextArea remarkArea = new TextArea();
-            remarkArea.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("restock.reason"));
+            remarkArea.setPromptText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Restock.REASON));
             remarkArea.setPrefRowCount(2);
 
             // 按钮
             Button confirmButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("restock.confirm"));
             confirmButton.getStyleClass().add("success-button");
 
-            Button cancelButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("return_order.cancel"));
+            Button cancelButton = new Button(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnOrder.CANCEL));
 
             confirmButton.setOnAction(e -> {
                 // 检查是否有入库数量
@@ -309,10 +308,8 @@ public class PurchaseInboundController {
 
                 try {
                     // 创建入库单
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-                    // 使用 SecureRandom 生成更安全的随机数
-                    java.security.SecureRandom secureRandom = new java.security.SecureRandom();
-                    String inboundNo = "IB" + sdf.format(new Date()) + String.format("%04d", secureRandom.nextInt(10000));
+                    String inboundNo = "IB" + java.time.LocalDate.now(java.time.ZoneId.systemDefault())
+                        .format(com.cashier.util.DateTimeFormats.COMPACT_DATE) + String.format("%04d", SECURE_RANDOM.nextInt(10000));
 
                     PurchaseInbound inbound = new PurchaseInbound();
                     inbound.inboundNo = inboundNo;
@@ -364,7 +361,7 @@ public class PurchaseInboundController {
                     logger.error("入库失败", ex);
                     com.cashier.service.AuditService.failure(currentUser, "PURCHASE", "PURCHASE_INBOUND",
                         "采购单=" + order.orderNo + ", 原因=" + ex.getMessage());
-                    showError(com.cashier.i18n.I18nManager.getInstance().get("message.operation.failed") + ": " + ex.getMessage());
+                    showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + ex.getMessage());
                 }
             });
 
@@ -374,15 +371,15 @@ public class PurchaseInboundController {
             buttonBox.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
 
             root.getChildren().addAll(
-                new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.order_info")),
+                new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.ORDER_INFO)),
                 infoPane,
                 new Label(I18nManager.getInstance().get("runtime.inbound_date")),
                 inboundDatePicker,
-                new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.product_details")),
+                new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.PRODUCT_DETAILS)),
                 itemTable,
                 totalLabel,
                 hintLabel,
-                new Label(com.cashier.i18n.I18nManager.getInstance().get("return_order_list.notes_label")),
+                new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnOrderList.NOTES_LABEL)),
                 remarkArea,
                 buttonBox
             );
@@ -395,7 +392,7 @@ public class PurchaseInboundController {
 
         } catch (SQLException e) {
             logger.error("加载订单明细失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -435,7 +432,7 @@ public class PurchaseInboundController {
         if (selected != null) {
             showOrderDetailDialog(selected);
         } else {
-            showWarning(I18nManager.getInstance().get("runtime.select_purchase_order"));
+            showWarning(I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_PURCHASE_ORDER));
         }
     }
 
@@ -451,18 +448,18 @@ public class PurchaseInboundController {
             GridPane infoPane = new GridPane();
             infoPane.setHgap(10);
             infoPane.setVgap(10);
-            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("checkout.order_number")), 0, 0);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Checkout.ORDER_NUMBER)), 0, 0);
             infoPane.add(new Label(order.orderNo), 1, 0);
-            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("product.edit.supplier")), 0, 1);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ProductEdit.SUPPLIER)), 0, 1);
             infoPane.add(new Label(order.supplierName), 1, 1);
-            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.purchase_date")), 0, 2);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.PURCHASE_DATE)), 0, 2);
             infoPane.add(new Label(order.purchaseDate), 1, 2);
-            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.total_amount")), 0, 3);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.TOTAL_AMOUNT)), 0, 3);
             infoPane.add(new Label(CurrencyUtil.format(order.totalAmount.doubleValue())), 1, 3);
 
             // 商品明细
             TableView<PurchaseOrderItem> itemTable = new TableView<>();
-            TableColumn<PurchaseOrderItem, String> nameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_approval.product_name"));
+            TableColumn<PurchaseOrderItem, String> nameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnApproval.PRODUCT_NAME));
             nameCol.setCellValueFactory(new PropertyValueFactory<>("productName"));
 
             TableColumn<PurchaseOrderItem, Number> qtyCol = new TableColumn<>(I18nManager.getInstance().get("purchase_inbound.order_quantity"));
@@ -471,11 +468,11 @@ public class PurchaseInboundController {
             TableColumn<PurchaseOrderItem, Number> inboundedCol = new TableColumn<>(I18nManager.getInstance().get("purchase_inbound.already_inbound"));
             inboundedCol.setCellValueFactory(new PropertyValueFactory<>("inboundQuantity"));
 
-            TableColumn<PurchaseOrderItem, String> priceCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_approval.unit_price"));
+            TableColumn<PurchaseOrderItem, String> priceCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnApproval.UNIT_PRICE));
             priceCol.setCellValueFactory(cellData ->
                 new SimpleStringProperty(String.format("%.2f", cellData.getValue().unitPrice)));
 
-            TableColumn<PurchaseOrderItem, String> totalCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("runtime.subtotal"));
+            TableColumn<PurchaseOrderItem, String> totalCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.SUBTOTAL));
             totalCol.setCellValueFactory(cellData ->
                 new SimpleStringProperty(String.format("%.2f", cellData.getValue().totalPrice)));
 
@@ -486,17 +483,17 @@ public class PurchaseInboundController {
 
             // 创建对话框Stage（需要在按钮回调之前声明）
             final Stage dialogStage = new Stage();
-            dialogStage.setTitle(I18nManager.getInstance().get("runtime.purchase_order_detail_title", order.orderNo));
+            dialogStage.setTitle(I18nManager.getInstance().get(I18nKeys.Runtime.PURCHASE_ORDER_DETAIL_TITLE, order.orderNo));
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(orderTable.getScene().getWindow());
 
-            Button closeButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.close"));
+            Button closeButton = new Button(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.CLOSE));
             closeButton.setOnAction(e -> dialogStage.close());
 
             root.getChildren().addAll(
-                new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.order_info")),
+                new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.ORDER_INFO)),
                 infoPane,
-                new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.product_details")),
+                new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.PRODUCT_DETAILS)),
                 itemTable,
                 closeButton
             );
@@ -509,7 +506,7 @@ public class PurchaseInboundController {
 
         } catch (SQLException e) {
             logger.error("加载订单详情失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -590,7 +587,7 @@ public class PurchaseInboundController {
             inboundTable.setItems(FXCollections.observableArrayList(inboundList));
             inboundTable.setPlaceholder(new Label(I18nManager.getInstance().get("purchase_inbound.history_no_data")));
 
-            Button closeButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.close"));
+            Button closeButton = new Button(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.CLOSE));
             closeButton.getStyleClass().add("secondary-button");
             closeButton.setOnAction(e -> dialogStage.close());
 
@@ -606,7 +603,7 @@ public class PurchaseInboundController {
 
         } catch (SQLException e) {
             logger.error("加载入库历史失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -629,7 +626,7 @@ public class PurchaseInboundController {
             infoPane.setVgap(10);
             infoPane.add(new Label(I18nManager.getInstance().get("runtime.inbound_no")), 0, 0);
             infoPane.add(new Label(inbound.inboundNo), 1, 0);
-            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("checkout.order_number")), 0, 1);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Checkout.ORDER_NUMBER)), 0, 1);
             infoPane.add(new Label(inbound.orderNo), 1, 1);
             infoPane.add(new Label(I18nManager.getInstance().get("runtime.inbound_date")), 0, 2);
             infoPane.add(new Label(inbound.inboundDate), 1, 2);
@@ -639,13 +636,13 @@ public class PurchaseInboundController {
             infoPane.add(new Label(CurrencyUtil.format(inbound.totalAmount.doubleValue())), 1, 4);
             infoPane.add(new Label(I18nManager.getInstance().get("runtime.operator")), 0, 5);
             infoPane.add(new Label(inbound.operator), 1, 5);
-            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("return_order_list.notes_label")), 0, 6);
+            infoPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnOrderList.NOTES_LABEL)), 0, 6);
             infoPane.add(new Label(inbound.remark != null ? inbound.remark : ""), 1, 6);
 
             // 入库明细
             TableView<PurchaseInboundItem> itemTable = new TableView<>();
             
-            TableColumn<PurchaseInboundItem, String> productNameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_approval.product_name"));
+            TableColumn<PurchaseInboundItem, String> productNameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnApproval.PRODUCT_NAME));
             productNameCol.setCellValueFactory(cellData ->
                 new SimpleStringProperty(cellData.getValue().getProductName()));
 
@@ -653,11 +650,11 @@ public class PurchaseInboundController {
             quantityCol.setCellValueFactory(cellData ->
                 new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getQuantity()));
 
-            TableColumn<PurchaseInboundItem, String> unitPriceCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_approval.unit_price"));
+            TableColumn<PurchaseInboundItem, String> unitPriceCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnApproval.UNIT_PRICE));
             unitPriceCol.setCellValueFactory(cellData ->
                 new SimpleStringProperty(String.format("%.2f", cellData.getValue().unitPrice)));
 
-            TableColumn<PurchaseInboundItem, String> totalCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("runtime.subtotal"));
+            TableColumn<PurchaseInboundItem, String> totalCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.SUBTOTAL));
             totalCol.setCellValueFactory(cellData ->
                 new SimpleStringProperty(String.format("%.2f", cellData.getValue().totalPrice)));
 
@@ -667,7 +664,7 @@ public class PurchaseInboundController {
             List<PurchaseInboundItem> items = PurchaseInboundItemDAO.findByInboundId(inbound.id);
             itemTable.setItems(FXCollections.observableArrayList(items));
 
-            Button closeButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.close"));
+            Button closeButton = new Button(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.CLOSE));
             closeButton.setOnAction(e -> detailStage.close());
 
             root.getChildren().addAll(
@@ -686,7 +683,7 @@ public class PurchaseInboundController {
 
         } catch (SQLException e) {
             logger.error("加载入库详情失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get("error.load_data") + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
     }
 
@@ -742,7 +739,7 @@ public class PurchaseInboundController {
     private void showError(String message) {
         com.cashier.util.StatusBarManager.updateError(message);
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(I18nManager.getInstance().get("label.error"));
+        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Label.ERROR));
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
@@ -750,6 +747,6 @@ public class PurchaseInboundController {
 
     private void showWarning(String message) {
         com.cashier.util.FXUtils.showWarningAlert(
-            I18nManager.getInstance().get("common.warning"), message);
+            I18nManager.getInstance().get(I18nKeys.Common.WARNING), message);
     }
 }

@@ -1,5 +1,7 @@
 package com.cashier.api.controller;
 
+import com.cashier.constant.ResourceBundleNames;
+
 import com.cashier.i18n.I18nManager;
 import com.cashier.i18n.I18nManager.LocaleInfo;
 import com.cashier.i18n.I18n;
@@ -185,7 +187,7 @@ public class I18nApiController {
         
         try {
             Locale locale = Locale.forLanguageTag(localeTag);
-            ResourceBundle bundle = ResourceBundle.getBundle("com.cashier.i18n.messages", locale);
+            ResourceBundle bundle = ResourceBundle.getBundle(ResourceBundleNames.I18N_MESSAGES, locale);
             
             Map<String, String> messages = new LinkedHashMap<>();
             
