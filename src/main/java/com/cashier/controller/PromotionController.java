@@ -1,5 +1,7 @@
 package com.cashier.controller;
 
+import com.cashier.i18n.I18nKeys;
+
 import com.cashier.service.DataService;
 import com.cashier.model.Promotion;
 import com.cashier.i18n.I18nManager;
@@ -23,7 +25,6 @@ import com.cashier.util.LoggerFactoryUtil;
 import com.cashier.util.FormValidator;
 
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 import java.util.List;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -137,11 +138,11 @@ public class PromotionController {
             new SimpleStringProperty(localizePromotionType(cellData.getValue().type)));
         descriptionColumn.setCellValueFactory(new PropertyValueFactory<>("description"));
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        DateTimeFormatter formatter = com.cashier.util.DateTimeFormats.DATE;
         periodColumn.setCellValueFactory(cellData -> {
             Promotion p = cellData.getValue();
-            LocalDate startDate = p.startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-            LocalDate endDate = p.endDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            LocalDate startDate = p.startDate.toLocalDate();
+            LocalDate endDate = p.endDate.toLocalDate();
             return new SimpleStringProperty(I18nManager.getInstance().get("promotion.date_range",
                 startDate.format(formatter), endDate.format(formatter)));
         });
@@ -212,7 +213,7 @@ public class PromotionController {
         if (selected != null) {
             showPromotionDialog(selected);
         } else {
-            showWarning(I18nManager.getInstance().get("runtime.select_promotion"));
+            showWarning(I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_PROMOTION));
         }
     }
 
@@ -296,14 +297,14 @@ public class PromotionController {
             thresholdField.setText(String.valueOf(promotion.threshold));
             discountField.setText(String.valueOf(promotion.discount));
             descriptionArea.setText(promotion.description);
-            startDatePicker.setValue(promotion.startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
-            endDatePicker.setValue(promotion.endDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+            startDatePicker.setValue(promotion.startDate.toLocalDate());
+            endDatePicker.setValue(promotion.endDate.toLocalDate());
             maxUsageField.setText(promotion.maxUsage == -1 ? "" : String.valueOf(promotion.maxUsage));
         } else {
             // 新建促销时自动生成编号
             promotionCodeField.setText(generatePromotionCode());
             promotionCodeField.setDisable(true);  // 禁用促销编号字段
-            thresholdField.setText(com.cashier.i18n.I18nManager.getInstance().get("member.edit.points_hint"));
+            thresholdField.setText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.MemberEdit.POINTS_HINT));
         }
 
         typeComboBox.valueProperty().addListener((obs, oldType, newType) -> {
@@ -334,8 +335,8 @@ public class PromotionController {
         content.getChildren().addAll(titleLabel, grid);
         dialog.getDialogPane().setContent(content);
 
-        ButtonType okButtonType = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get("common.ok"), ButtonBar.ButtonData.OK_DONE);
-        ButtonType cancelButtonType = new ButtonType(I18nManager.getInstance().get("common.cancel"), ButtonBar.ButtonData.CANCEL_CLOSE);
+        ButtonType okButtonType = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Common.OK), ButtonBar.ButtonData.OK_DONE);
+        ButtonType cancelButtonType = new ButtonType(I18nManager.getInstance().get(I18nKeys.Common.CANCEL), ButtonBar.ButtonData.CANCEL_CLOSE);
         dialog.getDialogPane().getButtonTypes().addAll(okButtonType, cancelButtonType);
 
         Node okButton = dialog.getDialogPane().lookupButton(okButtonType);
@@ -522,7 +523,7 @@ public class PromotionController {
             thresholdField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_coupon_threshold_hint"));
             discountField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_coupon_value_hint"));
             if (thresholdField.getText().trim().isEmpty()) {
-                thresholdField.setText(com.cashier.i18n.I18nManager.getInstance().get("member.edit.points_hint"));
+                thresholdField.setText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.MemberEdit.POINTS_HINT));
             }
         } else {
             thresholdField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_threshold_hint"));
@@ -596,8 +597,8 @@ public class PromotionController {
         newPromotion.threshold = threshold;
         newPromotion.discount = discount;
         newPromotion.description = descriptionArea.getText() == null ? "" : descriptionArea.getText().trim();
-        newPromotion.startDate = java.sql.Date.valueOf(startDatePicker.getValue());
-        newPromotion.endDate = java.sql.Date.valueOf(endDatePicker.getValue());
+        newPromotion.startDate = startDatePicker.getValue().atStartOfDay();
+        newPromotion.endDate = endDatePicker.getValue().atTime(23, 59, 59);
         newPromotion.maxUsage = maxUsage;
 
         return newPromotion;
@@ -650,7 +651,7 @@ public class PromotionController {
     private void showWarning(String message) {
         StatusBarManager.updateWarning(message);
         Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle(I18nManager.getInstance().get("common.warning"));
+        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Common.WARNING));
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
@@ -663,7 +664,7 @@ public class PromotionController {
     public void handleDeletePromotion() {
         List<Promotion> selected = promotionTable.getSelectionModel().getSelectedItems();
         if (selected.isEmpty()) {
-            showWarning(I18nManager.getInstance().get("runtime.select_promotion"));
+            showWarning(I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_PROMOTION));
             return;
         }
 
@@ -687,7 +688,7 @@ public class PromotionController {
     public void handleEnablePromotion() {
         List<Promotion> selected = promotionTable.getSelectionModel().getSelectedItems();
         if (selected.isEmpty()) {
-            showWarning(I18nManager.getInstance().get("runtime.select_promotion"));
+            showWarning(I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_PROMOTION));
             return;
         }
         for (Promotion p : selected) {
@@ -705,7 +706,7 @@ public class PromotionController {
     public void handleDisablePromotion() {
         List<Promotion> selected = promotionTable.getSelectionModel().getSelectedItems();
         if (selected.isEmpty()) {
-            showWarning(I18nManager.getInstance().get("runtime.select_promotion"));
+            showWarning(I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_PROMOTION));
             return;
         }
         for (Promotion p : selected) {

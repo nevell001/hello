@@ -1,8 +1,7 @@
 package com.cashier.model;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 public class Promotion {
     public int id;                    // 促销ID（数据库自增主键）
@@ -13,8 +12,8 @@ public class Promotion {
     public BigDecimal discount;          // 折扣值（满减的减额，打折的折扣率，优惠券的面额）
     public String description;           // 描述
     public boolean enabled;              // 是否启用
-    public Date startDate;               // 开始日期
-    public Date endDate;                 // 结束日期
+    public LocalDateTime startDate;               // 开始日期
+    public LocalDateTime endDate;                 // 结束日期
     public int usageCount;               // 使用次数
     public int maxUsage;                 // 最大使用次数（-1表示无限制）
 
@@ -27,8 +26,8 @@ public class Promotion {
         this.discount = BigDecimal.ZERO;
         this.description = "";
         this.enabled = true;
-        this.startDate = new Date();
-        this.endDate = new Date(System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000); // 默认30天后
+        this.startDate = LocalDateTime.now();
+        this.endDate = LocalDateTime.now().plusDays(30); // 默认30天后
         this.usageCount = 0;
         this.maxUsage = -1;
     }
@@ -46,7 +45,7 @@ public class Promotion {
         this(name, type, BigDecimal.valueOf(threshold), BigDecimal.valueOf(discount), description);
     }
 
-    public Promotion(int id, String name, String type, BigDecimal threshold, BigDecimal discount, String description, boolean enabled, Date startDate, Date endDate, int usageCount, int maxUsage) {
+    public Promotion(int id, String name, String type, BigDecimal threshold, BigDecimal discount, String description, boolean enabled, LocalDateTime startDate, LocalDateTime endDate, int usageCount, int maxUsage) {
         this.id = id;
         this.name = name;
         this.type = type;
@@ -60,16 +59,16 @@ public class Promotion {
         this.maxUsage = maxUsage;
     }
 
-    public Promotion(int id, String name, String type, double threshold, double discount, String description, boolean enabled, Date startDate, Date endDate, int usageCount, int maxUsage) {
+    public Promotion(int id, String name, String type, double threshold, double discount, String description, boolean enabled, LocalDateTime startDate, LocalDateTime endDate, int usageCount, int maxUsage) {
         this(id, name, type, BigDecimal.valueOf(threshold), BigDecimal.valueOf(discount), description, enabled, startDate, endDate, usageCount, maxUsage);
     }
 
-    public Promotion(int id, String promotionCode, String name, String type, BigDecimal threshold, BigDecimal discount, String description, boolean enabled, Date startDate, Date endDate, int usageCount, int maxUsage) {
+    public Promotion(int id, String promotionCode, String name, String type, BigDecimal threshold, BigDecimal discount, String description, boolean enabled, LocalDateTime startDate, LocalDateTime endDate, int usageCount, int maxUsage) {
         this(id, name, type, threshold, discount, description, enabled, startDate, endDate, usageCount, maxUsage);
         this.promotionCode = promotionCode;
     }
 
-    public Promotion(int id, String promotionCode, String name, String type, double threshold, double discount, String description, boolean enabled, Date startDate, Date endDate, int usageCount, int maxUsage) {
+    public Promotion(int id, String promotionCode, String name, String type, double threshold, double discount, String description, boolean enabled, LocalDateTime startDate, LocalDateTime endDate, int usageCount, int maxUsage) {
         this(id, promotionCode, name, type, BigDecimal.valueOf(threshold), BigDecimal.valueOf(discount), description, enabled, startDate, endDate, usageCount, maxUsage);
     }
 
@@ -110,8 +109,8 @@ public class Promotion {
 
     // 检查促销是否有效
     public boolean isValid() {
-        Date now = new Date();
-        return now.after(startDate) && now.before(endDate);
+        LocalDateTime now = LocalDateTime.now();
+        return now.isAfter(startDate) && now.isBefore(endDate);
     }
 
     // 增加使用次数
@@ -172,11 +171,11 @@ public class Promotion {
         return enabled;
     }
 
-    public Date getStartDate() {
+    public LocalDateTime getStartDate() {
         return startDate;
     }
 
-    public Date getEndDate() {
+    public LocalDateTime getEndDate() {
         return endDate;
     }
 
