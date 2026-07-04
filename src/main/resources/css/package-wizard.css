@@ -1,14 +1,43 @@
 /* 打包向导样式表 */
 
 .root {
-    -fx-base: #f5f5f5;
-    -fx-background-color: #ffffff;
+    -lisuan-surface: #ffffff;
+    -lisuan-surface-muted: #fff7ef;
+    -lisuan-surface-selected: #ffead8;
+    -lisuan-border: #e9ded1;
+    -lisuan-primary: #b85c1b;
+    -lisuan-primary-hover: #c96a24;
+    -lisuan-primary-active: #8f4314;
+    -lisuan-text: #1f2430;
+    -lisuan-text-muted: #6d6258;
+    -lisuan-text-heading: #2c3e50;
+    -lisuan-text-secondary: #6c757d;
+    -lisuan-text-default: #333333;
+    -lisuan-shell-base: #f5f5f5;
+    -lisuan-shell-muted: #f8f9fa;
+    -lisuan-panel-muted: #f8f8f8;
+    -lisuan-neutral-border: #e9ecef;
+    -lisuan-neutral-border-strong: #dee2e6;
+    -lisuan-input-border: #ced4da;
+    -lisuan-neutral: #6c757d;
+    -lisuan-neutral-hover: #5a6268;
+    -lisuan-neutral-active: #4e555b;
+    -lisuan-scrollbar-hover: #adb5bd;
+    -lisuan-success: #1B5E20;
+    -lisuan-danger: #B71C1C;
+    -lisuan-terminal-bg: #1e1e1e;
+    -lisuan-terminal-text: #cccccc;
+    -lisuan-terminal-success: #00ff00;
+    -lisuan-tooltip-bg: #343a40;
+
+    -fx-base: -lisuan-shell-base;
+    -fx-background-color: -lisuan-surface;
     -fx-font-family: "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
     -fx-font-size: 12px;
 }
 
 .wizard-root {
-    -fx-background-color: linear-gradient(to bottom, #f8f9fa, #ffffff);
+    -fx-background-color: linear-gradient(to bottom, -lisuan-shell-muted, -lisuan-surface);
 }
 
 .wizard-header {
@@ -16,20 +45,20 @@
 }
 
 .wizard-title {
-    -fx-text-fill: #2c3e50;
+    -fx-text-fill: -lisuan-text-heading;
     -fx-font-family: "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
     -fx-font-weight: bold;
 }
 
 .wizard-subtitle {
     -fx-font-family: "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
-    -fx-text-fill: #6c757d;
+    -fx-text-fill: -lisuan-text-secondary;
 }
 
 .wizard-version {
     -fx-font-family: "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
     -fx-font-size: 11px;
-    -fx-text-fill: #6c757d;
+    -fx-text-fill: -lisuan-text-secondary;
 }
 
 .section-title {
@@ -39,7 +68,7 @@
 
 .step-arrow,
 .help-text {
-    -fx-text-fill: #6c757d;
+    -fx-text-fill: -lisuan-text-secondary;
 }
 
 .help-text {
@@ -54,35 +83,35 @@
 
 .wizard-content {
     -fx-padding: 15px;
-    -fx-background-color: #f8f8f8;
+    -fx-background-color: -lisuan-panel-muted;
     -fx-background-radius: 8px;
 }
 
 .option-card {
-    -fx-background-color: white;
+    -fx-background-color: -lisuan-surface;
     -fx-padding: 15px;
     -fx-background-radius: 5px;
-    -fx-border-color: #e9ecef;
+    -fx-border-color: -lisuan-neutral-border;
     -fx-border-radius: 5px;
 }
 
 .status-label {
-    -fx-text-fill: #333333;
+    -fx-text-fill: -lisuan-text-default;
 }
 
 .connection-success {
-    -fx-text-fill: #1B5E20;
+    -fx-text-fill: -lisuan-success;
 }
 
 .connection-error {
-    -fx-text-fill: #B71C1C;
+    -fx-text-fill: -lisuan-danger;
 }
 
 /* 步骤按钮 */
 .step-button {
-    -fx-background-color: #e9ecef;
-    -fx-text-fill: #6c757d;
-    -fx-border-color: #dee2e6;
+    -fx-background-color: -lisuan-neutral-border;
+    -fx-text-fill: -lisuan-text-secondary;
+    -fx-border-color: -lisuan-neutral-border-strong;
     -fx-border-radius: 20;
     -fx-background-radius: 20;
     -fx-padding: 8 16;
@@ -91,19 +120,19 @@
 }
 
 .step-button:selected {
-    -fx-background-color: #007bff;
-    -fx-text-fill: white;
-    -fx-border-color: #007bff;
+    -fx-background-color: -lisuan-primary;
+    -fx-text-fill: -lisuan-surface;
+    -fx-border-color: -lisuan-primary;
 }
 
 .step-button:hover {
-    -fx-background-color: #0056b3;
+    -fx-background-color: -lisuan-primary-hover;
 }
 
 /* 普通按钮 */
 .button {
-    -fx-background-color: #6c757d;
-    -fx-text-fill: white;
+    -fx-background-color: -lisuan-text-secondary;
+    -fx-text-fill: -lisuan-surface;
     -fx-background-radius: 5;
     -fx-padding: 8 16;
     -fx-cursor: hand;
@@ -111,41 +140,41 @@
 }
 
 .button:hover {
-    -fx-background-color: #5a6268;
+    -fx-background-color: -lisuan-neutral-hover;
 }
 
 .button:pressed {
-    -fx-background-color: #4e555b;
+    -fx-background-color: -lisuan-neutral-active;
 }
 
 /* 主要按钮 */
 .primary-button {
-    -fx-background-color: #007bff;
-    -fx-text-fill: white;
+    -fx-background-color: -lisuan-primary;
+    -fx-text-fill: -lisuan-surface;
     -fx-font-weight: bold;
 }
 
 .primary-button:hover {
-    -fx-background-color: #0056b3;
+    -fx-background-color: -lisuan-primary-hover;
 }
 
 .primary-button:pressed {
-    -fx-background-color: #004085;
+    -fx-background-color: -lisuan-primary-active;
 }
 
 /* TextField 和 TextArea */
 .text-field, .text-area {
-    -fx-background-color: white;
+    -fx-background-color: -lisuan-surface;
     -fx-background-radius: 4;
-    -fx-border-color: #ced4da;
+    -fx-border-color: -lisuan-input-border;
     -fx-border-radius: 4;
     -fx-border-width: 1;
     -fx-padding: 8;
-    -fx-text-fill: black;
+    -fx-text-fill: -lisuan-text;
 }
 
 .text-field:focused, .text-area:focused {
-    -fx-border-color: #007bff;
+    -fx-border-color: -lisuan-primary;
     -fx-border-width: 2;
 }
 
@@ -155,42 +184,42 @@
 }
 
 .check-box > .text {
-    -fx-text-fill: #333333 !important;
+    -fx-text-fill: -lisuan-text-default !important;
 }
 
 .check-box .text {
-    -fx-text-fill: #333333 !important;
+    -fx-text-fill: -lisuan-text-default !important;
 }
 
 .check-box .box {
-    -fx-background-color: white;
-    -fx-border-color: #6c757d;
+    -fx-background-color: -lisuan-surface;
+    -fx-border-color: -lisuan-text-secondary;
     -fx-border-radius: 3;
 }
 
 .check-box:selected .box {
-    -fx-background-color: #007bff;
-    -fx-border-color: #007bff;
+    -fx-background-color: -lisuan-primary;
+    -fx-border-color: -lisuan-primary-active;
 }
 
 .check-box:selected > .text {
-    -fx-text-fill: #333333 !important;
+    -fx-text-fill: -lisuan-text-default !important;
 }
 
 .check-box:selected .text {
-    -fx-text-fill: #333333 !important;
+    -fx-text-fill: -lisuan-text-default !important;
 }
 
 /* ComboBox */
 .combo-box {
-    -fx-background-color: white;
+    -fx-background-color: -lisuan-surface;
     -fx-background-radius: 4;
-    -fx-border-color: #ced4da;
+    -fx-border-color: -lisuan-input-border;
     -fx-border-radius: 4;
 }
 
 .combo-box:hover {
-    -fx-border-color: #007bff;
+    -fx-border-color: -lisuan-primary;
 }
 
 .combo-box .list-cell {
@@ -199,29 +228,29 @@
 
 /* Spinner */
 .spinner {
-    -fx-background-color: white;
+    -fx-background-color: -lisuan-surface;
     -fx-background-radius: 4;
-    -fx-border-color: #ced4da;
+    -fx-border-color: -lisuan-input-border;
     -fx-border-radius: 4;
 }
 
 /* PasswordField */
 .password-field {
-    -fx-background-color: white;
+    -fx-background-color: -lisuan-surface;
     -fx-background-radius: 4;
-    -fx-border-color: #ced4da;
+    -fx-border-color: -lisuan-input-border;
     -fx-border-radius: 4;
     -fx-padding: 8;
 }
 
 .password-field:focused {
-    -fx-border-color: #007bff;
+    -fx-border-color: -lisuan-primary;
     -fx-border-width: 2;
 }
 
 /* Label */
 .label {
-    -fx-text-fill: #333;
+    -fx-text-fill: -lisuan-text-default;
 }
 
 /* ProgressBar */
@@ -230,20 +259,20 @@
 }
 
 .progress-bar .bar {
-    -fx-background-color: #007bff;
+    -fx-background-color: -lisuan-primary;
     -fx-background-radius: 4;
     -fx-background-insets: 0;
 }
 
 .progress-bar .track {
-    -fx-background-color: #e9ecef;
+    -fx-background-color: -lisuan-neutral-border;
     -fx-background-radius: 4;
     -fx-background-insets: 0;
 }
 
 /* ProgressIndicator */
 .progress-indicator {
-    -fx-progress-color: #007bff;
+    -fx-progress-color: -lisuan-primary;
 }
 
 /* Separator */
@@ -252,22 +281,22 @@
 }
 
 .separator .line {
-    -fx-border-color: #dee2e6;
+    -fx-border-color: -lisuan-neutral-border-strong;
     -fx-border-width: 1 0 0 0;
 }
 
 /* 滚动条 */
 .scroll-bar {
-    -fx-background-color: #f8f9fa;
+    -fx-background-color: -lisuan-shell-muted;
 }
 
 .scroll-bar .thumb {
-    -fx-background-color: #ced4da;
+    -fx-background-color: -lisuan-input-border;
     -fx-background-radius: 4;
 }
 
 .scroll-bar .thumb:hover {
-    -fx-background-color: #adb5bd;
+    -fx-background-color: -lisuan-scrollbar-hover;
 }
 
 .scroll-bar .track {
@@ -276,37 +305,37 @@
 
 /* TextArea 默认样式 */
 .text-area {
-    -fx-background-color: white;
-    -fx-text-fill: black;
+    -fx-background-color: -lisuan-surface;
+    -fx-text-fill: -lisuan-text;
 }
 
 /* 日志区域 - 终端风格 */
 .log-area .content {
-    -fx-background-color: #1e1e1e;
+    -fx-background-color: -lisuan-terminal-bg;
 }
 
 .log-area {
     -fx-font-family: monospace;
     -fx-font-size: 11px;
-    -fx-text-fill: #cccccc;
+    -fx-text-fill: -lisuan-terminal-text;
 }
 
 /* 打包说明区域 - 终端风格 */
 .info-area .content {
-    -fx-background-color: #1e1e1e;
+    -fx-background-color: -lisuan-terminal-bg;
 }
 
 .info-area {
     -fx-font-family: monospace;
     -fx-font-size: 11px;
-    -fx-text-fill: #00ff00;
+    -fx-text-fill: -lisuan-terminal-success;
     -fx-wrap-text: true;
 }
 
 /* Tooltip */
 .tooltip {
-    -fx-background-color: #343a40;
-    -fx-text-fill: white;
+    -fx-background-color: -lisuan-tooltip-bg;
+    -fx-text-fill: -lisuan-surface;
     -fx-font-size: 11px;
     -fx-background-radius: 4;
 }

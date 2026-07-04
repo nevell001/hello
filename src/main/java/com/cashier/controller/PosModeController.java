@@ -36,6 +36,10 @@ import java.util.Map;
  */
 public class PosModeController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(PosModeController.class);
+    private static final String AVATAR_CIRCLE_CLASS = "pos-avatar-circle";
+    private static final String AVATAR_ADMIN_CLASS = "pos-avatar-admin";
+    private static final String AVATAR_FINANCE_CLASS = "pos-avatar-finance";
+    private static final String AVATAR_CASHIER_CLASS = "pos-avatar-cashier";
     private static final Map<Character, String> PINYIN_FIRST_LETTER = Map.ofEntries(
         Map.entry('白', "B"),
         Map.entry('蔡', "C"), Map.entry('陈', "C"), Map.entry('程', "C"), Map.entry('崔', "C"), Map.entry('常', "C"),
@@ -123,19 +127,24 @@ public class PosModeController {
             String firstLetter = getFirstLetter(user.name);
             avatarText.setText(firstLetter);
 
-            // 根据角色设置头像颜色
-            String avatarColor;
-            if ("admin".equals(user.role)) {
-                avatarColor = "#FFC107"; // 管理员 - 黄色
-            } else if ("finance".equals(user.role)) {
-                avatarColor = "#9C27B0"; // 财务 - 紫色
-            } else {
-                avatarColor = "#FFC107"; // 收银员 - 黄色
+            avatarCircle.getStyleClass().removeAll(AVATAR_ADMIN_CLASS, AVATAR_FINANCE_CLASS, AVATAR_CASHIER_CLASS);
+            if (!avatarCircle.getStyleClass().contains(AVATAR_CIRCLE_CLASS)) {
+                avatarCircle.getStyleClass().add(AVATAR_CIRCLE_CLASS);
             }
-            avatarCircle.setStyle("-fx-fill: " + avatarColor + "; -fx-stroke: #FFFFFF; -fx-stroke-width: 2;");
+            avatarCircle.getStyleClass().add(resolveAvatarRoleClass(user.role));
         }
 
         logger.info("POS模式登录用户: {} ({})", user.name, user.getRoleDisplayName());
+    }
+
+    private String resolveAvatarRoleClass(String role) {
+        if ("admin".equals(role)) {
+            return AVATAR_ADMIN_CLASS;
+        }
+        if ("finance".equals(role)) {
+            return AVATAR_FINANCE_CLASS;
+        }
+        return AVATAR_CASHIER_CLASS;
     }
 
     /**

@@ -1507,6 +1507,21 @@
     -fx-text-fill: #E0E0E0;
 }
 
+.pos-avatar-circle {
+    -fx-fill: #FFC107;
+    -fx-stroke: #FFFFFF;
+    -fx-stroke-width: 2;
+}
+
+.pos-avatar-circle.pos-avatar-admin,
+.pos-avatar-circle.pos-avatar-cashier {
+    -fx-fill: #FFC107;
+}
+
+.pos-avatar-circle.pos-avatar-finance {
+    -fx-fill: #9C27B0;
+}
+
 .pos-avatar-text {
     -fx-font-size: 18px;
     -fx-font-weight: bold;

@@ -5,15 +5,47 @@
 
 /* ========== 全局样式 ========== */
 .root {
-    -fx-base: #FFFFFF;
-    -fx-background: #FFFFFF;
-    -fx-control-inner-background: #FFFFFF;
-    -fx-control-inner-background-alt: #FFF7EF;
-    -fx-accent: #B85C1B;
-    -fx-focus-color: #B85C1B;
+    -lisuan-surface: #FFFFFF;
+    -lisuan-surface-muted: #FFF7EF;
+    -lisuan-surface-selected: #FFEAD8;
+    -lisuan-surface-soft: #FFFBF6;
+    -lisuan-surface-warm: #FFF1E4;
+    -lisuan-border: #E9DED1;
+    -lisuan-border-strong: #E0C8AF;
+    -lisuan-border-subtle: #F0F0F0;
+    -lisuan-scrollbar: #D8C7B8;
+    -lisuan-scrollbar-hover: #BEA895;
+    -lisuan-primary: #B85C1B;
+    -lisuan-primary-hover: #C96A24;
+    -lisuan-primary-active: #8F4314;
+    -lisuan-primary-border: #8F4512;
+    -lisuan-primary-muted: #A94F16;
+    -lisuan-primary-deep: #6F320C;
+    -lisuan-primary-darker: #7F390E;
+    -lisuan-info: #111A44;
+    -lisuan-info-hover: #1B2760;
+    -lisuan-info-active: #0A102B;
+    -lisuan-text: #1F2430;
+    -lisuan-text-secondary: #4B4F5C;
+    -lisuan-text-tertiary: #6B6F7A;
+    -lisuan-text-muted: #6D6258;
+    -lisuan-text-disabled: #9E9E9E;
+    -lisuan-text-disabled-strong: #A0A0A0;
+    -lisuan-success: #4CAF50;
+    -lisuan-warning: #FF9800;
+    -lisuan-danger: #F44336;
+    -lisuan-avatar-admin: #FFC107;
+    -lisuan-avatar-finance: #9C27B0;
+
+    -fx-base: -lisuan-surface;
+    -fx-background: -lisuan-surface;
+    -fx-control-inner-background: -lisuan-surface;
+    -fx-control-inner-background-alt: -lisuan-surface-muted;
+    -fx-accent: -lisuan-primary;
+    -fx-focus-color: -lisuan-primary;
     -fx-faint-focus-color: rgba(184, 92, 27, 0.08);
-    -fx-text-fill: #1F2430;
-    -fx-text-fill-disabled: #A0A0A0;
+    -fx-text-fill: -lisuan-text;
+    -fx-text-fill-disabled: -lisuan-text-disabled-strong;
     -fx-font-family: "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei",
                      "Noto Sans SC", "SimHei", "UKIJ CJK",
                      "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji",
@@ -22,78 +54,78 @@
 
 /* ========== 场景背景 ========== */
 .scene {
-    -fx-background-color: #FFFFFF;
+    -fx-background-color: -lisuan-surface;
 }
 
 /* ========== 面板样式 ========== */
 .pane {
-    -fx-background-color: #FFFFFF;
+    -fx-background-color: -lisuan-surface;
 }
 
 /* ========== 卡片样式 ========== */
 .card {
-    -fx-background-color: #FFFFFF;
-    -fx-border-color: #E9DED1;
+    -fx-background-color: -lisuan-surface;
+    -fx-border-color: -lisuan-border;
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 6, 0, 0, 2);
 }
 
 /* ========== 按钮样式 ========== */
 .button {
-    -fx-background-color: #B85C1B;
-    -fx-text-fill: #FFFFFF;
+    -fx-background-color: -lisuan-primary;
+    -fx-text-fill: -lisuan-surface;
     -fx-background-radius: 3px;
     -fx-border-radius: 3px;
 }
 
 .button:hover {
-    -fx-background-color: #C96A24;
+    -fx-background-color: -lisuan-primary-hover;
 }
 
 .button:pressed {
-    -fx-background-color: #8F4314;
+    -fx-background-color: -lisuan-primary-active;
 }
 
 /* ========== 文本框样式 ========== */
 .text-field {
-    -fx-background-color: #FFFFFF;
-    -fx-border-color: #E9DED1;
+    -fx-background-color: -lisuan-surface;
+    -fx-border-color: -lisuan-border;
     -fx-border-radius: 3px;
-    -fx-text-fill: #1F2430;
+    -fx-text-fill: -lisuan-text;
 }
 
 .text-field:focused {
-    -fx-border-color: #B85C1B;
+    -fx-border-color: -lisuan-primary;
     -fx-border-width: 1.5px;
 }
 
 .text-field:disabled {
-    -fx-background-color: #FFF7EF;
-    -fx-text-fill: #9E9E9E;
+    -fx-background-color: -lisuan-surface-muted;
+    -fx-text-fill: -lisuan-text-disabled;
 }
 
 /* ========== 密码框样式 ========== */
 .password-field {
-    -fx-background-color: #FFFFFF;
-    -fx-border-color: #E9DED1;
+    -fx-background-color: -lisuan-surface;
+    -fx-border-color: -lisuan-border;
     -fx-border-radius: 3px;
-    -fx-text-fill: #1F2430;
+    -fx-text-fill: -lisuan-text;
 }
 
 .password-field:focused {
-    -fx-border-color: #B85C1B;
+    -fx-border-color: -lisuan-primary;
     -fx-border-width: 1.5px;
 }
 
 /* ========== 组合框样式 ========== */
 .combo-box {
-    -fx-background-color: #FFFFFF;
+    -fx-background-color: -lisuan-surface;
     -fx-background-insets: 0;
     -fx-background-radius: 3px;
-    -fx-border-color: #E9DED1;
+    -fx-border-color: -lisuan-border;
     -fx-border-insets: 0;
     -fx-border-radius: 3px;
     -fx-border-width: 1px;
-    -fx-text-fill: #1F2430;
+    -fx-text-fill: -lisuan-text;
     -fx-effect: null;
 }
 
@@ -127,21 +159,33 @@
 }
 
 .combo-box-popup .list-cell {
-    -fx-background-color: #FFFFFF;
+    -fx-background-color: -lisuan-surface;
     -fx-background-insets: 0;
     -fx-background-radius: 0;
     -fx-border-color: transparent;
     -fx-border-width: 0;
     -fx-border-insets: 0;
     -fx-border-radius: 0;
-    -fx-text-fill: #1F2430;
+    -fx-text-fill: -lisuan-text;
+}
+
+.combo-box-popup .list-cell:hover,
+.combo-box-popup .list-cell:filled:hover {
+    -fx-background-color: -lisuan-surface-selected;
+    -fx-text-fill: -lisuan-primary-active;
+}
+
+.combo-box-popup .list-cell:filled:selected,
+.combo-box-popup .list-cell:filled:selected:hover {
+    -fx-background-color: -lisuan-primary;
+    -fx-text-fill: -lisuan-surface;
 }
 
 .combo-box-popup .list-view {
-    -fx-background-color: #FFFFFF;
+    -fx-background-color: -lisuan-surface;
     -fx-background-insets: 0;
     -fx-background-radius: 0;
-    -fx-border-color: #E9DED1;
+    -fx-border-color: -lisuan-border;
     -fx-border-insets: 0;
     -fx-border-radius: 0;
     -fx-border-width: 1px;
@@ -149,41 +193,41 @@
 }
 
 .combo-box:focused {
-    -fx-border-color: #B85C1B;
+    -fx-border-color: -lisuan-primary;
     -fx-border-width: 1.5px;
 }
 
 /* ========== 表格样式 ========== */
 .table-view {
-    -fx-background-color: #FFFFFF;
-    -fx-border-color: #E9DED1;
+    -fx-background-color: -lisuan-surface;
+    -fx-border-color: -lisuan-border;
     -fx-border-radius: 3px;
 }
 
 .table-view .column-header {
-    -fx-background-color: #FFF7EF;
-    -fx-text-fill: #111A44;
+    -fx-background-color: -lisuan-surface-muted;
+    -fx-text-fill: -lisuan-info;
     -fx-font-size: 14px;
     -fx-font-weight: bold;
-    -fx-border-color: #E9DED1;
+    -fx-border-color: -lisuan-border;
 }
 
 .table-view .table-cell {
-    -fx-text-fill: #1F2430;
-    -fx-border-color: #F0F0F0;
+    -fx-text-fill: -lisuan-text;
+    -fx-border-color: -lisuan-border-subtle;
 }
 
 .table-view .table-row-cell {
-    -fx-background-color: #FFFFFF;
+    -fx-background-color: -lisuan-surface;
 }
 
 .table-view .table-row-cell:odd {
-    -fx-background-color: #FFFBF6;
+    -fx-background-color: -lisuan-surface-soft;
 }
 
 .table-view .table-row-cell:selected {
     -fx-background-color: linear-gradient(to right, rgba(184, 92, 27, 0.14), rgba(184, 92, 27, 0.20));
-    -fx-text-fill: #B85C1B;
+    -fx-text-fill: -lisuan-primary;
     -fx-font-weight: bold;
 }
 
@@ -204,7 +248,7 @@
 .table-view.user-table .table-row-cell:selected,
 .table-view.member-table .table-row-cell:selected {
     -fx-background-color: linear-gradient(to right, rgba(184, 92, 27, 0.14), rgba(184, 92, 27, 0.20));
-    -fx-text-fill: #B85C1B;
+    -fx-text-fill: -lisuan-primary;
     -fx-font-weight: bold;
 }
 
@@ -219,23 +263,23 @@
 .table-view.shift-table .table-row-cell:selected .table-cell,
 .table-view.user-table .table-row-cell:selected .table-cell,
 .table-view.member-table .table-row-cell:selected .table-cell {
-    -fx-text-fill: #B85C1B;
+    -fx-text-fill: -lisuan-primary;
     -fx-font-weight: bold;
 }
 
 /* 商品管理表格特殊样式 - 更明显的选中效果 */
 .table-view.inventory-table .table-row-cell:selected {
     -fx-background-color: linear-gradient(to right, rgba(184, 92, 27, 0.14), rgba(184, 92, 27, 0.20));
-    -fx-text-fill: #B85C1B;
+    -fx-text-fill: -lisuan-primary;
     -fx-font-weight: bold;
     -fx-font-size: 15px;
-    -fx-border-color: #B85C1B;
+    -fx-border-color: -lisuan-primary;
     -fx-border-width: 0 0 0 4px;
     -fx-effect: dropshadow(three-pass-box, rgba(184, 92, 27, 0.14), 3, 0, 0, 1);
 }
 
 .table-view.inventory-table .table-row-cell:selected .table-cell {
-    -fx-text-fill: #B85C1B;
+    -fx-text-fill: -lisuan-primary;
     -fx-font-weight: bold;
     -fx-font-size: 15px;
 }
@@ -276,87 +320,87 @@
 
 /* ========== 菜单和工具栏 ========== */
 .menu-bar {
-    -fx-background-color: #FFF7EF;
-    -fx-border-color: #E9DED1;
+    -fx-background-color: -lisuan-surface-muted;
+    -fx-border-color: -lisuan-border;
     -fx-border-width: 0 0 1px 0;
 }
 
 .menu .label {
-    -fx-text-fill: #1F2430;
+    -fx-text-fill: -lisuan-text;
 }
 
 .menu-bar > .container > .menu-button:hover {
-    -fx-background-color: #FFEAD8;
+    -fx-background-color: -lisuan-surface-selected;
     -fx-background-radius: 3px;
 }
 
 .menu-bar > .container > .menu-button:hover > .label {
-    -fx-text-fill: #8F4314;
+    -fx-text-fill: -lisuan-primary-active;
 }
 
 .menu-bar > .container > .menu-button:focused,
 .menu-bar > .container > .menu-button:showing {
-    -fx-background-color: #B85C1B;
+    -fx-background-color: -lisuan-primary;
     -fx-background-radius: 3px;
 }
 
 .menu-bar > .container > .menu-button:focused > .label,
 .menu-bar > .container > .menu-button:showing > .label {
-    -fx-text-fill: #FFFFFF;
+    -fx-text-fill: -lisuan-surface;
 }
 
 .menu-bar > .container > .menu-button:pressed {
-    -fx-background-color: #8F4314;
+    -fx-background-color: -lisuan-primary-active;
 }
 
 .menu-bar > .container > .menu-button:pressed > .label {
-    -fx-text-fill: #FFFFFF;
+    -fx-text-fill: -lisuan-surface;
 }
 
 .tool-bar {
-    -fx-background-color: #FFF7EF;
-    -fx-border-color: #E9DED1;
+    -fx-background-color: -lisuan-surface-muted;
+    -fx-border-color: -lisuan-border;
     -fx-border-width: 0 0 1px 0;
 }
 
 .context-menu {
-    -fx-background-color: #FFFFFF;
-    -fx-border-color: #E9DED1;
+    -fx-background-color: -lisuan-surface;
+    -fx-border-color: -lisuan-border;
     -fx-border-radius: 3px;
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 4, 0, 0, 1);
 }
 
 .menu-item {
-    -fx-text-fill: #1F2430;
+    -fx-text-fill: -lisuan-text;
 }
 
 .menu-item:focused,
 .context-menu .menu-item:focused {
-    -fx-background-color: #B85C1B;
+    -fx-background-color: -lisuan-primary;
 }
 
 .menu-item:focused .label,
 .context-menu .menu-item:focused .label {
-    -fx-text-fill: #FFFFFF;
+    -fx-text-fill: -lisuan-surface;
 }
 
 /* ========== 选项卡 ========== */
 .tab-pane {
-    -fx-background-color: #FFF7EF;
+    -fx-background-color: -lisuan-surface-muted;
 }
 
 .tab-pane .tab-header-area {
-    -fx-background-color: #FFF7EF;
-    -fx-border-color: #E9DED1;
+    -fx-background-color: -lisuan-surface-muted;
+    -fx-border-color: -lisuan-border;
     -fx-border-width: 0 0 1px 0;
 }
 
 .tab-pane .tab {
-    -fx-background-color: #FFF7EF;
+    -fx-background-color: -lisuan-surface-muted;
     -fx-background-radius: 3px 3px 0 0;
-    -fx-border-color: #E9DED1;
+    -fx-border-color: -lisuan-border;
     -fx-border-radius: 3px 3px 0 0;
-    -fx-text-fill: #1F2430;
+    -fx-text-fill: -lisuan-text;
     -fx-min-width: 97px;
 }
 
@@ -372,206 +416,632 @@
 }
 
 .tab-pane .tab:selected {
-    -fx-background-color: #FFFFFF;
-    -fx-text-fill: #B85C1B;
+    -fx-background-color: -lisuan-surface;
+    -fx-border-color: -lisuan-primary -lisuan-border transparent -lisuan-border;
+    -fx-text-fill: -lisuan-primary;
 }
 
 .tab-pane .tab-content-area {
-    -fx-background-color: #FFFFFF;
+    -fx-background-color: -lisuan-surface;
+}
+
+.main-tab-pane .tab-header-area {
+    -fx-background-color: -lisuan-surface-muted;
+    -fx-border-color: -lisuan-border;
+}
+
+.main-tab-pane .tab {
+    -fx-background-color: -lisuan-surface-muted;
+    -fx-border-color: transparent;
+}
+
+.main-tab-pane .tab:hover {
+    -fx-background-color: -lisuan-surface-selected;
+}
+
+.main-tab-pane .tab:selected {
+    -fx-background-color: -lisuan-surface;
+    -fx-border-color: -lisuan-primary -lisuan-border transparent -lisuan-border;
+    -fx-border-width: 2 1 0 1;
+}
+
+.main-tab-pane .tab:selected .tab-label,
+.main-tab-pane .tab:selected .content-tab-title {
+    -fx-text-fill: -lisuan-primary;
+    -fx-font-weight: bold;
+}
+
+.main-tab-pane .tab .tab-label,
+.main-tab-pane .content-tab-title {
+    -fx-text-fill: -lisuan-text;
+}
+
+/* ========== 表单选中与焦点态 ========== */
+.view-title {
+    -fx-text-fill: -lisuan-primary;
+}
+
+*:focused {
+    -fx-focus-color: -lisuan-primary;
+    -fx-faint-focus-color: rgba(184, 92, 27, 0.08);
+}
+
+.form-input,
+.form-combo,
+.form-textarea,
+.clean-combo-box,
+.date-picker {
+    -fx-border-color: -lisuan-border;
+}
+
+.form-input:focused,
+.form-combo:focused,
+.form-textarea:focused,
+.clean-combo-box:focused,
+.date-picker:focused {
+    -fx-border-color: -lisuan-primary;
+    -fx-border-width: 1.5px;
+}
+
+.text-field:focused,
+.password-field:focused,
+.text-area:focused,
+.combo-box:focused,
+.date-picker:focused {
+    -fx-effect: dropshadow(gaussian, rgba(184, 92, 27, 0.22), 4, 0, 0, 0);
+}
+
+.text-field,
+.password-field,
+.text-area,
+.form-input,
+.form-textarea {
+    -fx-highlight-fill: -lisuan-surface-selected;
+    -fx-highlight-text-fill: -lisuan-primary-active;
+}
+
+.clean-combo-box:hover {
+    -fx-border-color: -lisuan-primary-hover;
+}
+
+.clean-combo-box-popup .list-cell:hover {
+    -fx-background-color: -lisuan-surface-selected;
+    -fx-text-fill: -lisuan-primary-active;
+}
+
+.clean-combo-box-popup .list-cell:filled:selected,
+.clean-combo-box-popup .list-cell:filled:selected:hover {
+    -fx-background-color: -lisuan-primary;
+    -fx-text-fill: -lisuan-surface;
+}
+
+.date-picker-popup .date-cell:hover {
+    -fx-background-color: -lisuan-surface-selected;
+    -fx-text-fill: -lisuan-primary-active;
+}
+
+.date-picker-popup .date-cell:selected,
+.date-picker-popup .date-cell:selected:hover {
+    -fx-background-color: -lisuan-primary;
+    -fx-text-fill: -lisuan-surface;
+}
+
+.date-picker-popup .today {
+    -fx-border-color: -lisuan-primary;
+}
+
+.list-view .list-cell:filled:selected,
+.tree-view .tree-cell:selected {
+    -fx-background-color: -lisuan-surface-selected;
+    -fx-text-fill: -lisuan-primary-active;
+}
+
+.data-table-view .table-row-cell:selected {
+    -fx-background-color: linear-gradient(to right, rgba(184, 92, 27, 0.14), rgba(184, 92, 27, 0.20));
+    -fx-text-fill: -lisuan-primary;
+}
+
+.data-table-view .table-row-cell:selected .table-cell {
+    -fx-text-fill: -lisuan-primary;
+}
+
+.data-table-view .table-row-cell:hover {
+    -fx-background-color: rgba(184, 92, 27, 0.045);
+}
+
+/* ========== LiSuan 全局覆盖：统一公共样式中的默认蓝色 ========== */
+.login-scene {
+    -fx-background-color: linear-gradient(to bottom right, -lisuan-primary-active 0%, -lisuan-primary 46%, -lisuan-info 100%);
+}
+
+.login-input:focused,
+.dialog-input:focused {
+    -fx-background-color: -lisuan-surface;
+    -fx-border-color: -lisuan-primary;
+    -fx-border-width: 2px;
+}
+
+.forgot-password-link {
+    -fx-text-fill: -lisuan-primary;
+}
+
+.forgot-password-link:hover {
+    -fx-text-fill: -lisuan-primary-active;
+}
+
+.loading-indicator {
+    -fx-progress-color: -lisuan-primary;
+}
+
+.login-button {
+    -fx-background-color: linear-gradient(to right, -lisuan-primary 0%, -lisuan-primary-active 100%);
+    -fx-effect: dropshadow(three-pass-box, rgba(184, 92, 27, 0.28), 5, 0, 0, 2);
+}
+
+.login-button:hover {
+    -fx-background-color: linear-gradient(to right, -lisuan-primary-hover 0%, -lisuan-primary 100%);
+    -fx-effect: dropshadow(three-pass-box, rgba(184, 92, 27, 0.36), 8, 0, 0, 3);
+}
+
+.login-button:pressed {
+    -fx-background-color: linear-gradient(to right, -lisuan-primary-active 0%, -lisuan-primary-deep 100%);
+}
+
+.remember-checkbox:selected .box {
+    -fx-background-color: -lisuan-primary;
+    -fx-border-color: -lisuan-primary-active;
+}
+
+.button.info {
+    -fx-background-color: -lisuan-info;
+}
+
+.button.info:hover {
+    -fx-background-color: -lisuan-info-hover;
+}
+
+.button.info:pressed {
+    -fx-background-color: -lisuan-info-active;
+}
+
+.table-view .column-header,
+.table-view .column-header-background,
+.data-table-view .column-header,
+.data-table-view .column-header-background {
+    -fx-background-color: -lisuan-surface-muted;
+    -fx-border-color: -lisuan-border;
+}
+
+.table-view .column-header .label,
+.data-table-view .column-header .label {
+    -fx-text-fill: -lisuan-primary-active;
+}
+
+.table-view .table-row-cell:focused,
+.tree-view .tree-cell:focused,
+.list-view .list-cell:focused {
+    -fx-background-color: rgba(184, 92, 27, 0.12);
+    -fx-border-color: -lisuan-primary;
+}
+
+.table-view.inventory-table .table-row-cell:selected {
+    -fx-background-color: linear-gradient(to right, rgba(184, 92, 27, 0.14), rgba(184, 92, 27, 0.20));
+    -fx-text-fill: -lisuan-primary;
+    -fx-border-color: -lisuan-primary;
+    -fx-effect: dropshadow(three-pass-box, rgba(184, 92, 27, 0.14), 3, 0, 0, 1);
+}
+
+.table-view.inventory-table .table-row-cell:selected .table-cell {
+    -fx-text-fill: -lisuan-primary;
+}
+
+.table-view.inventory-table .table-row-cell:hover,
+.table-view.supplier-table .table-row-cell:hover,
+.table-view.purchase-order-table .table-row-cell:hover,
+.table-view.purchase-inbound-table .table-row-cell:hover,
+.table-view.inventory-check-table .table-row-cell:hover,
+.table-view.promotion-table .table-row-cell:hover,
+.table-view.transaction-table .table-row-cell:hover,
+.table-view.purchase-approval-table .table-row-cell:hover,
+.table-view.shift-table .table-row-cell:hover,
+.table-view.user-table .table-row-cell:hover,
+.table-view.member-table .table-row-cell:hover {
+    -fx-background-color: rgba(184, 92, 27, 0.045);
+}
+
+.table-view.inventory-table .table-row-cell:selected:hover,
+.table-view.supplier-table .table-row-cell:selected:hover,
+.table-view.purchase-order-table .table-row-cell:selected:hover,
+.table-view.purchase-inbound-table .table-row-cell:selected:hover,
+.table-view.inventory-check-table .table-row-cell:selected:hover,
+.table-view.promotion-table .table-row-cell:selected:hover,
+.table-view.transaction-table .table-row-cell:selected:hover,
+.table-view.purchase-approval-table .table-row-cell:selected:hover,
+.table-view.shift-table .table-row-cell:selected:hover,
+.table-view.user-table .table-row-cell:selected:hover,
+.table-view.member-table .table-row-cell:selected:hover {
+    -fx-background-color: linear-gradient(to right, rgba(184, 92, 27, 0.20), rgba(184, 92, 27, 0.28));
+}
+
+.progress-bar .bar,
+.loading-progress {
+    -fx-background-color: -lisuan-primary;
+    -fx-progress-color: -lisuan-primary;
+}
+
+.progress-indicator {
+    -fx-progress-color: -lisuan-primary;
+}
+
+.dialog-pane .header-panel,
+.a11y-skip-link {
+    -fx-background-color: -lisuan-primary;
+    -fx-text-fill: -lisuan-surface;
+}
+
+.nav-button:active,
+.nav-button.active,
+.nav-button-active {
+    -fx-background-color: -lisuan-surface-selected;
+    -fx-text-fill: -lisuan-primary-active;
+    -fx-font-weight: bold;
+}
+
+.nav-button:active .icon,
+.nav-button.active .icon,
+.nav-button-active .icon {
+    -fx-text-fill: -lisuan-primary-active;
+}
+
+.shortcut-help-view .header-bar,
+.search-view .search-header {
+    -fx-background-color: linear-gradient(to right, -lisuan-primary, -lisuan-primary-active);
+}
+
+.shortcut-help-view .search-field:focused,
+.search-view .search-input:focused {
+    -fx-border-color: -lisuan-primary;
+    -fx-effect: dropshadow(gaussian, rgba(184, 92, 27, 0.18), 4, 0, 0, 0);
+}
+
+.shortcut-help-view .group-title {
+    -fx-text-fill: -lisuan-primary;
+    -fx-border-color: transparent transparent transparent -lisuan-primary;
+}
+
+.search-view .search-result-item .result-type {
+    -fx-background-color: -lisuan-surface-selected;
+    -fx-text-fill: -lisuan-primary-active;
+}
+
+.search-view .search-result-cell:filled:selected {
+    -fx-background-color: -lisuan-surface-selected;
+}
+
+.cart-view .search-label,
+.cart-view .section-header {
+    -fx-text-fill: -lisuan-primary;
+}
+
+.cart-view .product-list-header {
+    -fx-background-color: -lisuan-primary;
+    -fx-border-color: -lisuan-primary-active;
+}
+
+.cart-view .product-list-header .double-click-hint,
+.cart-view .product-list-header .stock-hint {
+    -fx-text-fill: -lisuan-surface-muted;
+}
+
+.cart-view .member-info-box {
+    -fx-background-color: -lisuan-surface-muted;
+    -fx-border-color: -lisuan-border;
+}
+
+.cart-view .member-label {
+    -fx-text-fill: -lisuan-primary-active;
+}
+
+.cart-view .product-table .table-row-cell:hover {
+    -fx-background-color: rgba(184, 92, 27, 0.08);
+}
+
+.product-info-card {
+    -fx-background-color: -lisuan-surface-muted;
+    -fx-border-color: -lisuan-border;
+    -fx-effect: dropshadow(three-pass-box, rgba(184, 92, 27, 0.06), 2, 0, 0, 1);
+}
+
+.preview-box {
+    -fx-background-color: linear-gradient(to right, -lisuan-surface-muted, -lisuan-surface-selected);
+    -fx-border-color: -lisuan-border-strong;
+    -fx-effect: dropshadow(three-pass-box, rgba(184, 92, 27, 0.08), 2, 0, 0, 1);
+}
+
+.pos-toolbar {
+    -fx-background-color: linear-gradient(to right, -lisuan-primary, -lisuan-primary-active);
+}
+
+.pos-avatar-circle {
+    -fx-fill: -lisuan-avatar-admin;
+    -fx-stroke: -lisuan-surface;
+    -fx-stroke-width: 2;
+}
+
+.pos-avatar-circle.pos-avatar-admin,
+.pos-avatar-circle.pos-avatar-cashier {
+    -fx-fill: -lisuan-avatar-admin;
+}
+
+.pos-avatar-circle.pos-avatar-finance {
+    -fx-fill: -lisuan-avatar-finance;
+}
+
+.pos-mode-view,
+.pos-content,
+.cart-view {
+    -fx-background-color: -lisuan-surface-muted;
+}
+
+.member-info-box {
+    -fx-background-color: -lisuan-surface-muted;
+    -fx-border-color: -lisuan-border;
+}
+
+.text-accent {
+    -fx-text-fill: -lisuan-primary-active;
+}
+
+.bg-accent {
+    -fx-background-color: -lisuan-primary-active;
+}
+
+.alert-level-info {
+    -fx-text-fill: -lisuan-info;
+}
+
+.menu-item:focused,
+.context-menu .menu-item:focused {
+    -fx-background-color: -lisuan-primary;
+    -fx-text-fill: -lisuan-surface;
+}
+
+.tab-pane .tab:focused {
+    -fx-border-color: -lisuan-primary;
 }
 
 /* ========== 滚动条 ========== */
 .scroll-bar .thumb {
-    -fx-background-color: #D8C7B8;
+    -fx-background-color: -lisuan-scrollbar;
     -fx-background-radius: 2px;
 }
 
 .scroll-bar .thumb:hover {
-    -fx-background-color: #BEA895;
+    -fx-background-color: -lisuan-scrollbar-hover;
 }
 
 /* ========== 复选框和单选按钮 ========== */
 .check-box {
-    -fx-text-fill: #1F2430;
+    -fx-text-fill: -lisuan-text;
 }
 
 .check-box .box {
-    -fx-background-color: #FFFFFF;
-    -fx-border-color: #E9DED1;
+    -fx-background-color: -lisuan-surface;
+    -fx-border-color: -lisuan-border;
     -fx-border-radius: 2px;
+    -fx-background-radius: 2px;
+}
+
+.check-box:hover .box {
+    -fx-border-color: -lisuan-primary-hover;
+    -fx-background-color: -lisuan-surface-muted;
+}
+
+.check-box:focused .box {
+    -fx-border-color: -lisuan-primary;
+    -fx-effect: dropshadow(three-pass-box, rgba(184, 92, 27, 0.18), 3, 0, 0, 0);
+}
+
+.check-box:selected .box {
+    -fx-background-color: -lisuan-primary;
+    -fx-border-color: -lisuan-primary-active;
+}
+
+.check-box:selected .mark {
+    -fx-background-color: -lisuan-surface;
 }
 
 .radio-button {
-    -fx-text-fill: #1F2430;
+    -fx-text-fill: -lisuan-text;
 }
 
 .radio-button .radio {
-    -fx-background-color: #FFFFFF;
-    -fx-border-color: #E9DED1;
+    -fx-background-color: -lisuan-surface;
+    -fx-border-color: -lisuan-border;
     -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+}
+
+.radio-button:hover .radio {
+    -fx-border-color: -lisuan-primary-hover;
+    -fx-background-color: -lisuan-surface-muted;
+}
+
+.radio-button:focused .radio {
+    -fx-border-color: -lisuan-primary;
+    -fx-effect: dropshadow(three-pass-box, rgba(184, 92, 27, 0.18), 3, 0, 0, 0);
+}
+
+.radio-button:selected .radio {
+    -fx-background-color: -lisuan-surface;
+    -fx-border-color: -lisuan-primary;
+}
+
+.radio-button:selected .dot {
+    -fx-background-color: -lisuan-primary;
 }
 
 /* ========== 工具提示 ========== */
 .tooltip {
-    -fx-background-color: #B85C1B;
-    -fx-text-fill: #FFFFFF;
+    -fx-background-color: -lisuan-primary;
+    -fx-text-fill: -lisuan-surface;
     -fx-background-radius: 3px;
 }
 
 /* ========== 对话框 ========== */
 .dialog-pane {
-    -fx-background-color: #FFFFFF;
+    -fx-background-color: -lisuan-surface;
 }
 
 .dialog-pane .header-panel {
-    -fx-background-color: #FFF7EF;
-    -fx-text-fill: #B85C1B;
+    -fx-background-color: -lisuan-surface-muted;
+    -fx-text-fill: -lisuan-primary;
 }
 
 .dialog-pane .content {
-    -fx-text-fill: #1F2430;
+    -fx-text-fill: -lisuan-text;
 }
 
 .promotion-dialog .form-combo > .list-cell,
 .promotion-dialog .promotion-date-picker > .text-field {
-    -fx-text-fill: #1F2430;
+    -fx-text-fill: -lisuan-text;
 }
 
 .member-level-combo > .list-cell {
-    -fx-text-fill: #1F2430;
+    -fx-text-fill: -lisuan-text;
 }
 
 .return-refund-combo > .list-cell,
 .inventory-check-type-combo > .list-cell {
-    -fx-text-fill: #1F2430;
+    -fx-text-fill: -lisuan-text;
 }
 
 .member-discount-hint {
-    -fx-text-fill: #6D6258;
+    -fx-text-fill: -lisuan-text-muted;
 }
 
 .cart-view .product-list-header {
-    -fx-background-color: #B85C1B;
-    -fx-border-color: #8F4512;
+    -fx-background-color: -lisuan-primary;
+    -fx-border-color: -lisuan-primary-border;
 }
 
 .cart-view .product-list-header .product-list-title,
 .cart-view .product-list-header .double-click-hint,
 .cart-view .product-list-header .stock-hint {
-    -fx-text-fill: #FFFFFF;
+    -fx-text-fill: -lisuan-surface;
 }
 
 .promotion-dialog .promotion-date-picker {
-    -fx-background-color: #FFFFFF;
-    -fx-border-color: #E9DED1;
+    -fx-background-color: -lisuan-surface;
+    -fx-border-color: -lisuan-border;
 }
 
 .promotion-dialog .promotion-date-picker:focused {
-    -fx-border-color: #B85C1B;
+    -fx-border-color: -lisuan-primary;
 }
 
 /* ========== 进度条 ========== */
 .progress-bar {
-    -fx-background-color: #E9DED1;
+    -fx-background-color: -lisuan-border;
 }
 
 .progress-bar .bar {
-    -fx-background-color: #B85C1B;
+    -fx-background-color: -lisuan-primary;
 }
 
 /* ========== 滚动面板 ========== */
 .scroll-pane {
     -fx-background-color: transparent;
-    -fx-border-color: #E9DED1;
+    -fx-border-color: -lisuan-border;
     -fx-border-radius: 3px;
 }
 
 .scroll-pane .viewport {
-    -fx-background-color: #FFFFFF;
+    -fx-background-color: -lisuan-surface;
 }
 
 /* ========== 标签样式 ========== */
 .label {
-    -fx-text-fill: #1F2430;
+    -fx-text-fill: -lisuan-text;
 }
 
 .label.title {
-    -fx-text-fill: #111A44;
+    -fx-text-fill: -lisuan-info;
 }
 
 .label.heading {
-    -fx-text-fill: #1F2430;
+    -fx-text-fill: -lisuan-text;
 }
 
 .label.subtitle {
-    -fx-text-fill: #4B4F5C;
+    -fx-text-fill: -lisuan-text-secondary;
 }
 
 .label.secondary {
-    -fx-text-fill: #6B6F7A;
+    -fx-text-fill: -lisuan-text-tertiary;
 }
 
 .label.disabled {
-    -fx-text-fill: #9E9E9E;
+    -fx-text-fill: -lisuan-text-disabled;
 }
 
 /* ========== 文本颜色 ========== */
 .text-primary {
-    -fx-text-fill: #B85C1B;
+    -fx-text-fill: -lisuan-primary;
 }
 
 .text-success {
-    -fx-text-fill: #4CAF50;
+    -fx-text-fill: -lisuan-success;
 }
 
 .text-warning {
-    -fx-text-fill: #FF9800;
+    -fx-text-fill: -lisuan-warning;
 }
 
 .text-danger {
-    -fx-text-fill: #F44336;
+    -fx-text-fill: -lisuan-danger;
 }
 
 .text-info {
-    -fx-text-fill: #111A44;
+    -fx-text-fill: -lisuan-info;
 }
 
 /* ========== 背景颜色 ========== */
 .bg-primary {
-    -fx-background-color: #B85C1B;
+    -fx-background-color: -lisuan-primary;
 }
 
 .bg-success {
-    -fx-background-color: #4CAF50;
+    -fx-background-color: -lisuan-success;
 }
 
 .bg-warning {
-    -fx-background-color: #FF9800;
+    -fx-background-color: -lisuan-warning;
 }
 
 .bg-danger {
-    -fx-background-color: #F44336;
+    -fx-background-color: -lisuan-danger;
 }
 
 .bg-info {
-    -fx-background-color: #111A44;
+    -fx-background-color: -lisuan-info;
 }
 
 .bg-light {
-    -fx-background-color: #FFF7EF;
+    -fx-background-color: -lisuan-surface-muted;
 }
 
 .bg-dark {
-    -fx-background-color: #111A44;
+    -fx-background-color: -lisuan-info;
 }
 
 /* ========== 分割面板 ========== */
 .split-pane {
-    -fx-background-color: #E9DED1;
+    -fx-background-color: -lisuan-border;
 }
 
 .split-pane-divider {
-    -fx-background-color: #E9DED1;
+    -fx-background-color: -lisuan-border;
     -fx-padding: 0 1px;
 }
 /* ========== 字号大小类 ========== */
@@ -690,13 +1160,13 @@
 
 /* ========== LiSuan 左侧导航 ========== */
 .sidebar {
-    -fx-background-color: #FFF7EF;
+    -fx-background-color: -lisuan-surface-muted;
 }
 
 .sidebar .avatar-circle {
-    -fx-background-color: #A94F16;
+    -fx-background-color: -lisuan-primary-muted;
     -fx-background-radius: 999px;
-    -fx-border-color: #7F390E;
+    -fx-border-color: -lisuan-primary-darker;
     -fx-border-radius: 999px;
     -fx-border-width: 2px;
     -fx-pref-width: 60px;
@@ -709,86 +1179,86 @@
 }
 
 .sidebar .avatar-circle .avatar-text {
-    -fx-text-fill: #FFFFFF;
+    -fx-text-fill: -lisuan-surface;
 }
 
 .sidebar .scroll-pane,
 .sidebar .scroll-pane .viewport,
 .sidebar .nav-buttons,
 .sidebar .nav-group-content {
-    -fx-background-color: #FFF7EF;
+    -fx-background-color: -lisuan-surface-muted;
 }
 
 .sidebar .nav-group-header {
-    -fx-background-color: #FFF1E4;
-    -fx-border-color: transparent transparent #E9DED1 transparent;
+    -fx-background-color: -lisuan-surface-warm;
+    -fx-border-color: transparent transparent -lisuan-border transparent;
 }
 
 .sidebar .nav-group-header:hover {
-    -fx-background-color: #FFEAD8;
+    -fx-background-color: -lisuan-surface-selected;
 }
 
 .sidebar .nav-group-title,
 .sidebar .nav-group-header .icon,
 .sidebar .user-name-label,
 .sidebar .user-role-label {
-    -fx-text-fill: #111A44;
+    -fx-text-fill: -lisuan-info;
 }
 
 .sidebar .nav-button {
     -fx-background-color: transparent;
-    -fx-text-fill: #1F2430;
+    -fx-text-fill: -lisuan-text;
 }
 
 .sidebar .nav-button .icon {
-    -fx-text-fill: #1F2430;
+    -fx-text-fill: -lisuan-text;
 }
 
 .sidebar .nav-button:hover {
-    -fx-background-color: #FFEAD8;
-    -fx-text-fill: #8F4314;
+    -fx-background-color: -lisuan-surface-selected;
+    -fx-text-fill: -lisuan-primary-active;
 }
 
 .sidebar .nav-button:hover .icon {
-    -fx-text-fill: #8F4314;
+    -fx-text-fill: -lisuan-primary-active;
 }
 
 .sidebar .nav-button-active,
 .sidebar .nav-button.active {
-    -fx-background-color: #B85C1B;
-    -fx-text-fill: #FFFFFF;
+    -fx-background-color: -lisuan-primary;
+    -fx-text-fill: -lisuan-surface;
     -fx-background-radius: 4px;
     -fx-font-weight: bold;
 }
 
 .sidebar .nav-button-active .icon,
 .sidebar .nav-button.active .icon {
-    -fx-text-fill: #FFFFFF;
+    -fx-text-fill: -lisuan-surface;
 }
 
 .sidebar .nav-button-active:hover,
 .sidebar .nav-button.active:hover {
-    -fx-background-color: #C96A24;
-    -fx-text-fill: #FFFFFF;
+    -fx-background-color: -lisuan-primary-hover;
+    -fx-text-fill: -lisuan-surface;
 }
 
 .sidebar .nav-button-active:hover .icon,
 .sidebar .nav-button.active:hover .icon {
-    -fx-text-fill: #FFFFFF;
+    -fx-text-fill: -lisuan-surface;
 }
 
 .sidebar .nav-button-active:pressed,
 .sidebar .nav-button.active:pressed {
-    -fx-background-color: #8F4314;
+    -fx-background-color: -lisuan-primary-active;
 }
 
 /* ========== LiSuan 快捷键帮助 ========== */
 .shortcut-help-view {
-    -fx-background-color: #FFF7EF;
+    -fx-background-color: -lisuan-surface-muted;
 }
 
 .shortcut-help-view .header-bar {
-    -fx-background-color: #B85C1B;
+    -fx-background-color: -lisuan-primary;
     -fx-border-color: transparent;
     -fx-effect: dropshadow(three-pass-box, rgba(143,67,20,0.18), 4, 0, 0, 2);
 }
@@ -797,47 +1267,47 @@
 .shortcut-help-view .content-area,
 .shortcut-help-view .scroll-pane,
 .shortcut-help-view .scroll-pane .viewport {
-    -fx-background-color: #FFF7EF;
+    -fx-background-color: -lisuan-surface-muted;
 }
 
 .shortcut-help-view .search-bar {
-    -fx-border-color: #E9DED1;
+    -fx-border-color: -lisuan-border;
 }
 
 .shortcut-help-view .search-field {
-    -fx-background-color: #FFFFFF;
-    -fx-border-color: #E9DED1;
-    -fx-text-fill: #1F2430;
+    -fx-background-color: -lisuan-surface;
+    -fx-border-color: -lisuan-border;
+    -fx-text-fill: -lisuan-text;
 }
 
 .shortcut-help-view .search-field:focused {
-    -fx-border-color: #B85C1B;
+    -fx-border-color: -lisuan-primary;
 }
 
 .shortcut-help-view .shortcut-group {
-    -fx-background-color: #FFFFFF;
-    -fx-border-color: #E9DED1;
+    -fx-background-color: -lisuan-surface;
+    -fx-border-color: -lisuan-border;
     -fx-effect: dropshadow(three-pass-box, rgba(143,67,20,0.08), 3, 0, 0, 1);
 }
 
 .shortcut-help-view .group-title {
-    -fx-text-fill: #8F4314;
+    -fx-text-fill: -lisuan-primary-active;
 }
 
 .shortcut-help-view .shortcut-key {
-    -fx-background-color: linear-gradient(to bottom, #FFF7EF, #FFEAD8);
-    -fx-border-color: #E0C8AF;
-    -fx-text-fill: #8F4314;
+    -fx-background-color: linear-gradient(to bottom, -lisuan-surface-muted, -lisuan-surface-selected);
+    -fx-border-color: -lisuan-border-strong;
+    -fx-text-fill: -lisuan-primary-active;
 }
 
 .shortcut-help-view .shortcut-desc {
-    -fx-text-fill: #1F2430;
+    -fx-text-fill: -lisuan-text;
 }
 
 .shortcut-help-view .icon-button {
     -fx-background-color: rgba(255, 247, 239, 0.18);
     -fx-border-color: rgba(255, 247, 239, 0.36);
-    -fx-text-fill: #FFFFFF;
+    -fx-text-fill: -lisuan-surface;
 }
 
 .shortcut-help-view .icon-button:hover {

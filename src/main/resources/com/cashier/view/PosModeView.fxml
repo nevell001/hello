@@ -30,7 +30,7 @@
 
         <!-- 用户头像（显示首字母） -->
         <StackPane fx:id="avatarContainer" prefWidth="40" prefHeight="40">
-            <Circle fx:id="avatarCircle" radius="20" style="-fx-fill: #FFC107; -fx-stroke: #FFFFFF; -fx-stroke-width: 2;"/>
+            <Circle fx:id="avatarCircle" radius="20" styleClass="pos-avatar-circle"/>
             <Label fx:id="avatarText" text="U" styleClass="pos-avatar-text"/>
         </StackPane>
 

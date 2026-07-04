@@ -208,7 +208,7 @@ public class UIOptimizer {
      */
     public static ProgressIndicator showLoading(Node parent) {
         ProgressIndicator indicator = new ProgressIndicator();
-        indicator.setStyle("-fx-progress-color: #3F51B5;");
+        indicator.getStyleClass().add("loading-indicator");
         
         if (parent instanceof Pane) {
             Pane pane = (Pane) parent;
