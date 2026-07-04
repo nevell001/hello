@@ -1,188 +1,191 @@
 # 狸算(LiSuan)收银系统
 
-狸算(LiSuan)收银系统 - 功能完整的收银系统，基于 JavaFX 17 开发，MySQL8数据库，多语言支持。
+简体中文 | [English](./README_en.md) | [繁體中文](./README_zh_TW.md)
 
-**当前版本**: v2.5.8 | **最新更新**: 2026-06-20
+狸算(LiSuan)收银系统是一个基于 JavaFX 17 的桌面 POS 收银系统，面向零售门店的收银、商品、会员、采购、库存、退货、报表、用户权限、数据备份和硬件接入等日常经营场景。
+
+**当前版本**: v2.5.8 | **最新更新**: 2026-07-04
 
 ![Java](https://img.shields.io/badge/Java-17-orange)
 ![JavaFX](https://img.shields.io/badge/JavaFX-17.0.12-blue)
 ![Maven](https://img.shields.io/badge/Maven-3.8+-red)
+![MySQL](https://img.shields.io/badge/MySQL-8.4-blue)
 ![License](https://img.shields.io/badge/License-MulanPSL2-blue)
 
-## 核心功能
+## 功能概览
 
-### 🛒 POS 收银
-- 购物车管理（添加、修改、删除商品）
-- 多种支付方式：现金、微信支付、支付宝、银行卡
-- 会员折扣自动计算
-- 挂单/取单功能
-- 小票打印（支持多种打印机）
-- 快捷键操作支持
+### 收银管理
+- 结账收银、购物车增删改、商品搜索、会员手机号识别
+- 支持现金、微信、支付宝、银行卡等支付方式
+- 会员折扣、积分、余额消费与交易记录联动
+- 小票打印、打印预览、钱箱打开、快捷键帮助
+- 交班管理，记录班次销售额和收银员业绩
 
-### 📦 商品管理
-- 商品增删改查
-- SKU/条码管理
-- 规格管理（颜色、尺寸、材质等）
-- 分类管理
-- 库存预警
-- 快速入库
-- 批量导入/导出
-- 添加与编辑表单支持完整的多语言校验提示
+### 商品与库存
+- 商品增删改查，支持商品编码、条码、分类、单位、规格、售价、成本价和库存信息
+- 商品名称唯一约束，条码允许重复
+- 库存预警、低库存查询、快速入库
+- 库存盘点、盘点明细、差异处理和盘点状态跟踪
+- 商品 CSV 导入、Excel/PDF 导出
 
-### 👥 会员管理
-- 会员注册与信息管理
-- 积分系统（消费累计积分）
-- 等级自动升级（普通/银卡/金卡/钻石）
-- 会员折扣（无折扣/5%/10%/15%）
-- 余额充值与消费
-- 充值记录查询
+### 会员与客户
+- 会员注册、编辑、查询、充值和余额管理
+- 消费积分累计，会员等级自动升级
+- 等级折扣规则：普通 10 折、银卡 9.5 折、金卡 9 折、钻石 8.5 折
+- 充值记录查询，会员消费与退货流程联动
 
-### 📊 进销存管理
-- 采购订单管理
-- 采购入库
-- 供应商管理
-- 库存盘点
-- 利润分析报表
+### 采购管理
+- 供应商资料维护
+- 采购订单创建、编辑、查询和状态流转
+- 采购审批流程
+- 采购入库和入库历史
 - 采购报表统计
-- 入库历史与盘点明细显示优化
 
-### 🔄 退货管理
-- 退货订单创建
+### 退货管理
+- 基于原交易创建退货订单
+- 退货商品、退货原因、商品状态和退款方式记录
 - 退货审批流程
-- 库存自动恢复
-- 退款处理（现金/余额/积分）
-- 退货订单支持快捷日期筛选
+- 审批通过后恢复库存，并按现金、余额或积分等方式处理退款
+- 退货订单与退货报表支持查询、筛选、导出和打印
 
-### 📈 数据统计
-- 日销售报表
-- 月销售报表
-- 交易记录查询
-- 利润分析报表
-- 库存报表
-- 采购报表
-- 退货报表
+### 报表与统计
+- 交易记录查询与今日交易统计
+- 数据统计视图
+- 采购报表、库存报表、利润分析、退货报表
+- 支持 Excel 和 PDF 导出
+- 利润分析包含销售额、成本、毛利、毛利率、品类和日趋势等视图
 
-### 👤 用户权限
-- 三种角色：管理员、收银员、财务
-- 角色权限控制
-- 操作日志记录
-- 密码安全（BCrypt 加密）
-- 密码重置功能
+### 用户、权限与审计
+- 默认角色：管理员、收银员、财务
+- BCrypt 密码加密，支持密码重置和首次登录改密
+- 用户启用、停用、删除和角色管理
+- 管理员可查看审计日志，覆盖登录认证、交易、退货、库存、采购、会员、用户和系统设置等操作
 
-### 💾 数据管理
-- Excel 导出（Apache POI）
-- PDF 导出（PDFBox）
-- 数据批量导入
-- 云备份系统（支持多云存储）
-- 本地备份恢复
-- 自动定时备份
+### 数据备份与恢复
+- 菜单内置数据备份和数据恢复
+- SQL 备份默认生成到 `backup/sql`
+- 备份服务支持数据库、配置、日志、发票和业务数据文件打包
+- 支持本地备份、自动备份配置、保留策略和备份清理
+- API 侧保留云备份配置字段，便于对接对象存储
 
-### 🔌 REST API
-- 60+ REST 端点
-- Token 身份验证（24小时有效期）
-- WebSocket 多终端实时同步
-- 支持第三方集成
-- API 文档
+### REST API 与同步
+- 内置 Javalin API 服务，默认端口 `8080`
+- 当前注册 92 个 HTTP/WebSocket 路由
+- 覆盖认证、商品、会员、交易、库存、报表、设置、发票、用户、打印、支付、备份、国际化和同步状态
+- Token 身份认证、角色授权、请求限流和安全响应头
+- WebSocket 同步端点：`/ws/sync`
 
-### 🖨️ 硬件支持
-- 热敏打印机（ESC/POS）
-- 网络打印
-- 打印预览
-- USB 扫描枪（HID 模式）
-- 打印队列管理
+### 硬件支持
+- ESC/POS 热敏打印、网络打印、打印队列和打印历史
+- 打印机发现、连接、状态检测、默认打印机配置
+- USB HID 扫描枪接入和扫码焦点管理
+- 电子支付二维码生成与支付状态查询
 
-### 🌐 国际化 (i18n)
-- 多语言支持：简体中文、英文、繁體中文
-- 已移除日语、韩语支持
-- 货币国际化
-- 动态语言切换
-
-### 🎨 主题系统
-- 默认主题：LiSuan 主题
-- 可切换主题：浅色、深色、LiSuan
-- 兼容旧版 IntelliJ 主题偏好
-- 用户偏好持久化
-- 字号调整功能
-- 内置 Noto Sans CJK SC，统一跨平台简体中文显示
-
-### 🔄 交接班管理
-- 交接班记录
-- 班次销售额统计
-- 收银员业绩统计
+### 国际化与主题
+- 支持简体中文、英文、繁體中文
+- 运行时文案、弹窗、表单校验、状态栏和报表页面持续国际化
+- 货币显示国际化
+- 主题支持：LiSuan、浅色、深色，并兼容旧版 IntelliJ 主题偏好
+- 内置 Noto Sans CJK SC，优化跨平台中文显示
+- 左侧功能导航图标已按模块语义整理，避免重复
 
 ## 快速开始
 
 ### 环境要求
-- JDK 17+
-- Maven 3.8+（开发需要）
-- MySQL 8.4+
+- JDK 17 或更高版本
+- Maven 3.8 或更高版本
+- MySQL 8.4 或兼容的 MySQL 8.0/8.3
+- Docker Compose 可选，用于快速启动 MySQL
 
-### Windows 用户
+### 默认账户
+- 用户名：`admin`
+- 初始密码：`admin123`
+- 首次登录后建议立即修改密码
 
-**首次安装流程（推荐）**:
-```
-1. 双击 install.bat
-   → 自动检查 Java/Maven、构建 JAR，并打开数据库 GUI 配置工具
-2. 在 GUI 中填写数据库连接信息
-3. 点击 Save & Start
-   → 保存 config/database.properties 并启动应用
-```
+### 启动数据库
 
-`DataConfig.bat` 仍保留为单独的 GUI 数据库配置入口，适合后续修改数据库连接信息时使用。
-
-**日常启动**:
 ```bash
-start.bat          → 启动应用（控制台模式，可看到错误输出）
-start.bat --gui    → 启动应用（无控制台窗口，后台运行）
-```
-
-**开发模式**:
-```bash
-# 启动 MySQL（Docker 或本地）
 docker compose up -d mysql
-
-# 编译并运行
-mvn clean package
-start.bat
 ```
 
-**注意**:
-- 需要安装 Java 17+
-- 首次从源码安装需要 Maven 3.8+
-- JavaFX 运行时会自动从 Maven 本地仓库加载
+数据库初始化脚本位于 `docker/mysql-init/00-init-complete.sql`。默认配置文件为 `config/database.properties`，生产环境建议通过环境变量保存密码：
 
-### Linux / macOS 用户
+```bash
+export CASHER_DB_PASSWORD=your_password
+```
 
-**首次安装流程**:
+### 开发运行
+
+```bash
+mvn clean compile
+mvn javafx:run
+```
+
+### 打包运行
+
+```bash
+mvn clean package
+java -jar target/lisuan-fx-2.5.8-jar-with-dependencies.jar
+```
+
+也可以使用通配符启动：
+
+```bash
+java -jar target/lisuan-fx-*-jar-with-dependencies.jar
+```
+
+### Windows
+
+首次安装推荐运行：
+
+```bat
+install.bat
+```
+
+日常启动：
+
+```bat
+start.bat
+start.bat --gui
+```
+
+数据库配置工具：
+
+```bat
+DataConfig.bat
+```
+
+### Linux / macOS
+
 ```bash
 chmod +x install.sh start.sh
 ./install.sh
 ./start.sh
 ```
 
-`install.sh` 会检查 Java/Maven、构建可执行 JAR，并按提示配置 Docker、本地或远程 MySQL。`start.sh` 会优先启动 `target/lisuan-fx-*-jar-with-dependencies.jar`，避免普通 JAR 缺少运行时依赖。
+`install.sh` 会检查 Java/Maven、构建可执行 JAR，并引导配置 Docker、本地或远程 MySQL。`start.sh` 会优先启动带依赖的可执行 JAR。
 
-### 开发者安装
+## 常用命令
 
 ```bash
-# 克隆仓库
-git clone https://gitee.com/nevell/lisuan.git
-cd lisuan
+# 编译
+mvn clean compile
 
-# 启动 MySQL（Docker）
-docker compose up -d mysql
+# 运行测试
+mvn test
 
-# 运行
-mvn javafx:run
+# 跳过测试打包
+mvn clean package -DskipTests
 
-# 打包
-mvn clean package
-java -jar target/lisuan-fx-*-jar-with-dependencies.jar
+# 运行指定测试类
+mvn test -Dtest=ProductDAOTest
+
+# 运行指定测试方法
+mvn test -Dtest=PasswordUtilTest#testHashPassword
+
+# 静态质量检查
+mvn -q -DskipTests spotbugs:check
 ```
-
-### 默认账户
-- 用户名: `admin`
-- 初始密码: `admin123`（首次登录后建议修改）
 
 ## 快捷键
 
@@ -203,20 +206,123 @@ java -jar target/lisuan-fx-*-jar-with-dependencies.jar
 
 | 等级 | 积分范围 | 折扣 |
 |------|----------|------|
-| 普通会员 | 0-1999 | 无折扣 (10.0) |
-| 银卡会员 | 2000-4999 | 9.5折 |
-| 金卡会员 | 5000-9999 | 9折 |
-| 钻石会员 | 10000+ | 8.5折 |
+| 普通会员 | 0-1999 | 无折扣，按 10.0 计算 |
+| 银卡会员 | 2000-4999 | 9.5 折 |
+| 金卡会员 | 5000-9999 | 9 折 |
+| 钻石会员 | 10000+ | 8.5 折 |
+
+折扣计算方式：`消费金额 * (会员折扣 / 10.0)`。
+
+## REST API
+
+API 服务默认运行在 `8080` 端口。生产环境启动 API 前必须配置安全参数：
+
+```bash
+export TOKEN_SECRET=at_least_32_characters_secret
+export CORS_ALLOWED_ORIGINS=https://your-domain.example
+```
+
+主要接口分组：
+
+| 分组 | 路径 | 说明 |
+|------|------|------|
+| 健康检查 | `/api/health` | 服务与数据库状态 |
+| 认证 | `/api/auth/*` | 登录、刷新 Token、登出、当前用户 |
+| 商品 | `/api/products/*` | 商品 CRUD、低库存 |
+| 会员 | `/api/members/*` | 会员 CRUD、手机号查询、充值 |
+| 交易 | `/api/transactions/*` | 交易创建、查询、退款、今日统计 |
+| 库存 | `/api/inventory/*` | 库存列表、预警、盘点、库存更新 |
+| 报表 | `/api/reports/*` | 日报、月报、热销商品、支付方式统计 |
+| 设置 | `/api/settings/*` | 系统设置读写 |
+| 发票 | `/api/invoices/*` | 发票创建、查询、作废、打印记录 |
+| 用户 | `/api/users/*` | 用户管理 |
+| 打印 | `/api/printers/*` | 打印机发现、连接、状态、打印 |
+| 支付 | `/api/payment/*` | 支付创建、状态查询、退款、配置 |
+| 备份 | `/api/backup/*` | 备份执行、恢复、下载、配置 |
+| 国际化 | `/api/i18n/*` | 语言、消息和语言包查询 |
+| 同步 | `/ws/sync`, `/api/sync/status` | 多终端同步和在线状态 |
+
+除 `/api/health` 和 `/api/auth/login` 外，API 默认需要认证。
+
+## 数据库
+
+项目使用 MySQL，连接池为 HikariCP。关键表包括：
+
+| 表 | 说明 |
+|----|------|
+| `products` | 商品信息，商品名称唯一 |
+| `members` | 会员信息 |
+| `transactions`, `transaction_items` | 交易与交易明细 |
+| `return_orders`, `return_order_items` | 退货订单与退货明细 |
+| `purchase_orders`, `purchase_order_items` | 采购订单与明细 |
+| `purchase_approvals` | 采购审批记录 |
+| `purchase_inbound`, `purchase_inbound_items` | 采购入库与明细 |
+| `suppliers` | 供应商 |
+| `inventory_check`, `inventory_check_items` | 库存盘点 |
+| `users` | 用户与角色 |
+| `shifts` | 交班记录 |
+| `invoices` | 发票 |
+| `payment_orders`, `refund_records` | 支付订单与退款记录 |
+| `promotions` | 促销规则 |
+| `backup_records`, `backup_config` | 备份记录与备份配置 |
+| `operation_logs` | 审计日志 |
+| `settings` | 系统设置 |
+
+数据库版本说明见 `docker/mysql-init/DATABASE_VERSIONS.md`。
+
+## 项目结构
+
+```text
+src/main/java/com/cashier/
+├── api/           # Javalin REST API、认证、同步
+├── component/     # 可复用 JavaFX 组件
+├── constant/      # 应用、数据库、系统属性等常量
+├── controller/    # JavaFX 控制器
+├── dao/           # 数据访问对象
+├── i18n/          # 国际化管理和键名常量
+├── model/         # 业务实体
+├── notification/  # 通知系统
+├── printer/       # 打印设备与模板
+├── scanner/       # 扫描枪接入
+├── service/       # 业务服务
+└── util/          # 数据库、导入导出、日志、主题等工具
+```
+
+```text
+src/main/resources/
+├── com/cashier/view/      # FXML 页面
+├── com/cashier/i18n/      # 语言资源
+├── css/                   # LiSuan、浅色、深色主题
+├── fonts/                 # 内置字体
+└── images/                # 应用图标和图片资源
+```
+
+## 开发约定
+
+- 日志统一使用 `LoggerFactoryUtil.getLogger()`。
+- DAO 使用 `PreparedStatement`，并继承 `BaseDAO`。
+- 跨 DAO 的业务事务统一通过 `DatabaseManager.executeBooleanTransaction()` 等事务入口处理。
+- 新增界面优先使用 FXML + Controller，并补齐三套语言资源。
+- 新增 i18n key 优先放入 `I18nKeys`，避免控制器里散落字符串。
+- 新增非 i18n 常量优先收口到对应常量类，避免重复字面量。
+- 代码质量警告修复后至少运行编译，涉及公共逻辑时补跑测试。
 
 ## 最近更新
 
+### v2.5.8-maintenance (2026-07-04)
+- 整理 `I18nKeys`，将常用国际化键名集中管理
+- 收口系统属性、数据库配置、资源包名、日期时间格式等非 i18n 常量
+- 修复多处代码质量警告，包括复杂度、重复字符串、switch/default、资源关闭和静态检查问题
+- 更新左侧功能导航图标，保证分组和功能入口图标不重复
+- README 按当前功能、API、数据库和维护流程重新整理
+
 ### v2.5.8 (2026-06-20)
-- **国际化完善**：统一简体中文、英文和繁體中文资源，补齐弹窗、状态、日期、审批及表单校验提示
-- **退货流程优化**：增加快捷日期筛选，修复查看原交易、打印单据、完成退货和导出提示的多语言显示
-- **采购与盘点修复**：修复入库历史列不显示、盘点类型文字截断及空表提示未跟随应用语言的问题
-- **表单显示修复**：移除商品添加/编辑页空错误标签产生的红色竖线，并本地化校验错误
-- **字体与主题优化**：默认使用 LiSuan 主题，简体中文优先加载 Noto Sans CJK SC 字形并完善跨平台回退
-- **语言精简**：移除日语、韩语，仅保留简体中文、英文和繁體中文
+- 国际化完善：统一简体中文、英文和繁體中文资源，补齐弹窗、状态、日期、审批及表单校验提示
+- 退货流程优化：增加快捷日期筛选，修复查看原交易、打印单据、完成退货和导出提示的多语言显示
+- 采购与盘点修复：修复入库历史列不显示、盘点类型文字截断及空表提示未跟随应用语言的问题
+- 表单显示修复：移除商品添加/编辑页空错误标签产生的红色竖线，并本地化校验错误
+- 字体与主题优化：默认使用 LiSuan 主题，简体中文优先加载 Noto Sans CJK SC 字形并完善跨平台回退
+- 语言精简：移除日语、韩语，仅保留简体中文、英文和繁體中文
 
 ### v2.5.7-l10n (2026-06-20)
 - 语言包精简为简体中文、英文、繁體中文
@@ -225,139 +331,64 @@ java -jar target/lisuan-fx-*-jar-with-dependencies.jar
 - 调整部分页面顶部标签和输入区域的布局宽度
 
 ### v2.5.7 (2026-06-12)
-- **环境感知配置**: 支持 development/production 环境区分
-- **数据库用户分离**: 开发环境使用 root，生产环境使用 lisuan 专用用户
-- **安全性增强**: FormValidator 安全解析方法，防止 NumberFormatException
-- **安装脚本优化**: .env 文件支持，自动环境检测
-- **Windows 配置工具**: DataConfig.bat 支持环境变量
-- **脚本一致性**: start.sh/start.bat 移除冗余 temp 目录创建
-- **品牌统一**: 所有脚本显示"LiSuan System"
+- 支持 development/production 环境区分
+- 开发环境使用 root，生产环境使用 lisuan 专用用户
+- FormValidator 安全解析方法，防止 NumberFormatException
+- 安装脚本支持 `.env` 和自动环境检测
+- Windows 配置工具支持环境变量
+- 脚本显示品牌统一为 LiSuan System
 
 ### v2.5.6 (2026-06-10)
-- 品牌名称统一为"狸算(LiSuan)收银系统"
-- 更新所有用户界面和文档中的品牌信息
-- 更新 Docker 容器名称为 lisuan-mysql
-- 小票打印和图标中的品牌信息更新
+- 品牌名称统一为“狸算(LiSuan)收银系统”
+- 更新用户界面、脚本、小票打印、图标和 Docker 容器品牌信息
 
 ### v2.5.5 (2026-06-09)
-- 标签页宽度优化（减小约 50%）
-- 标签关闭按钮视觉优化
+- 标签页宽度和关闭按钮视觉优化
 - 新增字号调整功能
-- fcitx5 输入法兼容性修复
-- 繁体中文显示优化
-- 多平台字体回退链增强
+- 修复 fcitx5 输入法兼容性
+- 优化繁体中文显示和多平台字体回退链
 
 ### v2.5.4 (2026-05-21)
-- GUI 数据库配置工具
-- Windows 分发包优化
-- 安装脚本改进
+- 新增 GUI 数据库配置工具
+- 优化 Windows 分发包和安装脚本
 
 ### v2.5.3 (2026-05-15)
 - Windows 平台优化
-- 启动体验增强（Splash 画面）
+- 启动体验增强
 - 同步逻辑增强
 - DAO 重构完成
-- 资源清理机制（修复内存泄漏）
-
-### v2.5.2 (2026-05-10)
-- UI/UX 优化
-- 功能增强
-
-### v2.5.1 (2026-05-05)
-- 多语言界面支持（简体中文、英文、繁體中文）
-- 货币国际化
-
-### v2.5.0 (2026-05-01)
-- 多语言支持（简体中文、英文、繁體中文）
-- 云备份系统（多云存储支持）
-- 电子支付系统（微信/支付宝）
-- 网络打印系统（ESC/POS）
-- 电子发票系统
-- WebSocket 多终端同步
-- REST API（60+ 端点）
-
-## 技术栈
-
-- **前端**: JavaFX 17.0.12
-- **语言**: Java 17
-- **数据库**: MySQL 8.4 + HikariCP 连接池
-- **构建**: Maven 3.8+
-- **测试**: JUnit 5 + TestFX + H2
-- **API 服务**: Javalin 6.1.3
-- **序列化**: Jackson
-- **文档**: Apache POI 5.2.5 + PDFBox 3.0.4
-- **日志**: SLF4J + Logback
-
-## REST API
-
-服务器运行在端口 8080，提供 60+ REST 端点：
-
-- **认证** (`/api/v1/auth/*`) - 登录、令牌刷新、登出
-- **商品** (`/api/v1/products/*`) - 商品 CRUD、搜索
-- **会员** (`/api/v1/members/*`) - 会员 CRUD、充值、查询
-- **交易** (`/api/v1/transactions/*`) - 交易处理、统计
-- **库存** (`/api/v1/inventory/*`) - 库存更新、预警
-- **报表** (`/api/v1/reports/*`) - 日报、月报、销售报表
-- **支付** (`/api/v1/payments/*`) - 电子支付
-- **发票** (`/api/v1/invoices/*`) - 发票管理
-- **打印** (`/api/v1/print/*`) - 网络打印
-- **备份** (`/api/v1/backup/*`) - 云备份
-- **国际化** (`/api/v1/i18n/*`) - 多语言支持
-- **用户** (`/api/v1/users/*`) - 用户管理（管理员）
-- **设置** (`/api/v1/settings/*`) - 系统设置
-- **健康** (`/api/v1/health`) - 健康检查（无需认证）
-
-## 数据库架构
-
-主要数据表：
-- `products` - 商品信息（名称唯一约束）
-- `specifications` - 规格类型
-- `specification_values` - 规格值
-- `product_specifications` - 商品规格关联
-- `members` - 会员信息（会员号唯一）
-- `transactions` - 交易记录
-- `transaction_items` - 交易明细
-- `returns` - 退货订单
-- `return_items` - 退货明细
-- `purchase_orders` - 采购订单
-- `purchase_inbound` - 采购入库
-- `suppliers` - 供应商
-- `users` - 用户（三种角色）
-- `shifts` - 交接班记录
-- `invoices` - 发票
-- `payment_records` - 支付记录
-- `operation_logs` - 操作日志
+- 修复资源清理和内存泄漏问题
 
 ## 故障排除
 
 **应用无法启动**
-- 检查 JDK 版本是否为 17+
-- 检查 MySQL 服务是否运行
-- 确保已执行 `mvn clean package` 构建项目
+- 检查 JDK 是否为 17 或更高版本
+- 检查 MySQL 是否正在运行
+- 检查 `config/database.properties`
 - 查看 `logs/` 目录下的日志文件
 
-**启动时提示"缺少 JavaFX 运行时组件"**
-- 确保已安装 Maven 3.8+
-- 执行 `mvn clean install` 下载依赖
-- JavaFX 将自动从 Maven 本地仓库加载
-
 **数据库连接失败**
-- 确保 MySQL 正在运行
-- 检查数据库用户名和密码
-- 使用 `Database Config.bat` / `Database Config.sh` 重新配置
+- 确认数据库地址、端口、库名、用户名和密码
+- 如果使用环境变量密码，确认 `CASHER_DB_PASSWORD` 已设置
+- Docker 环境可先执行 `docker compose up -d mysql`
+
+**API 服务无法启动**
+- 确认已设置至少 32 字符的 `TOKEN_SECRET`
+- 生产环境不要使用 `CORS_ALLOWED_ORIGINS=*`
+- 查看日志中的端口占用或配置错误
 
 **扫描枪无法工作**
-- 确认扫描枪已正确连接（USB）
-- 确认扫描枪处于 HID 模式
+- 确认扫描枪已连接并处于 USB HID 模式
+- 确认当前页面焦点未被其他输入控件占用
 
 **打印无响应**
-- 检查打印机是否正确连接
-- 确认打印队列状态
-- 尝试重启打印服务
+- 检查打印机连接、驱动和纸张状态
+- 查看打印机状态检测和打印历史
+- 网络打印需确认 IP、端口和防火墙配置
 
 **中文显示异常**
-- Linux: 安装中文字体包
-- Windows/macOS: 系统自带支持
+- 优先确认内置 Noto Sans CJK SC 是否随资源打包
+- Linux 环境可额外安装中文字体包
 
 ## 许可证
 
@@ -366,4 +397,5 @@ java -jar target/lisuan-fx-*-jar-with-dependencies.jar
 ---
 
 **仓库**: https://gitee.com/nevell/lisuan.git
+
 **问题反馈**: https://gitee.com/nevell/lisuan/issues
