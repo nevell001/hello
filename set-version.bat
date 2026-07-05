@@ -7,7 +7,7 @@ setlocal enabledelayedexpansion
 
 if "%1"=="" (
     echo Usage: set-version.bat x.y.z
-    echo Example: set-version.bat 2.5.8
+    echo Example: set-version.bat 2.5.9
     exit /b 1
 )
 
@@ -26,7 +26,7 @@ REM Validate version format (basic check)
 echo %NEW_VERSION% | findstr /R "^[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$" >nul
 if errorlevel 1 (
     echo [Error] Invalid version format: %NEW_VERSION%
-    echo Expected format: x.y.z (e.g., 2.5.8)
+    echo Expected format: x.y.z (e.g., 2.5.9)
     exit /b 1
 )
 

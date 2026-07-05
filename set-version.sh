@@ -7,7 +7,7 @@ set -e
 
 if [ -z "$1" ]; then
     echo "Usage: ./set-version.sh x.y.z"
-    echo "Example: ./set-version.sh 2.5.8"
+    echo "Example: ./set-version.sh 2.5.9"
     exit 1
 fi
 
@@ -25,7 +25,7 @@ echo ""
 # Validate version format
 if ! [[ "$NEW_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     echo "[Error] Invalid version format: $NEW_VERSION"
-    echo "Expected format: x.y.z (e.g., 2.5.8)"
+    echo "Expected format: x.y.z (e.g., 2.5.9)"
     exit 1
 fi
 

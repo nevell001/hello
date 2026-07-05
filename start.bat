@@ -3,13 +3,13 @@ setlocal enabledelayedexpansion
 
 REM ============================================
 REM   LiSuan Startup Script (Windows)
-REM   Version 2.5.8
+REM   Version 2.5.9
 REM ============================================
 
 cd /d "%~dp0"
 
 set "APP_NAME=LiSuan"
-set "APP_VERSION=2.5.8"
+set "APP_VERSION=2.5.9"
 
 cls
 echo.

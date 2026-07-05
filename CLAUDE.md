@@ -98,7 +98,7 @@ mvn javafx:run
 
 # Package
 mvn clean package
-java -jar target/lisuan-fx-2.5.8-jar-with-dependencies.jar
+java -jar target/lisuan-fx-2.5.9-jar-with-dependencies.jar
 
 # Run tests
 mvn test

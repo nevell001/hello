@@ -336,14 +336,14 @@ src/main/resources/
 - Unified database initialization scripts, enabling out-of-the-box support for more modules.
 - Optimized README structure for better readability.
 
-### v2.5.8-maintenance (2026-07-04)
+### v2.5.9-maintenance (2026-07-04)
 - Organized `I18nKeys`, centralizing commonly used internationalization keys.
 - Centralized non-localized constants such as system properties, database configs, resource bundles, and date-time formats.
 - Fixed several code quality warnings including complexity, duplicate strings, switch/default statements, resource closures, and static analysis issues.
 - Updated left navigation icons to ensure uniqueness and logical grouping.
 - Re-organized README to reflect current features, API, database schema, and maintenance procedures.
 
-### v2.5.8 (2026-06-20)
+### v2.5.9 (2026-06-20)
 - Enhanced localization: unified Simplified Chinese, English, and Traditional Chinese resources, filling gaps in dialogs, statuses, dates, approvals, and form validation hints.
 - Optimized return workflow: added quick date filters, fixed multilingual displays for viewing original transactions, printing receipts, completing returns, and exporting notifications.
 - Fixed purchasing and inventory check: fixed invisible columns in inbound stock history, text truncation in inventory check type labels, and corrected empty table warnings to respect current language.

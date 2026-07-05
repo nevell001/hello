@@ -4,13 +4,14 @@
 -- 此脚本整合了用户创建、表结构初始化和示例数据
 -- 使用方法: docker exec lisuan-mysql mysql -uroot -pYOUR_PASSWORD --default-character-set=utf8mb4 lisuan_system < 00-init-complete.sql
 -- 
--- 版本: v2.5.8
+-- 版本: v2.5.9
 -- 更新日期: 2026-07-05
--- 
+--
 -- 变更说明:
 -- - 支持 MySQL 8.4 LTS
 -- - 使用 --mysql-native-password=ON 参数确保向后兼容
 -- - 优化 TIMESTAMP 字段以支持 MySQL 8.4 的新特性
+-- - 移除了 SQL 脚本中的用户创建逻辑（由 Docker 环境变量管理）
 --
 -- MySQL 8.4 兼容性说明:
 -- - 此脚本完全兼容 MySQL 8.0、8.3 和 8.4
@@ -28,33 +29,11 @@ SET CHARACTER SET utf8mb4;
 -- ============================================
 -- 确保使用正确的数据库
 -- ============================================
+CREATE DATABASE IF NOT EXISTS lisuan_system CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE lisuan_system;
 
 -- ============================================
--- 第一部分：创建专用用户
--- ============================================
-
--- 1. 创建专用用户（如果不存在）
--- 注意：通过 docker-compose.yml 环境变量创建的用户可能权限不足
--- 这个脚本确保用户有完整的权限
-
--- ⚠️ 安全警告：请将 'YOUR_CASHIER_PASSWORD_HERE' 替换为您的实际密码！
-CREATE USER IF NOT EXISTS 'lisuan'@'%' IDENTIFIED BY 'YOUR_LISUAN_PASSWORD_HERE';
-CREATE USER IF NOT EXISTS 'lisuan'@'localhost' IDENTIFIED BY 'YOUR_LISUAN_PASSWORD_HERE';
-
--- 2. 授予所有权限
-GRANT ALL PRIVILEGES ON lisuan_system.* TO 'lisuan'@'%';
-GRANT ALL PRIVILEGES ON lisuan_system.* TO 'lisuan'@'localhost';
-
--- 3. 刷新权限
-FLUSH PRIVILEGES;
-
--- 4. 显示创建的用户
-SELECT '=== MySQL 用户创建完成 ===' AS status;
-SELECT user, host FROM mysql.user WHERE user IN ('root', 'lisuan');
-
--- ============================================
--- 第二部分：创建基础表
+-- 第一部分：创建基础表
 -- ============================================
 
 -- 创建用户表
