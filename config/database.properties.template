@@ -1,64 +1,24 @@
-# ============================================
-# 狸算 (LiSuan) 收银系统 - 数据库配置模板
-# ============================================
-#
-# 安装程序会根据用户输入自动生成此文件
-# 手动配置时，请复制此文件并重命名为 database.properties
-#
-# ============================================
+# 数据库连接配置
+# 狸算(LiSuan)收银系统
 
 # 数据库连接 URL
-# 格式: jdbc:mysql://[主机]:[端口]/[数据库]?参数
-db.url=jdbc:mysql://localhost:3306/lisuan_system?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8
+db.url=jdbc:mysql://localhost:3306/lisuan_system?sslMode=PREFERRED&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8
 
 # 数据库用户名
-db.username=root
+db.username=lisuan
 
 # 数据库密码
-db.password=
+# 安全提示：为了生产环境安全，强烈建议通过环境变量设置密码
+# Windows: set CASHER_DB_PASSWORD=your_password
+# Linux/Mac: export CASHER_DB_PASSWORD=your_password
+# 如果不使用环境变量，请在此处填写密码（不推荐用于生产）
+db.password=YOUR_DATABASE_PASSWORD_HERE
 
-# ============================================
-# 连接池配置 (HikariCP)
-# ============================================
-
-# 连接池大小 (默认: 10)
+# 连接池配置
 db.pool.size=10
-
-# 备份/恢复使用的 Docker MySQL 容器名
-backup.mysql.container=lisuan-mysql
-
-# 连接超时时间 (毫秒, 默认: 30000)
 db.connection.timeout=30000
-
-# 空闲连接超时时间 (毫秒, 默认: 600000)
 db.idle.timeout=600000
-
-# 连接最大生命周期 (毫秒, 默认: 1800000)
 db.max.lifetime=1800000
 
-# ============================================
-# 配置说明
-# ============================================
-#
-# Docker MySQL 推荐配置:
-#   主机: localhost
-#   端口: 3306
-#   数据库: lisuan_system
-#   用户: lisuan
-#   密码: 通过 MYSQL_PASSWORD 或 CASHER_DB_PASSWORD 环境变量提供
-#
-# 本地 MySQL 配置:
-#   主机: localhost
-#   端口: 3306
-#   数据库: lisuan_system
-#   用户: root
-#   密码: <你的 MySQL 密码>
-#
-# 远程 MySQL 配置:
-#   主机: <远程服务器 IP>
-#   端口: 3306
-#   数据库: lisuan_system
-#   用户: <远程用户名>
-#   密码: <远程密码>
-#
-# ============================================
+# 备份配置
+backup.mysql.container=lisuan-mysql

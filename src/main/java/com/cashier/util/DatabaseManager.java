@@ -1018,9 +1018,8 @@ public class DatabaseManager {
                 pstmt.executeUpdate();
             }
 
-            logger.info("默认管理员用户创建成功:");
-            logger.info("  用户名: admin");
-            // 安全提示：不在日志中记录明文密码，避免日志泄露凭据
+            logger.info("默认管理员用户创建成功");
+            // 安全提示：不在日志中记录用户名和明文密码，避免日志泄露凭据
             logger.info("  初始密码已生成并使用 BCrypt 加密存储，请查看控制台输出获取临时密码");
             printInitialAdminPassword(initialPassword);
         } else {

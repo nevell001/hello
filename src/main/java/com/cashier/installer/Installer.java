@@ -390,9 +390,7 @@ public class Installer {
         log("  • Linux/Mac: 运行 ./start.sh");
         log("");
         log("默认登录：");
-        log("  用户名: admin");
-        log("  初始密码: 请查看控制台日志中的随机生成密码");
-        log("  注意: 首次登录需要修改密码");
+        log("  注意: 首次登录请使用初始化时生成的随机密码并立即修改");
         log("");
         
         SwingUtilities.invokeLater(() -> {

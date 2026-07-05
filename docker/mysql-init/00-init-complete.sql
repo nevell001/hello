@@ -4,8 +4,8 @@
 -- 此脚本整合了用户创建、表结构初始化和示例数据
 -- 使用方法: docker exec lisuan-mysql mysql -uroot -pYOUR_PASSWORD --default-character-set=utf8mb4 lisuan_system < 00-init-complete.sql
 -- 
--- 版本: v2.4.3
--- 更新日期: 2026-03-07
+-- 版本: v2.5.8
+-- 更新日期: 2026-07-05
 -- 
 -- 变更说明:
 -- - 支持 MySQL 8.4 LTS
@@ -452,6 +452,7 @@ SET @sql = IF(@table_exists = 0,
     'CREATE TABLE IF NOT EXISTS language_preferences (
         username VARCHAR(50) PRIMARY KEY,
         language_tag VARCHAR(10) DEFAULT ''zh-CN'',
+        currency_code VARCHAR(10) DEFAULT ''CNY'' COMMENT ''货币代码'',
         updated_at BIGINT,
         INDEX idx_username (username),
         FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
@@ -461,6 +462,92 @@ SET @sql = IF(@table_exists = 0,
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
+
+-- 创建字号偏好表（如果不存在）
+SET @table_exists = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.TABLES
+    WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'font_size_preferences'
+);
+
+SET @sql = IF(@table_exists = 0,
+    'CREATE TABLE IF NOT EXISTS font_size_preferences (
+        username VARCHAR(50) PRIMARY KEY,
+        font_size VARCHAR(20) DEFAULT ''medium'',
+        updated_at BIGINT,
+        INDEX idx_username (username),
+        FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
+    'SELECT "font_size_preferences table already exists" AS message'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ============================================
+-- v2.4.5 新增表：商品规格管理
+-- ============================================
+
+-- 创建商品规格类型表
+CREATE TABLE IF NOT EXISTS specifications (
+    id INT AUTO_INCREMENT PRIMARY KEY COMMENT '规格类型ID',
+    name VARCHAR(100) NOT NULL COMMENT '规格名称',
+    code VARCHAR(50) NOT NULL UNIQUE COMMENT '规格代码',
+    type VARCHAR(20) NOT NULL COMMENT '规格类型：COLOR-颜色，SIZE-尺寸，MATERIAL-材质，OTHER-其他',
+    description TEXT COMMENT '规格描述',
+    sort_order INT DEFAULT 0 COMMENT '排序序号',
+    enabled BOOLEAN DEFAULT TRUE COMMENT '是否启用',
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_type (type),
+    INDEX idx_enabled (enabled),
+    INDEX idx_sort_order (sort_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商品规格类型表';
+
+-- 创建商品规格值表
+CREATE TABLE IF NOT EXISTS specification_values (
+    id INT AUTO_INCREMENT PRIMARY KEY COMMENT '规格值ID',
+    specification_id INT NOT NULL COMMENT '规格类型ID',
+    value VARCHAR(100) NOT NULL COMMENT '规格值',
+    code VARCHAR(50) NOT NULL UNIQUE COMMENT '规格值代码',
+    color_code VARCHAR(20) COMMENT '颜色代码（用于颜色规格）',
+    sort_order INT DEFAULT 0 COMMENT '排序序号',
+    enabled BOOLEAN DEFAULT TRUE COMMENT '是否启用',
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    FOREIGN KEY (specification_id) REFERENCES specifications(id) ON DELETE CASCADE,
+    INDEX idx_specification_id (specification_id),
+    INDEX idx_enabled (enabled),
+    INDEX idx_sort_order (sort_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商品规格值表';
+
+-- 创建商品规格关联表
+CREATE TABLE IF NOT EXISTS product_specifications (
+    id INT AUTO_INCREMENT PRIMARY KEY COMMENT '关联ID',
+    product_id INT NOT NULL COMMENT '商品ID',
+    specification_id INT NOT NULL COMMENT '规格类型ID',
+    specification_value_id INT NOT NULL COMMENT '规格值ID',
+    sku_code VARCHAR(50) UNIQUE COMMENT 'SKU编码',
+    price_adjustment DECIMAL(10,2) DEFAULT 0.00 COMMENT '价格调整值',
+    quantity INT DEFAULT 0 COMMENT '库存数量',
+    barcode VARCHAR(50) COMMENT '条形码',
+    enabled BOOLEAN DEFAULT TRUE COMMENT '是否启用',
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+    FOREIGN KEY (specification_id) REFERENCES specifications(id) ON DELETE CASCADE,
+    FOREIGN KEY (specification_value_id) REFERENCES specification_values(id) ON DELETE CASCADE,
+    INDEX idx_product_id (product_id),
+    INDEX idx_specification_id (specification_id),
+    INDEX idx_specification_value_id (specification_value_id),
+    INDEX idx_sku_code (sku_code),
+    INDEX idx_barcode (barcode),
+    INDEX idx_enabled (enabled)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商品规格关联表';
+
+-- 创建唯一索引，防止同一商品重复关联同一规格值
+CREATE UNIQUE INDEX idx_product_spec_value ON product_specifications(product_id, specification_id, specification_value_id);
 
 -- ============================================
 -- v2.3.0-v2.3.1 新增表：采购管理模块
@@ -880,6 +967,31 @@ DELETE FROM purchase_approvals;
 DELETE FROM purchase_order_items;
 DELETE FROM purchase_orders;
 DELETE FROM suppliers;
+
+-- v2.4.5 商品规格管理示例数据
+INSERT IGNORE INTO specifications (id, name, code, type, description, sort_order) VALUES
+(1, '颜色', 'COLOR', 'COLOR', '商品颜色规格', 1),
+(2, '尺寸', 'SIZE', 'SIZE', '商品尺寸规格', 2),
+(3, '材质', 'MATERIAL', 'MATERIAL', '商品材质规格', 3);
+
+INSERT IGNORE INTO specification_values (id, specification_id, value, code, color_code, sort_order) VALUES
+(1, 1, '红色', 'RED', '#FF0000', 1),
+(2, 1, '蓝色', 'BLUE', '#0000FF', 2),
+(3, 1, '绿色', 'GREEN', '#00FF00', 3),
+(4, 1, '黄色', 'YELLOW', '#FFFF00', 4),
+(5, 1, '黑色', 'BLACK', '#000000', 5),
+(6, 1, '白色', 'WHITE', '#FFFFFF', 6),
+(7, 2, 'XS', 'XS', NULL, 1),
+(8, 2, 'S', 'S', NULL, 2),
+(9, 2, 'M', 'M', NULL, 3),
+(10, 2, 'L', 'L', NULL, 4),
+(11, 2, 'XL', 'XL', NULL, 5),
+(12, 2, 'XXL', 'XXL', NULL, 6),
+(13, 3, '棉质', 'COTTON', NULL, 1),
+(14, 3, '涤纶', 'POLYESTER', NULL, 2),
+(15, 3, '丝绸', 'SILK', NULL, 3),
+(16, 3, '羊毛', 'WOOL', NULL, 4),
+(17, 3, '麻质', 'LINEN', NULL, 5);
 
 -- v2.3.0-v2.3.1 采购管理模块示例数据
 

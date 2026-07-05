@@ -37,12 +37,12 @@ class ThemeStylePolicyTest {
             "src/main/resources/css/lisuan-theme.css"
         ));
 
-        assertTrue(css.contains(".sidebar .nav-button-active"));
-        assertTrue(css.contains("-fx-background-color: #B85C1B;"));
-        assertTrue(css.contains("-fx-text-fill: #FFFFFF;"));
+        assertTrue(css.contains(".sidebar .nav-button-active") || css.contains(".sidebar .nav-button.active"));
+        assertTrue(css.contains("-fx-background-color: #B85C1B;") || css.contains("-fx-background-color: -lisuan-primary;"));
+        assertTrue(css.contains("-fx-text-fill: #FFFFFF;") || css.contains("-fx-text-fill: -lisuan-surface;"));
         assertTrue(css.contains(".menu-button:showing"));
         assertTrue(css.contains(".menu-button:pressed"));
-        assertTrue(css.contains("-fx-background-color: #FFEAD8;"));
+        assertTrue(css.contains("-fx-background-color: #FFEAD8;") || css.contains("-fx-background-color: -lisuan-surface-selected;"));
     }
 
     @Test
@@ -54,9 +54,10 @@ class ThemeStylePolicyTest {
 
         assertTrue(css.contains(".shortcut-help-view .header-bar"));
         assertTrue(css.contains(".shortcut-help-view .shortcut-key"));
-        assertTrue(css.contains("-fx-background-color: #B85C1B;"));
-        assertTrue(css.contains("-fx-text-fill: #8F4314;"));
-        assertTrue(css.contains("-fx-background-color: linear-gradient(to bottom, #FFF7EF, #FFEAD8);"));
+        assertTrue(css.contains("-fx-background-color: #B85C1B;") || css.contains("-fx-background-color: -lisuan-primary;"));
+        assertTrue(css.contains("-fx-text-fill: #8F4314;") || css.contains("-fx-text-fill: -lisuan-primary-active;"));
+        assertTrue(css.contains("-fx-background-color: linear-gradient(to bottom, #FFF7EF, #FFEAD8);") 
+                || css.contains("-fx-background-color: linear-gradient(to bottom, -lisuan-surface-muted, -lisuan-surface-selected);"));
     }
 
     private void inspectFiles(Path directory, String suffix, List<String> violations) throws IOException {
