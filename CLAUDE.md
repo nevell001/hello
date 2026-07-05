@@ -70,7 +70,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 This is a **POS (Point of Sale) cashier system** built with JavaFX 17. It's a desktop application for retail operations including cash register functionality, inventory management, member management, purchasing, returns, and reporting.
 
-**Current Version:** v2.5.8 | **Main Entry:** `com.cashier.CashierSystemFXApplication`
+**Current Version:** v2.5.9 | **Main Entry:** `com.cashier.CashierSystemFXApplication`
 
 **Tech Stack:**
 - JavaFX 17.0.12 for UI
