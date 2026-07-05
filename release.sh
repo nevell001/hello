@@ -8,8 +8,20 @@ echo "===================================================="
 echo "      狸算(LiSuan) 生产发布候选验证开始"
 echo "===================================================="
 
+# 0. 版本一致性门禁
+echo "[0/4] 正在校验版本一致性..."
+VERSION_POM=$(grep -m 1 "<version>" pom.xml | sed 's/.*<version>\(.*\)<\/version>.*/\1/')
+VERSION_JAVA=$(grep "APP_VERSION =" src/main/java/com/cashier/constant/AppConstants.java | sed 's/.*"\(.*\)".*/\1/')
+
+if [ "$VERSION_POM" != "$VERSION_JAVA" ]; then
+    echo "✗ 错误：版本号不一致！"
+    echo "  pom.xml: $VERSION_POM"
+    echo "  AppConstants.java: $VERSION_JAVA"
+    exit 1
+fi
+echo "✓ 版本号一致 ($VERSION_POM)"
+
 # 1. 单元测试与覆盖率
-echo "[1/4] 正在运行单元测试与覆盖率检查..."
 mvn clean test -DskipTests=false
 echo "✓ 单元测试通过"
 
