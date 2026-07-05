@@ -4,7 +4,7 @@
 
 LiSuan Cashier System is a desktop POS (Point of Sale) cashier system built with JavaFX 17. It is designed for daily retail operations, covering checkout, products, members, purchasing, inventory, returns, reports, user permissions, data backup, and hardware integration.
 
-**Current Version**: v2.5.8 | **Latest Update**: 2026-07-04
+**Current Version**: v2.5.9 | **Latest Update**: 2026-07-05
 
 ![Java](https://img.shields.io/badge/Java-17-orange)
 ![JavaFX](https://img.shields.io/badge/JavaFX-17.0.12-blue)
@@ -129,7 +129,7 @@ mvn javafx:run
 
 ```bash
 mvn clean package
-java -jar target/lisuan-fx-2.5.8-jar-with-dependencies.jar
+java -jar target/lisuan-fx-2.5.9-jar-with-dependencies.jar
 ```
 
 Alternatively, launch using wildcards:
@@ -328,6 +328,13 @@ src/main/resources/
 ---
 
 ## Recent Updates
+
+### v2.5.9-maintenance (2026-07-05)
+- Fixed API Token security test failure.
+- Optimized Mockito configuration for test environments.
+- Strengthened security prompts in production configuration templates.
+- Unified database initialization scripts, enabling out-of-the-box support for more modules.
+- Optimized README structure for better readability.
 
 ### v2.5.8-maintenance (2026-07-04)
 - Organized `I18nKeys`, centralizing commonly used internationalization keys.

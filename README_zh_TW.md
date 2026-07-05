@@ -4,7 +4,7 @@
 
 狸算 (LiSuan) 收銀系統是一個基於 JavaFX 17 的桌面 POS 收銀系統，面向零售門市的收銀、商品、會員、採購、庫存、退貨、報表、用戶權限、資料備份和硬體接入等日常經營場景。
 
-**當前版本**: v2.5.8 | **最新更新**: 2026-07-04
+**當前版本**: v2.5.9 | **最新更新**: 2026-07-05
 
 ![Java](https://img.shields.io/badge/Java-17-orange)
 ![JavaFX](https://img.shields.io/badge/JavaFX-17.0.12-blue)
@@ -129,7 +129,7 @@ mvn javafx:run
 
 ```bash
 mvn clean package
-java -jar target/lisuan-fx-2.5.8-jar-with-dependencies.jar
+java -jar target/lisuan-fx-2.5.9-jar-with-dependencies.jar
 ```
 
 也可以使用萬用字元啟動：
@@ -329,6 +329,13 @@ src/main/resources/
 
 ## 最近更新
 
+### v2.5.9-maintenance (2026-07-05)
+- 修復了 API Token 的安全測試失敗問題
+- 優化了測試環境下的 Mockito 配置
+- 強化了生產環境配置模板的安全提示
+- 統一了資料庫初始化指令碼，支援更多功能模組的開箱即用
+- 優化了 README 文檔結構，提升易讀性
+
 ### v2.5.8-maintenance (2026-07-04)
 - 整理 `I18nKeys`，將常用國際化鍵名集中管理。
 - 收口系統屬性、資料庫設定、資源包名、日期時間格式等非 i18n 常數。
@@ -341,7 +348,7 @@ src/main/resources/
 - 退貨流程優化：增加快捷日期篩選，修復查看原交易、列印單據、完成退貨和匯出提示的多語言顯示。
 - 採購與盤點修復：修復入庫歷史列不顯示、盤點類型文字截斷及空表提示未跟隨應用語言的問題。
 - 表單顯示修復：移除商品新增/編輯頁空錯誤標籤產生的紅色豎線，並在地化校驗錯誤。
-- 字型與主題優化：預設使用 LiSuan 主題，簡體中文優先載入 Noto Sans CJK SC 字形並完善跨平台回退。
+- 字型與主題優化：預設使用 LiSuan 主題，繁體中文優先載入 Noto Sans CJK SC 字形並完善跨平台回退。
 - 語言精簡：移除日語、韓語，僅保留簡體中文、英文和繁體中文。
 
 ### v2.5.7-l10n (2026-06-20)
