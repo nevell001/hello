@@ -176,7 +176,9 @@
 }
 
 .combo-box-popup .list-cell:filled:selected,
-.combo-box-popup .list-cell:filled:selected:hover {
+.combo-box-popup .list-cell:filled:selected:hover,
+.combo-box-popup .list-view .list-cell:filled:selected,
+.combo-box-popup .list-view .list-cell:filled:selected:hover {
     -fx-background-color: -lisuan-primary;
     -fx-text-fill: -lisuan-surface;
 }
@@ -192,7 +194,8 @@
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 6, 0, 0, 3);
 }
 
-.combo-box:focused {
+.combo-box:focused,
+.combo-box-base:focused {
     -fx-border-color: -lisuan-primary;
     -fx-border-width: 1.5px;
 }
@@ -1033,6 +1036,18 @@
 
 .bg-dark {
     -fx-background-color: -lisuan-info;
+}
+
+.status-indicator {
+    -fx-fill: -lisuan-text-disabled;
+}
+
+.status-indicator.status-running {
+    -fx-fill: -lisuan-success;
+}
+
+.status-indicator.status-stopped {
+    -fx-fill: -lisuan-danger;
 }
 
 /* ========== 分割面板 ========== */

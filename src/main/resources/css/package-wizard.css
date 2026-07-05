@@ -47,6 +47,7 @@
 .wizard-title {
     -fx-text-fill: -lisuan-text-heading;
     -fx-font-family: "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+    -fx-font-size: 20px;
     -fx-font-weight: bold;
 }
 
@@ -63,6 +64,11 @@
 
 .section-title {
     -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.summary-title,
+.summary-value {
     -fx-font-weight: bold;
 }
 
@@ -181,14 +187,15 @@
 /* CheckBox */
 .check-box {
     -fx-font-size: 12px;
+    -fx-text-fill: -lisuan-text-default;
 }
 
 .check-box > .text {
-    -fx-text-fill: -lisuan-text-default !important;
+    -fx-text-fill: -lisuan-text-default;
 }
 
 .check-box .text {
-    -fx-text-fill: -lisuan-text-default !important;
+    -fx-text-fill: -lisuan-text-default;
 }
 
 .check-box .box {
@@ -197,17 +204,27 @@
     -fx-border-radius: 3;
 }
 
+.check-box:hover .box {
+    -fx-background-color: -lisuan-surface-muted;
+    -fx-border-color: -lisuan-primary-hover;
+}
+
+.check-box:focused .box {
+    -fx-border-color: -lisuan-primary;
+    -fx-effect: dropshadow(three-pass-box, rgba(184, 92, 27, 0.18), 3, 0, 0, 0);
+}
+
 .check-box:selected .box {
     -fx-background-color: -lisuan-primary;
     -fx-border-color: -lisuan-primary-active;
 }
 
 .check-box:selected > .text {
-    -fx-text-fill: -lisuan-text-default !important;
+    -fx-text-fill: -lisuan-text-default;
 }
 
 .check-box:selected .text {
-    -fx-text-fill: -lisuan-text-default !important;
+    -fx-text-fill: -lisuan-text-default;
 }
 
 /* ComboBox */

@@ -15,7 +15,7 @@
         <padding>
             <Insets top="15" right="15" bottom="15" left="15"/>
         </padding>
-        <Label text="🔍" style="-fx-font-size: 20px;"/>
+        <Label text="🔍" styleClass="emoji-icon-lg"/>
         <TextField fx:id="searchField"
                    promptText="%search.placeholder"
                    HBox.hgrow="ALWAYS"
@@ -34,12 +34,12 @@
         <padding>
             <Insets top="8" right="15" bottom="8" left="15"/>
         </padding>
-        <Label text="%search.results" styleClass="text-muted" style="-fx-font-size: 12px"/>
-        <Label fx:id="resultCountLabel" text="0" styleClass="text-primary" style="-fx-font-weight: bold; -fx-font-size: 12px"/>
+        <Label text="%search.results" styleClass="text-muted, text-sm"/>
+        <Label fx:id="resultCountLabel" text="0" styleClass="text-primary, text-sm, font-bold"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Label text="%search.keyboard_select" styleClass="text-muted" style="-fx-font-size: 11px"/>
-        <Label text="%search.keyboard_open" styleClass="text-muted" style="-fx-font-size: 11px"/>
-        <Label text="%search.keyboard_close" styleClass="text-muted" style="-fx-font-size: 11px"/>
+        <Label text="%search.keyboard_select" styleClass="text-muted, text-xs"/>
+        <Label text="%search.keyboard_open" styleClass="text-muted, text-xs"/>
+        <Label text="%search.keyboard_close" styleClass="text-muted, text-xs"/>
     </HBox>
 
 </VBox>

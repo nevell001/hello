@@ -98,7 +98,7 @@
             <TableColumn fx:id="statusColumn" text="%promotion.status" prefWidth="120"/>
         </columns>
         <placeholder>
-            <Label text="%promotion.no_data" styleClass="text-muted" style="-fx-font-size: 14px"/>
+            <Label text="%promotion.no_data" styleClass="text-muted, text-lg"/>
         </placeholder>
     </TableView>
 

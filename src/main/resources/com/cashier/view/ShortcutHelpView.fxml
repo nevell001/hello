@@ -16,7 +16,7 @@
         <padding>
             <Insets top="15" right="15" bottom="15" left="15"/>
         </padding>
-        <Label text="⌨️" style="-fx-font-size: 24px;"/>
+        <Label text="⌨️" styleClass="emoji-icon-xl"/>
         <Label text="%快捷键.title" styleClass="title-label"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Button text="%快捷键.close" onAction="#handleClose" styleClass="icon-button"/>
@@ -27,7 +27,7 @@
         <padding>
             <Insets top="10" right="15" bottom="10" left="15"/>
         </padding>
-        <Label text="🔍" style="-fx-font-size: 14px;"/>
+        <Label text="🔍" styleClass="text-lg"/>
         <TextField fx:id="searchField" promptText="%shortcut.search_hint" HBox.hgrow="ALWAYS"
                    styleClass="search-field" onKeyReleased="#handleSearch"/>
     </HBox>

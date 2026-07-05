@@ -93,7 +93,7 @@
             <TableColumn fx:id="operatorColumn" text="%inventory_check.operator" prefWidth="100"/>
         </columns>
         <placeholder>
-            <Label text="%inventory_check.no_data" styleClass="text-muted" style="-fx-font-size: 14px"/>
+            <Label text="%inventory_check.no_data" styleClass="text-muted, text-lg"/>
         </placeholder>
     </TableView>
 

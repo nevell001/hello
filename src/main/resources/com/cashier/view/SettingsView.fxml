@@ -36,7 +36,7 @@
                         <Insets top="20" right="20" bottom="20" left="20"/>
                     </padding>
 
-                    <Label text="%settings.store_info" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
+                    <Label text="%settings.store_info" styleClass="text-primary, settings-section-title"/>
 
                     <GridPane hgap="10" vgap="10">
                         <padding>
@@ -55,7 +55,7 @@
 
                     <Separator/>
 
-                    <Label text="%settings.financial" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
+                    <Label text="%settings.financial" styleClass="text-primary, settings-section-title"/>
 
                     <GridPane hgap="10" vgap="10">
                         <padding>
@@ -69,7 +69,7 @@
 
                     <Separator/>
 
-                    <Label text="%settings.ui" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
+                    <Label text="%settings.ui" styleClass="text-primary, settings-section-title"/>
 
                     <GridPane hgap="10" vgap="10">
                         <padding>
@@ -113,7 +113,7 @@
 
                     <Separator/>
 
-                    <Label text="%settings.printer_name" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
+                    <Label text="%settings.printer_name" styleClass="text-primary, settings-section-title"/>
 
                     <GridPane hgap="10" vgap="10">
                         <padding>
@@ -129,7 +129,7 @@
 
                     <Separator/>
 
-                    <Label text="%settings.logo_settings" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
+                    <Label text="%settings.logo_settings" styleClass="text-primary, settings-section-title"/>
 
                     <VBox spacing="10" styleClass="logo-section">
                         <padding>
@@ -138,7 +138,7 @@
 
                         <HBox spacing="10" alignment="CENTER_LEFT">
                             <CheckBox fx:id="printLogoCheckBox" text="%settings.print_logo"/>
-                            <Label text="%settings.logo_format_hint" styleClass="text-muted" style="-fx-font-size: 11px"/>
+                            <Label text="%settings.logo_format_hint" styleClass="text-muted, text-xs"/>
                         </HBox>
 
                         <HBox spacing="10" alignment="CENTER_LEFT">
@@ -157,16 +157,16 @@
                                 <Label fx:id="logoPreviewPlaceholder" text="%settings.no_logo" styleClass="text-muted" visible="true"/>
                             </StackPane>
                             <VBox spacing="5">
-                                <Label text="%settings.logo_preview" style="-fx-font-weight: bold;"/>
-                                <Label fx:id="logoInfoLabel" text="%settings.logo_hint" styleClass="text-muted" style="-fx-font-size: 11px"/>
-                                <Label text="%settings.logo_print_hint" styleClass="text-muted" style="-fx-font-size: 10px"/>
+                                <Label text="%settings.logo_preview" styleClass="font-bold"/>
+                                <Label fx:id="logoInfoLabel" text="%settings.logo_hint" styleClass="text-muted, text-xs"/>
+                                <Label text="%settings.logo_print_hint" styleClass="text-muted, text-xxs"/>
                             </VBox>
                         </HBox>
                     </VBox>
 
                     <Separator/>
 
-                    <Label text="%settings.other_print_options" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
+                    <Label text="%settings.other_print_options" styleClass="text-primary, settings-section-title"/>
 
                     <VBox spacing="10">
                         <padding>
@@ -200,7 +200,7 @@
 
                     <Separator/>
 
-                    <Label text="%settings.backup_settings" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
+                    <Label text="%settings.backup_settings" styleClass="text-primary, settings-section-title"/>
 
                     <GridPane hgap="10" vgap="10">
                         <padding>
@@ -219,7 +219,7 @@
 
                     <Separator/>
 
-                    <Label text="%settings.manual_operations" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
+                    <Label text="%settings.manual_operations" styleClass="text-primary, settings-section-title"/>
 
                     <HBox spacing="10">
                         <Button fx:id="backupNowButton"
@@ -254,7 +254,7 @@
                         <Insets top="20" right="20" bottom="20" left="20"/>
                     </padding>
 
-                    <Label text="%settings.session_security" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
+                    <Label text="%settings.session_security" styleClass="text-primary, settings-section-title"/>
 
                     <GridPane hgap="10" vgap="10">
                         <padding>
@@ -268,7 +268,7 @@
 
                     <Separator/>
 
-                    <Label text="%settings.password_policy" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
+                    <Label text="%settings.password_policy" styleClass="text-primary, settings-section-title"/>
 
                     <GridPane hgap="10" vgap="10">
                         <padding>
@@ -303,7 +303,7 @@
                         <Insets top="20" right="20" bottom="20" left="20"/>
                     </padding>
 
-                    <Label text="%settings.payment_general" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
+                    <Label text="%settings.payment_general" styleClass="text-primary, settings-section-title"/>
                     <Label text="%settings.payment_adapter_hint" styleClass="text-muted" wrapText="true"/>
 
                     <GridPane hgap="10" vgap="10">
@@ -328,7 +328,7 @@
 
                     <Separator/>
 
-                    <Label text="%settings.wechat_payment" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
+                    <Label text="%settings.wechat_payment" styleClass="text-primary, settings-section-title"/>
 
                     <GridPane hgap="10" vgap="10">
                         <padding>
@@ -352,7 +352,7 @@
 
                     <Separator/>
 
-                    <Label text="%settings.alipay_payment" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
+                    <Label text="%settings.alipay_payment" styleClass="text-primary, settings-section-title"/>
 
                     <GridPane hgap="10" vgap="10">
                         <padding>
@@ -395,7 +395,7 @@
                         <Insets top="20" right="20" bottom="20" left="20"/>
                     </padding>
 
-                    <Label text="%settings.csv_import" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
+                    <Label text="%settings.csv_import" styleClass="text-primary, settings-section-title"/>
 
                     <GridPane hgap="10" vgap="10">
                         <padding>
@@ -414,19 +414,19 @@
                         </HBox>
                     </GridPane>
 
-                    <VBox spacing="10" styleClass="surface-warning" style="-fx-padding: 15; -fx-background-radius: 5">
-                        <Label text="%settings.csv_format" styleClass="text-warning" style="-fx-font-weight: bold"/>
-                        <Label text="%settings.csv_format_comma" styleClass="text-warning" style="-fx-font-weight: 600"/>
-                        <Label text="%settings.csv_format_detail_1" style="-fx-wrap-text: true;"/>
-                        <Label text="%settings.csv_format_detail_2" style="-fx-wrap-text: true;"/>
-                        <Label text="%settings.csv_format_detail_3" style="-fx-wrap-text: true;"/>
-                        <Label text="%settings.csv_format_detail_4" style="-fx-wrap-text: true;"/>
+                    <VBox spacing="10" styleClass="surface-warning, surface-warning-panel">
+                        <Label text="%settings.csv_format" styleClass="text-warning, font-bold"/>
+                        <Label text="%settings.csv_format_comma" styleClass="text-warning, font-semibold"/>
+                        <Label text="%settings.csv_format_detail_1" styleClass="wrap-text"/>
+                        <Label text="%settings.csv_format_detail_2" styleClass="wrap-text"/>
+                        <Label text="%settings.csv_format_detail_3" styleClass="wrap-text"/>
+                        <Label text="%settings.csv_format_detail_4" styleClass="wrap-text"/>
                         <Label text=""/>
-                        <Label text="%settings.csv_format_pipe" styleClass="text-warning" style="-fx-font-weight: 600"/>
-                        <Label text="%settings.csv_format_detail_5" style="-fx-wrap-text: true;"/>
-                        <Label text="%settings.csv_format_detail_6" style="-fx-wrap-text: true;"/>
-                        <Label text="%settings.csv_format_detail_7" style="-fx-wrap-text: true;"/>
-                        <Label text="%settings.csv_format_detail_8" style="-fx-wrap-text: true;"/>
+                        <Label text="%settings.csv_format_pipe" styleClass="text-warning, font-semibold"/>
+                        <Label text="%settings.csv_format_detail_5" styleClass="wrap-text"/>
+                        <Label text="%settings.csv_format_detail_6" styleClass="wrap-text"/>
+                        <Label text="%settings.csv_format_detail_7" styleClass="wrap-text"/>
+                        <Label text="%settings.csv_format_detail_8" styleClass="wrap-text"/>
                     </VBox>
 
                     <HBox spacing="10" alignment="CENTER_LEFT">
@@ -445,31 +445,31 @@
 
                     <Separator/>
 
-                    <Label text="%settings.import_statistics" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
+                    <Label text="%settings.import_statistics" styleClass="text-primary, settings-section-title"/>
 
                     <GridPane hgap="20" vgap="10">
                         <padding>
                             <Insets top="10" right="0" bottom="0" left="0"/>
                         </padding>
 
-                        <Label text="%settings.total_processed_label" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-font-weight: 600;"/>
+                        <Label text="%settings.total_processed_label" GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="font-semibold"/>
                         <Label fx:id="totalProcessedLabel" text="0" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 
-                        <Label text="%settings.import_success_label" GridPane.columnIndex="0" GridPane.rowIndex="1" style="-fx-font-weight: 600;"/>
+                        <Label text="%settings.import_success_label" GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="font-semibold"/>
                         <Label fx:id="successCountLabel" text="0" GridPane.columnIndex="1" GridPane.rowIndex="1" styleClass="text-success"/>
 
-                        <Label text="%settings.import_skipped_label" GridPane.columnIndex="0" GridPane.rowIndex="2" style="-fx-font-weight: 600;"/>
+                        <Label text="%settings.import_skipped_label" GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="font-semibold"/>
                         <Label fx:id="skippedCountLabel" text="0" GridPane.columnIndex="1" GridPane.rowIndex="2" styleClass="text-warning"/>
 
-                        <Label text="%settings.import_errors_label" GridPane.columnIndex="0" GridPane.rowIndex="3" style="-fx-font-weight: 600;"/>
+                        <Label text="%settings.import_errors_label" GridPane.columnIndex="0" GridPane.rowIndex="3" styleClass="font-semibold"/>
                         <Label fx:id="errorCountLabel" text="0" GridPane.columnIndex="1" GridPane.rowIndex="3" styleClass="text-danger"/>
                     </GridPane>
 
-                    <VBox fx:id="importMessagesArea" spacing="5" styleClass="surface-muted" style="-fx-padding: 10; -fx-background-radius: 5; -fx-pref-height: 150">
+                    <VBox fx:id="importMessagesArea" spacing="5" styleClass="surface-muted, import-messages-area">
                         <padding>
                             <Insets top="5" right="5" bottom="5" left="5"/>
                         </padding>
-                        <Label text="%settings.import_log" style="-fx-font-weight: 600;"/>
+                        <Label text="%settings.import_log" styleClass="font-semibold"/>
                     </VBox>
                 </VBox>
             </ScrollPane>

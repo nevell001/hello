@@ -107,7 +107,7 @@
             <TableColumn fx:id="warningColumn" text="%inventory.warning_status" prefWidth="80"/>
         </columns>
         <placeholder>
-            <Label text="%inventory.no_data" styleClass="text-muted" style="-fx-font-size: 14px"/>
+            <Label text="%inventory.no_data" styleClass="text-muted, text-lg"/>
         </placeholder>
     </TableView>
 

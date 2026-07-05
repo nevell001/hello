@@ -50,7 +50,7 @@
             <TableColumn fx:id="purchaserColumn" text="%purchase_inbound.purchaser" prefWidth="130" minWidth="110"/>
         </columns>
         <placeholder>
-            <Label text="%purchase_inbound.no_data" styleClass="text-muted" style="-fx-font-size: 14px"/>
+            <Label text="%purchase_inbound.no_data" styleClass="text-muted, text-lg"/>
         </placeholder>
     </TableView>
 

@@ -20,9 +20,9 @@
     <HBox alignment="CENTER_LEFT" spacing="10">
         <Label fx:id="titleLabel"
                text="%restock.title"
-               styleClass="text-primary" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
+               styleClass="text-primary, title-xl"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Label text="%restock.subtitle" styleClass="text-muted" style="-fx-font-size: 12px; -fx-font-style: italic"/>
+        <Label text="%restock.subtitle" styleClass="text-muted, text-sm, font-italic"/>
     </HBox>
 
     <!-- 商品信息卡片 -->
@@ -30,10 +30,10 @@
         <padding>
             <Insets top="12" right="15" bottom="12" left="15"/>
         </padding>
-        <Label fx:id="productLabel" text="" styleClass="text-default" style="-fx-font-size: 15px; -fx-font-weight: bold"/>
+        <Label fx:id="productLabel" text="" styleClass="text-default, product-title"/>
         <HBox spacing="20" alignment="CENTER_LEFT">
-            <Label fx:id="currentStockLabel" text="" styleClass="text-muted" style="-fx-font-size: 13px"/>
-            <Label fx:id="costPriceLabel" text="" styleClass="text-muted" style="-fx-font-size: 13px"/>
+            <Label fx:id="currentStockLabel" text="" styleClass="text-muted, text-md"/>
+            <Label fx:id="costPriceLabel" text="" styleClass="text-muted, text-md"/>
         </HBox>
     </VBox>
 
@@ -49,27 +49,27 @@
 
         <!-- 补货数量 -->
         <Label text="%restock.quantity" GridPane.columnIndex="0" GridPane.rowIndex="0"
-               styleClass="text-default" style="-fx-font-size: 14px; -fx-font-weight: 600"/>
+               styleClass="text-default, form-label-strong"/>
         <TextField fx:id="quantityField"
                    GridPane.columnIndex="1" GridPane.rowIndex="0"
                    prefWidth="250" promptText="%restock.quantity_hint"
-                   style="-fx-font-size: 14px;"/>
+                   styleClass="control-lg"/>
 
         <!-- 入库来源 -->
         <Label text="%restock.source" GridPane.columnIndex="0" GridPane.rowIndex="1"
-               styleClass="text-default" style="-fx-font-size: 14px; -fx-font-weight: 600"/>
+               styleClass="text-default, form-label-strong"/>
         <ComboBox fx:id="sourceComboBox"
                   GridPane.columnIndex="1" GridPane.rowIndex="1"
                   prefWidth="250" editable="true"
-                  style="-fx-font-size: 14px;"/>
+                  styleClass="control-lg"/>
 
         <!-- 备注 -->
         <Label text="%restock.reason" GridPane.columnIndex="0" GridPane.rowIndex="2"
-               styleClass="text-default" style="-fx-font-size: 14px; -fx-font-weight: 600"/>
+               styleClass="text-default, form-label-strong"/>
         <TextField fx:id="reasonField"
                    GridPane.columnIndex="1" GridPane.rowIndex="2"
                    prefWidth="250" promptText="%restock.reason_hint"
-                   style="-fx-font-size: 14px;"/>
+                   styleClass="control-lg"/>
     </GridPane>
 
     <!-- 实时预览信息 -->
@@ -77,15 +77,15 @@
         <padding>
             <Insets top="10" right="15" bottom="10" left="15"/>
         </padding>
-        <Label text="%restock.preview" styleClass="text-muted" style="-fx-font-size: 13px; -fx-font-weight: bold"/>
+        <Label text="%restock.preview" styleClass="text-muted, text-md, font-bold"/>
         <HBox spacing="30" alignment="CENTER_LEFT">
             <VBox spacing="2">
-                <Label text="%restock.after_stock" styleClass="text-muted" style="-fx-font-size: 11px"/>
-                <Label fx:id="afterStockLabel" text="-" styleClass="text-primary" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
+                <Label text="%restock.after_stock" styleClass="text-muted, text-xs"/>
+                <Label fx:id="afterStockLabel" text="-" styleClass="text-primary, preview-value"/>
             </VBox>
             <VBox spacing="2">
-                <Label text="%restock.total_cost" styleClass="text-muted" style="-fx-font-size: 11px"/>
-                <Label fx:id="totalCostLabel" text="-" styleClass="text-warning" style="-fx-font-size: 16px; -fx-font-weight: bold"/>
+                <Label text="%restock.total_cost" styleClass="text-muted, text-xs"/>
+                <Label fx:id="totalCostLabel" text="-" styleClass="text-warning, preview-value"/>
             </VBox>
         </HBox>
     </VBox>
@@ -93,7 +93,7 @@
     <!-- 错误提示 -->
     <Label fx:id="errorLabel"
            text=""
-           styleClass="text-danger" style="-fx-font-size: 12px"/>
+           styleClass="text-danger, text-sm"/>
 
     <!-- 按钮区域 -->
     <HBox spacing="10" alignment="CENTER_RIGHT">

@@ -51,6 +51,50 @@
     -fx-text-fill: #FFFFFF;
 }
 
+.app-title-label {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.toolbar-meta-label {
+    -fx-font-size: 13px;
+}
+
+.user-avatar-row {
+    -fx-padding: 0 0 10 0;
+}
+
+.user-name-label {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.user-role-label {
+    -fx-font-size: 13px;
+}
+
+.nav-group-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+.nav-separator {
+    -fx-padding: 5px 0;
+}
+
+.welcome-title {
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+}
+
+.welcome-subtitle {
+    -fx-font-size: 16px;
+}
+
+.welcome-actions {
+    -fx-padding: 30 0 0 0;
+}
+
 /* ========== 登录界面样式 ========== */
 .login-scene {
     -fx-background-color: linear-gradient(to bottom right, #315C72 0%, #4C6A7D 48%, #6D5D84 100%);
@@ -1001,8 +1045,151 @@
     -fx-font-weight: bold;
 }
 
+.font-semibold {
+    -fx-font-weight: 600;
+}
+
 .font-italic {
     -fx-font-style: italic;
+}
+
+.text-xs {
+    -fx-font-size: 11px;
+}
+
+.text-xxs {
+    -fx-font-size: 10px;
+}
+
+.text-sm {
+    -fx-font-size: 12px;
+}
+
+.text-md {
+    -fx-font-size: 13px;
+}
+
+.text-lg {
+    -fx-font-size: 14px;
+}
+
+.title-md {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}
+
+.title-sm {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.title-lg {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+}
+
+.title-xl {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+}
+
+.product-title {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.form-label-strong {
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+}
+
+.control-lg {
+    -fx-font-size: 14px;
+}
+
+.metric-value {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+}
+
+.preview-value {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.metric-value-md {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+}
+
+.metric-value-large {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+.status-indicator {
+    -fx-fill: #9E9E9E;
+}
+
+.status-indicator.status-running {
+    -fx-fill: #4CAF50;
+}
+
+.status-indicator.status-stopped {
+    -fx-fill: #F44336;
+}
+
+.section-heading {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.settings-section-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.wrap-text {
+    -fx-wrap-text: true;
+}
+
+.inline-separator {
+    -fx-padding: 0 10 0 10;
+}
+
+.emoji-icon-lg {
+    -fx-font-size: 20px;
+}
+
+.emoji-icon-xl {
+    -fx-font-size: 24px;
+}
+
+.pad-md {
+    -fx-padding: 15;
+}
+
+.pad-sm {
+    -fx-padding: 10;
+}
+
+.pad-lg {
+    -fx-padding: 20;
+}
+
+.pad-top-sm {
+    -fx-padding: 10 0 0 0;
+}
+
+.surface-warning-panel {
+    -fx-padding: 15;
+    -fx-background-radius: 5;
+}
+
+.import-messages-area {
+    -fx-padding: 10;
+    -fx-background-radius: 5;
+    -fx-pref-height: 150;
 }
 
 .text-primary {
@@ -1505,6 +1692,11 @@
 .pos-secondary-text {
     -fx-font-size: 13px;
     -fx-text-fill: #E0E0E0;
+}
+
+.pos-action-button {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
 }
 
 .pos-avatar-circle {

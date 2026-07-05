@@ -61,7 +61,7 @@
 
         <!-- 统计信息 -->
         <Label fx:id="countLabel" text="%purchase_approval.current_display" styleClass="text-muted"/>
-        <Label fx:id="pendingCountLabel" text="%purchase_approval.pending_count" styleClass="text-danger" style="-fx-font-weight: bold"/>
+        <Label fx:id="pendingCountLabel" text="%purchase_approval.pending_count" styleClass="text-danger, font-bold"/>
     </HBox>
 
     <!-- 待审批订单表格 -->
@@ -76,7 +76,7 @@
             <TableColumn fx:id="purchaserColumn" text="%purchase_approval.purchaser" prefWidth="100"/>
         </columns>
         <placeholder>
-            <Label text="%purchase_approval.no_data" styleClass="text-muted" style="-fx-font-size: 14px"/>
+            <Label text="%purchase_approval.no_data" styleClass="text-muted, text-lg"/>
         </placeholder>
     </TableView>
 

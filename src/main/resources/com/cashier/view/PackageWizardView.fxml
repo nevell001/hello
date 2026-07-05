@@ -23,8 +23,7 @@
             </image>
         </ImageView>
         <VBox spacing="5">
-            <Label text="%wizard.title" styleClass="wizard-title"
-                   style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+            <Label text="%wizard.title" styleClass="wizard-title"/>
             <Label text="%wizard.subtitle" styleClass="wizard-subtitle"/>
         </VBox>
         <Region HBox.hgrow="ALWAYS"/>
@@ -155,19 +154,19 @@
             <Label text="%wizard.section.confirm" styleClass="section-title"/>
 
             <VBox spacing="10" styleClass="option-card">
-                <Label text="%wizard.label.summary" style="-fx-font-weight: bold;"/>
+                <Label text="%wizard.label.summary" styleClass="summary-title"/>
                 <GridPane hgap="15" vgap="5">
                     <Label text="%wizard.label.app_name" GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="help-text"/>
-                    <Label fx:id="summaryAppName" text="LiSuan" GridPane.columnIndex="1" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
+                    <Label fx:id="summaryAppName" text="LiSuan" GridPane.columnIndex="1" GridPane.rowIndex="0" styleClass="summary-value"/>
 
                     <Label text="%wizard.label.version" GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="help-text"/>
-                    <Label fx:id="summaryVersion" text="2.5.8" GridPane.columnIndex="1" GridPane.rowIndex="1" style="-fx-font-weight: bold;"/>
+                    <Label fx:id="summaryVersion" text="2.5.8" GridPane.columnIndex="1" GridPane.rowIndex="1" styleClass="summary-value"/>
 
                     <Label text="%wizard.label.embed_jre" GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="help-text"/>
-                    <Label fx:id="summaryEmbedJre" text="%wizard.yes" GridPane.columnIndex="1" GridPane.rowIndex="2" style="-fx-font-weight: bold;"/>
+                    <Label fx:id="summaryEmbedJre" text="%wizard.yes" GridPane.columnIndex="1" GridPane.rowIndex="2" styleClass="summary-value"/>
 
                     <Label text="%wizard.label.output_dir" GridPane.columnIndex="0" GridPane.rowIndex="3" styleClass="help-text"/>
-                    <Label fx:id="summaryOutputDir" text="target/dist" GridPane.columnIndex="1" GridPane.rowIndex="3" style="-fx-font-weight: bold;"/>
+                    <Label fx:id="summaryOutputDir" text="target/dist" GridPane.columnIndex="1" GridPane.rowIndex="3" styleClass="summary-value"/>
                 </GridPane>
             </VBox>
 

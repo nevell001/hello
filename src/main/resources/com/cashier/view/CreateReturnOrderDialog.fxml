@@ -18,15 +18,15 @@
     <Label text="%return_order.title" styleClass="view-title"/>
 
     <!-- 原交易信息 -->
-    <VBox spacing="5" styleClass="surface-muted" style="-fx-padding: 10">
-        <Label text="%return_order.original_info" style="-fx-font-weight: bold;"/>
+    <VBox spacing="5" styleClass="surface-muted, pad-sm">
+        <Label text="%return_order.original_info" styleClass="font-bold"/>
         <GridPane hgap="14" vgap="10" styleClass="form-grid">
             <Label text="%return_order.transaction_id" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
             <Label fx:id="transactionIdLabel" GridPane.columnIndex="1" GridPane.rowIndex="0" styleClass="text-info"/>
 
             <Label text="%return_order.transaction_amount" GridPane.columnIndex="2" GridPane.rowIndex="0"/>
             <Label fx:id="transactionAmountLabel" GridPane.columnIndex="3" GridPane.rowIndex="0"
-                   styleClass="text-danger" style="-fx-font-weight: bold;"/>
+                   styleClass="text-danger, font-bold"/>
 
             <Label text="%return_order.transaction_date" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
             <Label fx:id="transactionDateLabel" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
@@ -42,7 +42,7 @@
     <!-- 退货商品列表 -->
     <VBox spacing="5" VBox.vgrow="ALWAYS">
         <HBox spacing="10" alignment="CENTER_LEFT">
-            <Label text="%return_order.items" style="-fx-font-weight: bold;"/>
+            <Label text="%return_order.items" styleClass="font-bold"/>
             <CheckBox fx:id="selectAllCheckBox" text="%return_order.select_all" onAction="#handleSelectAll"/>
         </HBox>
         <TableView fx:id="returnItemTable" VBox.vgrow="ALWAYS" prefHeight="250">
@@ -61,7 +61,7 @@
 
     <!-- 退货信息 -->
     <VBox spacing="10">
-        <Label text="%return_order.return_info" style="-fx-font-weight: bold;"/>
+        <Label text="%return_order.return_info" styleClass="font-bold"/>
         <GridPane hgap="14" vgap="10" styleClass="form-grid">
             <Label text="%return_order.return_reason_label" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
             <TextField fx:id="returnReasonField" GridPane.columnIndex="1" GridPane.rowIndex="0"
@@ -80,10 +80,10 @@
     </VBox>
 
     <!-- 退货金额汇总 -->
-    <HBox spacing="20" alignment="CENTER_RIGHT" styleClass="surface-muted" style="-fx-padding: 10">
-        <Label text="%return_order.total_amount" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+    <HBox spacing="20" alignment="CENTER_RIGHT" styleClass="surface-muted, pad-sm">
+        <Label text="%return_order.total_amount" styleClass="section-heading"/>
         <Label fx:id="totalReturnAmountLabel" text="0.00"
-              styleClass="text-danger" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+              styleClass="text-danger, title-md"/>
     </HBox>
 
     <!-- 按钮区域 -->

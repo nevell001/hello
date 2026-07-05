@@ -15,7 +15,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
@@ -30,6 +29,8 @@ import java.util.*;
  */
 public class InventoryAlertController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(InventoryAlertController.class);
+    private static final String STATUS_RUNNING_STYLE = "status-running";
+    private static final String STATUS_STOPPED_STYLE = "status-stopped";
     private final ProductDAORefactored productDAO = DAOFactory.getInstance().getProductDAO();
 
     @FXML
@@ -286,12 +287,12 @@ public class InventoryAlertController {
             serviceStatusLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("runtime.service_running"));
             serviceStatusLabel.getStyleClass().removeAll("text-success", "text-danger");
             serviceStatusLabel.getStyleClass().add("text-success");
-            statusIndicator.setFill(Color.web("#4CAF50"));
+            updateStatusIndicator(STATUS_RUNNING_STYLE);
         } else {
             serviceStatusLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.service_not_started"));
             serviceStatusLabel.getStyleClass().removeAll("text-success", "text-danger");
             serviceStatusLabel.getStyleClass().add("text-danger");
-            statusIndicator.setFill(Color.web("#F44336"));
+            updateStatusIndicator(STATUS_STOPPED_STYLE);
         }
 
         // 更新配置信息
@@ -309,6 +310,11 @@ public class InventoryAlertController {
         } else {
             lastCheckTimeLabel.setText(com.cashier.i18n.I18nManager.getInstance().get("inventory_alert.last_check"));
         }
+    }
+
+    private void updateStatusIndicator(String statusStyle) {
+        statusIndicator.getStyleClass().removeAll(STATUS_RUNNING_STYLE, STATUS_STOPPED_STYLE);
+        statusIndicator.getStyleClass().add(statusStyle);
     }
 
     /**

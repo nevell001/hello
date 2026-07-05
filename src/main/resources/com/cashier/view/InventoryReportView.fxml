@@ -79,24 +79,24 @@
                     <padding>
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding>
-                    <Label text="%inventory_report.total_products" styleClass="text-muted" style="-fx-font-size: 11px"/>
-                    <Label fx:id="totalProductsLabel" text="0" styleClass="text-primary" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
+                    <Label text="%inventory_report.total_products" styleClass="text-muted, text-xs"/>
+                    <Label fx:id="totalProductsLabel" text="0" styleClass="text-primary, metric-value"/>
                 </VBox>
 
                 <VBox spacing="4" styleClass="stat-card-compact" GridPane.columnIndex="1" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS">
                     <padding>
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding>
-                    <Label text="%inventory_report.total_stock_value" styleClass="text-muted" style="-fx-font-size: 11px"/>
-                    <Label fx:id="totalStockValueLabel" text="0.00" styleClass="text-success" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
+                    <Label text="%inventory_report.total_stock_value" styleClass="text-muted, text-xs"/>
+                    <Label fx:id="totalStockValueLabel" text="0.00" styleClass="text-success, metric-value"/>
                 </VBox>
 
                 <VBox spacing="4" styleClass="stat-card-compact" GridPane.columnIndex="2" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS">
                     <padding>
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding>
-                    <Label text="%inventory_report.avg_turnover_rate" styleClass="text-muted" style="-fx-font-size: 11px"/>
-                    <Label fx:id="avgTurnoverRateLabel" text="0.00" styleClass="text-warning" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
+                    <Label text="%inventory_report.avg_turnover_rate" styleClass="text-muted, text-xs"/>
+                    <Label fx:id="avgTurnoverRateLabel" text="0.00" styleClass="text-warning, metric-value"/>
                 </VBox>
 
                 <!-- 第二行：3列 -->
@@ -104,24 +104,24 @@
                     <padding>
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding>
-                    <Label text="%inventory_report.low_stock" styleClass="text-muted" style="-fx-font-size: 11px"/>
-                    <Label fx:id="lowStockCountLabel" text="0" styleClass="text-danger" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
+                    <Label text="%inventory_report.low_stock" styleClass="text-muted, text-xs"/>
+                    <Label fx:id="lowStockCountLabel" text="0" styleClass="text-danger, metric-value"/>
                 </VBox>
 
                 <VBox spacing="4" styleClass="stat-card-compact" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS">
                     <padding>
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding>
-                    <Label text="%inventory_report.slow_sales" styleClass="text-muted" style="-fx-font-size: 11px"/>
-                    <Label fx:id="slowSalesCountLabel" text="0" styleClass="text-accent" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
+                    <Label text="%inventory_report.slow_sales" styleClass="text-muted, text-xs"/>
+                    <Label fx:id="slowSalesCountLabel" text="0" styleClass="text-accent, metric-value"/>
                 </VBox>
 
                 <VBox spacing="4" styleClass="stat-card-compact" GridPane.columnIndex="2" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS">
                     <padding>
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding>
-                    <Label text="%inventory_report.overstock" styleClass="text-muted" style="-fx-font-size: 11px"/>
-                    <Label fx:id="overstockCountLabel" text="0" styleClass="text-info" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
+                    <Label text="%inventory_report.overstock" styleClass="text-muted, text-xs"/>
+                    <Label fx:id="overstockCountLabel" text="0" styleClass="text-info, metric-value"/>
                 </VBox>
             </GridPane>
         </VBox>
@@ -143,7 +143,7 @@
                     <padding>
                         <Insets top="12" right="12" bottom="12" left="12"/>
                     </padding>
-                    <Label text="%inventory_report.stock_status" styleClass="text-primary" style="-fx-font-size: 14px; -fx-font-weight: bold"/>
+                    <Label text="%inventory_report.stock_status" styleClass="text-primary, section-heading"/>
                     <PieChart fx:id="stockStatusPieChart" VBox.vgrow="ALWAYS" legendSide="RIGHT"/>
                 </VBox>
 
@@ -152,7 +152,7 @@
                     <padding>
                         <Insets top="12" right="12" bottom="12" left="12"/>
                     </padding>
-                    <Label text="%inventory_report.turnover_analysis" styleClass="text-success" style="-fx-font-size: 14px; -fx-font-weight: bold"/>
+                    <Label text="%inventory_report.turnover_analysis" styleClass="text-success, section-heading"/>
                     <BarChart fx:id="turnoverRateBarChart" VBox.vgrow="ALWAYS">
                         <xAxis>
                             <CategoryAxis label="%inventory_report.product_axis"/>
@@ -168,7 +168,7 @@
                     <padding>
                         <Insets top="12" right="12" bottom="12" left="12"/>
                     </padding>
-                    <Label text="%inventory_report.category_stock_value" styleClass="text-warning" style="-fx-font-size: 14px; -fx-font-weight: bold"/>
+                    <Label text="%inventory_report.category_stock_value" styleClass="text-warning, section-heading"/>
                     <BarChart fx:id="categoryStockValueBarChart" VBox.vgrow="ALWAYS">
                         <xAxis>
                             <CategoryAxis label="%product.category"/>

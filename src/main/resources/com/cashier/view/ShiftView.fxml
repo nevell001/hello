@@ -52,9 +52,9 @@
         <padding>
             <Insets top="5" right="10" bottom="5" left="10"/>
         </padding>
-        <Label fx:id="countLabel" text="%shift.count" styleClass="text-muted" style="-fx-font-size: 13px"/>
-        <Label fx:id="totalRevenueLabel" text="%shift.total_revenue" styleClass="text-success" style="-fx-font-size: 13px; -fx-font-weight: bold"/>
-        <Label fx:id="totalTransactionLabel" text="%shift.total_transactions" styleClass="text-warning" style="-fx-font-size: 13px; -fx-font-weight: bold"/>
+        <Label fx:id="countLabel" text="%shift.count" styleClass="text-muted, text-md"/>
+        <Label fx:id="totalRevenueLabel" text="%shift.total_revenue" styleClass="text-success, text-md, font-bold"/>
+        <Label fx:id="totalTransactionLabel" text="%shift.total_transactions" styleClass="text-warning, text-md, font-bold"/>
     </HBox>
 
     <!-- 图表区域 -->
@@ -69,7 +69,7 @@
                 <padding>
                     <Insets top="10" right="10" bottom="10" left="10"/>
                 </padding>
-                <Label text="%shift.revenue_chart" styleClass="text-primary" style="-fx-font-size: 14px; -fx-font-weight: bold"/>
+                <Label text="%shift.revenue_chart" styleClass="text-primary, section-heading"/>
                 <BarChart fx:id="shiftRevenueBarChart" prefHeight="250">
                     <xAxis>
                         <CategoryAxis label="%shift.shift_axis"/>
@@ -85,7 +85,7 @@
                 <padding>
                     <Insets top="10" right="10" bottom="10" left="10"/>
                 </padding>
-                <Label text="%shift.payment_chart" styleClass="text-success" style="-fx-font-size: 14px; -fx-font-weight: bold"/>
+                <Label text="%shift.payment_chart" styleClass="text-success, section-heading"/>
                 <PieChart fx:id="paymentMethodPieChart" prefWidth="380" prefHeight="250" legendSide="RIGHT"/>
             </VBox>
         </HBox>
@@ -105,7 +105,7 @@
             <TableColumn fx:id="paymentColumn" text="%shift.payment_methods" prefWidth="300"/>
         </columns>
         <placeholder>
-            <Label text="%shift.no_data" styleClass="text-muted" style="-fx-font-size: 14px"/>
+            <Label text="%shift.no_data" styleClass="text-muted, text-lg"/>
         </placeholder>
     </TableView>
 

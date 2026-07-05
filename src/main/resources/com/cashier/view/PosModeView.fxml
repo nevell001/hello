@@ -40,8 +40,7 @@
                 onAction="#handleExit"
                 prefWidth="90"
                 prefHeight="40"
-                style="-fx-font-size: 15px; -fx-font-weight: bold;"
-                styleClass="danger-button"/>
+                styleClass="danger-button, pos-action-button"/>
     </HBox>
 
     <!-- 主内容区域 - 直接显示收银台 -->
@@ -67,8 +66,7 @@
                 onAction="#handleShift"
                 prefWidth="140"
                 prefHeight="40"
-                style="-fx-font-size: 15px; -fx-font-weight: bold;"
-                styleClass="primary-button"/>
+                styleClass="primary-button, pos-action-button"/>
 
         <Label fx:id="statusLabel" text="%pos.ready" styleClass="pos-ready-text"/>
     </HBox>

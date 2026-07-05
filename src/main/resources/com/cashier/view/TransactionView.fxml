@@ -86,8 +86,8 @@
         <padding>
             <Insets top="5" right="10" bottom="5" left="10"/>
         </padding>
-        <Label fx:id="countLabel" text="%transaction.count" styleClass="text-muted" style="-fx-font-size: 13px"/>
-        <Label fx:id="totalAmountLabel" text="%transaction.total_amount" styleClass="text-success" style="-fx-font-size: 13px; -fx-font-weight: bold"/>
+        <Label fx:id="countLabel" text="%transaction.count" styleClass="text-muted, text-md"/>
+        <Label fx:id="totalAmountLabel" text="%transaction.total_amount" styleClass="text-success, text-md, font-bold"/>
     </HBox>
 
     <!-- 交易记录表格 -->
@@ -103,7 +103,7 @@
             <TableColumn fx:id="memberColumn" text="%transaction.member_column" prefWidth="120"/>
         </columns>
         <placeholder>
-            <Label text="%transaction.no_data" styleClass="text-muted" style="-fx-font-size: 14px"/>
+            <Label text="%transaction.no_data" styleClass="text-muted, text-lg"/>
         </placeholder>
     </TableView>
 

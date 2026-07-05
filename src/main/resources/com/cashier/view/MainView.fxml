@@ -39,10 +39,10 @@
                     <Insets top="6" right="8" bottom="6" left="8"/>
                 </padding>
 
-                <Label text="%app.name" styleClass="app-title-label" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+                <Label text="%app.name" styleClass="app-title-label"/>
                 <Region HBox.hgrow="ALWAYS"/>
-                <Label fx:id="currentUserLabel" styleClass="toolbar-meta-label" style="-fx-font-size: 13px;"/>
-                <Label fx:id="currentTimeLabel" styleClass="toolbar-meta-label" style="-fx-font-size: 13px;"/>
+                <Label fx:id="currentUserLabel" styleClass="toolbar-meta-label"/>
+                <Label fx:id="currentTimeLabel" styleClass="toolbar-meta-label"/>
             </HBox>
         </VBox>
     </top>
@@ -57,7 +57,7 @@
                 </padding>
 
                 <!-- 头像 -->
-                <HBox alignment="CENTER" style="-fx-padding-bottom: 10;">
+                <HBox alignment="CENTER" styleClass="user-avatar-row">
                     <StackPane styleClass="avatar-circle">
                         <Label fx:id="avatarLabel"
                                text="A"
@@ -67,12 +67,10 @@
 
                 <Label fx:id="userNameLabel"
                        text="%login.username"
-                       styleClass="user-name-label"
-                       style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+                       styleClass="user-name-label"/>
                 <Label fx:id="userRoleLabel"
                        text="%user.role_label"
-                       styleClass="user-role-label"
-                       style="-fx-font-size: 13px;"/>
+                       styleClass="user-role-label"/>
             </VBox>
 
             <!-- 导航按钮 - 分组优化版本 -->
@@ -89,7 +87,7 @@
                                 <Insets top="6" right="8" bottom="6" left="8"/>
                             </padding>
                             <Label text="" styleClass="icon"/>
-                            <Label text="%nav.group.pos" styleClass="nav-group-title" style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                            <Label text="%nav.group.pos" styleClass="nav-group-title"/>
                         </HBox>
                         <VBox spacing="1" styleClass="nav-group-content">
                             <Button fx:id="cartBtn" text="%nav.cart" onAction="#handleCart" styleClass="nav-button, nav-button-active">
@@ -101,7 +99,7 @@
                         </VBox>
                     </VBox>
 
-                    <Separator style="-fx-padding: 5px 0;"/>
+                    <Separator styleClass="nav-separator"/>
 
                     <!-- 商品管理分组 -->
                     <VBox spacing="0" styleClass="nav-group">
@@ -110,7 +108,7 @@
                                 <Insets top="6" right="8" bottom="6" left="8"/>
                             </padding>
                             <Label text="" styleClass="icon"/>
-                            <Label text="%nav.group.product" styleClass="nav-group-title" style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                            <Label text="%nav.group.product" styleClass="nav-group-title"/>
                         </HBox>
                         <VBox spacing="1" styleClass="nav-group-content">
                             <Button fx:id="inventoryBtn" text="%nav.inventory" onAction="#handleInventory" styleClass="nav-button">
@@ -122,7 +120,7 @@
                         </VBox>
                     </VBox>
 
-                    <Separator style="-fx-padding: 5px 0;"/>
+                    <Separator styleClass="nav-separator"/>
 
                     <!-- 客户管理分组 -->
                     <VBox spacing="0" styleClass="nav-group">
@@ -131,7 +129,7 @@
                                 <Insets top="6" right="8" bottom="6" left="8"/>
                             </padding>
                             <Label text="" styleClass="icon"/>
-                            <Label text="%nav.group.customer" styleClass="nav-group-title" style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                            <Label text="%nav.group.customer" styleClass="nav-group-title"/>
                         </HBox>
                         <VBox spacing="1" styleClass="nav-group-content">
                             <Button fx:id="membersBtn" text="%nav.members" onAction="#handleMembers" styleClass="nav-button">
@@ -143,7 +141,7 @@
                         </VBox>
                     </VBox>
 
-                    <Separator style="-fx-padding: 5px 0;"/>
+                    <Separator styleClass="nav-separator"/>
 
                     <!-- 采购管理分组 -->
                     <VBox spacing="0" styleClass="nav-group">
@@ -152,7 +150,7 @@
                                 <Insets top="6" right="8" bottom="6" left="8"/>
                             </padding>
                             <Label text="" styleClass="icon"/>
-                            <Label text="%nav.group.purchase" styleClass="nav-group-title" style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                            <Label text="%nav.group.purchase" styleClass="nav-group-title"/>
                         </HBox>
                         <VBox spacing="1" styleClass="nav-group-content">
                             <Button fx:id="supplierBtn" text="%nav.supplier" onAction="#handleSupplier" styleClass="nav-button">
@@ -170,7 +168,7 @@
                         </VBox>
                     </VBox>
 
-                    <Separator style="-fx-padding: 5px 0;"/>
+                    <Separator styleClass="nav-separator"/>
 
                     <!-- 数据统计分组 -->
                     <VBox spacing="0" styleClass="nav-group">
@@ -179,7 +177,7 @@
                                 <Insets top="6" right="8" bottom="6" left="8"/>
                             </padding>
                             <Label text="" styleClass="icon"/>
-                            <Label text="%nav.group.statistics" styleClass="nav-group-title" style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                            <Label text="%nav.group.statistics" styleClass="nav-group-title"/>
                         </HBox>
                         <VBox spacing="1" styleClass="nav-group-content">
                             <Button fx:id="transactionsBtn" text="%nav.transactions" onAction="#handleTransactions" styleClass="nav-button">
@@ -194,7 +192,7 @@
                         </VBox>
                     </VBox>
 
-                    <Separator style="-fx-padding: 5px 0;"/>
+                    <Separator styleClass="nav-separator"/>
 
                     <!-- 报表中心分组 -->
                     <VBox spacing="0" styleClass="nav-group">
@@ -203,7 +201,7 @@
                                 <Insets top="6" right="8" bottom="6" left="8"/>
                             </padding>
                             <Label text="" styleClass="icon"/>
-                            <Label text="%nav.group.reports" styleClass="nav-group-title" style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                            <Label text="%nav.group.reports" styleClass="nav-group-title"/>
                         </HBox>
                         <VBox spacing="1" styleClass="nav-group-content">
                             <Button fx:id="purchaseReportBtn" text="%nav.purchase_report" onAction="#handlePurchaseReport" styleClass="nav-button">
@@ -221,7 +219,7 @@
                         </VBox>
                     </VBox>
 
-                    <Separator style="-fx-padding: 5px 0;"/>
+                    <Separator styleClass="nav-separator"/>
 
                     <!-- 系统设置分组 -->
                     <VBox spacing="0" styleClass="nav-group">
@@ -230,7 +228,7 @@
                                 <Insets top="6" right="8" bottom="6" left="8"/>
                             </padding>
                             <Label text="" styleClass="icon"/>
-                            <Label text="%nav.group.system" styleClass="nav-group-title" style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                            <Label text="%nav.group.system" styleClass="nav-group-title"/>
                         </HBox>
                         <VBox spacing="1" styleClass="nav-group-content">
                             <Button fx:id="userManagementBtn" text="%nav.user_management" onAction="#handleUserManagement" styleClass="nav-button">
@@ -263,13 +261,11 @@
                     </padding>
 
                     <Label text="%main.welcome.title"
-                           styleClass="welcome-title"
-                           style="-fx-font-size: 32px; -fx-font-weight: bold;"/>
+                           styleClass="welcome-title"/>
                     <Label text="%main.welcome.subtitle"
-                           styleClass="welcome-subtitle"
-                           style="-fx-font-size: 16px;"/>
+                           styleClass="welcome-subtitle"/>
 
-                    <HBox spacing="20" alignment="CENTER" style="-fx-padding-top: 30;">
+                    <HBox spacing="20" alignment="CENTER" styleClass="welcome-actions">
                         <Button text="%main.get_started"
                                 onAction="#handleCart"
                                 prefWidth="120"

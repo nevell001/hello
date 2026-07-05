@@ -76,7 +76,7 @@
             <TableColumn fx:id="addressColumn" text="%supplier.address" prefWidth="350" minWidth="250"/>
         </columns>
         <placeholder>
-            <Label text="%supplier.no_data" styleClass="text-muted" style="-fx-font-size: 14px"/>
+            <Label text="%supplier.no_data" styleClass="text-muted, text-lg"/>
         </placeholder>
     </TableView>
 

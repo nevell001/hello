@@ -62,24 +62,24 @@
                     <padding>
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding>
-                    <Label text="%profit_report.total_revenue" styleClass="text-muted" style="-fx-font-size: 11px"/>
-                    <Label fx:id="totalRevenueLabel" text="0.00" styleClass="text-success" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
+                    <Label text="%profit_report.total_revenue" styleClass="text-muted, text-xs"/>
+                    <Label fx:id="totalRevenueLabel" text="0.00" styleClass="text-success, metric-value"/>
                 </VBox>
 
                 <VBox spacing="4" styleClass="stat-card-compact" GridPane.columnIndex="1" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS">
                     <padding>
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding>
-                    <Label text="%profit_report.total_cost" styleClass="text-muted" style="-fx-font-size: 11px"/>
-                    <Label fx:id="totalCostLabel" text="0.00" styleClass="text-danger" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
+                    <Label text="%profit_report.total_cost" styleClass="text-muted, text-xs"/>
+                    <Label fx:id="totalCostLabel" text="0.00" styleClass="text-danger, metric-value"/>
                 </VBox>
 
                 <VBox spacing="4" styleClass="stat-card-compact" GridPane.columnIndex="2" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS">
                     <padding>
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding>
-                    <Label text="%profit_report.gross_profit" styleClass="text-muted" style="-fx-font-size: 11px"/>
-                    <Label fx:id="grossProfitLabel" text="0.00" styleClass="text-info" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
+                    <Label text="%profit_report.gross_profit" styleClass="text-muted, text-xs"/>
+                    <Label fx:id="grossProfitLabel" text="0.00" styleClass="text-info, metric-value"/>
                 </VBox>
 
                 <!-- 第二行：3列 -->
@@ -87,24 +87,24 @@
                     <padding>
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding>
-                    <Label text="%profit_report.gross_margin" styleClass="text-muted" style="-fx-font-size: 11px"/>
-                    <Label fx:id="grossMarginLabel" text="0.00%" styleClass="text-warning" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
+                    <Label text="%profit_report.gross_margin" styleClass="text-muted, text-xs"/>
+                    <Label fx:id="grossMarginLabel" text="0.00%" styleClass="text-warning, metric-value"/>
                 </VBox>
 
                 <VBox spacing="4" styleClass="stat-card-compact" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS">
                     <padding>
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding>
-                    <Label text="%profit_report.net_profit" styleClass="text-muted" style="-fx-font-size: 11px"/>
-                    <Label fx:id="netProfitLabel" text="0.00" styleClass="text-accent" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
+                    <Label text="%profit_report.net_profit" styleClass="text-muted, text-xs"/>
+                    <Label fx:id="netProfitLabel" text="0.00" styleClass="text-accent, metric-value"/>
                 </VBox>
 
                 <VBox spacing="4" styleClass="stat-card-compact" GridPane.columnIndex="2" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS">
                     <padding>
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding>
-                    <Label text="%profit_report.avg_margin" styleClass="text-muted" style="-fx-font-size: 11px"/>
-                    <Label fx:id="avgMarginLabel" text="0.00%" styleClass="text-info" style="-fx-font-size: 22px; -fx-font-weight: bold"/>
+                    <Label text="%profit_report.avg_margin" styleClass="text-muted, text-xs"/>
+                    <Label fx:id="avgMarginLabel" text="0.00%" styleClass="text-info, metric-value"/>
                 </VBox>
             </GridPane>
         </VBox>
@@ -126,7 +126,7 @@
                     <padding>
                         <Insets top="12" right="12" bottom="12" left="12"/>
                     </padding>
-                    <Label text="%profit_report.profit_composition" styleClass="text-primary" style="-fx-font-size: 14px; -fx-font-weight: bold"/>
+                    <Label text="%profit_report.profit_composition" styleClass="text-primary, section-heading"/>
                     <PieChart fx:id="profitCompositionPieChart" VBox.vgrow="ALWAYS" legendSide="RIGHT"/>
                 </VBox>
 
@@ -135,7 +135,7 @@
                     <padding>
                         <Insets top="12" right="12" bottom="12" left="12"/>
                     </padding>
-                    <Label text="%profit_report.profit_trend" styleClass="text-success" style="-fx-font-size: 14px; -fx-font-weight: bold"/>
+                    <Label text="%profit_report.profit_trend" styleClass="text-success, section-heading"/>
                     <LineChart fx:id="dailyProfitTrendLineChart" VBox.vgrow="ALWAYS">
                         <xAxis>
                             <CategoryAxis label="%profit_report.date_axis"/>
@@ -151,7 +151,7 @@
                     <padding>
                         <Insets top="12" right="12" bottom="12" left="12"/>
                     </padding>
-                    <Label text="%profit_report.category_profit" styleClass="text-warning" style="-fx-font-size: 14px; -fx-font-weight: bold"/>
+                    <Label text="%profit_report.category_profit" styleClass="text-warning, section-heading"/>
                     <BarChart fx:id="categoryProfitBarChart" VBox.vgrow="ALWAYS">
                         <xAxis>
                             <CategoryAxis label="%profit_report.category_axis"/>

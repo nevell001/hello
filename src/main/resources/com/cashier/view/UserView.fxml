@@ -63,7 +63,7 @@
             <TableColumn fx:id="statusColumn" text="%user.status" prefWidth="80"/>
         </columns>
         <placeholder>
-            <Label text="%user.no_data" styleClass="text-muted" style="-fx-font-size: 14px"/>
+            <Label text="%user.no_data" styleClass="text-muted, text-lg"/>
         </placeholder>
     </TableView>
 

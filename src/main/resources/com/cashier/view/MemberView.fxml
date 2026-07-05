@@ -81,7 +81,7 @@
             <TableColumn fx:id="birthdayColumn" text="%member.birthday" prefWidth="100"/>
         </columns>
         <placeholder>
-            <Label text="%member.no_data" styleClass="text-muted" style="-fx-font-size: 14px"/>
+            <Label text="%member.no_data" styleClass="text-muted, text-lg"/>
         </placeholder>
     </TableView>
 
