@@ -191,7 +191,9 @@ public class DatabaseConnectionHelper {
                 + "3. 用户是否有访问 lisuan_system 数据库的权限\n\n"
                 + "如果忘记密码，可以重置：\n"
                 + "mysql -u root -p\n"
-                + "ALTER USER '" + dbUsername + "'@'localhost' IDENTIFIED BY '新密码';"
+                + "ALTER USER '" + dbUsername + "'@'%' IDENTIFIED BY '新密码';\n"
+                + "GRANT ALL PRIVILEGES ON lisuan_system.* TO '" + dbUsername + "'@'%';\n"
+                + "FLUSH PRIVILEGES;"
             );
         }
 

@@ -38,16 +38,10 @@ MYSQL_CONTAINER_NAME=${MYSQL_CONTAINER_NAME:-"lisuan-mysql"}
 # 环境类型：development 或 production
 ENVIRONMENT=${ENVIRONMENT:-"development"}
 
-# 开发环境使用 root，生产环境使用专用用户
-if [ "$ENVIRONMENT" = "production" ]; then
-    DB_USERNAME=${MYSQL_USER:-"lisuan"}
-    DB_PASSWORD=${MYSQL_PASSWORD}
-else
-    # 开发环境默认使用 root（便于调试）
-    DB_USERNAME="root"
-    DB_PASSWORD=${MYSQL_ROOT_PASSWORD}
-    MYSQL_USER=${MYSQL_USER:-"lisuan"}
-fi
+# 应用始终使用专用数据库用户；root 只用于初始化和维护数据库。
+MYSQL_USER=${MYSQL_USER:-"lisuan"}
+DB_USERNAME=${MYSQL_USER}
+DB_PASSWORD=${MYSQL_PASSWORD}
 
 # Auto-detect executable fat JAR (works for any version)
 JAR_PATH=$(ls target/lisuan-fx-*-jar-with-dependencies.jar 2>/dev/null | head -n 1)
@@ -174,11 +168,8 @@ if [ "$DB_TYPE" == "docker" ]; then
         exit 1
     fi
     export MYSQL_ROOT_PASSWORD MYSQL_PASSWORD
-    if [ "$ENVIRONMENT" = "production" ]; then
-        DB_PASSWORD="$MYSQL_PASSWORD"
-    else
-        DB_PASSWORD="$MYSQL_ROOT_PASSWORD"
-    fi
+    DB_USERNAME="$MYSQL_USER"
+    DB_PASSWORD="$MYSQL_PASSWORD"
 
     echo "[Docker] Checking Docker installation..."
     if ! command -v docker &> /dev/null; then
@@ -207,7 +198,7 @@ if [ "$DB_TYPE" == "docker" ]; then
         echo "[Docker] Waiting for MySQL to be ready..."
         MYSQL_READY=0
         for i in {1..60}; do
-            if docker exec ${MYSQL_CONTAINER_NAME} mysqladmin ping -uroot -p${MYSQL_ROOT_PASSWORD} --silent &>/dev/null; then
+            if docker exec "${MYSQL_CONTAINER_NAME}" mysqladmin ping -uroot -p"${MYSQL_ROOT_PASSWORD}" --silent &>/dev/null; then
                 MYSQL_READY=1
                 break
             fi
@@ -220,10 +211,14 @@ if [ "$DB_TYPE" == "docker" ]; then
         fi
 
         echo "[Docker] Creating database if not exists..."
-        docker exec ${MYSQL_CONTAINER_NAME} mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>/dev/null
+        DB_NAME_SQL=$(printf "%s" "$DB_NAME" | sed 's/`/``/g')
+        MYSQL_USER_SQL=$(printf "%s" "$MYSQL_USER" | sed "s/'/''/g")
+        MYSQL_PASSWORD_SQL=$(printf "%s" "$MYSQL_PASSWORD" | sed "s/'/''/g")
+        docker exec "${MYSQL_CONTAINER_NAME}" mysql -uroot -p"${MYSQL_ROOT_PASSWORD}" -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME_SQL}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>/dev/null
+        docker exec "${MYSQL_CONTAINER_NAME}" mysql -uroot -p"${MYSQL_ROOT_PASSWORD}" -e "CREATE USER IF NOT EXISTS '${MYSQL_USER_SQL}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD_SQL}'; ALTER USER '${MYSQL_USER_SQL}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD_SQL}'; GRANT ALL PRIVILEGES ON \`${DB_NAME_SQL}\`.* TO '${MYSQL_USER_SQL}'@'%'; FLUSH PRIVILEGES;" 2>/dev/null
 
         echo "[Docker] Initializing database with complete schema..."
-        docker exec ${MYSQL_CONTAINER_NAME} mysql -uroot -p${MYSQL_ROOT_PASSWORD} --default-character-set=utf8mb4 ${DB_NAME} < docker/mysql-init/00-init-complete.sql 2>/dev/null
+        docker exec "${MYSQL_CONTAINER_NAME}" mysql -uroot -p"${MYSQL_ROOT_PASSWORD}" --default-character-set=utf8mb4 "${DB_NAME}" < docker/mysql-init/00-init-complete.sql 2>/dev/null
 
         echo "[Done] Database initialization completed (v${APP_VERSION})"
         echo "[Note] Tables will be created automatically when you start the application"

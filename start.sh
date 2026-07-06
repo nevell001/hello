@@ -6,9 +6,8 @@
 #
 # 数据库配置：
 # 应用启动时会从 config/database.properties 读取数据库连接信息
-# 安装脚本 install.sh 会根据 ENVIRONMENT 变量自动配置：
-#   - development: 使用 root 用户（便于开发调试）
-#   - production: 使用 lisuan 用户（更安全）
+# 安装脚本 install.sh 会把应用配置为使用专用数据库用户。
+# root 账号只用于初始化和维护数据库，不用于应用启动。
 # ============================================
 
 APP_NAME="LiSuan System"
@@ -70,6 +69,10 @@ echo "[3/6] Checking configuration files..."
 if [ ! -f "config/database.properties" ]; then
     echo "[Warning] Database config file not found, using default settings"
     echo "[Tip] Please run ./install.sh for full installation"
+fi
+
+if [ -n "${CASHER_DB_PASSWORD:-}" ]; then
+    echo "[Info] CASHER_DB_PASSWORD is set and will override db.password in config/database.properties"
 fi
 
 if [ ! -f "config/jvm.config" ]; then

@@ -220,7 +220,7 @@ productDAO.update(product);
 
 **Legacy Pattern (Status Updated):**
 - The old static `ProductDAO` implementation has been removed from `src/main/java/com/cashier/dao/` and replaced by the instance-based `ProductDAORefactored` accessible via `DAOFactory.getInstance().getProductDAO()`.
-- A backup of the removed legacy file was saved at `backups/ProductDAO.java.bak` in case rollback is needed.
+- If rollback reference is needed, use Git history for the removed legacy implementation.
 - If you have external scripts, CI jobs or docs that reference `ProductDAO`, update them to use `DAOFactory.getInstance().getProductDAO()` or `ProductDAORefactored` instance methods.
 
 **BaseDAO** (`dao/BaseDAO.java`)
