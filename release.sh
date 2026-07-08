@@ -46,8 +46,66 @@ else
     exit 1
 fi
 
+# 数据库生产配置门禁
+DB_CONFIG="config/database.properties"
+if [ ! -f "$DB_CONFIG" ]; then
+    echo "✗ 找不到数据库配置文件: $DB_CONFIG"
+    exit 1
+fi
+
+DB_URL=$(grep '^db.url=' "$DB_CONFIG" | cut -d= -f2-)
+DB_PASSWORD=$(grep '^db.password=' "$DB_CONFIG" | cut -d= -f2-)
+
+if echo "$DB_URL" | grep -E 'useSSL=false|sslMode=DISABLED' > /dev/null 2>&1; then
+    echo "✗ 数据库连接禁用了 SSL，请改用 sslMode=PREFERRED/REQUIRED/VERIFY_CA/VERIFY_IDENTITY"
+    exit 1
+fi
+
+if [ -n "$DB_PASSWORD" ]; then
+    echo "✗ config/database.properties 不应保存数据库密码，请改用 CASHER_DB_PASSWORD 环境变量"
+    exit 1
+fi
+
+if [ -z "${CASHER_DB_PASSWORD:-}" ]; then
+    echo "✗ 未设置 CASHER_DB_PASSWORD，生产发布必须通过环境变量提供数据库密码"
+    exit 1
+fi
+echo "✓ 数据库密码与 SSL 配置通过"
+
+# API 生产配置门禁：API 未开启时允许发布；开启后必须使用强密钥和限定 CORS。
+API_CONFIG="config/api.properties"
+if [ -f "$API_CONFIG" ] && grep -q '^api.enabled=true' "$API_CONFIG"; then
+    TOKEN_SECRET_VALUE="${TOKEN_SECRET:-$(grep '^token.secret=' "$API_CONFIG" | cut -d= -f2-)}"
+    CORS_VALUE="${CORS_ALLOWED_ORIGINS:-$(grep '^cors.allowed.origins=' "$API_CONFIG" | cut -d= -f2-)}"
+
+    if [ "${#TOKEN_SECRET_VALUE}" -lt 32 ] \
+        || [ "$TOKEN_SECRET_VALUE" = "default_secret_key" ] \
+        || echo "$TOKEN_SECRET_VALUE" | grep -E 'REPLACE_|change_this|your_secret' > /dev/null 2>&1; then
+        echo "✗ API 已开启，但 TOKEN_SECRET 不安全"
+        exit 1
+    fi
+
+    if [ -z "$CORS_VALUE" ] || echo "$CORS_VALUE" | grep '\*' > /dev/null 2>&1; then
+        echo "✗ API 已开启，但 CORS_ALLOWED_ORIGINS/cors.allowed.origins 未限制为具体来源"
+        exit 1
+    fi
+    echo "✓ API 安全配置通过"
+else
+    echo "✓ API 未开启，跳过 API 密钥与 CORS 发布门禁"
+fi
+
+# 支付配置提示：关闭电子支付不阻断现金收银发布，但真实线上收款必须另行配置。
+if [ -f "config/payment.properties" ]; then
+    PAYMENT_MODE=$(grep '^payment.mode=' config/payment.properties | cut -d= -f2-)
+    if [ "$PAYMENT_MODE" = "disabled" ]; then
+        echo "⚠ 电子支付当前为 disabled；如生产需要微信/支付宝收款，请先配置真实支付通道"
+    fi
+fi
+
 # 检查敏感信息（二次确认）
-if grep -r "RootPassword123!" config/ src/main/resources/ > /dev/null 2>&1; then
+if grep -r -E "RootPassword123!|db.password=.+[^[:space:]]" config/ src/main/resources/ \
+    --exclude='database.properties.template' \
+    --exclude='*.example' > /dev/null 2>&1; then
     echo "✗ 警告：在代码或配置中发现疑似泄露的本地密码！请清理后再发布。"
     exit 1
 else

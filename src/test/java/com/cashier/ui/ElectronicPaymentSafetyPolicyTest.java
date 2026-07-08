@@ -54,10 +54,24 @@ class ElectronicPaymentSafetyPolicyTest {
         assertTrue(settingsView.contains("fx:id=\"wechatAppIdField\""));
         assertTrue(settingsView.contains("fx:id=\"wechatMchIdField\""));
         assertTrue(settingsView.contains("fx:id=\"wechatApiKeyField\""));
+        assertTrue(settingsView.contains("fx:id=\"wechatPrivateKeyPathField\""));
+        assertTrue(settingsView.contains("fx:id=\"wechatMerchantSerialNoField\""));
         assertTrue(settingsView.contains("fx:id=\"alipayEnabledCheckBox\""));
         assertTrue(settingsView.contains("fx:id=\"alipayAppIdField\""));
         assertTrue(settingsView.contains("fx:id=\"alipayPrivateKeyArea\""));
         assertTrue(settingsView.contains("fx:id=\"alipayPublicKeyArea\""));
+        assertTrue(settingsView.contains("fx:id=\"alipayGatewayField\""));
         assertTrue(settingsController.contains("PaymentService.saveConfig(paymentConfig)"));
+    }
+
+    @Test
+    @DisplayName("API 支付配置更新也必须持久化到配置文件")
+    void paymentApiConfigUpdatePersistsConfig() throws Exception {
+        String apiController = Files.readString(Path.of(
+            "src/main/java/com/cashier/api/controller/PaymentApiController.java"
+        ));
+
+        assertTrue(apiController.contains("PaymentService.saveConfig(config)"));
+        assertFalse(apiController.contains("PaymentService.setConfig(config);"));
     }
 }

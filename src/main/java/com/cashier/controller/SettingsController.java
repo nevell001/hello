@@ -156,6 +156,12 @@ public class SettingsController {
     private TextField wechatCertPathField;
 
     @FXML
+    private TextField wechatPrivateKeyPathField;
+
+    @FXML
+    private TextField wechatMerchantSerialNoField;
+
+    @FXML
     private CheckBox alipayEnabledCheckBox;
 
     @FXML
@@ -169,6 +175,9 @@ public class SettingsController {
 
     @FXML
     private TextField alipayCertPathField;
+
+    @FXML
+    private TextField alipayGatewayField;
 
     // 数据导入标签页
     @FXML
@@ -1077,12 +1086,15 @@ public class SettingsController {
         wechatMchIdField.setText(defaultText(paymentConfig.wechatMchId, ""));
         wechatApiKeyField.setText(defaultText(paymentConfig.wechatApiKey, ""));
         wechatCertPathField.setText(defaultText(paymentConfig.wechatCertPath, ""));
+        wechatPrivateKeyPathField.setText(defaultText(paymentConfig.wechatPrivateKeyPath, ""));
+        wechatMerchantSerialNoField.setText(defaultText(paymentConfig.wechatMerchantSerialNo, ""));
 
         alipayEnabledCheckBox.setSelected(paymentConfig.alipayEnabled);
         alipayAppIdField.setText(defaultText(paymentConfig.alipayAppId, ""));
         alipayPrivateKeyArea.setText(defaultText(paymentConfig.alipayPrivateKey, ""));
         alipayPublicKeyArea.setText(defaultText(paymentConfig.alipayPublicKey, ""));
         alipayCertPathField.setText(defaultText(paymentConfig.alipayCertPath, ""));
+        alipayGatewayField.setText(defaultText(paymentConfig.alipayGateway, ""));
     }
 
     private PaymentService.PaymentConfig buildPaymentConfigFromForm() {
@@ -1111,12 +1123,15 @@ public class SettingsController {
         paymentConfig.wechatMchId = wechatMchIdField.getText().trim();
         paymentConfig.wechatApiKey = wechatApiKeyField.getText().trim();
         paymentConfig.wechatCertPath = wechatCertPathField.getText().trim();
+        paymentConfig.wechatPrivateKeyPath = wechatPrivateKeyPathField.getText().trim();
+        paymentConfig.wechatMerchantSerialNo = wechatMerchantSerialNoField.getText().trim();
 
         paymentConfig.alipayEnabled = alipayEnabledCheckBox.isSelected();
         paymentConfig.alipayAppId = alipayAppIdField.getText().trim();
         paymentConfig.alipayPrivateKey = alipayPrivateKeyArea.getText().trim();
         paymentConfig.alipayPublicKey = alipayPublicKeyArea.getText().trim();
         paymentConfig.alipayCertPath = alipayCertPathField.getText().trim();
+        paymentConfig.alipayGateway = alipayGatewayField.getText().trim();
         return paymentConfig;
     }
 

@@ -19,10 +19,10 @@ api.host=127.0.0.1
 # ============================================
 # CORS 配置（重要！）
 # ============================================
-# 开发环境: * (允许所有来源)
+# 开发环境确需放开时可在本机临时改为 *，不要提交或发布该配置
 # 生产环境: 必须限制为具体域名，多个域名用逗号分隔
 # 示例: https://pos.example.com,https://admin.example.com
-cors.allowed.origins=*
+cors.allowed.origins=https://pos.example.com
 
 # Token 过期时间（小时）
 token.expire.hours=24
@@ -33,4 +33,4 @@ token.expire.hours=24
 # ⚠️ 生产环境必须使用强随机密钥（至少64字符）
 # ⚠️ 建议使用环境变量 TOKEN_SECRET 设置
 # 生成方式: openssl rand -base64 48
-token.secret=your_secret_key_change_this_in_production
+token.secret=REPLACE_WITH_RANDOM_64_CHAR_SECRET_FROM_ENVIRONMENT

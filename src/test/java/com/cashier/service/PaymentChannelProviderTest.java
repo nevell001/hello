@@ -49,6 +49,40 @@ class PaymentChannelProviderTest {
     }
 
     @Test
+    @DisplayName("生产模式会注册已完整配置的真实渠道")
+    void productionProviderUsesSavedMerchantConfig() {
+        PaymentService.PaymentConfig config = new PaymentService.PaymentConfig();
+        config.mode = "production";
+        config.notifyUrl = "https://pos.example.com/api/payment/notify";
+        config.wechatEnabled = true;
+        config.wechatAppId = "wx-app";
+        config.wechatMchId = "mch-id";
+        config.wechatApiKey = "api-v3-key";
+        config.wechatPrivateKeyPath = "src/test/resources/fake-wechat-key.pem";
+        config.wechatMerchantSerialNo = "SERIAL123";
+        config.alipayEnabled = true;
+        config.alipayAppId = "ali-app";
+        config.alipayPrivateKey = "-----BEGIN PRIVATE KEY-----\\nMIIB\\n-----END PRIVATE KEY-----";
+        config.alipayPublicKey = "-----BEGIN PUBLIC KEY-----\\nMIIB\\n-----END PUBLIC KEY-----";
+        PaymentService.setConfig(config);
+
+        assertTrue(PaymentService.isChannelAvailable(PaymentOrder.PaymentChannel.WECHAT));
+        assertTrue(PaymentService.isChannelAvailable(PaymentOrder.PaymentChannel.ALIPAY));
+    }
+
+    @Test
+    @DisplayName("生产模式缺少必要参数时渠道仍保持不可用")
+    void productionProviderRequiresCompleteMerchantConfig() {
+        PaymentService.PaymentConfig config = new PaymentService.PaymentConfig();
+        config.mode = "production";
+        config.wechatEnabled = true;
+        PaymentService.setConfig(config);
+
+        assertFalse(PaymentService.isChannelAvailable(PaymentOrder.PaymentChannel.WECHAT));
+        assertTrue(PaymentService.getChannelUnavailableReason(PaymentOrder.PaymentChannel.WECHAT).contains("微信"));
+    }
+
+    @Test
     @DisplayName("模拟回调也必须校验测试密钥")
     void mockNotificationRequiresSecret() {
         MockPaymentChannelProvider provider = new MockPaymentChannelProvider(

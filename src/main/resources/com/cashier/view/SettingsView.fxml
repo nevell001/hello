@@ -348,6 +348,12 @@
 
                         <Label text="%settings.wechat_cert_path_label" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
                         <TextField fx:id="wechatCertPathField" GridPane.columnIndex="1" GridPane.rowIndex="4" prefWidth="420"/>
+
+                        <Label text="%settings.wechat_private_key_path_label" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
+                        <TextField fx:id="wechatPrivateKeyPathField" GridPane.columnIndex="1" GridPane.rowIndex="5" prefWidth="420"/>
+
+                        <Label text="%settings.wechat_serial_no_label" GridPane.columnIndex="0" GridPane.rowIndex="6"/>
+                        <TextField fx:id="wechatMerchantSerialNoField" GridPane.columnIndex="1" GridPane.rowIndex="6" prefWidth="420"/>
                     </GridPane>
 
                     <Separator/>
@@ -372,6 +378,9 @@
 
                         <Label text="%settings.alipay_cert_path_label" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
                         <TextField fx:id="alipayCertPathField" GridPane.columnIndex="1" GridPane.rowIndex="4" prefWidth="420"/>
+
+                        <Label text="%settings.alipay_gateway_label" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
+                        <TextField fx:id="alipayGatewayField" GridPane.columnIndex="1" GridPane.rowIndex="5" prefWidth="420"/>
                     </GridPane>
 
                     <Separator/>

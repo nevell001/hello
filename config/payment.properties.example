@@ -8,12 +8,15 @@ wechat.app.id=YOUR_WECHAT_APPID
 wechat.mch.id=YOUR_MCH_ID
 wechat.api.key=YOUR_API_V3_KEY
 wechat.cert.path=
+wechat.private.key.path=/path/to/apiclient_key.pem
+wechat.merchant.serial.no=YOUR_MERCHANT_CERT_SERIAL_NO
 
 alipay.enabled=false
 alipay.app.id=YOUR_ALIPAY_APPID
 alipay.private.key=YOUR_PRIVATE_KEY_HERE
 alipay.public.key=YOUR_ALIPAY_PUBLIC_KEY
 alipay.cert.path=
+alipay.gateway=https://openapi.alipay.com/gateway.do
 
 # 通用配置
 order.expire.minutes=15

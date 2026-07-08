@@ -5,9 +5,11 @@ import com.cashier.api.sync.SyncManager;
 import com.cashier.dao.PaymentDAO;
 import com.cashier.model.PaymentOrder;
 import com.cashier.model.RefundRecord;
+import com.cashier.service.payment.AlipayPrecreatePaymentProvider;
 import com.cashier.service.payment.MockPaymentChannelProvider;
 import com.cashier.service.payment.PaymentChannelProvider;
 import com.cashier.service.payment.UnavailablePaymentChannelProvider;
+import com.cashier.service.payment.WechatNativePaymentProvider;
 import com.cashier.util.LoggerFactoryUtil;
 import org.slf4j.Logger;
 
@@ -61,11 +63,14 @@ public final class PaymentService {
                 loaded.wechatMchId = props.getProperty("wechat.mch.id");
                 loaded.wechatApiKey = props.getProperty("wechat.api.key");
                 loaded.wechatCertPath = props.getProperty("wechat.cert.path");
+                loaded.wechatPrivateKeyPath = props.getProperty("wechat.private.key.path");
+                loaded.wechatMerchantSerialNo = props.getProperty("wechat.merchant.serial.no");
                 loaded.alipayEnabled = Boolean.parseBoolean(props.getProperty("alipay.enabled", "false"));
                 loaded.alipayAppId = props.getProperty("alipay.app.id");
                 loaded.alipayPrivateKey = props.getProperty("alipay.private.key");
                 loaded.alipayPublicKey = props.getProperty("alipay.public.key");
                 loaded.alipayCertPath = props.getProperty("alipay.cert.path");
+                loaded.alipayGateway = props.getProperty("alipay.gateway");
                 loaded.orderExpireMinutes = Integer.parseInt(props.getProperty("order.expire.minutes", "15"));
                 loaded.notifyUrl = props.getProperty("notify.url");
                 loaded.returnUrl = props.getProperty("return.url");
@@ -93,11 +98,14 @@ public final class PaymentService {
         props.setProperty("wechat.mch.id", safe(nextConfig.wechatMchId, ""));
         props.setProperty("wechat.api.key", safe(nextConfig.wechatApiKey, ""));
         props.setProperty("wechat.cert.path", safe(nextConfig.wechatCertPath, ""));
+        props.setProperty("wechat.private.key.path", safe(nextConfig.wechatPrivateKeyPath, ""));
+        props.setProperty("wechat.merchant.serial.no", safe(nextConfig.wechatMerchantSerialNo, ""));
         props.setProperty("alipay.enabled", String.valueOf(nextConfig.alipayEnabled));
         props.setProperty("alipay.app.id", safe(nextConfig.alipayAppId, ""));
         props.setProperty("alipay.private.key", safe(nextConfig.alipayPrivateKey, ""));
         props.setProperty("alipay.public.key", safe(nextConfig.alipayPublicKey, ""));
         props.setProperty("alipay.cert.path", safe(nextConfig.alipayCertPath, ""));
+        props.setProperty("alipay.gateway", safe(nextConfig.alipayGateway, ""));
         props.setProperty("order.expire.minutes", String.valueOf(nextConfig.orderExpireMinutes));
         props.setProperty("notify.url", safe(nextConfig.notifyUrl, ""));
         props.setProperty("return.url", safe(nextConfig.returnUrl, ""));
@@ -249,9 +257,24 @@ public final class PaymentService {
             providers.put(channel, new MockPaymentChannelProvider(channel, config.mockCallbackSecret));
             return;
         }
+        if (enabled && "production".equals(config.mode)) {
+            registerProductionProvider(channel);
+            return;
+        }
         String reason = !enabled ? "支付渠道未启用"
-            : "真实支付渠道适配器尚未注册，请配置商户 SDK 和证书";
+            : "支付模式未启用生产适配器";
         providers.put(channel, new UnavailablePaymentChannelProvider(channel, reason));
+    }
+
+    private static void registerProductionProvider(PaymentOrder.PaymentChannel channel) {
+        PaymentChannelProvider provider = channel == PaymentOrder.PaymentChannel.WECHAT
+            ? new WechatNativePaymentProvider(config)
+            : new AlipayPrecreatePaymentProvider(config);
+        if (provider.isAvailable()) {
+            providers.put(channel, provider);
+        } else {
+            providers.put(channel, new UnavailablePaymentChannelProvider(channel, provider.unavailableReason()));
+        }
     }
 
     public static class PaymentConfig {
@@ -262,11 +285,14 @@ public final class PaymentService {
         public String wechatMchId;
         public String wechatApiKey;
         public String wechatCertPath;
+        public String wechatPrivateKeyPath;
+        public String wechatMerchantSerialNo;
         public boolean wechatEnabled;
         public String alipayAppId;
         public String alipayPrivateKey;
         public String alipayPublicKey;
         public String alipayCertPath;
+        public String alipayGateway;
         public boolean alipayEnabled;
         public int orderExpireMinutes = 15;
         public String notifyUrl;

@@ -394,6 +394,15 @@ public class PaymentApiController {
             if (body.containsKey("wechatApiKey")) {
                 config.wechatApiKey = getString(body, "wechatApiKey", null);
             }
+            if (body.containsKey("wechatCertPath")) {
+                config.wechatCertPath = getString(body, "wechatCertPath", null);
+            }
+            if (body.containsKey("wechatPrivateKeyPath")) {
+                config.wechatPrivateKeyPath = getString(body, "wechatPrivateKeyPath", null);
+            }
+            if (body.containsKey("wechatMerchantSerialNo")) {
+                config.wechatMerchantSerialNo = getString(body, "wechatMerchantSerialNo", null);
+            }
             
             if (body.containsKey("alipayEnabled")) {
                 config.alipayEnabled = Boolean.parseBoolean(String.valueOf(body.get("alipayEnabled")));
@@ -404,6 +413,15 @@ public class PaymentApiController {
             if (body.containsKey("alipayPrivateKey")) {
                 config.alipayPrivateKey = getString(body, "alipayPrivateKey", null);
             }
+            if (body.containsKey("alipayPublicKey")) {
+                config.alipayPublicKey = getString(body, "alipayPublicKey", null);
+            }
+            if (body.containsKey("alipayCertPath")) {
+                config.alipayCertPath = getString(body, "alipayCertPath", null);
+            }
+            if (body.containsKey("alipayGateway")) {
+                config.alipayGateway = getString(body, "alipayGateway", null);
+            }
             
             if (body.containsKey("orderExpireMinutes")) {
                 config.orderExpireMinutes = getInt(body, "orderExpireMinutes", config.orderExpireMinutes);
@@ -412,7 +430,7 @@ public class PaymentApiController {
                 config.notifyUrl = getString(body, "notifyUrl", null);
             }
             
-            PaymentService.setConfig(config);
+            PaymentService.saveConfig(config);
             
             ctx.json(Map.of(
                 "success", true,
