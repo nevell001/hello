@@ -164,7 +164,17 @@ public final class PaymentService {
         }
         PaymentOrder.PaymentStatus status = requireProvider(order.channel).queryStatus(order);
         if (status != order.status) {
-            PaymentDAO.updateStatus(order.paymentId, status);
+            if (status == PaymentOrder.PaymentStatus.SUCCESS) {
+                PaymentDAO.updatePaymentSuccess(
+                    order.paymentId,
+                    order.channelTransactionId,
+                    order.channelUserId,
+                    order.paidAmount != null ? order.paidAmount : order.amount,
+                    order.discountAmount != null ? order.discountAmount : BigDecimal.ZERO
+                );
+            } else {
+                PaymentDAO.updateStatus(order.paymentId, status);
+            }
             order.status = status;
         }
         return order;

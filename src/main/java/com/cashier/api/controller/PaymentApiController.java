@@ -5,6 +5,7 @@ import com.cashier.model.RefundRecord;
 import com.cashier.dao.PaymentDAO;
 import com.cashier.service.PaymentService;
 import com.cashier.util.LoggerFactoryUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.http.Context;
 import org.slf4j.Logger;
 
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
  */
 public class PaymentApiController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(PaymentApiController.class);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String PAYMENT_ID_FIELD = "paymentId";
     private static final String OUT_TRADE_NO_FIELD = "out_trade_no";
     
@@ -158,20 +160,16 @@ public class PaymentApiController {
             // 解析回调数据
             Map<String, String> notifyData = new HashMap<>();
             if (channel == PaymentOrder.PaymentChannel.WECHAT) {
-                // 微信回调 XML
-                String xml = ctx.body();
-                // 简化解析（实际需要XML解析）
-                notifyData.put(OUT_TRADE_NO_FIELD, extractXmlValue(xml, OUT_TRADE_NO_FIELD));
-                notifyData.put("transaction_id", extractXmlValue(xml, "transaction_id"));
-                notifyData.put("trade_status", extractXmlValue(xml, "result_code"));
-                notifyData.put("total_amount", extractXmlValue(xml, "total_fee"));
+                notifyData.put("raw_body", ctx.body());
+                notifyData.put("Wechatpay-Timestamp", ctx.header("Wechatpay-Timestamp"));
+                notifyData.put("Wechatpay-Nonce", ctx.header("Wechatpay-Nonce"));
+                notifyData.put("Wechatpay-Signature", ctx.header("Wechatpay-Signature"));
+                notifyData.put("Wechatpay-Serial", ctx.header("Wechatpay-Serial"));
+                extractWechatV3NotifyMetadata(ctx.body(), notifyData);
             } else {
-                // 支付宝回调
                 Map<String, List<String>> params = ctx.formParamMap();
-                notifyData.put(OUT_TRADE_NO_FIELD, params.containsKey(OUT_TRADE_NO_FIELD) ? params.get(OUT_TRADE_NO_FIELD).get(0) : "");
-                notifyData.put("transaction_id", params.containsKey("trade_no") ? params.get("trade_no").get(0) : "");
-                notifyData.put("trade_status", params.containsKey("trade_status") ? params.get("trade_status").get(0) : "");
-                notifyData.put("total_amount", params.containsKey("total_amount") ? params.get("total_amount").get(0) : "0");
+                params.forEach((key, values) -> notifyData.put(key, values == null || values.isEmpty() ? "" : values.get(0)));
+                notifyData.put("transaction_id", notifyData.getOrDefault("trade_no", ""));
             }
             
             if (ctx.formParam("mock_signature") != null) {
@@ -184,9 +182,9 @@ public class PaymentApiController {
                 ctx.status(400);
             }
             if (channel == PaymentOrder.PaymentChannel.WECHAT && success) {
-                ctx.result("<xml><return_code><![CDATA[SUCCESS]]></return_code></xml>");
+                ctx.json(Map.of("code", "SUCCESS", "message", "成功"));
             } else if (channel == PaymentOrder.PaymentChannel.WECHAT) {
-                ctx.result("<xml><return_code><![CDATA[FAIL]]></return_code></xml>");
+                ctx.json(Map.of("code", "FAIL", "message", "签名或业务校验失败"));
             } else if (success) {
                 ctx.result("success");
             } else {
@@ -196,32 +194,21 @@ public class PaymentApiController {
         } catch (Exception e) {
             logger.error("处理支付回调失败", e);
             if (channel == PaymentOrder.PaymentChannel.WECHAT) {
-                ctx.result("<xml><return_code><![CDATA[FAIL]]></return_code></xml>");
+                ctx.status(500).json(Map.of("code", "FAIL", "message", "处理失败"));
             } else {
                 ctx.result("fail");
             }
         }
     }
     
-    /**
-     * 简化XML值提取
-     */
-    private static String extractXmlValue(String xml, String key) {
+    private static void extractWechatV3NotifyMetadata(String body, Map<String, String> notifyData) {
         try {
-            int start = xml.indexOf("<" + key + ">") + key.length() + 2;
-            int end = xml.indexOf("</" + key + ">");
-            if (start > 0 && end > start) {
-                String value = xml.substring(start, end);
-                // 去除CDATA
-                if (value.startsWith("<![CDATA[")) {
-                    value = value.substring(9, value.length() - 3);
-                }
-                return value;
-            }
+            var root = OBJECT_MAPPER.readTree(body);
+            notifyData.put("wechat_event_type", root.path("event_type").asText(""));
+            notifyData.put("wechat_resource_type", root.path("resource_type").asText(""));
         } catch (Exception e) {
-            // ignore
+            logger.warn("解析微信支付 v3 回调元数据失败: {}", e.getMessage());
         }
-        return "";
     }
     
     /**

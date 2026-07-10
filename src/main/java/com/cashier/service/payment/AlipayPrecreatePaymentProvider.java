@@ -71,7 +71,19 @@ public final class AlipayPrecreatePaymentProvider implements PaymentChannelProvi
             params.put("biz_content", MAPPER.writeValueAsString(Map.of("out_trade_no", order.merchantOrderNo)));
             JsonNode response = call(params, "alipay_trade_query_response");
             String status = response.path("trade_status").asText();
-            if ("TRADE_SUCCESS".equals(status) || "TRADE_FINISHED".equals(status)) return PaymentOrder.PaymentStatus.SUCCESS;
+            if ("TRADE_SUCCESS".equals(status) || "TRADE_FINISHED".equals(status)) {
+                order.channelTransactionId = response.path("trade_no").asText(null);
+                order.channelUserId = response.path("buyer_user_id").asText(null);
+                if (response.has("buyer_logon_id") && (order.channelUserId == null || order.channelUserId.isBlank())) {
+                    order.channelUserId = response.path("buyer_logon_id").asText(null);
+                }
+                if (response.has("receipt_amount")) {
+                    order.paidAmount = new BigDecimal(response.path("receipt_amount").asText());
+                } else if (response.has("total_amount")) {
+                    order.paidAmount = new BigDecimal(response.path("total_amount").asText());
+                }
+                return PaymentOrder.PaymentStatus.SUCCESS;
+            }
             if ("TRADE_CLOSED".equals(status)) return PaymentOrder.PaymentStatus.CLOSED;
             if (order.expireTime != null && new Date().after(order.expireTime)) return PaymentOrder.PaymentStatus.CLOSED;
             return PaymentOrder.PaymentStatus.WAITING;

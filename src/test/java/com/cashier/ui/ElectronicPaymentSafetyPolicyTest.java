@@ -74,4 +74,29 @@ class ElectronicPaymentSafetyPolicyTest {
         assertTrue(apiController.contains("PaymentService.saveConfig(config)"));
         assertFalse(apiController.contains("PaymentService.setConfig(config);"));
     }
+
+    @Test
+    @DisplayName("支付查单和回调应保留真实渠道详情")
+    void paymentStatusAndNotifyKeepProviderDetails() throws Exception {
+        String paymentService = Files.readString(Path.of(
+            "src/main/java/com/cashier/service/PaymentService.java"
+        ));
+        String apiController = Files.readString(Path.of(
+            "src/main/java/com/cashier/api/controller/PaymentApiController.java"
+        ));
+        String wechatProvider = Files.readString(Path.of(
+            "src/main/java/com/cashier/service/payment/WechatNativePaymentProvider.java"
+        ));
+
+        assertTrue(paymentService.contains("PaymentDAO.updatePaymentSuccess("));
+        assertTrue(paymentService.contains("order.channelTransactionId"));
+        assertTrue(paymentService.contains("order.channelUserId"));
+        assertTrue(apiController.contains("params.forEach("));
+        assertTrue(wechatProvider.contains("decryptAes256Gcm("));
+        assertTrue(wechatProvider.contains("loadPublicKeyFromCertificateOrPem("));
+        assertTrue(apiController.contains("\"code\", \"SUCCESS\""));
+        assertFalse(apiController.contains("extractXmlValue("));
+        assertFalse(apiController.contains("total_fee"));
+        assertFalse(apiController.contains("<xml><return_code>"));
+    }
 }

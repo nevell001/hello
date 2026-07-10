@@ -13,6 +13,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -76,7 +77,17 @@ public final class WechatNativePaymentProvider implements PaymentChannelProvider
             HttpResponse<String> response = send("GET", path, query, "");
             JsonNode root = parseSuccess(response);
             String state = root.path("trade_state").asText();
-            if ("SUCCESS".equals(state)) return PaymentOrder.PaymentStatus.SUCCESS;
+            if ("SUCCESS".equals(state)) {
+                order.channelTransactionId = root.path("transaction_id").asText(null);
+                order.channelUserId = root.path("payer").path("openid").asText(null);
+                JsonNode amount = root.path("amount");
+                if (amount.has("payer_total")) {
+                    order.paidAmount = fromCents(amount.path("payer_total").asInt());
+                } else if (amount.has("total")) {
+                    order.paidAmount = fromCents(amount.path("total").asInt());
+                }
+                return PaymentOrder.PaymentStatus.SUCCESS;
+            }
             if ("CLOSED".equals(state) || "REVOKED".equals(state)) return PaymentOrder.PaymentStatus.CLOSED;
             if ("PAYERROR".equals(state)) return PaymentOrder.PaymentStatus.FAILED;
             if (order.expireTime != null && new Date().after(order.expireTime)) return PaymentOrder.PaymentStatus.CLOSED;
@@ -88,7 +99,50 @@ public final class WechatNativePaymentProvider implements PaymentChannelProvider
 
     @Override
     public boolean verifyNotification(Map<String, String> notification) {
-        return false;
+        if (!isAvailable() || notification == null || PaymentCryptoUtil.isBlank(config.wechatCertPath)) {
+            return false;
+        }
+        try {
+            String rawBody = notification.get("raw_body");
+            String timestamp = notification.get("Wechatpay-Timestamp");
+            String nonce = notification.get("Wechatpay-Nonce");
+            String signature = notification.get("Wechatpay-Signature");
+            if (PaymentCryptoUtil.isBlank(rawBody) || PaymentCryptoUtil.isBlank(timestamp)
+                    || PaymentCryptoUtil.isBlank(nonce) || PaymentCryptoUtil.isBlank(signature)) {
+                return false;
+            }
+            String message = timestamp + "\n" + nonce + "\n" + rawBody + "\n";
+            PublicKey publicKey = PaymentCryptoUtil.loadPublicKeyFromCertificateOrPem(config.wechatCertPath);
+            if (!PaymentCryptoUtil.verifySha256WithRsa(message, signature, publicKey)) {
+                return false;
+            }
+
+            JsonNode root = MAPPER.readTree(rawBody);
+            if (!"TRANSACTION.SUCCESS".equals(root.path("event_type").asText())) {
+                return false;
+            }
+            JsonNode resource = root.path("resource");
+            String plainText = PaymentCryptoUtil.decryptAes256Gcm(
+                config.wechatApiKey,
+                resource.path("nonce").asText(),
+                resource.path("associated_data").asText(),
+                resource.path("ciphertext").asText()
+            );
+            JsonNode transaction = MAPPER.readTree(plainText);
+            if (!"SUCCESS".equals(transaction.path("trade_state").asText())) {
+                return false;
+            }
+            notification.put("out_trade_no", transaction.path("out_trade_no").asText(""));
+            notification.put("trade_status", "SUCCESS");
+            notification.put("transaction_id", transaction.path("transaction_id").asText(""));
+            notification.put("buyer_id", transaction.path("payer").path("openid").asText(""));
+            notification.put("total_amount", fromCents(transaction.path("amount").path("payer_total")
+                .asInt(transaction.path("amount").path("total").asInt())).toPlainString());
+            notification.put("wechat_plain_body", plainText);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override
@@ -156,6 +210,10 @@ public final class WechatNativePaymentProvider implements PaymentChannelProvider
 
     private static int toCents(BigDecimal amount) {
         return amount.multiply(BigDecimal.valueOf(100)).setScale(0, RoundingMode.HALF_UP).intValueExact();
+    }
+
+    private static BigDecimal fromCents(int cents) {
+        return BigDecimal.valueOf(cents, 2).setScale(2, RoundingMode.HALF_UP);
     }
 
     private void ensureAvailable() {
