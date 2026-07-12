@@ -8,7 +8,9 @@ import com.cashier.util.LoggerFactoryUtil;
 import java.sql.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.StringJoiner;
 
 /**
  * 采购订单明细数据访问对象
@@ -75,6 +77,50 @@ public class PurchaseOrderItemDAO {
      */
     public static List<PurchaseOrderItem> findByOrder(int orderId) throws SQLException {
         return findByOrderId(orderId);
+    }
+
+    /**
+     * 根据多个订单ID批量查找明细，避免报表逐单查询造成 N+1 数据库访问。
+     *
+     * @param orderIds 订单ID集合
+     * @return 采购订单明细列表
+     * @throws SQLException 数据库操作异常
+     */
+    public static List<PurchaseOrderItem> findByOrderIds(Collection<Integer> orderIds) throws SQLException {
+        if (orderIds == null || orderIds.isEmpty()) {
+            return List.of();
+        }
+
+        List<Integer> ids = orderIds.stream()
+            .filter(id -> id != null && id > 0)
+            .distinct()
+            .toList();
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+
+        StringJoiner placeholders = new StringJoiner(", ");
+        for (int i = 0; i < ids.size(); i++) {
+            placeholders.add("?");
+        }
+
+        List<PurchaseOrderItem> items = new ArrayList<>();
+        String sql = "SELECT id, order_id, product_id, product_name, quantity, unit_price, total_price, inbound_quantity " +
+                     "FROM purchase_order_items WHERE order_id IN (" + placeholders + ") ORDER BY order_id, id";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            for (int i = 0; i < ids.size(); i++) {
+                pstmt.setInt(i + 1, ids.get(i));
+            }
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                items.add(mapRowToPurchaseOrderItem(rs));
+            }
+        }
+        return items;
     }
 
     /**

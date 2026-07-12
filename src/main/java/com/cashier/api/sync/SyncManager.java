@@ -6,7 +6,6 @@ import io.javalin.websocket.WsContext;
 import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -17,6 +16,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SyncManager {
     private static final Logger logger = LoggerFactoryUtil.getLogger(SyncManager.class);
     private static final ObjectMapper mapper = new ObjectMapper();
+    private static final int DEFAULT_SYNC_PAGE = 1;
+    private static final int DEFAULT_SYNC_PAGE_SIZE = 100;
+    private static final int MAX_SYNC_PAGE_SIZE = 500;
     
     private static final SyncManager INSTANCE = new SyncManager();
     
@@ -225,7 +227,8 @@ public class SyncManager {
      * 处理同步请求
      */
     private void handleSyncRequest(WsContext ctx, SyncMessage msg) {
-        String entity = (String) msg.data.get("entity");
+        Map<String, Object> requestData = msg.data == null ? Map.of() : msg.data;
+        String entity = requestData.get("entity") instanceof String value ? value : null;
         SyncMessage response = new SyncMessage();
         response.type = "SYNC_RESPONSE";
         response.timestamp = System.currentTimeMillis();
@@ -234,15 +237,21 @@ public class SyncManager {
         responseData.put("entity", entity);
         
         try {
+            int page = getIntValue(requestData, "page", DEFAULT_SYNC_PAGE);
+            int pageSize = getIntValue(requestData, "pageSize", DEFAULT_SYNC_PAGE_SIZE);
+            page = Math.max(1, page);
+            pageSize = Math.max(1, Math.min(pageSize, MAX_SYNC_PAGE_SIZE));
+
             if ("PRODUCTS".equals(entity)) {
-                responseData.put("items", com.cashier.dao.DAOFactory.getInstance().getProductDAO().findAll());
+                com.cashier.model.PageResult<com.cashier.model.Product> products =
+                    com.cashier.dao.DAOFactory.getInstance().getProductDAO().findAll(page, pageSize);
+                putPageResult(responseData, products);
             } else if ("MEMBERS".equals(entity)) {
-                responseData.put("items", com.cashier.dao.MemberDAO.findAll());
+                com.cashier.model.PageResult<com.cashier.model.Member> members =
+                    com.cashier.dao.MemberDAO.findAll(page, pageSize);
+                putPageResult(responseData, members);
             } else if ("TRANSACTIONS".equals(entity)) {
-                // 返回最近的100条交易
-                List<com.cashier.model.Transaction> transactions = com.cashier.dao.TransactionDAO.findAll();
-                transactions.sort((a, b) -> b.timestamp.compareTo(a.timestamp));
-                responseData.put("items", transactions.subList(0, Math.min(transactions.size(), 100)));
+                responseData.put("items", com.cashier.dao.TransactionDAO.findRecent(100));
             } else {
                 responseData.put("status", "error");
                 responseData.put("message", "不支持的同步实体: " + entity);
@@ -261,6 +270,30 @@ public class SyncManager {
         
         response.data = responseData;
         ctx.send(toJson(response));
+    }
+
+    private static int getIntValue(Map<String, Object> data, String key, int defaultValue) {
+        Object value = data.get(key);
+        if (value instanceof Number number) {
+            return number.intValue();
+        }
+        if (value instanceof String text) {
+            try {
+                return Integer.parseInt(text);
+            } catch (NumberFormatException e) {
+                return defaultValue;
+            }
+        }
+        return defaultValue;
+    }
+
+    private static <T> void putPageResult(Map<String, Object> responseData, com.cashier.model.PageResult<T> pageResult) {
+        responseData.put("items", pageResult.getData());
+        responseData.put("page", pageResult.getPageNum());
+        responseData.put("pageSize", pageResult.getPageSize());
+        responseData.put("total", pageResult.getTotal());
+        responseData.put("pages", pageResult.getPages());
+        responseData.put("hasMore", pageResult.hasNextPage());
     }
     
     /**

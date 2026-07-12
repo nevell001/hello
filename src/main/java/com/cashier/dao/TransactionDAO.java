@@ -163,37 +163,39 @@ public class TransactionDAO {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                String transactionId = rs.getString("transaction_id");
+                addJoinedTransactionRow(transactionMap, rs);
+            }
+        }
+        return new ArrayList<>(transactionMap.values());
+    }
 
-                // 如果交易还未加载，创建新的交易对象
-                if (!transactionMap.containsKey(transactionId)) {
-                    Transaction transaction = new Transaction();
-                    transaction.transactionId = rs.getString("transaction_id");
-                    transaction.timestamp = rs.getString("timestamp");
-                    transaction.totalAmount = rs.getBigDecimal("total_amount");
-                    transaction.tax = rs.getBigDecimal("tax");
-                    transaction.finalAmount = rs.getBigDecimal("final_amount");
-                    transaction.paymentMethod = rs.getString("payment_method");
-                    transaction.memberPhone = rs.getString("member_phone");
-                    transaction.operatorUsername = rs.getString("operator_username");
-                    transaction.operatorName = rs.getString("operator_name");
-                    transaction.items = new ArrayList<>();
+    /**
+     * 查询最近交易，数据库侧先限制交易主记录数量，避免同步接口全量拉取后再截断。
+     */
+    public static List<Transaction> findRecent(int limit) throws SQLException {
+        if (limit < 1) {
+            return List.of();
+        }
+        Map<String, Transaction> transactionMap = new LinkedHashMap<>();
 
-                    transactionMap.put(transactionId, transaction);
-                }
+        String sql = "SELECT t.transaction_id, t.timestamp, t.total_amount, t.tax, t.final_amount, t.payment_method, " +
+                     "t.member_phone, t.operator_username, " +
+                     "COALESCE(t.operator_name, u.name, t.operator_username) AS operator_name, " +
+                     "ti.id as item_id, ti.product_id, ti.product_code, ti.barcode, ti.product_name, ti.price, ti.quantity, ti.subtotal " +
+                     "FROM (SELECT transaction_id, timestamp, total_amount, tax, final_amount, payment_method, " +
+                     "member_phone, operator_username, operator_name FROM transactions ORDER BY timestamp DESC LIMIT ?) t " +
+                     "LEFT JOIN users u ON t.operator_username = u.username " +
+                     "LEFT JOIN transaction_items ti ON t.transaction_id = ti.transaction_id " +
+                     "ORDER BY t.timestamp DESC";
 
-                // 添加交易明细
-                String productName = rs.getString("product_name");
-                if (productName != null) {
-                    Product product = new Product();
-                    product.id = rs.getInt("product_id");
-                    product.productCode = rs.getString("product_code");
-                    product.barcode = rs.getString("barcode");
-                    product.name = rs.getString("product_name");
-                    product.price = rs.getBigDecimal("price");
-                    product.quantity = rs.getInt("quantity");
-                    transactionMap.get(transactionId).items.add(product);
-                }
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, limit);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                addJoinedTransactionRow(transactionMap, rs);
             }
         }
         return new ArrayList<>(transactionMap.values());
@@ -224,37 +226,7 @@ public class TransactionDAO {
             ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
-                String transactionId = rs.getString("transaction_id");
-
-                // 如果交易还未加载，创建新的交易对象
-                if (!transactionMap.containsKey(transactionId)) {
-                    Transaction transaction = new Transaction();
-                    transaction.transactionId = rs.getString("transaction_id");
-                    transaction.timestamp = rs.getString("timestamp");
-                    transaction.totalAmount = rs.getBigDecimal("total_amount");
-                    transaction.tax = rs.getBigDecimal("tax");
-                    transaction.finalAmount = rs.getBigDecimal("final_amount");
-                    transaction.paymentMethod = rs.getString("payment_method");
-                    transaction.memberPhone = rs.getString("member_phone");
-                    transaction.operatorUsername = rs.getString("operator_username");
-                    transaction.operatorName = rs.getString("operator_name");
-                    transaction.items = new ArrayList<>();
-
-                    transactionMap.put(transactionId, transaction);
-                }
-
-                // 添加交易明细
-                String productName = rs.getString("product_name");
-                if (productName != null) {
-                    Product product = new Product();
-                    product.id = rs.getInt("product_id");
-                    product.productCode = rs.getString("product_code");
-                    product.barcode = rs.getString("barcode");
-                    product.name = rs.getString("product_name");
-                    product.price = rs.getBigDecimal("price");
-                    product.quantity = rs.getInt("quantity");
-                    transactionMap.get(transactionId).items.add(product);
-                }
+                addJoinedTransactionRow(transactionMap, rs);
             }
         }
         return new ArrayList<>(transactionMap.values());
@@ -297,6 +269,107 @@ public class TransactionDAO {
             }
         }
         return transactions;
+    }
+
+    /**
+     * 统计商品销售排行，避免报表接口加载全量交易明细后再聚合。
+     */
+    public static List<Map<String, Object>> getTopProducts(int limit) throws SQLException {
+        if (limit < 1) {
+            return List.of();
+        }
+
+        List<Map<String, Object>> products = new ArrayList<>();
+        String sql = "SELECT product_name, SUM(quantity) AS quantity, " +
+                     "COALESCE(SUM(COALESCE(subtotal, price * quantity)), 0) AS amount " +
+                     "FROM transaction_items " +
+                     "WHERE product_name IS NOT NULL " +
+                     "GROUP BY product_name " +
+                     "ORDER BY quantity DESC " +
+                     "LIMIT ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, limit);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put("name", rs.getString("product_name"));
+                    item.put("quantity", rs.getInt("quantity"));
+                    item.put("amount", rs.getBigDecimal("amount"));
+                    products.add(item);
+                }
+            }
+        }
+        return products;
+    }
+
+    /**
+     * 统计支付方式，避免报表接口加载全量交易后再聚合。
+     */
+    public static List<Map<String, Object>> getPaymentMethodStats() throws SQLException {
+        List<Map<String, Object>> methods = new ArrayList<>();
+        String sql = "SELECT COALESCE(payment_method, '未知') AS method, COUNT(*) AS count, " +
+                     "COALESCE(SUM(final_amount), 0) AS amount " +
+                     "FROM transactions " +
+                     "GROUP BY COALESCE(payment_method, '未知') " +
+                     "ORDER BY amount DESC";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                Map<String, Object> item = new HashMap<>();
+                item.put("method", rs.getString("method"));
+                item.put("count", rs.getInt("count"));
+                item.put("amount", rs.getBigDecimal("amount"));
+                methods.add(item);
+            }
+        }
+        return methods;
+    }
+
+    private static void addJoinedTransactionRow(Map<String, Transaction> transactionMap, ResultSet rs)
+            throws SQLException {
+        String transactionId = rs.getString("transaction_id");
+        Transaction transaction = transactionMap.get(transactionId);
+        if (transaction == null) {
+            transaction = mapTransaction(rs);
+            transactionMap.put(transactionId, transaction);
+        }
+        addJoinedItem(transaction, rs);
+    }
+
+    private static Transaction mapTransaction(ResultSet rs) throws SQLException {
+        Transaction transaction = new Transaction();
+        transaction.transactionId = rs.getString("transaction_id");
+        transaction.timestamp = rs.getString("timestamp");
+        transaction.totalAmount = rs.getBigDecimal("total_amount");
+        transaction.tax = rs.getBigDecimal("tax");
+        transaction.finalAmount = rs.getBigDecimal("final_amount");
+        transaction.paymentMethod = rs.getString("payment_method");
+        transaction.memberPhone = rs.getString("member_phone");
+        transaction.operatorUsername = rs.getString("operator_username");
+        transaction.operatorName = rs.getString("operator_name");
+        transaction.items = new ArrayList<>();
+        return transaction;
+    }
+
+    private static void addJoinedItem(Transaction transaction, ResultSet rs) throws SQLException {
+        String productName = rs.getString("product_name");
+        if (productName == null) {
+            return;
+        }
+        Product product = new Product();
+        product.id = rs.getInt("product_id");
+        product.productCode = rs.getString("product_code");
+        product.barcode = rs.getString("barcode");
+        product.name = productName;
+        product.price = rs.getBigDecimal("price");
+        product.quantity = rs.getInt("quantity");
+        transaction.items.add(product);
     }
 
     /**

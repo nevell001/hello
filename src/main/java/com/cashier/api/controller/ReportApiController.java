@@ -9,7 +9,6 @@ import com.cashier.util.LoggerFactoryUtil;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
@@ -27,30 +26,10 @@ public class ReportApiController {
             String dateStr = ctx.queryParam("date");
             if (dateStr == null) dateStr = LocalDate.now().toString();
             LocalDate date = LocalDate.parse(dateStr);
-            
-            List<Transaction> transactions = TransactionDAO.findAll();
-            
-            // 筛选当天交易
-            long dayStart = date.atStartOfDay(java.time.ZoneId.systemDefault())
-                .toInstant().toEpochMilli();
-            long dayEnd = date.plusDays(1).atStartOfDay(java.time.ZoneId.systemDefault())
-                .toInstant().toEpochMilli();
-            
-            // 由于 Transaction 使用 timestamp 字符串，需要解析
-            List<Transaction> dayTransactions = new ArrayList<>();
-            for (Transaction t : transactions) {
-                if (t.timestamp != null && !t.timestamp.isEmpty()) {
-                    try {
-                        // 假设格式: 2024-01-01 12:30:45
-                        LocalDate tDate = LocalDate.parse(t.timestamp.substring(0, 10));
-                        if (tDate.equals(date)) {
-                            dayTransactions.add(t);
-                        }
-                    } catch (Exception e) {
-                        logger.warn("Failed to parse transaction timestamp: {}", t.timestamp, e);
-                    }
-                }
-            }
+            List<Transaction> dayTransactions = TransactionDAO.findByDateRange(
+                date.atStartOfDay().format(com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME),
+                date.plusDays(1).atStartOfDay().minusSeconds(1).format(com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME)
+            );
             
             BigDecimal totalAmount = BigDecimal.ZERO;
             BigDecimal cashAmount = BigDecimal.ZERO;
@@ -102,23 +81,12 @@ public class ReportApiController {
         try {
             String monthStr = ctx.queryParam("month");
             if (monthStr == null) monthStr = LocalDate.now().format(com.cashier.util.DateTimeFormats.MONTH);
-            
-            List<Transaction> transactions = TransactionDAO.findAll();
-            
-            // 筛选当月交易
-            List<Transaction> monthTransactions = new ArrayList<>();
-            for (Transaction t : transactions) {
-                if (t.timestamp != null && !t.timestamp.isEmpty()) {
-                    try {
-                        String tMonth = t.timestamp.substring(0, 7); // 2024-01
-                        if (tMonth.equals(monthStr)) {
-                            monthTransactions.add(t);
-                        }
-                    } catch (Exception e) {
-                        logger.warn("Failed to parse transaction timestamp: {}", t.timestamp, e);
-                    }
-                }
-            }
+            LocalDate monthStart = LocalDate.parse(monthStr + "-01", com.cashier.util.DateTimeFormats.DATE);
+            LocalDate monthEnd = monthStart.plusMonths(1).minusDays(1);
+            List<Transaction> monthTransactions = TransactionDAO.findByDateRange(
+                monthStart.atStartOfDay().format(com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME),
+                monthEnd.plusDays(1).atStartOfDay().minusSeconds(1).format(com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME)
+            );
             
             BigDecimal totalAmount = BigDecimal.ZERO;
             Map<String, BigDecimal> dailyAmounts = new TreeMap<>();
@@ -158,35 +126,7 @@ public class ReportApiController {
     public static void topProducts(Context ctx) {
         try {
             int limit = ctx.queryParamAsClass("limit", Integer.class).getOrDefault(10);
-            
-            List<Transaction> transactions = TransactionDAO.findAll();
-            
-            // 统计商品销量
-            Map<String, Integer> productCounts = new HashMap<>();
-            Map<String, BigDecimal> productAmounts = new HashMap<>();
-            
-            for (Transaction t : transactions) {
-                if (t.items != null) {
-                    for (var item : t.items) {
-                        String name = item.name;
-                        productCounts.merge(name, item.quantity, Integer::sum);
-                        productAmounts.merge(name, item.price.multiply(BigDecimal.valueOf(item.quantity)), BigDecimal::add);
-                    }
-                }
-            }
-            
-            // 排序
-            List<Map<String, Object>> topList = new ArrayList<>();
-            productCounts.entrySet().stream()
-                .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
-                .limit(limit)
-                .forEach(e -> {
-                    Map<String, Object> item = new HashMap<>();
-                    item.put("name", e.getKey());
-                    item.put("quantity", e.getValue());
-                    item.put("amount", productAmounts.getOrDefault(e.getKey(), BigDecimal.ZERO));
-                    topList.add(item);
-                });
+            List<Map<String, Object>> topList = TransactionDAO.getTopProducts(limit);
             
             ctx.json(Map.of("success", true, "data", topList));
         } catch (Exception e) {
@@ -202,25 +142,7 @@ public class ReportApiController {
      */
     public static void paymentMethods(Context ctx) {
         try {
-            List<Transaction> transactions = TransactionDAO.findAll();
-            
-            Map<String, Integer> methodCounts = new HashMap<>();
-            Map<String, BigDecimal> methodAmounts = new HashMap<>();
-            
-            for (Transaction t : transactions) {
-                String method = t.paymentMethod != null ? t.paymentMethod : "未知";
-                methodCounts.merge(method, 1, Integer::sum);
-                methodAmounts.merge(method, t.finalAmount != null ? t.finalAmount : BigDecimal.ZERO, BigDecimal::add);
-            }
-            
-            List<Map<String, Object>> result = new ArrayList<>();
-            methodCounts.forEach((method, count) -> {
-                Map<String, Object> item = new HashMap<>();
-                item.put("method", method);
-                item.put("count", count);
-                item.put("amount", methodAmounts.get(method));
-                result.add(item);
-            });
+            List<Map<String, Object>> result = TransactionDAO.getPaymentMethodStats();
             
             ctx.json(Map.of("success", true, "data", result));
         } catch (Exception e) {

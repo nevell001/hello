@@ -276,16 +276,13 @@ public class ProfitReportController {
             allProducts = productDAO.findAll();
             allTransactions = TransactionDAO.findAll();
             allInboundRecords = PurchaseInboundDAO.findAll();
-            allInboundItems = new ArrayList<>();
             productActualCostMap = new HashMap<>();
             productNameMap = new HashMap<>();
             allCategories = new TreeSet<>();
 
-            // 加载所有采购入库明细
-            for (PurchaseInbound inbound : allInboundRecords) {
-                List<PurchaseInboundItem> items = PurchaseInboundItemDAO.findByInboundId(inbound.id);
-                allInboundItems.addAll(items);
-            }
+            allInboundItems = PurchaseInboundItemDAO.findByInboundIds(
+                allInboundRecords.stream().map(inbound -> inbound.id).toList()
+            );
 
             // 计算每个商品的加权平均成本
             calculateProductActualCosts();

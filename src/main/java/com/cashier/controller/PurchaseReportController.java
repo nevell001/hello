@@ -21,6 +21,7 @@ import javafx.scene.control.*;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 采购报表控制器
@@ -246,13 +247,10 @@ public class PurchaseReportController {
         try {
             allOrders = PurchaseOrderDAO.findAll();
             allSuppliers = SupplierDAO.findAll();
-            orderItemsMap = new HashMap<>();
-
-            // 加载订单明细
-            for (PurchaseOrder order : allOrders) {
-                List<PurchaseOrderItem> items = PurchaseOrderItemDAO.findByOrderId(order.id);
-                orderItemsMap.put(order.id, items);
-            }
+            orderItemsMap = PurchaseOrderItemDAO.findByOrderIds(
+                    allOrders.stream().map(order -> order.id).toList()
+                ).stream()
+                .collect(Collectors.groupingBy(item -> item.orderId));
 
             // 加载供应商列表到下拉框
             javafx.collections.ObservableList<String> supplierList = javafx.collections.FXCollections.observableArrayList();

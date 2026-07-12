@@ -9,6 +9,7 @@ import com.cashier.dao.TransactionDAO;
 import com.cashier.model.Product;
 import com.cashier.model.Transaction;
 import com.cashier.util.CurrencyUtil;
+import com.cashier.util.DateTimeFormats;
 import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
 import com.cashier.util.FormValidator;
@@ -22,7 +23,6 @@ import javafx.scene.layout.*;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.*;
 
 /**
@@ -289,7 +289,7 @@ public class InventoryReportController {
     private void loadData() {
         try {
             allProducts = productDAO.findAll();
-            allTransactions = TransactionDAO.findAll();
+            allTransactions = new ArrayList<>();
             allCategories = new TreeSet<>();
 
             // 收集所有分类
@@ -308,7 +308,7 @@ public class InventoryReportController {
                 "全部分类".equals(value) ? I18nManager.getInstance().get(I18nKeys.Filter.ALL_CATEGORIES) : value);
             categoryComboBox.getSelectionModel().select(0);
 
-            logger.info("成功加载 {} 个商品，{} 条交易记录", allProducts.size(), allTransactions.size());
+            logger.info("成功加载 {} 个商品", allProducts.size());
         } catch (SQLException e) {
             logger.error("加载数据失败", e);
             showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
@@ -408,6 +408,9 @@ public class InventoryReportController {
      */
     private void calculateStatistics(LocalDate startDate, LocalDate endDate, String categoryName,
                                     double turnoverThreshold, int slowSalesThreshold, int inventoryDaysThreshold) {
+        loadTransactions(startDate, endDate);
+        Map<String, SalesStats> salesStatsMap = buildSalesStatsMap();
+
         // 总商品数、总库存价值
         int totalProducts = 0;
         double totalStockValue = 0.0;
@@ -442,7 +445,8 @@ public class InventoryReportController {
             totalStockValue += stockValue;
 
             // 统计销售数量
-            int salesQuantity = calculateSalesQuantity(product.name, startDate, endDate);
+            SalesStats salesStats = salesStatsMap.getOrDefault(product.name, SalesStats.empty());
+            int salesQuantity = salesStats.quantity;
 
             // 计算周转率 = 销售数量 / 平均库存
             // 平均库存 = (期初库存 + 期末库存) / 2
@@ -473,7 +477,7 @@ public class InventoryReportController {
             }
 
             // 获取最后销售日期
-            String lastSaleDate = getLastSaleDate(product.name);
+            String lastSaleDate = salesStats.lastSaleDate();
 
             // 商品记录
             productRecords.add(new InventoryReportRecord(
@@ -535,62 +539,37 @@ public class InventoryReportController {
         updateCharts(productRecords, categoryQuantityMap, categoryAmountMap);
     }
 
-    /**
-     * 计算销售数量
-     */
-    private int calculateSalesQuantity(String productName, LocalDate startDate, LocalDate endDate) {
-        int salesQuantity = 0;
-
-        for (Transaction transaction : allTransactions) {
-            try {
-                LocalDate localDate = com.cashier.util.DateTimeFormats.parseStandard(transaction.timestamp).toLocalDate();
-
-                if (!localDate.isBefore(startDate) && !localDate.isAfter(endDate)) {
-                    if (transaction.items != null) {
-                        for (var item : transaction.items) {
-                            if (item.name.equals(productName)) {
-                                salesQuantity += item.quantity;
-                            }
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                // 日期解析失败，跳过该记录
-            }
+    private void loadTransactions(LocalDate startDate, LocalDate endDate) {
+        try {
+            allTransactions = TransactionDAO.findByDateRange(
+                startDate.atStartOfDay().format(DateTimeFormats.STANDARD_DATE_TIME),
+                endDate.plusDays(1).atStartOfDay().minusSeconds(1).format(DateTimeFormats.STANDARD_DATE_TIME)
+            );
+        } catch (SQLException e) {
+            logger.error("加载库存报表交易数据失败", e);
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
+            allTransactions = new ArrayList<>();
         }
-
-        return salesQuantity;
     }
 
-    /**
-     * 获取最后销售日期
-     */
-    private String getLastSaleDate(String productName) {
-        String lastSaleDate = I18nManager.getInstance().get("report.never_sold");
-        LocalDate maxDate = null;
-
+    private Map<String, SalesStats> buildSalesStatsMap() {
+        Map<String, SalesStats> statsMap = new HashMap<>();
         for (Transaction transaction : allTransactions) {
-            if (transaction.items != null) {
-                for (var item : transaction.items) {
-                    if (item.name.equals(productName)) {
-                        try {
-                            LocalDate localDate = com.cashier.util.DateTimeFormats.parseStandard(transaction.timestamp).toLocalDate();
-                            if (maxDate == null || localDate.isAfter(maxDate)) {
-                                maxDate = localDate;
-                            }
-                        } catch (Exception e) {
-                            // 日期解析失败，跳过
-                        }
-                    }
-                }
+            if (transaction.items == null || transaction.timestamp == null) {
+                continue;
+            }
+            LocalDate saleDate;
+            try {
+                saleDate = DateTimeFormats.parseStandard(transaction.timestamp).toLocalDate();
+            } catch (Exception e) {
+                continue;
+            }
+            for (var item : transaction.items) {
+                statsMap.computeIfAbsent(item.name, ignored -> new SalesStats())
+                    .record(item.quantity, saleDate);
             }
         }
-
-        if (maxDate != null) {
-            lastSaleDate = maxDate.format(com.cashier.util.DateTimeFormats.DATE);
-        }
-
-        return lastSaleDate;
+        return statsMap;
     }
 
     /**
@@ -1016,6 +995,28 @@ public class InventoryReportController {
             this.currentStock = currentStock;
             this.stockValue = stockValue;
             this.inventoryDays = inventoryDays;
+        }
+    }
+
+    private static class SalesStats {
+        int quantity;
+        LocalDate lastSaleDate;
+
+        static SalesStats empty() {
+            return new SalesStats();
+        }
+
+        void record(int soldQuantity, LocalDate saleDate) {
+            quantity += soldQuantity;
+            if (lastSaleDate == null || saleDate.isAfter(lastSaleDate)) {
+                lastSaleDate = saleDate;
+            }
+        }
+
+        String lastSaleDate() {
+            return lastSaleDate == null
+                ? I18nManager.getInstance().get("report.never_sold")
+                : lastSaleDate.format(DateTimeFormats.DATE);
         }
     }
 }

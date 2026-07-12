@@ -6,6 +6,7 @@ import com.cashier.i18n.I18nManager;
 import com.cashier.dao.TransactionDAO;
 import com.cashier.model.Transaction;
 import com.cashier.util.CurrencyUtil;
+import com.cashier.util.DateTimeFormats;
 import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
 import javafx.fxml.FXML;
@@ -18,7 +19,6 @@ import javafx.scene.chart.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.*;
 
 /**
@@ -139,9 +139,6 @@ public class StatisticsController {
         setupCategoryTableColumns();
         setupHourlyTableColumns();
 
-        // 加载交易数据
-        loadTransactions();
-
         // 执行查询
         handleQuery();
 
@@ -173,13 +170,13 @@ public class StatisticsController {
             new javafx.beans.property.SimpleStringProperty(CurrencyUtil.format(cellData.getValue().amount)));
     }
 
-    /**
-     * 加载交易数据
-     */
-    private void loadTransactions() {
+    private void loadTransactions(LocalDate startDate, LocalDate endDate) {
         logger.info("StatisticsController: 开始加载交易数据...");
         try {
-            allTransactions = TransactionDAO.findAll();
+            allTransactions = TransactionDAO.findByDateRange(
+                startDate.atStartOfDay().format(DateTimeFormats.STANDARD_DATE_TIME),
+                endDate.plusDays(1).atStartOfDay().minusSeconds(1).format(DateTimeFormats.STANDARD_DATE_TIME)
+            );
         } catch (SQLException e) {
             logger.error("加载交易数据失败", e);
             showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
@@ -253,11 +250,10 @@ public class StatisticsController {
             return;
         }
 
-        // 筛选交易记录
-        List<Transaction> filteredTransactions = filterTransactionsByDate(startDate, endDate);
+        loadTransactions(startDate, endDate);
 
         // 计算统计数据
-        calculateStatistics(filteredTransactions);
+        calculateStatistics(allTransactions);
     }
 
     /**
@@ -265,37 +261,10 @@ public class StatisticsController {
      */
     @FXML
     public void handleRefresh() {
-        // 重新加载数据
-        loadTransactions();
-        
         // 重新查询
         handleQuery();
         
         logger.info("数据统计已刷新");
-    }
-
-    /**
-     * 按日期筛选交易记录
-     */
-    private List<Transaction> filterTransactionsByDate(LocalDate startDate, LocalDate endDate) {
-        List<Transaction> filtered = new ArrayList<>();
-        java.time.format.DateTimeFormatter sdf = com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME;
-
-        for (Transaction t : allTransactions) {
-            try {
-                java.time.LocalDate localDate = java.time.LocalDateTime.parse(t.timestamp, sdf)
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDate();
-
-                if (!localDate.isBefore(startDate) && !localDate.isAfter(endDate)) {
-                    filtered.add(t);
-                }
-            } catch (Exception e) {
-                // 日期解析失败，跳过该记录
-            }
-        }
-
-        return filtered;
     }
 
     /**
@@ -370,7 +339,7 @@ public class StatisticsController {
 
             // 小时统计
             try {
-                java.time.format.DateTimeFormatter sdf = com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME;
+                java.time.format.DateTimeFormatter sdf = DateTimeFormats.STANDARD_DATE_TIME;
                 int hour = java.time.LocalDateTime.parse(t.timestamp, sdf)
                     .atZone(ZoneId.systemDefault())
                     .getHour();
@@ -617,11 +586,12 @@ public class StatisticsController {
     private void updateSalesTrendLineChart(List<Transaction> transactions) {
         // 按日期统计销售额
         Map<String, Double> dailySalesMap = new TreeMap<>();
-        java.time.format.DateTimeFormatter formatter = com.cashier.util.DateTimeFormats.DATE;
+        java.time.format.DateTimeFormatter formatter = DateTimeFormats.DATE;
         
         for (Transaction t : transactions) {
             try {
-                java.time.LocalDate date = java.time.LocalDate.parse(t.timestamp, formatter);
+                java.time.LocalDate date = java.time.LocalDateTime.parse(t.timestamp, DateTimeFormats.STANDARD_DATE_TIME)
+                    .toLocalDate();
                 String dateStr = date.format(formatter);
                 dailySalesMap.put(dateStr, dailySalesMap.getOrDefault(dateStr, 0.0) + t.getFinalAmount().doubleValue());
             } catch (Exception e) {

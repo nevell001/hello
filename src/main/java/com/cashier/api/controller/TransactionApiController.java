@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -38,12 +39,15 @@ public class TransactionApiController {
             String startDate = ctx.queryParam("startDate");
             String endDate = ctx.queryParam("endDate");
             String paymentMethod = ctx.queryParam("paymentMethod");
-            
-            List<Transaction> transactions = TransactionDAO.findAll();
+            int limit = ctx.queryParamAsClass("limit", Integer.class).getOrDefault(100);
+
+            List<Transaction> transactions = hasDateFilter(startDate, endDate)
+                ? TransactionDAO.findByDateRange(toStartDateTime(startDate), toEndDateTime(endDate))
+                : TransactionDAO.findRecent(limit);
             
             // 按条件筛选
-            if (startDate != null || endDate != null || paymentMethod != null) {
-                transactions = filterTransactions(transactions, startDate, endDate, paymentMethod);
+            if (paymentMethod != null && !paymentMethod.isEmpty()) {
+                transactions = filterTransactions(transactions, paymentMethod);
             }
             
             // 按时间倒序
@@ -309,26 +313,24 @@ public class TransactionApiController {
      */
     public static void todayStats(Context ctx) {
         try {
-            List<Transaction> transactions = TransactionDAO.findAll();
-            
             String today = LocalDateTime.now().format(com.cashier.util.DateTimeFormats.DATE);
+            List<Transaction> transactions = TransactionDAO.findByDateRange(
+                today + " 00:00:00",
+                today + " 23:59:59"
+            );
             
             BigDecimal totalAmount = BigDecimal.ZERO;
-            int count = 0;
             
             for (Transaction t : transactions) {
-                if (t.timestamp != null && t.timestamp.startsWith(today)) {
-                    count++;
-                    if (t.finalAmount != null) {
-                        totalAmount = totalAmount.add(t.finalAmount);
-                    }
+                if (t.finalAmount != null) {
+                    totalAmount = totalAmount.add(t.finalAmount);
                 }
             }
             
             Map<String, Object> result = new HashMap<>();
             result.put("success", true);
             result.put("date", today);
-            result.put("count", count);
+            result.put("count", transactions.size());
             result.put("totalAmount", totalAmount);
             
             ctx.json(result);
@@ -342,35 +344,36 @@ public class TransactionApiController {
     /**
      * 筛选交易
      */
-    private static List<Transaction> filterTransactions(List<Transaction> transactions, 
-            String startDate, String endDate, String paymentMethod) {
+    private static List<Transaction> filterTransactions(List<Transaction> transactions, String paymentMethod) {
         List<Transaction> result = new ArrayList<>();
         
         for (Transaction t : transactions) {
-            // 支付方式筛选
-            if (paymentMethod != null && !paymentMethod.isEmpty()) {
-                if (t.paymentMethod == null || !t.paymentMethod.contains(paymentMethod)) {
-                    continue;
-                }
+            if (t.paymentMethod == null || !t.paymentMethod.contains(paymentMethod)) {
+                continue;
             }
-            
-            // 日期筛选
-            if (t.timestamp != null && !t.timestamp.isEmpty()) {
-                String date = t.timestamp.substring(0, 10);
-                
-                if (startDate != null && !startDate.isEmpty() && date.compareTo(startDate) < 0) {
-                    continue;
-                }
-                
-                if (endDate != null && !endDate.isEmpty() && date.compareTo(endDate) > 0) {
-                    continue;
-                }
-            }
-            
             result.add(t);
         }
         
         return result;
+    }
+
+    private static boolean hasDateFilter(String startDate, String endDate) {
+        return startDate != null && !startDate.isBlank()
+            || endDate != null && !endDate.isBlank();
+    }
+
+    private static String toStartDateTime(String startDate) {
+        String date = startDate == null || startDate.isBlank()
+            ? LocalDate.now().minusDays(30).format(com.cashier.util.DateTimeFormats.DATE)
+            : startDate;
+        return date.length() == 10 ? date + " 00:00:00" : date;
+    }
+
+    private static String toEndDateTime(String endDate) {
+        String date = endDate == null || endDate.isBlank()
+            ? LocalDate.now().format(com.cashier.util.DateTimeFormats.DATE)
+            : endDate;
+        return date.length() == 10 ? date + " 23:59:59" : date;
     }
     
     /**

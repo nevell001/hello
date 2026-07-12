@@ -8,7 +8,9 @@ import com.cashier.util.LoggerFactoryUtil;
 import java.sql.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.StringJoiner;
 
 /**
  * 采购入库明细数据访问对象
@@ -75,6 +77,52 @@ public class PurchaseInboundItemDAO {
      */
     public static List<PurchaseInboundItem> findByInbound(int inboundId) throws SQLException {
         return findByInboundId(inboundId);
+    }
+
+    /**
+     * 根据多个入库ID批量查找明细，避免报表逐单查询造成 N+1 数据库访问。
+     *
+     * @param inboundIds 入库ID集合
+     * @return 采购入库明细列表
+     * @throws SQLException 数据库操作异常
+     */
+    public static List<PurchaseInboundItem> findByInboundIds(Collection<Integer> inboundIds) throws SQLException {
+        if (inboundIds == null || inboundIds.isEmpty()) {
+            return List.of();
+        }
+
+        List<Integer> ids = inboundIds.stream()
+            .filter(id -> id != null && id > 0)
+            .distinct()
+            .toList();
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+
+        StringJoiner placeholders = new StringJoiner(", ");
+        for (int i = 0; i < ids.size(); i++) {
+            placeholders.add("?");
+        }
+
+        List<PurchaseInboundItem> items = new ArrayList<>();
+        String sql = "SELECT ii.id, ii.inbound_id, ii.order_item_id, ii.product_id, p.name as product_name, " +
+                     "ii.quantity, ii.unit_price, ii.total_price " +
+                     "FROM purchase_inbound_items ii LEFT JOIN products p ON ii.product_id = p.id " +
+                     "WHERE ii.inbound_id IN (" + placeholders + ") ORDER BY ii.inbound_id, ii.id";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            for (int i = 0; i < ids.size(); i++) {
+                pstmt.setInt(i + 1, ids.get(i));
+            }
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                items.add(mapRowToPurchaseInboundItem(rs));
+            }
+        }
+        return items;
     }
 
     /**
