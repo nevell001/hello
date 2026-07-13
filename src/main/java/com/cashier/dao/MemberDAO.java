@@ -399,6 +399,57 @@ public class MemberDAO {
     }
 
     /**
+     * 分页搜索会员（按姓名或手机号）。
+     */
+    public static PageResult<Member> search(String keyword, int pageNum, int pageSize) throws SQLException {
+        if (pageNum < 1) {
+            pageNum = 1;
+        }
+        if (pageSize < 1) {
+            pageSize = 20;
+        }
+
+        List<Member> members = new ArrayList<>();
+        String pattern = "%" + keyword + "%";
+        long total = countByKeyword(pattern);
+        int offset = (pageNum - 1) * pageSize;
+        String sql = "SELECT id, member_code, phone, name, points, level, discount, balance, birthday FROM members " +
+                     "WHERE name LIKE ? OR phone LIKE ? ORDER BY name LIMIT ? OFFSET ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, pattern);
+            pstmt.setString(2, pattern);
+            pstmt.setInt(3, pageSize);
+            pstmt.setInt(4, offset);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    members.add(mapRowToMember(rs));
+                }
+            }
+        }
+        return new PageResult<>(members, pageNum, pageSize, total);
+    }
+
+    private static long countByKeyword(String pattern) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM members WHERE name LIKE ? OR phone LIKE ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, pattern);
+            pstmt.setString(2, pattern);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getLong(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+    /**
      * 根据等级查询会员
      */
     public static List<Member> findByLevel(String level) throws SQLException {

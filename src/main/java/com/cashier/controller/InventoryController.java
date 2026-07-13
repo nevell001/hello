@@ -8,6 +8,7 @@ import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
 import com.cashier.dao.UnitDAO;
 import com.cashier.model.Category;
+import com.cashier.model.PageResult;
 import com.cashier.model.Product;
 import com.cashier.model.Unit;
 import com.cashier.model.User;
@@ -48,6 +49,8 @@ import java.util.HashMap;
 @SuppressWarnings("unchecked")
 public class InventoryController extends BaseController<Product> {
     private static final Logger logger = LoggerFactoryUtil.getLogger(InventoryController.class);
+    private static final int FIRST_PAGE = 1;
+    private static final int DESKTOP_PAGE_SIZE = 500;
 
     @FXML
     private TableView<Product> inventoryTable;
@@ -103,6 +106,7 @@ public class InventoryController extends BaseController<Product> {
     private final ProductDAORefactored productDAO = DAOFactory.getInstance().getProductDAO();
     private ObservableList<Product> inventoryList;
     private Map<Integer, Product> inventoryMap;
+    private long totalProducts;
 
     /**
      * 初始化方法
@@ -210,26 +214,32 @@ public class InventoryController extends BaseController<Product> {
     @Override
     protected void loadTableData() {
         try {
-            List<Product> products = productDAO.findAll();
-            inventoryMap = new HashMap<>();
-            for (Product product : products) {
-                inventoryMap.put(product.id, product);
-            }
+            PageResult<Product> products = productDAO.findAll(FIRST_PAGE, DESKTOP_PAGE_SIZE);
+            totalProducts = products.getTotal();
+            setLoadedProducts(products.getData());
         } catch (SQLException e) {
             logger.error("加载商品数据失败", e);
             showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
             inventoryMap = new HashMap<>();
+            totalProducts = 0;
         }
         inventoryList = FXCollections.observableArrayList(inventoryMap.values());
         inventoryTable.setItems(inventoryList);
         updateCountLabel();
     }
 
+    private void setLoadedProducts(java.util.Collection<Product> products) {
+        inventoryMap = new HashMap<>();
+        for (Product product : products) {
+            inventoryMap.put(product.id, product);
+        }
+    }
+
     /**
      * 更新商品数量标签
      */
     private void updateCountLabel() {
-        countLabel.setText(i18n.get("inventory.count") + ": " + inventoryList.size());
+        countLabel.setText(i18n.get("inventory.count") + ": " + inventoryList.size() + "/" + totalProducts);
     }
 
     /**
@@ -414,11 +424,13 @@ public class InventoryController extends BaseController<Product> {
     public void handleSearch() {
         String searchText = searchField.getText().trim();
         if (searchText.isEmpty()) {
-            inventoryList.setAll(inventoryMap.values());
+            loadTableData();
         } else {
             try {
-                List<Product> results = productDAO.search(searchText);
-                inventoryList.setAll(results);
+                PageResult<Product> results = productDAO.search(searchText, FIRST_PAGE, DESKTOP_PAGE_SIZE);
+                totalProducts = results.getTotal();
+                setLoadedProducts(results.getData());
+                inventoryList.setAll(inventoryMap.values());
             } catch (SQLException e) {
                 logger.error("搜索商品失败", e);
                 showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
@@ -433,8 +445,7 @@ public class InventoryController extends BaseController<Product> {
     @FXML
     public void handleClearSearch() {
         searchField.clear();
-        inventoryList.setAll(inventoryMap.values());
-        updateCountLabel();
+        loadTableData();
     }
 
     /**

@@ -210,4 +210,29 @@ class PerformancePolicyTest {
         assertTrue(profitReportController.contains("TransactionDAO.findByDateRange("));
         assertFalse(profitReportController.contains("allTransactions = TransactionDAO.findAll();"));
     }
+
+    @Test
+    @DisplayName("会员和库存桌面列表必须使用分页加载")
+    void desktopMemberAndInventoryListsUsePagedQueries() throws Exception {
+        String memberController = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/MemberController.java"
+        ));
+        String inventoryController = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/InventoryController.java"
+        ));
+        String memberDao = Files.readString(Path.of(
+            "src/main/java/com/cashier/dao/MemberDAO.java"
+        ));
+
+        assertTrue(memberController.contains("MemberDAO.findAll(FIRST_PAGE, DESKTOP_PAGE_SIZE)"));
+        assertTrue(memberController.contains("MemberDAO.search(searchText, FIRST_PAGE, DESKTOP_PAGE_SIZE)"));
+        assertFalse(memberController.contains("MemberDAO.findAll()"));
+
+        assertTrue(inventoryController.contains("productDAO.findAll(FIRST_PAGE, DESKTOP_PAGE_SIZE)"));
+        assertTrue(inventoryController.contains("productDAO.search(searchText, FIRST_PAGE, DESKTOP_PAGE_SIZE)"));
+        assertFalse(inventoryController.contains("productDAO.findAll()"));
+        assertFalse(inventoryController.contains("productDAO.search(searchText)"));
+
+        assertTrue(memberDao.contains("PageResult<Member> search(String keyword, int pageNum, int pageSize)"));
+    }
 }

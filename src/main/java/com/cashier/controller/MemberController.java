@@ -6,6 +6,7 @@ import com.cashier.controller.base.BaseController;
 import com.cashier.dao.MemberDAO;
 import com.cashier.i18n.I18nManager;
 import com.cashier.model.Member;
+import com.cashier.model.PageResult;
 import com.cashier.util.FXMLUtils;
 import com.cashier.util.StatusBarManager;
 import org.slf4j.Logger;
@@ -33,6 +34,8 @@ import java.util.Map;
  */
 public class MemberController extends BaseController<Member> {
     private static final Logger logger = LoggerFactoryUtil.getLogger(MemberController.class);
+    private static final int FIRST_PAGE = 1;
+    private static final int DESKTOP_PAGE_SIZE = 500;
 
     @FXML
     private TableView<Member> memberTable;
@@ -78,6 +81,7 @@ public class MemberController extends BaseController<Member> {
 
     private ObservableList<Member> memberList;
     private Map<String, Member> members;
+    private long totalMembers;
 
     /**
      * 初始化方法
@@ -126,19 +130,25 @@ public class MemberController extends BaseController<Member> {
     @Override
     protected void loadTableData() {
         try {
-            var memberData = MemberDAO.findAll();
-            members = new java.util.HashMap<>();
-            for (Member member : memberData) {
-                members.put(member.phone, member);
-            }
+            PageResult<Member> memberData = MemberDAO.findAll(FIRST_PAGE, DESKTOP_PAGE_SIZE);
+            totalMembers = memberData.getTotal();
+            setLoadedMembers(memberData.getData());
         } catch (SQLException e) {
             logger.error("加载会员数据失败", e);
             showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
             members = new java.util.HashMap<>();
+            totalMembers = 0;
         }
         memberList = FXCollections.observableArrayList(members.values());
         memberTable.setItems(memberList);
         updateCountLabel();
+    }
+
+    private void setLoadedMembers(java.util.Collection<Member> loadedMembers) {
+        members = new java.util.HashMap<>();
+        for (Member member : loadedMembers) {
+            members.put(member.phone, member);
+        }
     }
 
     /**
@@ -172,11 +182,17 @@ public class MemberController extends BaseController<Member> {
     public void handleSearch() {
         String searchText = searchField.getText().trim().toLowerCase();
         if (searchText.isEmpty()) {
-            memberList.setAll(members.values());
+            loadTableData();
         } else {
-            memberList.setAll(members.values().stream()
-                .filter(m -> m.phone.contains(searchText) || m.name.toLowerCase().contains(searchText))
-                .toList());
+            try {
+                PageResult<Member> memberData = MemberDAO.search(searchText, FIRST_PAGE, DESKTOP_PAGE_SIZE);
+                totalMembers = memberData.getTotal();
+                setLoadedMembers(memberData.getData());
+                memberList.setAll(members.values());
+            } catch (SQLException e) {
+                logger.error("搜索会员失败", e);
+                showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
+            }
         }
         updateCountLabel();
     }
@@ -343,8 +359,7 @@ public class MemberController extends BaseController<Member> {
     @FXML
     public void handleClearSearch() {
         searchField.clear();
-        memberList.setAll(members.values());
-        updateCountLabel();
+        loadTableData();
     }
 
     /**
@@ -358,7 +373,7 @@ public class MemberController extends BaseController<Member> {
      * 更新会员数量标签
      */
     private void updateCountLabel() {
-        countLabel.setText(i18n.get("member.count", String.valueOf(memberList.size())));
+        countLabel.setText(i18n.get("member.count", memberList.size() + "/" + totalMembers));
     }
 
     /**
