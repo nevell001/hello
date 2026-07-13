@@ -245,12 +245,9 @@ public class PurchaseReportController {
      */
     private void loadData() {
         try {
-            allOrders = PurchaseOrderDAO.findAll();
+            allOrders = new ArrayList<>();
             allSuppliers = SupplierDAO.findAll();
-            orderItemsMap = PurchaseOrderItemDAO.findByOrderIds(
-                    allOrders.stream().map(order -> order.id).toList()
-                ).stream()
-                .collect(Collectors.groupingBy(item -> item.orderId));
+            orderItemsMap = new HashMap<>();
 
             // 加载供应商列表到下拉框
             javafx.collections.ObservableList<String> supplierList = javafx.collections.FXCollections.observableArrayList();
@@ -263,7 +260,7 @@ public class PurchaseReportController {
                 "全部供应商".equals(value) ? I18nManager.getInstance().get("filter.all_suppliers") : value);
             supplierComboBox.getSelectionModel().select(0);
 
-            logger.info("成功加载 {} 条采购订单记录", allOrders.size());
+            logger.info("成功加载 {} 个供应商", allSuppliers.size());
         } catch (SQLException e) {
             logger.error("加载数据失败", e);
             showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
@@ -340,11 +337,27 @@ public class PurchaseReportController {
 
         String selectedSupplier = supplierComboBox.getSelectionModel().getSelectedItem();
 
-        // 筛选订单记录
-        List<PurchaseOrder> filteredOrders = filterOrders(startDate, endDate, selectedSupplier);
+        List<PurchaseOrder> filteredOrders;
+        try {
+            loadOrdersByDateRange(startDate, endDate);
+            filteredOrders = filterOrders(startDate, endDate, selectedSupplier);
+        } catch (SQLException e) {
+            logger.error("加载采购报表订单失败", e);
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
+            return;
+        }
 
         // 计算统计数据
         calculateStatistics(filteredOrders);
+    }
+
+    private void loadOrdersByDateRange(LocalDate startDate, LocalDate endDate) throws SQLException {
+        allOrders = PurchaseOrderDAO.findByDateRange(startDate.toString(), endDate.toString());
+        orderItemsMap = PurchaseOrderItemDAO.findByOrderIds(
+                allOrders.stream().map(order -> order.id).toList()
+            ).stream()
+            .collect(Collectors.groupingBy(item -> item.orderId));
+        logger.info("成功加载 {} 条采购订单记录", allOrders.size());
     }
 
     /**

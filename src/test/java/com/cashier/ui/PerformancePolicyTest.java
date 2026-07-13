@@ -335,4 +335,22 @@ class PerformancePolicyTest {
         assertTrue(purchaseInboundDao.contains("ORDER BY pi.create_time DESC LIMIT ?"));
         assertFalse(purchaseInboundController.contains("PurchaseInboundDAO.findAll()"));
     }
+
+    @Test
+    @DisplayName("采购报表和审批页面不得默认全量加载采购订单")
+    void purchaseReportsAndApprovalAvoidUnboundedOrderLoads() throws Exception {
+        String purchaseReportController = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/PurchaseReportController.java"
+        ));
+        String purchaseApprovalController = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/PurchaseApprovalController.java"
+        ));
+
+        assertTrue(purchaseReportController.contains("PurchaseOrderDAO.findByDateRange("));
+        assertTrue(purchaseReportController.contains("loadOrdersByDateRange(startDate, endDate)"));
+        assertFalse(purchaseReportController.contains("PurchaseOrderDAO.findAll()"));
+
+        assertTrue(purchaseApprovalController.contains("PurchaseOrderDAO.findRecent(APPROVAL_ORDER_LIMIT)"));
+        assertFalse(purchaseApprovalController.contains("PurchaseOrderDAO.findAll()"));
+    }
 }

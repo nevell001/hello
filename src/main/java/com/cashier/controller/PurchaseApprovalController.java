@@ -35,6 +35,7 @@ import javafx.stage.Stage;
 @SuppressWarnings("unchecked")
 public class PurchaseApprovalController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(PurchaseApprovalController.class);
+    private static final int APPROVAL_ORDER_LIMIT = 500;
 
     @FXML
     private TableView<PurchaseOrder> orderTable;
@@ -139,7 +140,7 @@ public class PurchaseApprovalController {
      */
     private void loadAllOrders() {
         try {
-            List<PurchaseOrder> orderData = PurchaseOrderDAO.findAll();
+            List<PurchaseOrder> orderData = PurchaseOrderDAO.findRecent(APPROVAL_ORDER_LIMIT);
             orders = new HashMap<>();
             for (PurchaseOrder order : orderData) {
                 orders.put(order.id, order);
