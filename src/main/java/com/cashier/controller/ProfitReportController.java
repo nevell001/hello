@@ -9,6 +9,7 @@ import com.cashier.dao.PurchaseInboundDAO;
 import com.cashier.dao.PurchaseInboundItemDAO;
 import com.cashier.dao.TransactionDAO;
 import com.cashier.util.CurrencyUtil;
+import com.cashier.util.DateTimeFormats;
 import com.cashier.model.Product;
 import com.cashier.model.PurchaseInbound;
 import com.cashier.model.PurchaseInboundItem;
@@ -25,7 +26,6 @@ import javafx.scene.control.*;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.*;
 
 /**
@@ -274,7 +274,7 @@ public class ProfitReportController {
     private void loadData() {
         try {
             allProducts = productDAO.findAll();
-            allTransactions = TransactionDAO.findAll();
+            allTransactions = findTransactionsByDateRange(startDatePicker.getValue(), endDatePicker.getValue());
             allInboundRecords = PurchaseInboundDAO.findAll();
             productActualCostMap = new HashMap<>();
             productNameMap = new HashMap<>();
@@ -420,8 +420,27 @@ public class ProfitReportController {
 
         String selectedCategory = categoryComboBox.getSelectionModel().getSelectedItem();
 
+        try {
+            allTransactions = findTransactionsByDateRange(startDate, endDate);
+        } catch (SQLException e) {
+            logger.error("加载利润报表交易记录失败", e);
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
+            allTransactions = new ArrayList<>();
+            return;
+        }
+
         // 计算统计数据
         calculateStatistics(startDate, endDate, selectedCategory);
+    }
+
+    private List<Transaction> findTransactionsByDateRange(LocalDate startDate, LocalDate endDate) throws SQLException {
+        if (startDate == null || endDate == null) {
+            return new ArrayList<>();
+        }
+        return TransactionDAO.findByDateRange(
+            startDate.atStartOfDay().format(DateTimeFormats.STANDARD_DATE_TIME),
+            endDate.plusDays(1).atStartOfDay().minusSeconds(1).format(DateTimeFormats.STANDARD_DATE_TIME)
+        );
     }
 
     /**
@@ -461,7 +480,7 @@ public class ProfitReportController {
 
     private LocalDate parseTransactionDate(Transaction transaction) {
         java.time.LocalDateTime ldt = java.time.LocalDateTime.parse(transaction.timestamp, com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME);
-        return ldt.atZone(ZoneId.systemDefault()).toLocalDate();
+        return ldt.toLocalDate();
     }
 
     private boolean isWithinRange(LocalDate date, LocalDate startDate, LocalDate endDate) {

@@ -183,4 +183,31 @@ class PerformancePolicyTest {
         assertTrue(productDao.contains("findLowStock(int pageNum, int pageSize)"));
         assertTrue(productDao.contains("getInventorySummary()"));
     }
+
+    @Test
+    @DisplayName("桌面交易相关页面必须避免默认全量交易加载")
+    void desktopTransactionViewsUseDateRangeOrAggregates() throws Exception {
+        String transactionController = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/TransactionController.java"
+        ));
+        String shiftController = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/ShiftController.java"
+        ));
+        String profitReportController = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/ProfitReportController.java"
+        ));
+
+        assertTrue(transactionController.contains("findTransactionsByCurrentDateRange()"));
+        assertTrue(transactionController.contains("TransactionDAO.findByDateRange("));
+        assertFalse(transactionController.contains("allTransactions = TransactionDAO.findAll();"));
+
+        assertTrue(shiftController.contains("TransactionDAO.getTotalRevenue("));
+        assertTrue(shiftController.contains("TransactionDAO.getTransactionCount("));
+        assertTrue(shiftController.contains("TransactionDAO.findByDateRange("));
+        assertFalse(shiftController.contains("TransactionDAO.findAll()"));
+
+        assertTrue(profitReportController.contains("findTransactionsByDateRange(startDate"));
+        assertTrue(profitReportController.contains("TransactionDAO.findByDateRange("));
+        assertFalse(profitReportController.contains("allTransactions = TransactionDAO.findAll();"));
+    }
 }

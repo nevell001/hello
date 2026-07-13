@@ -8,6 +8,7 @@ import com.cashier.dao.TransactionDAO;
 import com.cashier.model.Shift;
 import com.cashier.model.Transaction;
 import com.cashier.util.CurrencyUtil;
+import com.cashier.util.DateTimeFormats;
 import com.cashier.util.StatusBarManager;
 import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
@@ -31,6 +32,7 @@ import java.util.*;
  */
 public class ShiftController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(ShiftController.class);
+    private static final String BEGINNING_OF_TIME = "0000-01-01 00:00:00";
 
     @FXML
     private TableView<Shift> shiftTable;
@@ -581,21 +583,17 @@ public class ShiftController {
                 return;
             }
 
-            // 加载现有交易记录，获取当前总营业额和交易数
-            List<Transaction> transactions;
+            // 获取当前累计营业额和交易数，数据库侧聚合，避免加载全量交易对象。
+            BigDecimal totalRevenue;
+            int totalTransactions;
             try {
-                transactions = TransactionDAO.findAll();
+                String now = java.time.LocalDateTime.now().format(DateTimeFormats.STANDARD_DATE_TIME);
+                totalRevenue = BigDecimal.valueOf(TransactionDAO.getTotalRevenue(BEGINNING_OF_TIME, now));
+                totalTransactions = TransactionDAO.getTransactionCount(BEGINNING_OF_TIME, now);
             } catch (SQLException e) {
-                logger.error("加载交易记录失败", e);
+                logger.error("加载交易统计失败", e);
                 showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
                 return;
-            }
-
-            BigDecimal totalRevenue = BigDecimal.ZERO;
-            int totalTransactions = transactions.size();
-
-            for (Transaction t : transactions) {
-                totalRevenue = totalRevenue.add(t.getFinalAmount());
             }
 
             // 生成班次ID
@@ -667,47 +665,39 @@ try {
         }
 
         try {
-            // 加载所有交易记录
-            List<Transaction> allTransactions;
+            // 只加载本班次开始后的交易记录。
+            List<Transaction> shiftTransactions;
             try {
-                allTransactions = TransactionDAO.findAll();
+                shiftTransactions = TransactionDAO.findByDateRange(
+                    activeShift.startTime.atZone(java.time.ZoneId.systemDefault())
+                        .toLocalDateTime()
+                        .format(DateTimeFormats.STANDARD_DATE_TIME),
+                    java.time.LocalDateTime.now().format(DateTimeFormats.STANDARD_DATE_TIME)
+                );
             } catch (SQLException e) {
                 logger.error("加载交易记录失败", e);
                 showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
                 return;
             }
 
-            // 筛选本班次的交易记录（在班次开始时间之后的交易）
-            java.time.format.DateTimeFormatter sdf = com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME;
-            List<Transaction> shiftTransactions = new java.util.ArrayList<>();
             BigDecimal cashRevenue = BigDecimal.ZERO;
             BigDecimal wechatRevenue = BigDecimal.ZERO;
             BigDecimal alipayRevenue = BigDecimal.ZERO;
             BigDecimal cardRevenue = BigDecimal.ZERO;
             BigDecimal totalRevenue = BigDecimal.ZERO;
 
-            for (Transaction t : allTransactions) {
-                try {
-                    java.time.LocalDateTime transactionTime = java.time.LocalDateTime.parse(t.timestamp, sdf);
-                    java.time.ZonedDateTime transactionZoned = transactionTime.atZone(java.time.ZoneId.systemDefault());
-                    java.time.ZonedDateTime shiftStartZoned = activeShift.startTime.atZone(java.time.ZoneId.systemDefault());
-                    if (transactionZoned.toInstant().isAfter(shiftStartZoned.toInstant()) || transactionZoned.toInstant().equals(shiftStartZoned.toInstant())) {
-                        shiftTransactions.add(t);
-                        totalRevenue = totalRevenue.add(t.getFinalAmount());
+            for (Transaction t : shiftTransactions) {
+                totalRevenue = totalRevenue.add(t.getFinalAmount());
 
-                        // 按支付方式分类统计
-                        if ("现金".equals(t.paymentMethod)) {
-                            cashRevenue = cashRevenue.add(t.getFinalAmount());
-                        } else if ("微信".equals(t.paymentMethod)) {
-                            wechatRevenue = wechatRevenue.add(t.getFinalAmount());
-                        } else if ("支付宝".equals(t.paymentMethod)) {
-                            alipayRevenue = alipayRevenue.add(t.getFinalAmount());
-                        } else if ("银行卡".equals(t.paymentMethod)) {
-                            cardRevenue = cardRevenue.add(t.getFinalAmount());
-                        }
-                    }
-                } catch (Exception e) {
-                    logger.error("解析交易时间失败: {}", t.timestamp, e);
+                // 按支付方式分类统计
+                if ("现金".equals(t.paymentMethod) || "CASH".equals(t.paymentMethod)) {
+                    cashRevenue = cashRevenue.add(t.getFinalAmount());
+                } else if ("微信".equals(t.paymentMethod) || "WECHAT".equals(t.paymentMethod)) {
+                    wechatRevenue = wechatRevenue.add(t.getFinalAmount());
+                } else if ("支付宝".equals(t.paymentMethod) || "ALIPAY".equals(t.paymentMethod)) {
+                    alipayRevenue = alipayRevenue.add(t.getFinalAmount());
+                } else if ("银行卡".equals(t.paymentMethod) || "CARD".equals(t.paymentMethod)) {
+                    cardRevenue = cardRevenue.add(t.getFinalAmount());
                 }
             }
 

@@ -7,6 +7,7 @@ import com.cashier.i18n.I18nManager;
 import com.cashier.model.Transaction;
 import com.cashier.model.Product;
 import com.cashier.util.CurrencyUtil;
+import com.cashier.util.DateTimeFormats;
 import com.cashier.util.FXMLUtils;
 import com.cashier.util.StatusBarManager;
 import com.cashier.util.FormValidator;
@@ -118,7 +119,9 @@ public class TransactionController {
         ));
         com.cashier.util.I18nUiUtils.configureComboBox(
             quickDateComboBox, com.cashier.util.I18nUiUtils::dateRange);
-        quickDateComboBox.setValue("全部报表");
+        LocalDate today = LocalDate.now();
+        quickDateComboBox.setValue("本月");
+        setDateRange(today.withDayOfMonth(1), today);
 
         // 设置表格列
         setupTableColumns();
@@ -192,7 +195,7 @@ public class TransactionController {
     private void loadTransactions() {
         logger.info("TransactionController: 开始加载交易数据...");
         try {
-            allTransactions = TransactionDAO.findAll();
+            allTransactions = findTransactionsByCurrentDateRange();
         } catch (SQLException e) {
             logger.error("加载交易数据失败", e);
             showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
@@ -202,6 +205,21 @@ public class TransactionController {
         transactionTable.setItems(transactionList);
         updateStatistics();
         logger.info("TransactionController: 加载了 {} 条交易记录", allTransactions.size());
+    }
+
+    private List<Transaction> findTransactionsByCurrentDateRange() throws SQLException {
+        LocalDate startDate = startDatePicker.getValue();
+        LocalDate endDate = endDatePicker.getValue();
+        if (startDate == null && endDate == null) {
+            return TransactionDAO.findAll();
+        }
+
+        LocalDate effectiveStart = startDate != null ? startDate : LocalDate.now().minusDays(30);
+        LocalDate effectiveEnd = endDate != null ? endDate : LocalDate.now();
+        return TransactionDAO.findByDateRange(
+            effectiveStart.atStartOfDay().format(DateTimeFormats.STANDARD_DATE_TIME),
+            effectiveEnd.plusDays(1).atStartOfDay().minusSeconds(1).format(DateTimeFormats.STANDARD_DATE_TIME)
+        );
     }
 
     /**
@@ -393,6 +411,14 @@ public class TransactionController {
      * 应用筛选条件
      */
     private void applyFilters() {
+        try {
+            allTransactions = findTransactionsByCurrentDateRange();
+        } catch (SQLException e) {
+            logger.error("筛选交易记录失败", e);
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
+            allTransactions = java.util.List.of();
+        }
+
         String searchText = searchField.getText().trim().toLowerCase();
         String paymentMethod = paymentMethodComboBox.getSelectionModel().getSelectedItem();
 
