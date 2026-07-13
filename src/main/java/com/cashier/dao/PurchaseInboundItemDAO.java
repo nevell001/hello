@@ -9,7 +9,9 @@ import java.sql.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
 /**
@@ -123,6 +125,30 @@ public class PurchaseInboundItemDAO {
             }
         }
         return items;
+    }
+
+    /**
+     * 按商品聚合采购入库明细，计算加权平均入库成本。
+     */
+    public static Map<Integer, BigDecimal> findAverageUnitCostByProductId() throws SQLException {
+        Map<Integer, BigDecimal> averageCosts = new HashMap<>();
+        String sql = "SELECT product_id, SUM(unit_price * quantity) / SUM(quantity) AS avg_unit_cost " +
+                     "FROM purchase_inbound_items " +
+                     "WHERE product_id > 0 AND quantity > 0 " +
+                     "GROUP BY product_id";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                BigDecimal averageCost = rs.getBigDecimal("avg_unit_cost");
+                if (averageCost != null) {
+                    averageCosts.put(rs.getInt("product_id"), averageCost);
+                }
+            }
+        }
+        return averageCosts;
     }
 
     /**

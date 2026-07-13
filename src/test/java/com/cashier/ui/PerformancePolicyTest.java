@@ -21,8 +21,12 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/dao/PurchaseInboundItemDAO.java"
         ));
 
-        assertTrue(controller.contains("PurchaseInboundItemDAO.findByInboundIds("));
+        assertTrue(controller.contains("PurchaseInboundItemDAO.findAverageUnitCostByProductId()"));
+        assertFalse(controller.contains("PurchaseInboundDAO.findAll()"));
+        assertFalse(controller.contains("PurchaseInboundItemDAO.findByInboundIds("));
         assertTrue(dao.contains("findByInboundIds(Collection<Integer> inboundIds)"));
+        assertTrue(dao.contains("findAverageUnitCostByProductId()"));
+        assertTrue(dao.contains("GROUP BY product_id"));
         assertFalse(controller.contains("PurchaseInboundItemDAO.findByInboundId(inbound.id)"));
     }
 
@@ -217,6 +221,9 @@ class PerformancePolicyTest {
         String memberController = Files.readString(Path.of(
             "src/main/java/com/cashier/controller/MemberController.java"
         ));
+        String memberEditController = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/MemberEditController.java"
+        ));
         String inventoryController = Files.readString(Path.of(
             "src/main/java/com/cashier/controller/InventoryController.java"
         ));
@@ -227,6 +234,8 @@ class PerformancePolicyTest {
         assertTrue(memberController.contains("MemberDAO.findAll(FIRST_PAGE, DESKTOP_PAGE_SIZE)"));
         assertTrue(memberController.contains("MemberDAO.search(searchText, FIRST_PAGE, DESKTOP_PAGE_SIZE)"));
         assertFalse(memberController.contains("MemberDAO.findAll()"));
+        assertTrue(memberEditController.contains("MemberDAO.findByPhone(phone)"));
+        assertFalse(memberEditController.contains("MemberDAO.findAll()"));
 
         assertTrue(inventoryController.contains("productDAO.findAll(FIRST_PAGE, DESKTOP_PAGE_SIZE)"));
         assertTrue(inventoryController.contains("productDAO.search(searchText, FIRST_PAGE, DESKTOP_PAGE_SIZE)"));
@@ -277,6 +286,9 @@ class PerformancePolicyTest {
 
         assertFalse(restockController.contains("productDAO.findAll()"));
         assertFalse(productEditController.contains("productDAO.findAll()"));
+        assertTrue(productEditController.contains("PRODUCT_SUPPLIER_LIMIT = 500"));
+        assertTrue(productEditController.contains("SupplierDAO.findByStatus(true, PRODUCT_SUPPLIER_LIMIT)"));
+        assertFalse(productEditController.contains("SupplierDAO.findAll()"));
         assertTrue(productEditController.contains("productDAO.countByProductCodePrefix(prefix)"));
         assertTrue(productDao.contains("countByProductCodePrefix(String prefix)"));
     }
@@ -366,6 +378,9 @@ class PerformancePolicyTest {
         String alertService = Files.readString(Path.of(
             "src/main/java/com/cashier/service/InventoryAlertService.java"
         ));
+        String alertController = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/InventoryAlertController.java"
+        ));
 
         assertTrue(productDao.contains("InventoryStatistics getInventoryStatistics()"));
         assertTrue(productDao.contains("COALESCE(SUM(quantity), 0) AS total_quantity"));
@@ -375,6 +390,8 @@ class PerformancePolicyTest {
         assertTrue(inventoryService.contains("productDAO.getInventoryStatistics()"));
         assertTrue(alertService.contains("productDAO.findProductsRequiringStockAlert()"));
         assertFalse(alertService.contains("productDAO.findAll()"));
+        assertTrue(alertController.contains("productDAO.findProductsRequiringStockAlert()"));
+        assertFalse(alertController.contains("productDAO.findAll()"));
     }
 
     @Test
@@ -415,5 +432,23 @@ class PerformancePolicyTest {
         assertTrue(dao.contains("search(String keyword, int limit)"));
         assertTrue(dao.contains("countBySupplierCodePrefix(String prefix)"));
         assertTrue(dao.contains("ORDER BY create_time DESC, id DESC LIMIT ?"));
+    }
+
+    @Test
+    @DisplayName("采购单商品选择必须使用有界商品查询")
+    void purchaseOrderProductSelectionUsesBoundedQueries() throws Exception {
+        String controller = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/PurchaseOrderController.java"
+        ));
+
+        assertTrue(controller.contains("PRODUCT_SELECTION_PAGE_SIZE = 500"));
+        assertTrue(controller.contains("PURCHASE_SUPPLIER_LIMIT = 500"));
+        assertTrue(controller.contains("SupplierDAO.findByStatus(true, PURCHASE_SUPPLIER_LIMIT)"));
+        assertTrue(controller.contains("productDAO.findAll(FIRST_PAGE, PRODUCT_SELECTION_PAGE_SIZE)"));
+        assertTrue(controller.contains("productDAO.search(normalizedSearch, FIRST_PAGE, PRODUCT_SELECTION_PAGE_SIZE)"));
+        assertTrue(controller.contains("productDAO.findByCategory(category, FIRST_PAGE, PRODUCT_SELECTION_PAGE_SIZE)"));
+        assertFalse(controller.contains("productDAO.findAll()"));
+        assertFalse(controller.contains("SupplierDAO.findAll()"));
+        assertFalse(controller.contains("filterProducts("));
     }
 }

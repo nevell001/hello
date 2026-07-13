@@ -16,8 +16,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
 
-import java.util.Map;
-
 /**
  * 会员编辑控制器
  * 处理会员添加和编辑对话框的逻辑
@@ -67,25 +65,12 @@ public class MemberEditController {
     private Stage dialogStage;
     private Member member;
     private boolean okClicked = false;
-    private Map<String, Member> members;
 
     /**
      * 初始化方法
      */
     @FXML
     private void initialize() {
-        // 加载会员数据
-        try {
-            var memberList = MemberDAO.findAll();
-            members = new java.util.HashMap<>();
-            for (Member m : memberList) {
-                members.put(m.phone, m);
-            }
-        } catch (SQLException e) {
-            logger.error("加载会员数据失败", e);
-            members = new java.util.HashMap<>();
-        }
-
         // 初始化等级下拉框
         levelComboBox.setItems(FXCollections.observableArrayList(
             "普通", "银卡", "金卡", "钻石"
@@ -278,8 +263,19 @@ public class MemberEditController {
             appendValidationError(errorMessage, "member.validation.phone_required");
         } else if (!phone.matches("\\d{11}")) {
             appendValidationError(errorMessage, "member.validation.phone_invalid");
-        } else if (member == null && members.containsKey(phone)) {
-            appendValidationError(errorMessage, "member.validation.phone_exists");
+        } else if (member == null) {
+            validateNewMemberPhone(errorMessage, phone);
+        }
+    }
+
+    private void validateNewMemberPhone(StringBuilder errorMessage, String phone) {
+        try {
+            if (MemberDAO.findByPhone(phone) != null) {
+                appendValidationError(errorMessage, "member.validation.phone_exists");
+            }
+        } catch (SQLException e) {
+            logger.error("检查会员手机号是否存在失败", e);
+            appendValidationError(errorMessage, "error.load_data");
         }
     }
 

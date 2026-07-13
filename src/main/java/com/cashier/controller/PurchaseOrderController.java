@@ -48,6 +48,9 @@ public class PurchaseOrderController {
     private static final String TEXT_DEFAULT_STYLE = "text-default";
     private static final String FONT_WEIGHT_BOLD_STYLE = "-fx-font-weight: bold;";
     private static final int PURCHASE_ORDER_LIMIT = 500;
+    private static final int PRODUCT_SELECTION_PAGE_SIZE = 500;
+    private static final int PURCHASE_SUPPLIER_LIMIT = 500;
+    private static final int FIRST_PAGE = 1;
     private final com.cashier.dao.ProductDAORefactored productDAO = com.cashier.dao.DAOFactory.getInstance().getProductDAO();
 
     @FXML
@@ -146,7 +149,7 @@ public class PurchaseOrderController {
      */
     private void loadSuppliers() {
         try {
-            List<Supplier> supplierData = SupplierDAO.findAll();
+            List<Supplier> supplierData = SupplierDAO.findByStatus(true, PURCHASE_SUPPLIER_LIMIT);
             suppliers = new HashMap<>();
             for (Supplier supplier : supplierData) {
                 suppliers.put(supplier.id, supplier);
@@ -296,7 +299,7 @@ public class PurchaseOrderController {
             boolean isEdit = order != null;
             if (isEdit) {
                 orderNoField.setText(order.orderNo);
-                Supplier supplier = suppliers.get(order.supplierId);
+                Supplier supplier = findSupplierForOrder(order.supplierId);
                 if (supplier != null) {
                     supplierCombo.setValue(supplier);
                 }
@@ -474,6 +477,24 @@ public class PurchaseOrderController {
             return supplierDisplayText.substring(dashIndex + 3, spaceIndex);
         }
         return supplierDisplayText;
+    }
+
+    private Supplier findSupplierForOrder(int supplierId) {
+        Supplier supplier = suppliers.get(supplierId);
+        if (supplier != null) {
+            return supplier;
+        }
+
+        try {
+            supplier = SupplierDAO.findById(supplierId);
+            if (supplier != null) {
+                suppliers.put(supplier.id, supplier);
+            }
+            return supplier;
+        } catch (SQLException e) {
+            logger.error("加载采购订单供应商失败，supplierId={}", supplierId, e);
+            return null;
+        }
     }
 
     private TableView<PurchaseOrderItem> createOrderItemTable() {
@@ -774,10 +795,7 @@ public class PurchaseOrderController {
             
             productTable.getColumns().addAll(nameCol, barcodeCol, costCol, stockCol);
             
-            // 加载商品数据
-            List<Product> allProducts = productDAO.findAll();
-            ObservableList<Product> productList = FXCollections.observableArrayList(allProducts);
-            productTable.setItems(productList);
+            loadProductSelectionPage(productTable, searchField.getText(), categoryCombo.getValue());
 
             // 监听选择状态变化，刷新表格以更新复选框显示
             productTable.getSelectionModel().getSelectedItems().addListener((javafx.collections.ListChangeListener<Product>) c -> {
@@ -786,11 +804,11 @@ public class PurchaseOrderController {
 
             // 搜索和分类筛选功能
             searchField.textProperty().addListener((obs, oldVal, newVal) -> {
-                filterProducts(productTable, allProducts, productList, newVal, categoryCombo.getValue());
+                loadProductSelectionPage(productTable, newVal, categoryCombo.getValue());
             });
             
             categoryCombo.setOnAction(e -> {
-                filterProducts(productTable, allProducts, productList, searchField.getText(), categoryCombo.getValue());
+                loadProductSelectionPage(productTable, searchField.getText(), categoryCombo.getValue());
             });
 
             // 全选/取消全选按钮
@@ -871,32 +889,31 @@ public class PurchaseOrderController {
         }
     }
 
-    /**
-     * 过滤商品列表
-     */
-    private void filterProducts(TableView<Product> productTable, List<Product> allProducts, 
-                                ObservableList<Product> productList, String searchText, String category) {
-        String searchLower = searchText.toLowerCase();
-        String categoryLower = category != null ? category.toLowerCase() : "";
-        
-        List<Product> filtered = allProducts.stream()
-            .filter(p -> {
-                // 分类筛选
-                if (!"全部分类".equals(categoryLower) && !"".equals(categoryLower)) {
-                    if (p.category == null || !p.category.toLowerCase().contains(categoryLower)) {
-                        return false;
-                    }
+    private void loadProductSelectionPage(TableView<Product> productTable, String searchText, String category) {
+        try {
+            String normalizedSearch = searchText == null ? "" : searchText.trim();
+            boolean allCategorySelected = category == null || category.isBlank() || "全部分类".equals(category);
+            List<Product> products;
+
+            if (!normalizedSearch.isEmpty()) {
+                products = productDAO.search(normalizedSearch, FIRST_PAGE, PRODUCT_SELECTION_PAGE_SIZE).getData();
+                if (!allCategorySelected) {
+                    products = products.stream()
+                        .filter(product -> category.equals(product.category))
+                        .toList();
                 }
-                // 搜索筛选
-                if (!searchLower.isEmpty()) {
-                    return p.name.toLowerCase().contains(searchLower) || 
-                           (p.barcode != null && p.barcode.toLowerCase().contains(searchLower));
-                }
-                return true;
-            })
-            .collect(Collectors.toList());
-        
-        productTable.setItems(FXCollections.observableArrayList(filtered));
+            } else if (!allCategorySelected) {
+                products = productDAO.findByCategory(category, FIRST_PAGE, PRODUCT_SELECTION_PAGE_SIZE).getData();
+            } else {
+                products = productDAO.findAll(FIRST_PAGE, PRODUCT_SELECTION_PAGE_SIZE).getData();
+            }
+
+            productTable.setItems(FXCollections.observableArrayList(products));
+            productTable.getSelectionModel().clearSelection();
+        } catch (SQLException e) {
+            logger.error("加载采购商品选择列表失败", e);
+            showError(I18nManager.getInstance().get("runtime.product_load_short_failed", e.getMessage()));
+        }
     }
 
     /**

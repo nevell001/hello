@@ -34,6 +34,7 @@ import java.util.Map;
  */
 public class ProductEditController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(ProductEditController.class);
+    private static final int PRODUCT_SUPPLIER_LIMIT = 500;
 
     @FXML
     private Label titleLabel;
@@ -178,11 +179,9 @@ public class ProductEditController {
         // 不添加默认供应商，要求必须选择
 
         try {
-            List<Supplier> supplierList = SupplierDAO.findAll();
+            List<Supplier> supplierList = SupplierDAO.findByStatus(true, PRODUCT_SUPPLIER_LIMIT);
             for (Supplier supplier : supplierList) {
-                if (supplier.status) { // 只加载启用的供应商
-                    suppliers.add(supplier.name);
-                }
+                suppliers.add(supplier.name);
             }
         } catch (SQLException e) {
             logger.error("加载供应商数据失败", e);

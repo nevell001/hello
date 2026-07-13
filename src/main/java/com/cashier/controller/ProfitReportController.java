@@ -5,7 +5,6 @@ import com.cashier.i18n.I18nKeys;
 import com.cashier.i18n.I18nManager;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
-import com.cashier.dao.PurchaseInboundDAO;
 import com.cashier.dao.PurchaseInboundItemDAO;
 import com.cashier.dao.TransactionDAO;
 import com.cashier.util.CurrencyUtil;
@@ -146,8 +145,6 @@ public class ProfitReportController {
 
     private List<Product> allProducts;
     private List<Transaction> allTransactions;
-    private List<PurchaseInbound> allInboundRecords;
-    private List<PurchaseInboundItem> allInboundItems;
     private Map<String, Double> productActualCostMap; // 商品实际成本（加权平均）
     private Map<String, Product> productNameMap; // 商品名称到商品的映射
     private Set<String> allCategories;
@@ -275,17 +272,11 @@ public class ProfitReportController {
         try {
             allProducts = productDAO.findAll();
             allTransactions = findTransactionsByDateRange(startDatePicker.getValue(), endDatePicker.getValue());
-            allInboundRecords = PurchaseInboundDAO.findAll();
             productActualCostMap = new HashMap<>();
             productNameMap = new HashMap<>();
             allCategories = new TreeSet<>();
 
-            allInboundItems = PurchaseInboundItemDAO.findByInboundIds(
-                allInboundRecords.stream().map(inbound -> inbound.id).toList()
-            );
-
-            // 计算每个商品的加权平均成本
-            calculateProductActualCosts();
+            loadProductActualCosts();
 
             // 构建商品名称映射（用于快速查找）
             productNameMap = new HashMap<>();
@@ -311,15 +302,13 @@ public class ProfitReportController {
                 "全部分类".equals(value) ? I18nManager.getInstance().get(I18nKeys.Filter.ALL_CATEGORIES) : value);
             categoryComboBox.getSelectionModel().select(0);
 
-            logger.info("成功加载 {} 个商品，{} 条交易记录，{} 条入库记录，{} 条入库明细",
-                allProducts.size(), allTransactions.size(), allInboundRecords.size(), allInboundItems.size());
+            logger.info("成功加载 {} 个商品，{} 条交易记录，{} 个商品实际成本",
+                allProducts.size(), allTransactions.size(), productActualCostMap.size());
         } catch (SQLException e) {
             logger.error("加载数据失败", e);
             showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
             allProducts = new ArrayList<>();
             allTransactions = new ArrayList<>();
-            allInboundRecords = new ArrayList<>();
-            allInboundItems = new ArrayList<>();
             productActualCostMap = new HashMap<>();
             productNameMap = new HashMap<>();
             allCategories = new TreeSet<>();
@@ -327,30 +316,18 @@ public class ProfitReportController {
     }
 
     /**
-     * 计算每个商品的加权平均成本
+     * 加载每个商品的加权平均采购成本
      */
-    private void calculateProductActualCosts() {
-        Map<Integer, Double> totalCostMap = new HashMap<>();
-        Map<Integer, Integer> totalQuantityMap = new HashMap<>();
-
-        // 统计每个商品的总成本和总数量
-        for (PurchaseInboundItem item : allInboundItems) {
-            if (item.productId > 0) {
-                double cost = item.unitPrice.doubleValue();
-                totalCostMap.put(item.productId, totalCostMap.getOrDefault(item.productId, 0.0) + cost * item.quantity);
-                totalQuantityMap.put(item.productId, totalQuantityMap.getOrDefault(item.productId, 0) + item.quantity);
-            }
-        }
-
-        // 计算加权平均成本并映射到商品名称
+    private void loadProductActualCosts() throws SQLException {
+        Map<Integer, BigDecimal> averageCostByProductId = PurchaseInboundItemDAO.findAverageUnitCostByProductId();
         for (Product product : allProducts) {
-            if (totalCostMap.containsKey(product.id) && totalQuantityMap.get(product.id) > 0) {
-                double avgCost = totalCostMap.get(product.id) / totalQuantityMap.get(product.id);
-                productActualCostMap.put(product.name, avgCost);
+            BigDecimal averageCost = averageCostByProductId.get(product.id);
+            if (averageCost != null && product.name != null && !product.name.isEmpty()) {
+                productActualCostMap.put(product.name, averageCost.doubleValue());
             }
         }
 
-        logger.info("计算了 {} 个商品的实际成本", productActualCostMap.size());
+        logger.info("加载了 {} 个商品的实际成本", productActualCostMap.size());
     }
 
     /**

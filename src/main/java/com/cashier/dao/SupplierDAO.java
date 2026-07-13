@@ -233,6 +233,29 @@ public class SupplierDAO {
     }
 
     /**
+     * 根据状态查找供应商并限制返回数量。
+     */
+    public static List<Supplier> findByStatus(boolean status, int limit) throws SQLException {
+        int safeLimit = limit > 0 ? limit : 100;
+        List<Supplier> suppliers = new ArrayList<>();
+        String sql = "SELECT id, supplier_code, name, contact_person, phone, address, `rank`, status, remark, create_time, update_time " +
+                     "FROM suppliers WHERE status = ? ORDER BY create_time DESC, id DESC LIMIT ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setBoolean(1, status);
+            pstmt.setInt(2, safeLimit);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    suppliers.add(mapRowToSupplier(rs));
+                }
+            }
+        }
+        return suppliers;
+    }
+
+    /**
      * 插入新供应商
      *
      * @param supplier 供应商对象

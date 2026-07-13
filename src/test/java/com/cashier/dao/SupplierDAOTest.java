@@ -66,6 +66,24 @@ class SupplierDAOTest extends DatabaseTestBase {
         assertEquals(2, SupplierDAO.countBySupplierCodePrefix("S20260713"));
     }
 
+    @Test
+    @DisplayName("按状态查询供应商时限制数量并按最近创建排序")
+    void testFindByStatusUsesLimitAndNewestFirst() throws SQLException {
+        Supplier activeOld = createSupplier("S202607130001", "启用旧供应商", 1_000L);
+        Supplier activeNewest = createSupplier("S202607130002", "启用新供应商", 3_000L);
+        Supplier inactive = createSupplier("S202607130003", "停用供应商", 4_000L);
+        inactive.status = false;
+
+        SupplierDAO.insert(activeOld);
+        SupplierDAO.insert(activeNewest);
+        SupplierDAO.insert(inactive);
+
+        var suppliers = SupplierDAO.findByStatus(true, 1);
+
+        assertEquals(1, suppliers.size());
+        assertEquals("S202607130002", suppliers.get(0).supplierCode);
+    }
+
     private Supplier createSupplier(String supplierCode, String name, long createTimeMillis) {
         Supplier supplier = new Supplier();
         supplier.supplierCode = supplierCode;

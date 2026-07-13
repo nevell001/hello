@@ -322,42 +322,30 @@ public class InventoryAlertController {
      */
     private void loadAlertItems() {
         try {
-            List<Product> allProducts = productDAO.findAll();
-            if (allProducts == null) {
-                allProducts = new ArrayList<>();
-            }
+            List<Product> alertProducts = productDAO.findProductsRequiringStockAlert();
 
             List<AlertItem> alertItems = new ArrayList<>();
             int criticalCount = 0;
             int warningCount = 0;
             int infoCount = 0;
 
-            for (Product product : allProducts) {
-                // 跳过没有设置最低库存的商品
-                if (product.minStock <= 0) {
-                    continue;
-                }
+            for (Product product : alertProducts) {
+                AlertItem alertItem = new AlertItem(product);
+                alertItems.add(alertItem);
 
-                // 检查库存是否低于最低库存
-                if (product.quantity <= product.minStock) {
-                    AlertItem alertItem = new AlertItem(product);
-                    alertItems.add(alertItem);
-
-                    // 统计预警级别
-                    switch (alertItem.getLevel()) {
-                        case CRITICAL:
-                            criticalCount++;
-                            break;
-                        case WARNING:
-                            warningCount++;
-                            break;
-                        case INFO:
-                            infoCount++;
-                            break;
-                        default:
-                            logger.warn("未知库存预警级别: {}", alertItem.getLevel());
-                            break;
-                    }
+                switch (alertItem.getLevel()) {
+                    case CRITICAL:
+                        criticalCount++;
+                        break;
+                    case WARNING:
+                        warningCount++;
+                        break;
+                    case INFO:
+                        infoCount++;
+                        break;
+                    default:
+                        logger.warn("未知库存预警级别: {}", alertItem.getLevel());
+                        break;
                 }
             }
 
