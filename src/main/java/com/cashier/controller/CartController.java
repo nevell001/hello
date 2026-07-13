@@ -52,6 +52,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class CartController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(CartController.class);
+    private static final int FIRST_PAGE = 1;
+    private static final int CART_PRODUCT_PAGE_SIZE = 500;
 
     // 音效文件路径（WAV 格式）
     private static final String SCAN_SUCCESS_SOUND = "/sounds/scan_success.wav";
@@ -428,7 +430,7 @@ public class CartController {
         logger.info("CartController: 开始加载库存数据...");
         inventoryMap = new HashMap<>();
         try {
-            List<Product> products = productDAO.findAll();
+            List<Product> products = productDAO.findAll(FIRST_PAGE, CART_PRODUCT_PAGE_SIZE).getData();
             for (Product product : products) {
                 inventoryMap.put(product.name, product);
             }
@@ -441,6 +443,22 @@ public class CartController {
         productList.setAll(inventoryMap.values());
         updateCountLabel();
         logger.info("CartController: 库存数据加载完成");
+    }
+
+    private List<Product> searchProducts(String searchText) throws SQLException {
+        if (searchText == null || searchText.trim().isEmpty()) {
+            return productDAO.findAll(FIRST_PAGE, CART_PRODUCT_PAGE_SIZE).getData();
+        }
+        return productDAO.search(searchText.trim(), FIRST_PAGE, CART_PRODUCT_PAGE_SIZE).getData();
+    }
+
+    private void replaceVisibleProducts(List<Product> products) {
+        inventoryMap.clear();
+        for (Product product : products) {
+            inventoryMap.put(product.name, product);
+        }
+        productList.setAll(products);
+        updateCountLabel();
     }
 
     /**
@@ -562,11 +580,15 @@ public class CartController {
             return false;
         }
 
-        refreshLatestInventory();
-
-        List<Product> exactMatches = inventoryMap.values().stream()
-            .filter(product -> matchesExactScanCode(product, normalizedScanText))
-            .toList();
+        List<Product> exactMatches;
+        try {
+            exactMatches = findExactScanMatches(normalizedScanText);
+        } catch (SQLException e) {
+            logger.error("查询扫码商品失败: {}", normalizedScanText, e);
+            playScanErrorSound();
+            showScanMessage(i18n.get("cart.scan.not_found", normalizedScanText), ScanMessageLevel.ERROR);
+            return false;
+        }
 
         if (exactMatches.isEmpty()) {
             playScanNotFoundSound();
@@ -575,8 +597,7 @@ public class CartController {
         }
 
         if (exactMatches.size() > 1) {
-            productList.setAll(exactMatches);
-            updateCountLabel();
+            replaceVisibleProducts(exactMatches);
             playScanErrorSound();
             showScanMessage(i18n.get("cart.scan.multiple_matches", exactMatches.size()), ScanMessageLevel.WARNING);
             return false;
@@ -680,21 +701,25 @@ public class CartController {
     public void handleSearch() {
         String searchText = searchField.getText().trim();
 
-        // 在搜索前刷新库存数据，确保使用最新数据
-        refreshLatestInventory();
-
         if (searchText.isEmpty()) {
-            productList.setAll(inventoryMap.values());
-            updateCountLabel();
+            try {
+                replaceVisibleProducts(searchProducts(searchText));
+            } catch (SQLException e) {
+                logger.error("加载商品失败", e);
+                showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
+            }
             return;
         }
 
         // 搜索匹配的商品（支持名称和条形码）
-        List<Product> matchedProducts = inventoryMap.values().stream()
-            .filter(p -> p.name.toLowerCase().contains(searchText.toLowerCase()) ||
-                      (p.barcode != null && p.barcode.toLowerCase().contains(searchText.toLowerCase())) ||
-                      (p.productCode != null && p.productCode.toLowerCase().contains(searchText.toLowerCase())))
-            .toList();
+        List<Product> matchedProducts;
+        try {
+            matchedProducts = searchProducts(searchText);
+        } catch (SQLException e) {
+            logger.error("搜索商品失败", e);
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
+            return;
+        }
 
         if (matchedProducts.isEmpty()) {
             // 未找到商品
@@ -723,8 +748,7 @@ public class CartController {
             }
         } else {
             // 找到多个匹配商品，显示列表让用户选择
-            productList.setAll(matchedProducts);
-            updateCountLabel();
+            replaceVisibleProducts(matchedProducts);
             playScanSuccessSound();
             showScanMessage(i18n.get("cart.scan.multiple_matches", matchedProducts.size()), ScanMessageLevel.WARNING);
         }
@@ -1700,17 +1724,30 @@ public class CartController {
     private void refreshLatestInventory() {
         logger.info("CartController: 刷新库存数据...");
         try {
-            List<Product> products = productDAO.findAll();
-            // 更新内存中的库存数据
-            for (Product product : products) {
-                inventoryMap.put(product.name, product);
-            }
-            // 更新商品列表显示
-            productList.setAll(inventoryMap.values());
+            replaceVisibleProducts(searchProducts(searchField.getText()));
             logger.info("CartController: 库存数据刷新完成，共 {} 个商品", inventoryMap.size());
         } catch (SQLException e) {
             logger.error("刷新库存数据失败", e);
         }
+    }
+
+    private List<Product> findExactScanMatches(String scanText) throws SQLException {
+        List<Product> matches = new ArrayList<>();
+        Product barcodeMatch = productDAO.findByBarcode(scanText);
+        if (barcodeMatch != null) {
+            matches.add(barcodeMatch);
+        }
+
+        Product codeMatch = productDAO.findByProductCode(scanText);
+        if (codeMatch != null && matches.stream().noneMatch(product -> product.id == codeMatch.id)) {
+            matches.add(codeMatch);
+        }
+
+        Product nameMatch = productDAO.findByName(scanText);
+        if (nameMatch != null && matches.stream().noneMatch(product -> product.id == nameMatch.id)) {
+            matches.add(nameMatch);
+        }
+        return matches;
     }
 
     /**

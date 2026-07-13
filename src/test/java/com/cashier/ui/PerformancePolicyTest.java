@@ -235,4 +235,21 @@ class PerformancePolicyTest {
 
         assertTrue(memberDao.contains("PageResult<Member> search(String keyword, int pageNum, int pageSize)"));
     }
+
+    @Test
+    @DisplayName("收银台商品加载和扫码必须避免无界全量商品查询")
+    void cartProductLookupUsesPagedAndTargetedQueries() throws Exception {
+        String cartController = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/CartController.java"
+        ));
+
+        assertTrue(cartController.contains("CART_PRODUCT_PAGE_SIZE = 500"));
+        assertTrue(cartController.contains("productDAO.findAll(FIRST_PAGE, CART_PRODUCT_PAGE_SIZE)"));
+        assertTrue(cartController.contains("productDAO.search(searchText.trim(), FIRST_PAGE, CART_PRODUCT_PAGE_SIZE)"));
+        assertTrue(cartController.contains("findExactScanMatches(normalizedScanText)"));
+        assertTrue(cartController.contains("productDAO.findByBarcode(scanText)"));
+        assertTrue(cartController.contains("productDAO.findByProductCode(scanText)"));
+        assertTrue(cartController.contains("productDAO.findByName(scanText)"));
+        assertFalse(cartController.contains("productDAO.findAll()"));
+    }
 }
