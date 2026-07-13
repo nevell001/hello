@@ -64,6 +64,31 @@ public class PurchaseInboundDAO {
     }
 
     /**
+     * 查询最近采购入库记录，避免历史弹窗默认加载全部记录。
+     */
+    public static List<PurchaseInbound> findRecent(int limit) throws SQLException {
+        if (limit < 1) {
+            return List.of();
+        }
+
+        List<PurchaseInbound> inboundList = new ArrayList<>();
+        String sql = "SELECT pi.id, pi.inbound_no, pi.order_id, po.order_no, pi.inbound_date, pi.total_quantity, pi.total_amount, pi.operator, pi.remark, pi.create_time " +
+                     "FROM purchase_inbound pi LEFT JOIN purchase_orders po ON pi.order_id = po.id ORDER BY pi.create_time DESC LIMIT ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, limit);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    inboundList.add(mapRowToPurchaseInbound(rs));
+                }
+            }
+        }
+        return inboundList;
+    }
+
+    /**
      * 根据入库单号查找采购入库记录
      *
      * @param inboundNo 入库单号

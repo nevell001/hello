@@ -308,4 +308,31 @@ class PerformancePolicyTest {
         assertTrue(returnOrderDao.contains("ORDER BY create_time DESC LIMIT ?"));
         assertFalse(returnOrderController.contains("ReturnOrderDAO.findAll()"));
     }
+
+    @Test
+    @DisplayName("采购订单和入库历史默认列表必须有界加载")
+    void purchaseListsUseRecentQueriesByDefault() throws Exception {
+        String purchaseOrderController = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/PurchaseOrderController.java"
+        ));
+        String purchaseOrderDao = Files.readString(Path.of(
+            "src/main/java/com/cashier/dao/PurchaseOrderDAO.java"
+        ));
+        String purchaseInboundController = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/PurchaseInboundController.java"
+        ));
+        String purchaseInboundDao = Files.readString(Path.of(
+            "src/main/java/com/cashier/dao/PurchaseInboundDAO.java"
+        ));
+
+        assertTrue(purchaseOrderController.contains("PurchaseOrderDAO.findRecent(PURCHASE_ORDER_LIMIT)"));
+        assertTrue(purchaseOrderDao.contains("findRecent(int limit)"));
+        assertTrue(purchaseOrderDao.contains("ORDER BY po.create_time DESC LIMIT ?"));
+        assertFalse(purchaseOrderController.contains("PurchaseOrderDAO.findAll()"));
+
+        assertTrue(purchaseInboundController.contains("PurchaseInboundDAO.findRecent(INBOUND_HISTORY_LIMIT)"));
+        assertTrue(purchaseInboundDao.contains("findRecent(int limit)"));
+        assertTrue(purchaseInboundDao.contains("ORDER BY pi.create_time DESC LIMIT ?"));
+        assertFalse(purchaseInboundController.contains("PurchaseInboundDAO.findAll()"));
+    }
 }

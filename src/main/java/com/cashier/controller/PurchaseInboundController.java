@@ -38,6 +38,7 @@ import javafx.util.converter.IntegerStringConverter;
 @SuppressWarnings("unchecked")
 public class PurchaseInboundController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(PurchaseInboundController.class);
+    private static final int INBOUND_HISTORY_LIMIT = 500;
     private static final java.security.SecureRandom SECURE_RANDOM = new java.security.SecureRandom();
 
     @FXML
@@ -583,7 +584,7 @@ public class PurchaseInboundController {
                 return row;
             });
 
-            List<PurchaseInbound> inboundList = PurchaseInboundDAO.findAll();
+            List<PurchaseInbound> inboundList = PurchaseInboundDAO.findRecent(INBOUND_HISTORY_LIMIT);
             inboundTable.setItems(FXCollections.observableArrayList(inboundList));
             inboundTable.setPlaceholder(new Label(I18nManager.getInstance().get("purchase_inbound.history_no_data")));
 

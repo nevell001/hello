@@ -62,6 +62,32 @@ public class PurchaseOrderDAO {
     }
 
     /**
+     * 查询最近采购订单，避免采购订单页面默认加载全部历史。
+     */
+    public static List<PurchaseOrder> findRecent(int limit) throws SQLException {
+        if (limit < 1) {
+            return List.of();
+        }
+
+        List<PurchaseOrder> orders = new ArrayList<>();
+        String sql = "SELECT po.id, po.order_no, po.supplier_id, s.name as supplier_name, po.purchase_date, po.expected_date, " +
+                     "po.total_amount, po.status, po.purchaser, po.approver, po.approval_time, po.approval_remark, po.remark, po.create_time, po.update_time " +
+                     "FROM purchase_orders po LEFT JOIN suppliers s ON po.supplier_id = s.id ORDER BY po.create_time DESC LIMIT ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, limit);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    orders.add(mapRowToPurchaseOrder(rs));
+                }
+            }
+        }
+        return orders;
+    }
+
+    /**
      * 根据订单号查找采购订单
      *
      * @param orderNo 订单号

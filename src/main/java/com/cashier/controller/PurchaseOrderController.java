@@ -47,6 +47,7 @@ public class PurchaseOrderController {
     private static final String TEXT_MUTED_STYLE = "text-muted";
     private static final String TEXT_DEFAULT_STYLE = "text-default";
     private static final String FONT_WEIGHT_BOLD_STYLE = "-fx-font-weight: bold;";
+    private static final int PURCHASE_ORDER_LIMIT = 500;
     private final com.cashier.dao.ProductDAORefactored productDAO = com.cashier.dao.DAOFactory.getInstance().getProductDAO();
 
     @FXML
@@ -161,7 +162,7 @@ public class PurchaseOrderController {
      */
     private void loadOrders() {
         try {
-            List<PurchaseOrder> orderData = PurchaseOrderDAO.findAll();
+            List<PurchaseOrder> orderData = PurchaseOrderDAO.findRecent(PURCHASE_ORDER_LIMIT);
             orders = new HashMap<>();
             for (PurchaseOrder order : orderData) {
                 orders.put(order.id, order);
