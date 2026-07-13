@@ -280,4 +280,32 @@ class PerformancePolicyTest {
         assertTrue(productEditController.contains("productDAO.countByProductCodePrefix(prefix)"));
         assertTrue(productDao.contains("countByProductCodePrefix(String prefix)"));
     }
+
+    @Test
+    @DisplayName("审计日志和退货订单列表必须避免默认全量加载")
+    void auditAndReturnOrderListsUseBoundedQueries() throws Exception {
+        String auditLogController = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/AuditLogController.java"
+        ));
+        String operationLogDao = Files.readString(Path.of(
+            "src/main/java/com/cashier/dao/OperationLogDAO.java"
+        ));
+        String returnOrderController = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/ReturnOrderController.java"
+        ));
+        String returnOrderDao = Files.readString(Path.of(
+            "src/main/java/com/cashier/dao/ReturnOrderDAO.java"
+        ));
+
+        assertTrue(auditLogController.contains("OperationLogDAO.findRecent(AUDIT_LOG_LIMIT)"));
+        assertTrue(operationLogDao.contains("findRecent(int limit)"));
+        assertTrue(operationLogDao.contains("ORDER BY timestamp DESC LIMIT ?"));
+        assertFalse(auditLogController.contains("OperationLogDAO.findAll()"));
+
+        assertTrue(returnOrderController.contains("ReturnOrderDAO.findRecent(RETURN_ORDER_LIMIT)"));
+        assertTrue(returnOrderController.contains("ReturnOrderDAO.findByDateRange("));
+        assertTrue(returnOrderDao.contains("findRecent(int limit)"));
+        assertTrue(returnOrderDao.contains("ORDER BY create_time DESC LIMIT ?"));
+        assertFalse(returnOrderController.contains("ReturnOrderDAO.findAll()"));
+    }
 }

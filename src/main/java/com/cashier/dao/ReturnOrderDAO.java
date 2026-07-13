@@ -214,6 +214,33 @@ public class ReturnOrderDAO {
     }
 
     /**
+     * 查询最近退货订单，避免默认页面无界加载全量历史。
+     */
+    public static List<ReturnOrder> findRecent(int limit) {
+        if (limit < 1) {
+            return List.of();
+        }
+
+        String sql = "SELECT id, return_order_id, original_transaction_id, member_id, member_name, return_date, return_reason, total_amount, status, payment_method, operator_name, approver_name, approval_date, approval_comment, completed_date, notes, create_time, update_time FROM return_orders ORDER BY create_time DESC LIMIT ?";
+        List<ReturnOrder> returnOrders = new ArrayList<>();
+
+        try (Connection conn = com.cashier.util.DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, limit);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    returnOrders.add(mapRowToReturnOrder(rs));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("查找最近退货订单失败", e);
+        }
+
+        return returnOrders;
+    }
+
+    /**
      * 根据状态查找退货订单
      */
     public static List<ReturnOrder> findByStatus(String status) {

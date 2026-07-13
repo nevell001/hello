@@ -35,6 +35,31 @@ public class OperationLogDAO {
     }
 
     /**
+     * 查询最近操作日志，避免审计页面默认加载全量历史。
+     */
+    public static List<OperationLog> findRecent(int limit) throws SQLException {
+        if (limit < 1) {
+            return List.of();
+        }
+
+        List<OperationLog> logs = new ArrayList<>();
+        String sql = "SELECT " + COLUMNS + " " +
+                     "FROM operation_logs ORDER BY timestamp DESC LIMIT ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, limit);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    logs.add(mapRowToOperationLog(rs));
+                }
+            }
+        }
+        return logs;
+    }
+
+    /**
      * 根据ID查找操作日志
      */
     public static OperationLog findById(int id) throws SQLException {

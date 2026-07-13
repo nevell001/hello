@@ -28,6 +28,7 @@ import java.util.List;
  */
 public class ReturnOrderController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(ReturnOrderController.class);
+    private static final int RETURN_ORDER_LIMIT = 500;
 
     @FXML private TableView<ReturnOrder> returnOrderTable;
     @FXML private TableColumn<ReturnOrder, String> returnOrderIdColumn;
@@ -82,7 +83,9 @@ public class ReturnOrderController {
         ));
         com.cashier.util.I18nUiUtils.configureComboBox(
             quickDateComboBox, com.cashier.util.I18nUiUtils::dateRange);
-        quickDateComboBox.setValue("全部报表");
+        LocalDate today = LocalDate.now();
+        quickDateComboBox.setValue("本月");
+        setDateRange(today.withDayOfMonth(1), today);
         quickDateComboBox.setOnAction(event -> handleQuickDateRange());
 
         // 初始化表格列
@@ -256,7 +259,7 @@ public class ReturnOrderController {
 
     private void loadReturnOrders() {
         returnOrderList.clear();
-        List<ReturnOrder> orders = ReturnOrderDAO.findAll();
+        List<ReturnOrder> orders = loadOrdersForCurrentDateRange();
         returnOrderList.addAll(orders);
         logger.info("加载了 {} 条退货订单记录", orders.size());
     }
@@ -308,10 +311,9 @@ public class ReturnOrderController {
         String status = statusFilter.getValue();
 
         returnOrderList.clear();
+        returnOrderList.addAll(loadOrdersForCurrentDateRange());
 
-        if ("全部".equals(status)) {
-            returnOrderList.addAll(ReturnOrderDAO.findAll());
-        } else {
+        if (!"全部".equals(status)) {
             String statusCode = "";
             switch (status) {
                 case "待审批": statusCode = "PENDING"; break;
@@ -322,7 +324,8 @@ public class ReturnOrderController {
                     logger.warn("未知退货订单状态筛选: {}", status);
                     return;
             }
-            returnOrderList.addAll(ReturnOrderDAO.findByStatus(statusCode));
+            String effectiveStatus = statusCode;
+            returnOrderList.removeIf(order -> !effectiveStatus.equals(order.status));
         }
 
         // 搜索过滤
@@ -333,20 +336,22 @@ public class ReturnOrderController {
             );
         }
 
+        logger.info("搜索结果: {} 条记录", returnOrderList.size());
+    }
+
+    private List<ReturnOrder> loadOrdersForCurrentDateRange() {
         LocalDate startDate = startDatePicker.getValue();
         LocalDate endDate = endDatePicker.getValue();
-        if (startDate != null || endDate != null) {
-            returnOrderList.removeIf(order -> {
-                if (order.returnDate == null) {
-                    return true;
-                }
-                LocalDate returnDate = order.returnDate.atZone(ZoneId.systemDefault()).toLocalDate();
-                return (startDate != null && returnDate.isBefore(startDate))
-                    || (endDate != null && returnDate.isAfter(endDate));
-            });
+        if (startDate == null && endDate == null) {
+            return ReturnOrderDAO.findRecent(RETURN_ORDER_LIMIT);
         }
 
-        logger.info("搜索结果: {} 条记录", returnOrderList.size());
+        LocalDate effectiveStart = startDate != null ? startDate : LocalDate.now().minusDays(30);
+        LocalDate effectiveEnd = endDate != null ? endDate : LocalDate.now();
+        return ReturnOrderDAO.findByDateRange(
+            java.util.Date.from(effectiveStart.atStartOfDay(ZoneId.systemDefault()).toInstant()),
+            java.util.Date.from(effectiveEnd.plusDays(1).atStartOfDay(ZoneId.systemDefault()).minusNanos(1).toInstant())
+        );
     }
 
     @FXML
@@ -391,9 +396,10 @@ public class ReturnOrderController {
         clearDetail();
         searchField.clear();
         statusFilter.setValue("全部");
-        startDatePicker.setValue(null);
-        endDatePicker.setValue(null);
-        quickDateComboBox.setValue("全部报表");
+        LocalDate today = LocalDate.now();
+        startDatePicker.setValue(today.withDayOfMonth(1));
+        endDatePicker.setValue(today);
+        quickDateComboBox.setValue("本月");
         logger.info("刷新退货订单列表");
     }
 

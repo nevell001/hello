@@ -19,6 +19,7 @@ import java.util.Locale;
 
 public class AuditLogController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(AuditLogController.class);
+    private static final int AUDIT_LOG_LIMIT = 500;
     private final ObservableList<OperationLog> allLogs = FXCollections.observableArrayList();
 
     @FXML private TableView<OperationLog> auditTable;
@@ -119,7 +120,7 @@ public class AuditLogController {
     @FXML
     private void handleRefresh() {
         try {
-            List<OperationLog> logs = OperationLogDAO.findAll();
+            List<OperationLog> logs = OperationLogDAO.findRecent(AUDIT_LOG_LIMIT);
             allLogs.setAll(logs);
             handleSearch();
         } catch (Exception e) {
