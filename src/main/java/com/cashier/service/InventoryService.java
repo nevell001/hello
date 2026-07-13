@@ -174,6 +174,19 @@ public class InventoryService {
     }
 
     /**
+     * 从数据库直接获取库存统计信息，适合报表和仪表盘等无需完整商品明细的场景。
+     * @return 统计信息
+     */
+    public static InventoryStatistics getInventoryStatistics() {
+        try {
+            return productDAO.getInventoryStatistics();
+        } catch (SQLException e) {
+            logger.error("获取库存统计信息失败", e);
+            return new InventoryStatistics(0, 0, 0, BigDecimal.ZERO);
+        }
+    }
+
+    /**
      * 检查商品库存是否充足
      * @param productId 商品ID
      * @param requiredQuantity 需要的数量

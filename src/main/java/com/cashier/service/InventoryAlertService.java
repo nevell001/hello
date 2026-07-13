@@ -103,8 +103,7 @@ public class InventoryAlertService {
             lastCheckTime = System.currentTimeMillis();
             logger.debug("开始检查库存预警...");
             
-            // 获取所有商品
-            List<Product> products = productDAO.findAll();
+            List<Product> products = productDAO.findProductsRequiringStockAlert();
             
             if (products == null || products.isEmpty()) {
                 logger.debug("没有商品需要检查");
@@ -113,27 +112,16 @@ public class InventoryAlertService {
             
             int alertCount = 0;
             
-            // 检查每个商品的库存
             for (Product product : products) {
-                // 跳过没有设置最低库存的商品
-                if (product.minStock <= 0) {
-                    continue;
-                }
+                Long lastAlertTime = lastAlertMap.get(product.id);
+                long currentTime = System.currentTimeMillis();
                 
-                // 检查库存是否低于最低库存
-                if (product.quantity <= product.minStock) {
-                    // 检查是否在冷却时间内
-                    Long lastAlertTime = lastAlertMap.get(product.id);
-                    long currentTime = System.currentTimeMillis();
-                    
-                    if (lastAlertTime == null || (currentTime - lastAlertTime) > alertCooldown) {
-                        // 发送库存预警通知
-                        sendInventoryAlert(product);
-                        lastAlertMap.put(product.id, currentTime);
-                        alertCount++;
-                        logger.info("商品库存预警: {} (库存: {}, 最低库存: {})", 
-                            product.name, product.quantity, product.minStock);
-                    }
+                if (lastAlertTime == null || (currentTime - lastAlertTime) > alertCooldown) {
+                    sendInventoryAlert(product);
+                    lastAlertMap.put(product.id, currentTime);
+                    alertCount++;
+                    logger.info("商品库存预警: {} (库存: {}, 最低库存: {})",
+                        product.name, product.quantity, product.minStock);
                 }
             }
             

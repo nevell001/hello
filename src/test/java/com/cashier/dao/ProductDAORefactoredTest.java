@@ -1,5 +1,6 @@
 package com.cashier.dao;
 
+import com.cashier.model.InventoryStatistics;
 import com.cashier.model.PageResult;
 import com.cashier.model.Product;
 import com.cashier.util.DatabaseTestBase;
@@ -187,6 +188,51 @@ public class ProductDAORefactoredTest extends DatabaseTestBase {
         assertThrows(SQLException.class, () -> {
             productDAO.insert(invalidProduct);
         });
+    }
+
+    @Test
+    @Order(6)
+    @DisplayName("测试数据库侧库存统计和预警查询")
+    void testInventoryStatisticsAndAlertQuery() throws SQLException {
+        InventoryStatistics baseline = productDAO.getInventoryStatistics();
+
+        Product lowStockProduct = new Product();
+        lowStockProduct.productCode = "STAT_LOW_001";
+        lowStockProduct.name = "库存统计低库存商品";
+        lowStockProduct.price = BigDecimal.valueOf(20.0);
+        lowStockProduct.quantity = 3;
+        lowStockProduct.category = "统计测试";
+        lowStockProduct.unit = "个";
+        lowStockProduct.minStock = 5;
+        lowStockProduct.cost = BigDecimal.valueOf(8.0);
+
+        Product healthyProduct = new Product();
+        healthyProduct.productCode = "STAT_OK_001";
+        healthyProduct.name = "库存统计正常商品";
+        healthyProduct.price = BigDecimal.valueOf(50.0);
+        healthyProduct.quantity = 12;
+        healthyProduct.category = "统计测试";
+        healthyProduct.unit = "个";
+        healthyProduct.minStock = 5;
+        healthyProduct.cost = BigDecimal.valueOf(30.0);
+
+        productDAO.insert(lowStockProduct);
+        productDAO.insert(healthyProduct);
+
+        InventoryStatistics stats = productDAO.getInventoryStatistics();
+        BigDecimal expectedAddedValue = BigDecimal.valueOf(384.0);
+
+        assertEquals(baseline.getTotalProducts() + 2, stats.getTotalProducts());
+        assertEquals(baseline.getTotalQuantity() + 15, stats.getTotalQuantity());
+        assertEquals(baseline.getLowStockCount() + 1, stats.getLowStockCount());
+        assertEquals(0, baseline.getTotalValue().add(expectedAddedValue).compareTo(stats.getTotalValue()));
+        assertTrue(productDAO.findProductsRequiringStockAlert().stream()
+            .anyMatch(product -> "STAT_LOW_001".equals(product.productCode)));
+        assertFalse(productDAO.findProductsRequiringStockAlert().stream()
+            .anyMatch(product -> "STAT_OK_001".equals(product.productCode)));
+
+        productDAO.delete(lowStockProduct.id);
+        productDAO.delete(healthyProduct.id);
     }
 
     @AfterAll

@@ -1,8 +1,10 @@
 package com.cashier.dao;
 
+import com.cashier.model.InventoryStatistics;
 import com.cashier.model.PageResult;
 import com.cashier.model.Product;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.Collection;
 import java.util.Collections;
@@ -290,6 +292,42 @@ public class ProductDAORefactored extends BaseDAO {
             }
         }
         return summary;
+    }
+
+    /**
+     * 直接在数据库侧计算库存统计，避免为汇总信息加载完整商品列表。
+     */
+    public InventoryStatistics getInventoryStatistics() throws SQLException {
+        String sql = "SELECT COUNT(*) AS total_count, " +
+                     "COALESCE(SUM(quantity), 0) AS total_quantity, " +
+                     "COALESCE(SUM(cost * quantity), 0) AS total_value, " +
+                     "SUM(CASE WHEN quantity <= min_stock THEN 1 ELSE 0 END) AS low_stock_count " +
+                     "FROM products";
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            if (rs.next()) {
+                return new InventoryStatistics(
+                    rs.getInt("total_count"),
+                    rs.getInt("low_stock_count"),
+                    rs.getInt("total_quantity"),
+                    rs.getBigDecimal("total_value")
+                );
+            }
+        }
+        return new InventoryStatistics(0, 0, 0, BigDecimal.ZERO);
+    }
+
+    /**
+     * 查询需要发送库存预警的商品，只返回设置了最低库存且低于阈值的记录。
+     */
+    public List<Product> findProductsRequiringStockAlert() throws SQLException {
+        String sql = "SELECT " + SELECT_COLUMNS + " FROM products " +
+                     "WHERE min_stock > 0 AND quantity <= min_stock " +
+                     "ORDER BY quantity, name";
+        return queryList(sql, PRODUCT_MAPPER);
     }
 
     /**

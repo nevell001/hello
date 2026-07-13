@@ -353,4 +353,27 @@ class PerformancePolicyTest {
         assertTrue(purchaseApprovalController.contains("PurchaseOrderDAO.findRecent(APPROVAL_ORDER_LIMIT)"));
         assertFalse(purchaseApprovalController.contains("PurchaseOrderDAO.findAll()"));
     }
+
+    @Test
+    @DisplayName("库存统计和预警服务必须使用数据库侧聚合或筛选")
+    void inventoryServicesUseDatabaseAggregationAndAlertFiltering() throws Exception {
+        String productDao = Files.readString(Path.of(
+            "src/main/java/com/cashier/dao/ProductDAORefactored.java"
+        ));
+        String inventoryService = Files.readString(Path.of(
+            "src/main/java/com/cashier/service/InventoryService.java"
+        ));
+        String alertService = Files.readString(Path.of(
+            "src/main/java/com/cashier/service/InventoryAlertService.java"
+        ));
+
+        assertTrue(productDao.contains("InventoryStatistics getInventoryStatistics()"));
+        assertTrue(productDao.contains("COALESCE(SUM(quantity), 0) AS total_quantity"));
+        assertTrue(productDao.contains("findProductsRequiringStockAlert()"));
+        assertTrue(productDao.contains("WHERE min_stock > 0 AND quantity <= min_stock"));
+
+        assertTrue(inventoryService.contains("productDAO.getInventoryStatistics()"));
+        assertTrue(alertService.contains("productDAO.findProductsRequiringStockAlert()"));
+        assertFalse(alertService.contains("productDAO.findAll()"));
+    }
 }
