@@ -394,4 +394,26 @@ class PerformancePolicyTest {
         assertTrue(dao.contains("findRecent(int limit)"));
         assertTrue(dao.contains("ORDER BY create_time DESC LIMIT ?"));
     }
+
+    @Test
+    @DisplayName("供应商列表和编号生成必须避免默认全量加载")
+    void supplierListAndCodeGenerationAvoidUnboundedLoads() throws Exception {
+        String controller = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/SupplierController.java"
+        ));
+        String dao = Files.readString(Path.of(
+            "src/main/java/com/cashier/dao/SupplierDAO.java"
+        ));
+
+        assertTrue(controller.contains("SUPPLIER_LIST_LIMIT = 500"));
+        assertTrue(controller.contains("SupplierDAO.findRecent(SUPPLIER_LIST_LIMIT)"));
+        assertTrue(controller.contains("SupplierDAO.search(searchText, SUPPLIER_LIST_LIMIT)"));
+        assertTrue(controller.contains("SupplierDAO.countBySupplierCodePrefix(prefix)"));
+        assertFalse(controller.contains("SupplierDAO.findAll()"));
+
+        assertTrue(dao.contains("findRecent(int limit)"));
+        assertTrue(dao.contains("search(String keyword, int limit)"));
+        assertTrue(dao.contains("countBySupplierCodePrefix(String prefix)"));
+        assertTrue(dao.contains("ORDER BY create_time DESC, id DESC LIMIT ?"));
+    }
 }

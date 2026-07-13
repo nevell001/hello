@@ -63,6 +63,77 @@ public class SupplierDAO {
     }
 
     /**
+     * 查询最近供应商，用于桌面列表默认加载。
+     */
+    public static List<Supplier> findRecent(int limit) throws SQLException {
+        int safeLimit = limit > 0 ? limit : 100;
+        List<Supplier> suppliers = new ArrayList<>();
+        String sql = "SELECT id, supplier_code, name, contact_person, phone, address, `rank`, status, remark, create_time, update_time " +
+                     "FROM suppliers ORDER BY create_time DESC, id DESC LIMIT ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, safeLimit);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    suppliers.add(mapRowToSupplier(rs));
+                }
+            }
+        }
+        return suppliers;
+    }
+
+    /**
+     * 搜索供应商并限制返回数量。
+     */
+    public static List<Supplier> search(String keyword, int limit) throws SQLException {
+        int safeLimit = limit > 0 ? limit : 100;
+        String normalizedKeyword = keyword == null ? "" : keyword.trim();
+        String searchPattern = "%" + normalizedKeyword.toLowerCase(java.util.Locale.ROOT) + "%";
+        List<Supplier> suppliers = new ArrayList<>();
+        String sql = "SELECT id, supplier_code, name, contact_person, phone, address, `rank`, status, remark, create_time, update_time " +
+                     "FROM suppliers " +
+                     "WHERE LOWER(COALESCE(name, '')) LIKE ? " +
+                     "OR LOWER(COALESCE(contact_person, '')) LIKE ? " +
+                     "OR LOWER(COALESCE(phone, '')) LIKE ? " +
+                     "OR LOWER(COALESCE(supplier_code, '')) LIKE ? " +
+                     "ORDER BY create_time DESC, id DESC LIMIT ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, searchPattern);
+            pstmt.setString(2, searchPattern);
+            pstmt.setString(3, searchPattern);
+            pstmt.setString(4, searchPattern);
+            pstmt.setInt(5, safeLimit);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    suppliers.add(mapRowToSupplier(rs));
+                }
+            }
+        }
+        return suppliers;
+    }
+
+    public static int countBySupplierCodePrefix(String prefix) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM suppliers WHERE supplier_code LIKE ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, prefix + "%");
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+    /**
      * 根据供应商编号查找供应商
      *
      * @param supplierCode 供应商编号

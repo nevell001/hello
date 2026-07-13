@@ -34,6 +34,7 @@ import javafx.stage.Stage;
  */
 public class SupplierController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(SupplierController.class);
+    private static final int SUPPLIER_LIST_LIMIT = 500;
 
     @FXML
     private TableView<Supplier> supplierTable;
@@ -117,19 +118,24 @@ public class SupplierController {
      */
     private void loadSuppliers() {
         try {
-            List<Supplier> supplierData = SupplierDAO.findAll();
-            suppliers = new HashMap<>();
-            for (Supplier supplier : supplierData) {
-                suppliers.put(supplier.id, supplier);
-            }
+            setSupplierData(SupplierDAO.findRecent(SUPPLIER_LIST_LIMIT));
         } catch (SQLException e) {
             logger.error("加载供应商数据失败", e);
             showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
             suppliers = new HashMap<>();
+            supplierList = FXCollections.observableArrayList();
+            supplierTable.setItems(supplierList);
         }
-        supplierList = FXCollections.observableArrayList(suppliers.values());
-        supplierTable.setItems(supplierList);
         updateCountLabel();
+    }
+
+    private void setSupplierData(List<Supplier> supplierData) {
+        suppliers = new HashMap<>();
+        for (Supplier supplier : supplierData) {
+            suppliers.put(supplier.id, supplier);
+        }
+        supplierList = FXCollections.observableArrayList(supplierData);
+        supplierTable.setItems(supplierList);
     }
 
     /**
@@ -343,13 +349,9 @@ public class SupplierController {
 
         int count = 0;
         try {
-            List<Supplier> allSuppliers = com.cashier.dao.SupplierDAO.findAll();
-            for (Supplier supplier : allSuppliers) {
-                if (supplier.supplierCode != null && supplier.supplierCode.startsWith(prefix)) {
-                    count++;
-                }
-            }
-        } catch (Exception ignored) {
+            count = SupplierDAO.countBySupplierCodePrefix(prefix);
+        } catch (SQLException e) {
+            logger.warn("统计供应商编号前缀失败: {}", prefix, e);
         }
 
         return prefix + String.format("%04d", count + 1);
@@ -389,14 +391,14 @@ public class SupplierController {
     public void handleSearch() {
         String searchText = searchField.getText().trim().toLowerCase();
         if (searchText.isEmpty()) {
-            supplierList.setAll(suppliers.values());
+            loadSuppliers();
         } else {
-            supplierList.setAll(suppliers.values().stream()
-                .filter(s -> s.name.toLowerCase().contains(searchText) ||
-                         s.contactPerson.toLowerCase().contains(searchText) ||
-                         s.phone.contains(searchText) ||
-                         s.supplierCode.toLowerCase().contains(searchText))
-                .toList());
+            try {
+                setSupplierData(SupplierDAO.search(searchText, SUPPLIER_LIST_LIMIT));
+            } catch (SQLException e) {
+                logger.error("搜索供应商失败", e);
+                showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
+            }
         }
         updateCountLabel();
     }
@@ -407,8 +409,7 @@ public class SupplierController {
     @FXML
     public void handleClearSearch() {
         searchField.clear();
-        supplierList.setAll(suppliers.values());
-        updateCountLabel();
+        loadSuppliers();
     }
 
     /**
