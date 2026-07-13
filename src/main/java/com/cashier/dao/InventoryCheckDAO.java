@@ -63,6 +63,32 @@ public class InventoryCheckDAO {
     }
 
     /**
+     * 查询最近的库存盘点记录，用于桌面列表默认加载。
+     *
+     * @param limit 最大返回数量
+     * @return 库存盘点记录列表
+     * @throws SQLException 数据库操作异常
+     */
+    public static List<InventoryCheck> findRecent(int limit) throws SQLException {
+        int safeLimit = limit > 0 ? limit : 100;
+        List<InventoryCheck> checks = new ArrayList<>();
+        String sql = "SELECT id, check_no, check_date, check_type, total_items, diff_items, status, operator, checker, remark, create_time, update_time " +
+                     "FROM inventory_check ORDER BY create_time DESC LIMIT ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, safeLimit);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    checks.add(mapRowToInventoryCheck(rs));
+                }
+            }
+        }
+        return checks;
+    }
+
+    /**
      * 根据盘点单号查找库存盘点记录
      *
      * @param checkNo 盘点单号

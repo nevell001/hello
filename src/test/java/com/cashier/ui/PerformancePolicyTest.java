@@ -376,4 +376,22 @@ class PerformancePolicyTest {
         assertTrue(alertService.contains("productDAO.findProductsRequiringStockAlert()"));
         assertFalse(alertService.contains("productDAO.findAll()"));
     }
+
+    @Test
+    @DisplayName("库存盘点记录默认列表必须有界加载")
+    void inventoryCheckListUsesRecentQueryByDefault() throws Exception {
+        String controller = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/InventoryCheckController.java"
+        ));
+        String dao = Files.readString(Path.of(
+            "src/main/java/com/cashier/dao/InventoryCheckDAO.java"
+        ));
+
+        assertTrue(controller.contains("INVENTORY_CHECK_LIMIT = 500"));
+        assertTrue(controller.contains("InventoryCheckDAO.findRecent(INVENTORY_CHECK_LIMIT)"));
+        assertFalse(controller.contains("InventoryCheckDAO.findAll()"));
+
+        assertTrue(dao.contains("findRecent(int limit)"));
+        assertTrue(dao.contains("ORDER BY create_time DESC LIMIT ?"));
+    }
 }

@@ -8,6 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
+import java.sql.Timestamp;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -39,5 +40,35 @@ class InventoryCheckDAOTest extends DatabaseTestBase {
         String nextCheckNo = InventoryCheckDAO.generateNextCheckNo("2026-06-17");
 
         assertEquals("IC202606170002", nextCheckNo);
+    }
+
+    @Test
+    @DisplayName("查询最近盘点记录时按创建时间倒序并限制数量")
+    void testFindRecentUsesLimitAndNewestFirst() throws SQLException {
+        InventoryCheck oldCheck = createCheck("IC202607130001", "2026-07-13", 1_000L);
+        InventoryCheck middleCheck = createCheck("IC202607130002", "2026-07-13", 2_000L);
+        InventoryCheck newestCheck = createCheck("IC202607130003", "2026-07-13", 3_000L);
+
+        InventoryCheckDAO.insert(oldCheck);
+        InventoryCheckDAO.insert(middleCheck);
+        InventoryCheckDAO.insert(newestCheck);
+
+        var recentChecks = InventoryCheckDAO.findRecent(2);
+
+        assertEquals(2, recentChecks.size());
+        assertEquals("IC202607130003", recentChecks.get(0).checkNo);
+        assertEquals("IC202607130002", recentChecks.get(1).checkNo);
+    }
+
+    private InventoryCheck createCheck(String checkNo, String checkDate, long createTimeMillis) {
+        InventoryCheck check = new InventoryCheck();
+        check.checkNo = checkNo;
+        check.checkDate = checkDate;
+        check.checkType = "full";
+        check.status = "checking";
+        check.operator = "admin";
+        check.createTime = new Timestamp(createTimeMillis);
+        check.updateTime = new Timestamp(createTimeMillis);
+        return check;
     }
 }

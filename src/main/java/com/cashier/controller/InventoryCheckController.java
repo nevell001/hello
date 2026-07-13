@@ -45,6 +45,7 @@ public class InventoryCheckController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(InventoryCheckController.class);
     private static final int FIRST_PAGE = 1;
     private static final int CHECK_PRODUCT_PAGE_SIZE = 500;
+    private static final int INVENTORY_CHECK_LIMIT = 500;
     private final ProductDAORefactored productDAO = DAOFactory.getInstance().getProductDAO();
 
     @FXML
@@ -153,7 +154,7 @@ public class InventoryCheckController {
      */
     private void loadChecks() {
         try {
-            List<InventoryCheck> checkData = InventoryCheckDAO.findAll();
+            List<InventoryCheck> checkData = InventoryCheckDAO.findRecent(INVENTORY_CHECK_LIMIT);
             checks = new HashMap<>();
             for (InventoryCheck check : checkData) {
                 checks.put(check.id, check);
