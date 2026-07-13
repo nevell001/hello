@@ -264,6 +264,10 @@ public class ProductDAORefactored extends BaseDAO {
         return queryLong("SELECT COUNT(*) FROM products WHERE quantity <= min_stock");
     }
 
+    public long countByProductCodePrefix(String prefix) throws SQLException {
+        return queryLong("SELECT COUNT(*) FROM products WHERE product_code LIKE ?", prefix + "%");
+    }
+
     public Map<String, Long> getInventorySummary() throws SQLException {
         Map<String, Long> summary = new HashMap<>();
         String sql = "SELECT COUNT(*) AS total_count, " +

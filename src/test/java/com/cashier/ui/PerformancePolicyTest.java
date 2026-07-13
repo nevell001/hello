@@ -252,4 +252,32 @@ class PerformancePolicyTest {
         assertTrue(cartController.contains("productDAO.findByName(scanText)"));
         assertFalse(cartController.contains("productDAO.findAll()"));
     }
+
+    @Test
+    @DisplayName("盘点补货和商品编辑不得无界全量加载商品")
+    void inventoryDialogsAvoidUnboundedProductLoads() throws Exception {
+        String inventoryCheckController = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/InventoryCheckController.java"
+        ));
+        String restockController = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/RestockController.java"
+        ));
+        String productEditController = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/ProductEditController.java"
+        ));
+        String productDao = Files.readString(Path.of(
+            "src/main/java/com/cashier/dao/ProductDAORefactored.java"
+        ));
+
+        assertTrue(inventoryCheckController.contains("CHECK_PRODUCT_PAGE_SIZE = 500"));
+        assertTrue(inventoryCheckController.contains("productDAO.findAll(FIRST_PAGE, CHECK_PRODUCT_PAGE_SIZE)"));
+        assertTrue(inventoryCheckController.contains("productDAO.search(normalizedSearch, FIRST_PAGE, CHECK_PRODUCT_PAGE_SIZE)"));
+        assertTrue(inventoryCheckController.contains("productDAO.findByCategory(selectedCategory, FIRST_PAGE, CHECK_PRODUCT_PAGE_SIZE)"));
+        assertFalse(inventoryCheckController.contains("productDAO.findAll()"));
+
+        assertFalse(restockController.contains("productDAO.findAll()"));
+        assertFalse(productEditController.contains("productDAO.findAll()"));
+        assertTrue(productEditController.contains("productDAO.countByProductCodePrefix(prefix)"));
+        assertTrue(productDao.contains("countByProductCodePrefix(String prefix)"));
+    }
 }

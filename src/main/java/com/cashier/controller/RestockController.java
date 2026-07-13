@@ -14,10 +14,6 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import javafx.scene.control.*;
 
-import java.util.Map;
-import java.util.HashMap;
-import java.util.List;
-
 /**
  * 快速入库控制器
  * 处理商品快速入库对话框的逻辑
@@ -65,7 +61,6 @@ public class RestockController {
     private javafx.stage.Stage dialogStage;
     private Product product;
     private boolean okClicked = false;
-    private Map<String, Product> inventoryMap;
     private final ProductDAORefactored productDAO = DAOFactory.getInstance().getProductDAO();
 
     /**
@@ -73,18 +68,6 @@ public class RestockController {
      */
     @FXML
     private void initialize() {
-        // 加载库存数据
-        try {
-            List<Product> products = productDAO.findAll();
-            inventoryMap = new HashMap<>();
-            for (Product p : products) {
-                inventoryMap.put(p.name, p);
-            }
-        } catch (SQLException e) {
-            logger.error("加载商品数据失败", e);
-            inventoryMap = new HashMap<>();
-        }
-
         // 初始化入库来源下拉框
         sourceComboBox.getItems().addAll(
             "采购入库",

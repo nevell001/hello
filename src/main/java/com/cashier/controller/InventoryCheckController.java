@@ -3,6 +3,7 @@ package com.cashier.controller;
 import com.cashier.i18n.I18nKeys;
 
 import com.cashier.i18n.I18nManager;
+import com.cashier.dao.CategoryDAO;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.InventoryCheckDAO;
 import com.cashier.dao.InventoryCheckItemDAO;
@@ -42,6 +43,8 @@ import javafx.application.Platform;
 @SuppressWarnings("unchecked")
 public class InventoryCheckController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(InventoryCheckController.class);
+    private static final int FIRST_PAGE = 1;
+    private static final int CHECK_PRODUCT_PAGE_SIZE = 500;
     private final ProductDAORefactored productDAO = DAOFactory.getInstance().getProductDAO();
 
     @FXML
@@ -569,50 +572,27 @@ public class InventoryCheckController {
 
             productTable.getColumns().addAll(selectColumn, nameCol, barcodeCol, categoryCol, stockCol, costCol);
             
-            // 加载商品数据
-            List<Product> products = productDAO.findAll();
-            ObservableList<Product> productList = FXCollections.observableArrayList(products);
-            productTable.setItems(productList);
-
             // 加载分类列表
-            Set<String> categories = products.stream()
-                .map(p -> p.category)
-                .filter(c -> c != null && !c.isEmpty())
-                .collect(Collectors.toSet());
             ObservableList<String> categoryList = FXCollections.observableArrayList();
             String allCategories = I18nManager.getInstance().get(I18nKeys.Filter.ALL_CATEGORIES);
             categoryList.add(allCategories);
-            categoryList.addAll(categories);
+            categoryList.addAll(CategoryDAO.findAll().stream()
+                .map(category -> category.name)
+                .filter(name -> name != null && !name.isEmpty())
+                .collect(Collectors.toCollection(TreeSet::new)));
             categoryCombo.setItems(categoryList);
             categoryCombo.setValue(allCategories);
 
+            loadProductSelectionPage(productTable, allCategories, "", allCategories);
+
             // 分类筛选和全选功能
             categoryCombo.setOnAction(e -> {
-                String selectedCategory = categoryCombo.getValue();
-                if (allCategories.equals(selectedCategory)) {
-                    productTable.setItems(productList);
-                } else {
-                    List<Product> filtered = productList.stream()
-                        .filter(p -> selectedCategory.equals(p.category))
-                        .collect(Collectors.toList());
-                    productTable.setItems(FXCollections.observableArrayList(filtered));
-                }
-                productTable.getSelectionModel().clearSelection();
+                loadProductSelectionPage(productTable, allCategories, searchField.getText(), categoryCombo.getValue());
             });
 
             // 搜索功能
             searchField.textProperty().addListener((obs, oldVal, newVal) -> {
-                String searchText = newVal.toLowerCase();
-                String selectedCategory = categoryCombo.getValue();
-                List<Product> filtered = productList.stream()
-                    .filter(p -> {
-                        boolean matchCategory = allCategories.equals(selectedCategory) || selectedCategory.equals(p.category);
-                        boolean matchSearch = searchText.isEmpty() || p.name.toLowerCase().contains(searchText);
-                        return matchCategory && matchSearch;
-                    })
-                    .collect(Collectors.toList());
-                productTable.setItems(FXCollections.observableArrayList(filtered));
-                productTable.getSelectionModel().clearSelection();
+                loadProductSelectionPage(productTable, allCategories, newVal, categoryCombo.getValue());
             });
 
             // 全选/取消全选按钮
@@ -679,6 +659,38 @@ public class InventoryCheckController {
 
         } catch (SQLException e) {
             logger.error("加载商品数据失败", e);
+            showError(I18nManager.getInstance().get("runtime.product_load_failed", e.getMessage()));
+        }
+    }
+
+    private void loadProductSelectionPage(
+            TableView<Product> productTable,
+            String allCategories,
+            String searchText,
+            String selectedCategory) {
+
+        try {
+            String normalizedSearch = searchText == null ? "" : searchText.trim();
+            boolean allCategorySelected = selectedCategory == null || allCategories.equals(selectedCategory);
+            List<Product> products;
+
+            if (!normalizedSearch.isEmpty()) {
+                products = productDAO.search(normalizedSearch, FIRST_PAGE, CHECK_PRODUCT_PAGE_SIZE).getData();
+                if (!allCategorySelected) {
+                    products = products.stream()
+                        .filter(product -> selectedCategory.equals(product.category))
+                        .toList();
+                }
+            } else if (!allCategorySelected) {
+                products = productDAO.findByCategory(selectedCategory, FIRST_PAGE, CHECK_PRODUCT_PAGE_SIZE).getData();
+            } else {
+                products = productDAO.findAll(FIRST_PAGE, CHECK_PRODUCT_PAGE_SIZE).getData();
+            }
+
+            productTable.setItems(FXCollections.observableArrayList(products));
+            productTable.getSelectionModel().clearSelection();
+        } catch (SQLException e) {
+            logger.error("加载盘点商品选择列表失败", e);
             showError(I18nManager.getInstance().get("runtime.product_load_failed", e.getMessage()));
         }
     }

@@ -26,7 +26,6 @@ import javafx.stage.Stage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 
 /**
  * 商品编辑控制器
@@ -90,7 +89,6 @@ public class ProductEditController {
     private Stage dialogStage;
     private Product product;
     private boolean okClicked = false;
-    private Map<String, Product> inventoryMap;
     private final ProductDAORefactored productDAO = DAOFactory.getInstance().getProductDAO();
 
     /**
@@ -105,18 +103,6 @@ public class ProductEditController {
             errorLabel.setVisible(hasError);
             errorLabel.setManaged(hasError);
         });
-
-        // 加载库存数据
-        try {
-            List<Product> products = productDAO.findAll();
-            inventoryMap = new HashMap<>();
-            for (Product p : products) {
-                inventoryMap.put(p.name, p);
-            }
-        } catch (SQLException e) {
-            logger.error("加载商品数据失败", e);
-            inventoryMap = new HashMap<>();
-        }
 
         // 加载分类数据
         loadCategories();
@@ -272,14 +258,9 @@ public class ProductEditController {
 
         // 查询当天生成的商品数量
         String prefix = "P" + dateStr;
-        int count = 0;
+        long count = 0;
         try {
-            List<Product> allProducts = productDAO.findAll();
-            for (Product p : allProducts) {
-                if (p.productCode != null && p.productCode.startsWith(prefix)) {
-                    count++;
-                }
-            }
+            count = productDAO.countByProductCodePrefix(prefix);
         } catch (SQLException e) {
             logger.error("查询商品数量失败", e);
         }
@@ -479,8 +460,6 @@ public class ProductEditController {
     private void validateProductName(StringBuilder errorMessage) {
         if (nameField.getText().trim().isEmpty()) {
             appendValidationError(errorMessage, "product.validation.name_required");
-        } else if (product == null && inventoryMap.containsKey(nameField.getText().trim())) {
-            appendValidationError(errorMessage, "product.validation.name_duplicate");
         }
     }
 
