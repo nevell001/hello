@@ -2,6 +2,7 @@ package com.cashier.api.controller;
 
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
+import com.cashier.model.PageResult;
 import com.cashier.model.Product;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
@@ -9,7 +10,6 @@ import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -26,13 +26,9 @@ public class InventoryApiController {
      */
     public static void list(Context ctx) {
         try {
-            List<Product> products = productDAO.findAll();
-            
-            Map<String, Object> result = new HashMap<>();
-            result.put("success", true);
-            result.put("data", products);
-            result.put("total", products.size());
-            ctx.json(result);
+            ApiPagination.PageRequest page = ApiPagination.from(ctx);
+            PageResult<Product> products = productDAO.findAll(page.page(), page.pageSize());
+            ctx.json(ApiPagination.success(products));
         } catch (Exception e) {
             logger.error("获取库存列表失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -46,12 +42,9 @@ public class InventoryApiController {
      */
     public static void alerts(Context ctx) {
         try {
-            List<Product> products = productDAO.findLowStock();
-            
-            Map<String, Object> result = new HashMap<>();
-            result.put("success", true);
-            result.put("data", products);
-            result.put("total", products.size());
+            ApiPagination.PageRequest page = ApiPagination.from(ctx);
+            PageResult<Product> products = productDAO.findLowStock(page.page(), page.pageSize());
+            Map<String, Object> result = ApiPagination.success(products);
             result.put("alert", true);
             ctx.json(result);
         } catch (Exception e) {
@@ -100,22 +93,18 @@ public class InventoryApiController {
      */
     public static void check(Context ctx) {
         try {
-            List<Product> products = productDAO.findAll();
-            int totalProducts = products.size();
-            int lowStockCount = 0;
-            int zeroStockCount = 0;
-            
-            for (Product p : products) {
-                if (p.quantity <= 0) zeroStockCount++;
-                else if (p.quantity < p.minStock) lowStockCount++;
-            }
-            
+            Map<String, Long> inventorySummary = productDAO.getInventorySummary();
+            long totalProducts = inventorySummary.getOrDefault("totalProducts", 0L);
+            long lowStockCount = inventorySummary.getOrDefault("lowStockCount", 0L);
+            long zeroStockCount = inventorySummary.getOrDefault("zeroStockCount", 0L);
+            long healthyCount = inventorySummary.getOrDefault("healthyCount", totalProducts - lowStockCount - zeroStockCount);
+
             Map<String, Object> result = new HashMap<>();
             result.put("success", true);
             result.put("totalProducts", totalProducts);
             result.put("lowStockCount", lowStockCount);
             result.put("zeroStockCount", zeroStockCount);
-            result.put("healthyCount", totalProducts - lowStockCount - zeroStockCount);
+            result.put("healthyCount", healthyCount);
             
             ctx.json(result);
         } catch (Exception e) {

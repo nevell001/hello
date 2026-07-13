@@ -143,4 +143,44 @@ class PerformancePolicyTest {
         assertTrue(dao.contains("getPaymentMethodStats()"));
         assertFalse(controller.contains("TransactionDAO.findAll()"));
     }
+
+    @Test
+    @DisplayName("商品会员库存列表 API 必须分页查询")
+    void coreListApisUsePagedQueries() throws Exception {
+        String productApi = Files.readString(Path.of(
+            "src/main/java/com/cashier/api/controller/ProductApiController.java"
+        ));
+        String memberApi = Files.readString(Path.of(
+            "src/main/java/com/cashier/api/controller/MemberApiController.java"
+        ));
+        String inventoryApi = Files.readString(Path.of(
+            "src/main/java/com/cashier/api/controller/InventoryApiController.java"
+        ));
+        String pagination = Files.readString(Path.of(
+            "src/main/java/com/cashier/api/controller/ApiPagination.java"
+        ));
+        String productDao = Files.readString(Path.of(
+            "src/main/java/com/cashier/dao/ProductDAORefactored.java"
+        ));
+
+        assertTrue(productApi.contains("ApiPagination.from(ctx)"));
+        assertTrue(productApi.contains("productDAO.findAll(page.page(), page.pageSize())"));
+        assertTrue(productApi.contains("productDAO.search(keyword, page.page(), page.pageSize())"));
+        assertTrue(productApi.contains("productDAO.findByCategory(category, page.page(), page.pageSize())"));
+        assertFalse(productApi.contains("productDAO.findAll()"));
+        assertFalse(productApi.contains("productDAO.search(keyword)"));
+
+        assertTrue(memberApi.contains("MemberDAO.findAll(page.page(), page.pageSize())"));
+        assertFalse(memberApi.contains("MemberDAO.findAll()"));
+
+        assertTrue(inventoryApi.contains("productDAO.findAll(page.page(), page.pageSize())"));
+        assertTrue(inventoryApi.contains("productDAO.findLowStock(page.page(), page.pageSize())"));
+        assertTrue(inventoryApi.contains("productDAO.getInventorySummary()"));
+        assertFalse(inventoryApi.contains("productDAO.findAll()"));
+
+        assertTrue(pagination.contains("MAX_PAGE_SIZE = 500"));
+        assertTrue(productDao.contains("findByCategory(String category, int pageNum, int pageSize)"));
+        assertTrue(productDao.contains("findLowStock(int pageNum, int pageSize)"));
+        assertTrue(productDao.contains("getInventorySummary()"));
+    }
 }

@@ -2,6 +2,7 @@ package com.cashier.api.controller;
 
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
+import com.cashier.model.PageResult;
 import com.cashier.model.Product;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
@@ -9,8 +10,6 @@ import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -29,21 +28,18 @@ public class ProductApiController {
         try {
             String category = ctx.queryParam("category");
             String keyword = ctx.queryParam("keyword");
-            
-            List<Product> products;
+            ApiPagination.PageRequest page = ApiPagination.from(ctx);
+
+            PageResult<Product> products;
             if (keyword != null && !keyword.isEmpty()) {
-                products = productDAO.search(keyword);
+                products = productDAO.search(keyword, page.page(), page.pageSize());
             } else if (category != null && !category.isEmpty()) {
-                products = productDAO.findByCategory(category);
+                products = productDAO.findByCategory(category, page.page(), page.pageSize());
             } else {
-                products = productDAO.findAll();
+                products = productDAO.findAll(page.page(), page.pageSize());
             }
-            
-            Map<String, Object> result = new HashMap<>();
-            result.put("success", true);
-            result.put("data", products);
-            result.put("total", products.size());
-            ctx.json(result);
+
+            ctx.json(ApiPagination.success(products));
         } catch (Exception e) {
             logger.error("获取商品列表失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -198,8 +194,9 @@ public class ProductApiController {
      */
     public static void lowStock(Context ctx) {
         try {
-            List<Product> products = productDAO.findLowStock();
-            ctx.json(Map.of("success", true, "data", products, "total", products.size()));
+            ApiPagination.PageRequest page = ApiPagination.from(ctx);
+            PageResult<Product> products = productDAO.findLowStock(page.page(), page.pageSize());
+            ctx.json(ApiPagination.success(products));
         } catch (Exception e) {
             logger.error("获取低库存商品失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)

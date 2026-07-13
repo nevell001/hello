@@ -139,6 +139,21 @@ public class ProductDAORefactored extends BaseDAO {
     }
 
     /**
+     * 根据分类分页查询商品。
+     */
+    public PageResult<Product> findByCategory(String category, int pageNum, int pageSize) throws SQLException {
+        if (pageNum < 1) pageNum = 1;
+        if (pageSize < 1) pageSize = 20;
+
+        long total = queryLong("SELECT COUNT(*) FROM products WHERE category = ?", category);
+        int offset = (pageNum - 1) * pageSize;
+        String sql = "SELECT " + SELECT_COLUMNS + " FROM products WHERE category = ? ORDER BY name LIMIT ? OFFSET ?";
+        List<Product> products = queryList(sql, PRODUCT_MAPPER, category, pageSize, offset);
+
+        return new PageResult<>(products, pageNum, pageSize, total);
+    }
+
+    /**
      * 使用指定连接根据ID查找商品
      * @param conn 数据库连接
      * @param id 商品ID
@@ -228,6 +243,49 @@ public class ProductDAORefactored extends BaseDAO {
     public List<Product> findLowStock() throws SQLException {
         String sql = "SELECT " + SELECT_COLUMNS + " FROM products WHERE quantity <= min_stock ORDER BY quantity";
         return queryList(sql, PRODUCT_MAPPER);
+    }
+
+    /**
+     * 分页查询低库存商品。
+     */
+    public PageResult<Product> findLowStock(int pageNum, int pageSize) throws SQLException {
+        if (pageNum < 1) pageNum = 1;
+        if (pageSize < 1) pageSize = 20;
+
+        long total = countLowStock();
+        int offset = (pageNum - 1) * pageSize;
+        String sql = "SELECT " + SELECT_COLUMNS + " FROM products WHERE quantity <= min_stock ORDER BY quantity LIMIT ? OFFSET ?";
+        List<Product> products = queryList(sql, PRODUCT_MAPPER, pageSize, offset);
+
+        return new PageResult<>(products, pageNum, pageSize, total);
+    }
+
+    public long countLowStock() throws SQLException {
+        return queryLong("SELECT COUNT(*) FROM products WHERE quantity <= min_stock");
+    }
+
+    public Map<String, Long> getInventorySummary() throws SQLException {
+        Map<String, Long> summary = new HashMap<>();
+        String sql = "SELECT COUNT(*) AS total_count, " +
+                     "SUM(CASE WHEN quantity <= 0 THEN 1 ELSE 0 END) AS zero_stock_count, " +
+                     "SUM(CASE WHEN quantity > 0 AND quantity < min_stock THEN 1 ELSE 0 END) AS low_stock_count " +
+                     "FROM products";
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            if (rs.next()) {
+                long total = rs.getLong("total_count");
+                long zeroStock = rs.getLong("zero_stock_count");
+                long lowStock = rs.getLong("low_stock_count");
+                summary.put("totalProducts", total);
+                summary.put("zeroStockCount", zeroStock);
+                summary.put("lowStockCount", lowStock);
+                summary.put("healthyCount", total - zeroStock - lowStock);
+            }
+        }
+        return summary;
     }
 
     /**

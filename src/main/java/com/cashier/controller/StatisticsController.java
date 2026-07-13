@@ -340,9 +340,7 @@ public class StatisticsController {
             // 小时统计
             try {
                 java.time.format.DateTimeFormatter sdf = DateTimeFormats.STANDARD_DATE_TIME;
-                int hour = java.time.LocalDateTime.parse(t.timestamp, sdf)
-                    .atZone(ZoneId.systemDefault())
-                    .getHour();
+                int hour = java.time.LocalDateTime.parse(t.timestamp, sdf).getHour();
                 hourCountMap.put(hour, hourCountMap.getOrDefault(hour, 0) + 1);
                 hourAmountMap.put(hour, hourAmountMap.getOrDefault(hour, 0.0) + t.getFinalAmount().doubleValue());
             } catch (Exception e) {

@@ -2,14 +2,13 @@ package com.cashier.api.controller;
 
 import com.cashier.dao.MemberDAO;
 import com.cashier.model.Member;
+import com.cashier.model.PageResult;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,13 +23,9 @@ public class MemberApiController {
      */
     public static void list(Context ctx) {
         try {
-            List<Member> members = MemberDAO.findAll();
-            
-            Map<String, Object> result = new HashMap<>();
-            result.put("success", true);
-            result.put("data", members);
-            result.put("total", members.size());
-            ctx.json(result);
+            ApiPagination.PageRequest page = ApiPagination.from(ctx);
+            PageResult<Member> members = MemberDAO.findAll(page.page(), page.pageSize());
+            ctx.json(ApiPagination.success(members));
         } catch (Exception e) {
             logger.error("获取会员列表失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
