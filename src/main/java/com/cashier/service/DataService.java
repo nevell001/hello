@@ -145,7 +145,7 @@ public class DataService {
      */
     public static List<Promotion> loadPromotions() {
         try {
-            return PromotionDAO.findAll();
+            return PromotionDAO.findRecent(LEGACY_LOAD_LIMIT);
         } catch (SQLException e) {
             logger.error("加载促销数据失败", e);
             return new ArrayList<>();

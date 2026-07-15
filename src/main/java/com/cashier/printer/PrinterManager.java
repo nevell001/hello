@@ -5,6 +5,7 @@ import com.cashier.util.LoggerFactoryUtil;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * 打印设备管理器
@@ -45,8 +46,8 @@ public class PrinterManager {
      */
     private PrinterManager() {
         this.devices = new ConcurrentHashMap<>();
-        this.taskQueue = new LinkedList<>();
-        this.printHistory = new ArrayList<>();
+        this.taskQueue = new ConcurrentLinkedQueue<>();
+        this.printHistory = Collections.synchronizedList(new ArrayList<>());
     }
     
     /**
@@ -244,9 +245,7 @@ public class PrinterManager {
      */
     public void addPrintTask(PrintTask task) {
         if (task != null) {
-            synchronized (taskQueue) {
-                taskQueue.add(task);
-            }
+            taskQueue.add(task);
             logger.info("添加打印任务到队列: {}", task.getTaskName());
         }
     }
@@ -256,10 +255,7 @@ public class PrinterManager {
      */
     public void processQueue() {
         while (true) {
-            PrintTask task;
-            synchronized (taskQueue) {
-                task = taskQueue.poll();
-            }
+            PrintTask task = taskQueue.poll();
             if (task != null) {
                 print(task);
             } else {
@@ -351,9 +347,7 @@ public class PrinterManager {
             device.dispose();
         }
         devices.clear();
-        synchronized (taskQueue) {
-            taskQueue.clear();
-        }
+        taskQueue.clear();
         synchronized (printHistory) {
             printHistory.clear();
         }

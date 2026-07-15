@@ -2,6 +2,7 @@ package com.cashier.controller;
 
 import com.cashier.i18n.I18nKeys;
 
+import com.cashier.dao.PromotionDAO;
 import com.cashier.service.DataService;
 import com.cashier.model.Promotion;
 import com.cashier.i18n.I18nManager;
@@ -25,6 +26,8 @@ import com.cashier.util.LoggerFactoryUtil;
 import com.cashier.util.FormValidator;
 
 import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -381,10 +384,7 @@ public class PromotionController {
 
         dialog.showAndWait().ifPresent(result -> {
             try {
-                if (promotion == null) {
-                    allPromotions.add(result);
-                }
-                DataService.savePromotions(allPromotions);
+                persistPromotion(result);
                 loadPromotions();
                 updateStatus(I18nManager.getInstance().get(
                     promotion == null ? "promotion.added" : "promotion.updated"));
@@ -674,10 +674,15 @@ public class PromotionController {
         alert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_delete_confirm", selected.size()));
 
         if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
-            allPromotions.removeAll(selected);
-            DataService.savePromotions(allPromotions);
-            loadPromotions();
-            updateStatus(I18nManager.getInstance().get("promotion.deleted"));
+            try {
+                deletePromotions(new ArrayList<>(selected));
+                loadPromotions();
+                updateStatus(I18nManager.getInstance().get("promotion.deleted"));
+            } catch (SQLException e) {
+                logger.error("删除促销失败", e);
+                showAlert(I18nManager.getInstance().get("message.delete.failed"),
+                    I18nManager.getInstance().get("runtime.promotion_delete_error", e.getMessage()));
+            }
         }
     }
 
@@ -691,12 +696,15 @@ public class PromotionController {
             showWarning(I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_PROMOTION));
             return;
         }
-        for (Promotion p : selected) {
-            p.enabled = true;
+        try {
+            updateSelectedPromotionState(selected, true);
+            loadPromotions();
+            updateStatus(I18nManager.getInstance().get("promotion.enabled"));
+        } catch (SQLException e) {
+            logger.error("启用促销失败", e);
+            showAlert(I18nManager.getInstance().get("message.save.failed"),
+                I18nManager.getInstance().get("runtime.promotion_save_error", e.getMessage()));
         }
-        DataService.savePromotions(allPromotions);
-        loadPromotions();
-        updateStatus(I18nManager.getInstance().get("promotion.enabled"));
     }
 
     /**
@@ -709,12 +717,36 @@ public class PromotionController {
             showWarning(I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_PROMOTION));
             return;
         }
-        for (Promotion p : selected) {
-            p.enabled = false;
+        try {
+            updateSelectedPromotionState(selected, false);
+            loadPromotions();
+            updateStatus(I18nManager.getInstance().get("promotion.disabled"));
+        } catch (SQLException e) {
+            logger.error("禁用促销失败", e);
+            showAlert(I18nManager.getInstance().get("message.save.failed"),
+                I18nManager.getInstance().get("runtime.promotion_save_error", e.getMessage()));
         }
-        DataService.savePromotions(allPromotions);
-        loadPromotions();
-        updateStatus(I18nManager.getInstance().get("promotion.disabled"));
+    }
+
+    private void persistPromotion(Promotion promotion) throws SQLException {
+        if (promotion.id > 0) {
+            PromotionDAO.update(promotion);
+        } else {
+            PromotionDAO.insert(promotion);
+        }
+    }
+
+    private void deletePromotions(List<Promotion> promotions) throws SQLException {
+        for (Promotion promotion : promotions) {
+            PromotionDAO.delete(promotion.id);
+        }
+    }
+
+    private void updateSelectedPromotionState(List<Promotion> selected, boolean enabled) throws SQLException {
+        for (Promotion promotion : new ArrayList<>(selected)) {
+            promotion.enabled = enabled;
+            PromotionDAO.update(promotion);
+        }
     }
 
     /**

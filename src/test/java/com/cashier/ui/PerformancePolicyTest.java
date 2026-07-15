@@ -269,8 +269,11 @@ class PerformancePolicyTest {
         ));
 
         assertTrue(printerManager.contains("MAX_PRINT_HISTORY_SIZE = 500"));
+        assertTrue(printerManager.contains("new ConcurrentLinkedQueue<>()"));
+        assertTrue(printerManager.contains("Collections.synchronizedList(new ArrayList<>())"));
         assertTrue(printerManager.contains("getRecentPrintHistory(int limit)"));
         assertTrue(printerManager.contains("printHistory.remove(0)"));
+        assertFalse(printerManager.contains("new LinkedList<>()"));
 
         assertTrue(printApi.contains("DEFAULT_PRINT_HISTORY_LIMIT = 100"));
         assertTrue(printApi.contains("MAX_PRINT_HISTORY_LIMIT = 500"));
@@ -733,7 +736,10 @@ class PerformancePolicyTest {
 
         assertTrue(purchaseReportController.contains("PurchaseOrderDAO.findByDateRange("));
         assertTrue(purchaseReportController.contains("loadOrdersByDateRange(startDate, endDate)"));
+        assertTrue(purchaseReportController.contains("PURCHASE_REPORT_SUPPLIER_LIMIT = 500"));
+        assertTrue(purchaseReportController.contains("SupplierDAO.findRecent(PURCHASE_REPORT_SUPPLIER_LIMIT)"));
         assertFalse(purchaseReportController.contains("PurchaseOrderDAO.findAll()"));
+        assertFalse(purchaseReportController.contains("SupplierDAO.findAll()"));
 
         assertTrue(purchaseApprovalController.contains("PurchaseOrderDAO.findRecent(APPROVAL_ORDER_LIMIT)"));
         assertFalse(purchaseApprovalController.contains("PurchaseOrderDAO.findAll()"));
@@ -890,6 +896,7 @@ class PerformancePolicyTest {
         assertTrue(dataService.contains("UserDAO.findAll(FIRST_PAGE, LEGACY_LOAD_LIMIT).getData()"));
         assertTrue(dataService.contains("MemberDAO.findAll(FIRST_PAGE, LEGACY_LOAD_LIMIT).getData()"));
         assertTrue(dataService.contains("TransactionDAO.findRecent(LEGACY_LOAD_LIMIT)"));
+        assertTrue(dataService.contains("PromotionDAO.findRecent(LEGACY_LOAD_LIMIT)"));
         assertTrue(dataService.contains("RechargeRecordDAO.findRecent(LEGACY_LOAD_LIMIT)"));
         assertTrue(dataService.contains("OperationLogDAO.findRecent(LEGACY_LOAD_LIMIT)"));
 
@@ -919,6 +926,7 @@ class PerformancePolicyTest {
         assertFalse(productionSources.contains("DataService.saveUsers("));
         assertFalse(productionSources.contains("DataService.saveMembers("));
         assertFalse(productionSources.contains("DataService.saveTransactions("));
+        assertFalse(productionSources.contains("DataService.savePromotions("));
         assertFalse(productionSources.contains("DataService.saveRechargeRecords("));
         assertFalse(productionSources.contains("DataService.saveOperationLogs("));
     }

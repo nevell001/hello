@@ -129,6 +129,7 @@ public class PurchaseReportController {
     private List<PurchaseOrder> allOrders;
     private List<Supplier> allSuppliers;
     private Map<Integer, List<PurchaseOrderItem>> orderItemsMap;
+    private static final int PURCHASE_REPORT_SUPPLIER_LIMIT = 500;
 
     /**
      * 初始化方法
@@ -246,7 +247,7 @@ public class PurchaseReportController {
     private void loadData() {
         try {
             allOrders = new ArrayList<>();
-            allSuppliers = SupplierDAO.findAll();
+            allSuppliers = SupplierDAO.findRecent(PURCHASE_REPORT_SUPPLIER_LIMIT);
             orderItemsMap = new HashMap<>();
 
             // 加载供应商列表到下拉框

@@ -79,6 +79,16 @@ class PromotionDAOTest extends DatabaseTestBase {
     }
 
     @Test
+    void testFindRecentLimitsResults() throws SQLException {
+        PromotionDAO.insert(createTestPromotion("促销A", "满减", 100, 10));
+        PromotionDAO.insert(createTestPromotion("促销B", "打折", 200, 0.9));
+
+        List<Promotion> recent = PromotionDAO.findRecent(1);
+
+        assertEquals(1, recent.size());
+    }
+
+    @Test
     void testFindEnabled() throws SQLException {
         Promotion enabled = createTestPromotion("启用促销", "满减", 100, 10);
         enabled.enabled = true;

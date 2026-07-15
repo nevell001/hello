@@ -34,6 +34,27 @@ public class PromotionDAO {
     }
 
     /**
+     * 查询最近促销，限制返回数量
+     */
+    public static List<Promotion> findRecent(int limit) throws SQLException {
+        List<Promotion> promotions = new ArrayList<>();
+        String sql = "SELECT id, promotion_code, name, type, threshold, discount, description, enabled, " +
+                     "start_date, end_date, usage_count, max_usage FROM promotions ORDER BY id DESC LIMIT ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, Math.max(1, limit));
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                promotions.add(mapRowToPromotion(rs));
+            }
+        }
+        return promotions;
+    }
+
+    /**
      * 根据ID查找促销
      */
     public static Promotion findById(int id) throws SQLException {
