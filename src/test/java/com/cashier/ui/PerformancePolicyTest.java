@@ -249,6 +249,9 @@ class PerformancePolicyTest {
         assertTrue(invoiceApi.contains("ApiPagination.success(invoices)"));
         assertFalse(invoiceApi.contains("InvoiceService.getAllInvoices()"));
 
+        assertTrue(invoiceService.contains("DEFAULT_INVOICE_LIST_LIMIT = 5000"));
+        assertTrue(invoiceService.contains("getInvoicesPage(null, null, null, FIRST_PAGE, DEFAULT_INVOICE_LIST_LIMIT).getData()"));
+        assertFalse(invoiceService.contains("return InvoiceDAO.findAll()"));
         assertTrue(invoiceService.contains("PageResult<Invoice> getInvoicesPage("));
         assertTrue(invoiceDao.contains("PageResult<Invoice> findPage("));
         assertTrue(invoiceDao.contains("ORDER BY create_time DESC LIMIT ? OFFSET ?"));

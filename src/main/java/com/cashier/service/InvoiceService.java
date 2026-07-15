@@ -25,6 +25,8 @@ import java.util.Map;
  */
 public class InvoiceService {
     private static final Logger logger = LoggerFactoryUtil.getLogger(InvoiceService.class);
+    private static final int FIRST_PAGE = 1;
+    private static final int DEFAULT_INVOICE_LIST_LIMIT = 5000;
     
     // 默认销售方信息（可配置）
     private static String defaultSellerName = "某某商贸有限公司";
@@ -193,10 +195,10 @@ public class InvoiceService {
     }
     
     /**
-     * 查询所有发票
+     * 查询发票列表。为兼容旧调用保留方法名，但默认只返回有界数据。
      */
     public static List<Invoice> getAllInvoices() throws SQLException {
-        return InvoiceDAO.findAll();
+        return getInvoicesPage(null, null, null, FIRST_PAGE, DEFAULT_INVOICE_LIST_LIMIT).getData();
     }
 
     /**
