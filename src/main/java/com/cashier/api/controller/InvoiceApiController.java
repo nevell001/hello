@@ -2,6 +2,7 @@ package com.cashier.api.controller;
 
 import com.cashier.dao.InvoiceDAO;
 import com.cashier.model.Invoice;
+import com.cashier.model.PageResult;
 import com.cashier.service.InvoiceService;
 import com.cashier.util.LoggerFactoryUtil;
 import io.javalin.http.Context;
@@ -31,30 +32,18 @@ public class InvoiceApiController {
             String startDate = ctx.queryParam("startDate");
             String endDate = ctx.queryParam("endDate");
             String status = ctx.queryParam("status");
-            
-            List<Invoice> invoices;
-            
-            if (startDate != null && endDate != null) {
-                LocalDate start = LocalDate.parse(startDate, DateTimeFormats.DATE);
-                LocalDate end = LocalDate.parse(endDate, DateTimeFormats.DATE);
-                invoices = InvoiceService.getInvoicesByDateRange(start, end);
-            } else {
-                invoices = InvoiceService.getAllInvoices();
-            }
-            
-            // 状态筛选
-            if (status != null && !status.isEmpty()) {
-                invoices = invoices.stream()
-                    .filter(i -> i.status.equals(status))
-                    .toList();
-            }
-            
-            Map<String, Object> result = new HashMap<>();
-            result.put("success", true);
-            result.put("data", invoices);
-            result.put("total", invoices.size());
-            
-            ctx.json(result);
+            ApiPagination.PageRequest page = ApiPagination.from(ctx);
+            LocalDate start = startDate != null ? LocalDate.parse(startDate, DateTimeFormats.DATE) : null;
+            LocalDate end = endDate != null ? LocalDate.parse(endDate, DateTimeFormats.DATE) : null;
+            PageResult<Invoice> invoices = InvoiceService.getInvoicesPage(
+                start,
+                end,
+                status,
+                page.page(),
+                page.pageSize()
+            );
+
+            ctx.json(ApiPagination.success(invoices));
         } catch (Exception e) {
             logger.error("获取发票列表失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)

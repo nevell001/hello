@@ -32,6 +32,8 @@ import javafx.scene.layout.VBox;
  */
 public class UserController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(UserController.class);
+    private static final int FIRST_PAGE = 1;
+    private static final int USER_LIST_PAGE_SIZE = 500;
 
     @FXML
     private TableView<User> userTable;
@@ -158,7 +160,7 @@ public class UserController {
     private void loadUsers() {
         logger.info("UserController: 开始加载用户数据...");
         try {
-            List<User> userListData = UserDAO.findAll();
+            List<User> userListData = UserDAO.findAll(FIRST_PAGE, USER_LIST_PAGE_SIZE).getData();
             users = new java.util.HashMap<>();
             for (User user : userListData) {
                 users.put(user.username, user);

@@ -564,15 +564,23 @@ private Button shiftBtn;
                     handleShift();
                 } else if (buttonType == noButton) {
                     // 用户选择直接退出
-                    System.exit(0);
+                    exitApplication();
                 }
                 // 如果选择取消，不做任何操作
             });
         } else {
             // 没有活跃班次，直接退出
             if (FXUtils.showConfirmAlert("确认退出", "确定要退出系统吗？")) {
-                System.exit(0);
+                exitApplication();
             }
+        }
+    }
+
+    private void exitApplication() {
+        if (application != null) {
+            application.exitApplication();
+        } else {
+            javafx.application.Platform.exit();
         }
     }
 

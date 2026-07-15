@@ -210,10 +210,6 @@ public class TransactionController {
     private List<Transaction> findTransactionsByCurrentDateRange() throws SQLException {
         LocalDate startDate = startDatePicker.getValue();
         LocalDate endDate = endDatePicker.getValue();
-        if (startDate == null && endDate == null) {
-            return TransactionDAO.findAll();
-        }
-
         LocalDate effectiveStart = startDate != null ? startDate : LocalDate.now().minusDays(30);
         LocalDate effectiveEnd = endDate != null ? endDate : LocalDate.now();
         return TransactionDAO.findByDateRange(

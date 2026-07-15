@@ -78,7 +78,6 @@ public class CashierSystemFXApplication extends Application {
                 alert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("app.single_instance.message"));
                 alert.showAndWait();
                 Platform.exit();
-                System.exit(0);
             });
             throw new Exception("Application already running");
         }
@@ -162,6 +161,8 @@ public class CashierSystemFXApplication extends Application {
 
     @Override
     public void stop() {
+        shutdown();
+
         // 释放单实例锁
         try {
             if (fileLock != null && fileLock.isValid()) {
@@ -371,6 +372,13 @@ public class CashierSystemFXApplication extends Application {
      * 处理退出
      */
     private void handleExit() {
+        requestExit();
+    }
+
+    /**
+     * 请求退出应用，统一执行退出确认和 JavaFX 生命周期清理。
+     */
+    public void requestExit() {
         // 检查是否有进行中的班次
         if (DataService.hasActiveShift()) {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -391,18 +399,20 @@ public class CashierSystemFXApplication extends Application {
                     logger.info("用户选择先交班");
                 } else if (buttonType == noButton) {
                     // 用户选择直接退出
-                    shutdown();
-                    System.exit(0);
+                    exitApplication();
                 }
                 // 如果选择取消，不做任何操作
             });
         } else {
             // 没有活跃班次，直接退出
             if (FXUtils.showConfirmAlert("确认退出", "确定要退出系统吗？")) {
-                shutdown();
-                System.exit(0);
+                exitApplication();
             }
         }
+    }
+
+    public void exitApplication() {
+        javafx.application.Platform.exit();
     }
     
     /**
@@ -653,22 +663,6 @@ public class CashierSystemFXApplication extends Application {
             logger.error("停止 REST API 服务器时发生错误", e);
         }
 
-        // 关闭通知管理器
-        try {
-            com.cashier.notification.NotificationManager.getInstance().shutdown();
-            logger.info("通知管理器已关闭");
-        } catch (Exception e) {
-            logger.error("关闭通知管理器时发生错误", e);
-        }
-
-        // 关闭 UI 优化器
-        try {
-            com.cashier.util.UIOptimizer.shutdown();
-            logger.info("UI 优化器已关闭");
-        } catch (Exception e) {
-            logger.error("关闭 UI 优化器时发生错误", e);
-        }
-
         this.currentUser = null;
 
         try {
@@ -733,7 +727,6 @@ public class CashierSystemFXApplication extends Application {
             if (!java.nio.file.Files.exists(configPath)) {
                 logger.warn("用户取消配置，退出应用");
                 javafx.application.Platform.exit();
-                System.exit(0);
             }
 
             logger.info("数据库配置完成");

@@ -4,6 +4,7 @@ import com.cashier.dao.InvoiceDAO;
 import com.cashier.dao.TransactionDAO;
 import com.cashier.model.Invoice;
 import com.cashier.model.InvoiceItem;
+import com.cashier.model.PageResult;
 import com.cashier.model.Product;
 import com.cashier.model.Transaction;
 import com.cashier.api.sync.SyncEventType;
@@ -196,6 +197,19 @@ public class InvoiceService {
      */
     public static List<Invoice> getAllInvoices() throws SQLException {
         return InvoiceDAO.findAll();
+    }
+
+    /**
+     * 分页查询发票。
+     */
+    public static PageResult<Invoice> getInvoicesPage(
+            LocalDate startDate,
+            LocalDate endDate,
+            String status,
+            int pageNum,
+            int pageSize
+    ) throws SQLException {
+        return InvoiceDAO.findPage(startDate, endDate, status, pageNum, pageSize);
     }
     
     /**

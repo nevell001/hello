@@ -29,6 +29,8 @@ public class TransactionApiController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(TransactionApiController.class);
     private static final DateTimeFormatter ID_FORMATTER = com.cashier.util.DateTimeFormats.COMPACT_DATE_TIME_MILLIS;
     private static final ProductDAORefactored productDAO = DAOFactory.getInstance().getProductDAO();
+    private static final int DEFAULT_TRANSACTION_LIST_LIMIT = 100;
+    private static final int MAX_TRANSACTION_LIST_LIMIT = 500;
     
     /**
      * 获取交易列表
@@ -39,7 +41,8 @@ public class TransactionApiController {
             String startDate = ctx.queryParam("startDate");
             String endDate = ctx.queryParam("endDate");
             String paymentMethod = ctx.queryParam("paymentMethod");
-            int limit = ctx.queryParamAsClass("limit", Integer.class).getOrDefault(100);
+            int requestedLimit = ctx.queryParamAsClass("limit", Integer.class).getOrDefault(DEFAULT_TRANSACTION_LIST_LIMIT);
+            int limit = Math.max(1, Math.min(requestedLimit, MAX_TRANSACTION_LIST_LIMIT));
 
             List<Transaction> transactions = hasDateFilter(startDate, endDate)
                 ? TransactionDAO.findByDateRange(toStartDateTime(startDate), toEndDateTime(endDate))

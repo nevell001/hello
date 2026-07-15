@@ -3,7 +3,7 @@ package com.cashier.controller;
 import com.cashier.i18n.I18nKeys;
 
 import com.cashier.i18n.I18nManager;
-import com.cashier.service.DataService;
+import com.cashier.dao.RechargeRecordDAO;
 import com.cashier.model.Member;
 import com.cashier.model.RechargeRecord;
 import com.cashier.util.CurrencyUtil;
@@ -25,6 +25,7 @@ import java.util.*;
  */
 public class RechargeController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(RechargeController.class);
+    private static final int RECHARGE_HISTORY_LIMIT = 10;
 
     @FXML
     private Label memberNameLabel;
@@ -136,23 +137,10 @@ public class RechargeController {
      */
     private void loadRechargeHistory() {
         try {
-            List<RechargeRecord> allRecords = DataService.loadRechargeRecords();
-            List<RechargeRecord> memberRecords = new ArrayList<>();
-
-            for (RechargeRecord record : allRecords) {
-                if (record.memberPhone.equals(member.phone)) {
-                    memberRecords.add(record);
-                }
-            }
-
-            // 按时间倒序排列
-            memberRecords.sort((r1, r2) -> r2.timestamp.compareTo(r1.timestamp));
-
-            // 只显示最近10条记录
-            if (memberRecords.size() > 10) {
-                memberRecords = memberRecords.subList(0, 10);
-            }
-
+            List<RechargeRecord> memberRecords = RechargeRecordDAO.findRecentByMemberPhone(
+                member.phone,
+                RECHARGE_HISTORY_LIMIT
+            );
             historyTable.getItems().setAll(memberRecords);
         } catch (Exception e) {
             logger.error("加载充值历史记录失败", e);

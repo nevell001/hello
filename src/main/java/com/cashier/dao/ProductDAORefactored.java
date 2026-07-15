@@ -209,6 +209,44 @@ public class ProductDAORefactored extends BaseDAO {
     }
 
     /**
+     * 根据商品名称批量查询商品。
+     */
+    public Map<String, Product> findByNames(Collection<String> names) throws SQLException {
+        Map<String, Product> products = new HashMap<>();
+        if (names == null || names.isEmpty()) {
+            return products;
+        }
+
+        List<String> filteredNames = names.stream()
+            .filter(name -> name != null && !name.isBlank())
+            .distinct()
+            .toList();
+        if (filteredNames.isEmpty()) {
+            return products;
+        }
+
+        String placeholders = String.join(", ", Collections.nCopies(filteredNames.size(), "?"));
+        String sql = "SELECT " + SELECT_COLUMNS + " FROM products WHERE name IN (" + placeholders + ")";
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            for (int i = 0; i < filteredNames.size(); i++) {
+                pstmt.setString(i + 1, filteredNames.get(i));
+            }
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                int rowNum = 0;
+                while (rs.next()) {
+                    Product product = PRODUCT_MAPPER.mapRow(rs, ++rowNum);
+                    products.put(product.name, product);
+                }
+            }
+        }
+        return products;
+    }
+
+    /**
      * 更新商品库存（用于交易）
      * @param id 商品ID
      * @param delta 变化量

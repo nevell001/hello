@@ -160,6 +160,28 @@ public abstract class DatabaseTestBase {
             )
             """);
 
+        // 创建 shifts 表
+        stmt.execute("""
+            CREATE TABLE IF NOT EXISTS shifts (
+                shift_id VARCHAR(50) PRIMARY KEY,
+                operator_username VARCHAR(50),
+                operator_name VARCHAR(100),
+                start_time BIGINT NOT NULL,
+                end_time BIGINT,
+                opening_revenue DECIMAL(10,2) DEFAULT 0,
+                closing_revenue DECIMAL(10,2) DEFAULT 0,
+                shift_revenue DECIMAL(10,2) DEFAULT 0,
+                opening_transaction_count INT DEFAULT 0,
+                closing_transaction_count INT DEFAULT 0,
+                shift_transaction_count INT DEFAULT 0,
+                cash_revenue DECIMAL(10,2) DEFAULT 0,
+                wechat_revenue DECIMAL(10,2) DEFAULT 0,
+                alipay_revenue DECIMAL(10,2) DEFAULT 0,
+                card_revenue DECIMAL(10,2) DEFAULT 0,
+                notes TEXT
+            )
+            """);
+
         // 创建 transactions 表
         stmt.execute("""
             CREATE TABLE IF NOT EXISTS transactions (
@@ -420,6 +442,59 @@ public abstract class DatabaseTestBase {
             )
             """);
 
+        // 创建 invoices 表（发票）
+        stmt.execute("""
+            CREATE TABLE IF NOT EXISTS invoices (
+                invoice_id VARCHAR(50) PRIMARY KEY,
+                invoice_code VARCHAR(20),
+                invoice_number VARCHAR(20),
+                transaction_id VARCHAR(50),
+                buyer_name VARCHAR(100),
+                buyer_tax_id VARCHAR(30),
+                buyer_address VARCHAR(200),
+                buyer_phone VARCHAR(50),
+                buyer_bank VARCHAR(100),
+                seller_name VARCHAR(100),
+                seller_tax_id VARCHAR(30),
+                seller_address VARCHAR(200),
+                seller_phone VARCHAR(50),
+                seller_bank VARCHAR(100),
+                total_amount DECIMAL(10,2),
+                tax_amount DECIMAL(10,2),
+                final_amount DECIMAL(10,2),
+                tax_rate DECIMAL(5,4),
+                create_time TIMESTAMP,
+                print_time TIMESTAMP,
+                create_by VARCHAR(50),
+                status VARCHAR(20),
+                void_reason VARCHAR(200),
+                void_time TIMESTAMP,
+                remark VARCHAR(500),
+                payee VARCHAR(50),
+                checker VARCHAR(50),
+                print_count INT DEFAULT 0,
+                pdf_path VARCHAR(200),
+                image_path VARCHAR(200)
+            )
+            """);
+
+        // 创建 invoice_items 表（发票明细）
+        stmt.execute("""
+            CREATE TABLE IF NOT EXISTS invoice_items (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                invoice_id VARCHAR(50),
+                product_name VARCHAR(100),
+                specification VARCHAR(100),
+                unit VARCHAR(20),
+                quantity INT,
+                unit_price DECIMAL(10,2),
+                amount DECIMAL(10,2),
+                tax_rate DECIMAL(5,4),
+                tax_amount DECIMAL(10,2),
+                total_amount DECIMAL(10,2)
+            )
+            """);
+
         stmt.close();
     }
 
@@ -453,9 +528,12 @@ public abstract class DatabaseTestBase {
         // 从连接池获取连接来清空数据
         try (Connection conn = testDataSource.getConnection(); Statement stmt = conn.createStatement()) {
             // 按依赖关系倒序删除
+            stmt.execute("DELETE FROM invoice_items");
+            stmt.execute("DELETE FROM invoices");
             stmt.execute("DELETE FROM transaction_items");
             stmt.execute("DELETE FROM transactions");
             stmt.execute("DELETE FROM members");
+            stmt.execute("DELETE FROM shifts");
             stmt.execute("DELETE FROM inventory_check_items");
             stmt.execute("DELETE FROM inventory_check");
             stmt.execute("DELETE FROM purchase_inbound_items");

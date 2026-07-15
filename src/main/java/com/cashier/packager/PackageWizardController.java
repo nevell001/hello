@@ -13,10 +13,13 @@ import javafx.stage.FileChooser;
 import org.slf4j.Logger;
 
 import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 图形界面打包向导控制器
@@ -77,6 +80,9 @@ public class PackageWizardController {
 
     private int currentStep = 1;
     private static final int TOTAL_STEPS = 4;
+    private static final int TOOL_LOOKUP_TIMEOUT_SECONDS = 10;
+    private static final int PACKAGE_COMMAND_TIMEOUT_SECONDS = 10 * 60;
+    private static final int POWERSHELL_PACKAGE_TIMEOUT_SECONDS = 30 * 60;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     /**
@@ -92,7 +98,7 @@ public class PackageWizardController {
             ProcessBuilder pb = new ProcessBuilder(mavenCmd, "--version");
             pb.redirectErrorStream(true);
             Process p = pb.start();
-            if (p.waitFor() == 0) {
+            if (waitForProcess(p, "检测 Maven 命令", TOOL_LOOKUP_TIMEOUT_SECONDS) == 0) {
                 return mavenCmd;
             }
         } catch (Exception e) {
@@ -131,7 +137,7 @@ public class PackageWizardController {
             ProcessBuilder pb = new ProcessBuilder("jpackage", "--version");
             pb.redirectErrorStream(true);
             Process p = pb.start();
-            if (p.waitFor() == 0) {
+            if (waitForProcess(p, "检测 jpackage 命令", TOOL_LOOKUP_TIMEOUT_SECONDS) == 0) {
                 return "jpackage";
             }
         } catch (Exception e) {
@@ -388,7 +394,8 @@ public class PackageWizardController {
         alert.setTitle("取消打包");
         alert.setHeaderText("确定要取消打包吗？");
         if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
-            System.exit(0);
+            shutdownExecutor();
+            javafx.application.Platform.exit();
         }
     }
 
@@ -526,11 +533,12 @@ public class PackageWizardController {
                         mvnCompile.redirectErrorStream(true);
 
                         Process compileProcess = mvnCompile.start();
-                        logProcessOutput(compileProcess);
+                        Thread compileOutputReader = logProcessOutputAsync(compileProcess, Charset.forName("GBK"), null);
 
-                        if (compileProcess.waitFor() != 0) {
+                        if (waitForProcess(compileProcess, "Maven 编译", PACKAGE_COMMAND_TIMEOUT_SECONDS) != 0) {
                             throw new RuntimeException("编译失败");
                         }
+                        compileOutputReader.join(TimeUnit.SECONDS.toMillis(1));
                         appendLog("✓ 编译完成\n");
 
                         // 步骤 2: 打包 JAR
@@ -543,11 +551,12 @@ public class PackageWizardController {
                         mvnPackage.redirectErrorStream(true);
 
                         Process packageProcess = mvnPackage.start();
-                        logProcessOutput(packageProcess);
+                        Thread packageOutputReader = logProcessOutputAsync(packageProcess, Charset.forName("GBK"), null);
 
-                        if (packageProcess.waitFor() != 0) {
+                        if (waitForProcess(packageProcess, "Maven 打包", PACKAGE_COMMAND_TIMEOUT_SECONDS) != 0) {
                             throw new RuntimeException("打包失败");
                         }
+                        packageOutputReader.join(TimeUnit.SECONDS.toMillis(1));
                         appendLog("✓ JAR 打包完成\n");
                     }
 
@@ -648,11 +657,12 @@ public class PackageWizardController {
 
         jlink.redirectErrorStream(true);
         Process jlinkProcess = jlink.start();
-        logProcessOutput(jlinkProcess);
+        Thread jlinkOutputReader = logProcessOutputAsync(jlinkProcess, Charset.forName("GBK"), null);
 
-        if (jlinkProcess.waitFor() != 0) {
+        if (waitForProcess(jlinkProcess, "jlink 创建 JRE", PACKAGE_COMMAND_TIMEOUT_SECONDS) != 0) {
             throw new RuntimeException("jlink 创建 JRE 失败");
         }
+        jlinkOutputReader.join(TimeUnit.SECONDS.toMillis(1));
     }
 
     private void saveDatabaseConfig() throws Exception {
@@ -735,16 +745,9 @@ public class PackageWizardController {
 
         // 捕获输出
         StringBuilder output = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(psProcess.getInputStream(), "UTF-8"))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line).append("\n");
-                final String outputLine = line;
-                javafx.application.Platform.runLater(() -> appendLog(outputLine));
-            }
-        }
-
-        int exitCode = psProcess.waitFor();
+        Thread psOutputReader = logProcessOutputAsync(psProcess, StandardCharsets.UTF_8, output);
+        int exitCode = waitForProcess(psProcess, "PowerShell 打包", POWERSHELL_PACKAGE_TIMEOUT_SECONDS);
+        psOutputReader.join(TimeUnit.SECONDS.toMillis(1));
         logger.info("PowerShell exit code: {}", exitCode);
         logger.info("PowerShell output:\n{}", output);
 
@@ -762,14 +765,40 @@ public class PackageWizardController {
         appendLog("启动方式: 双击 " + appName + ".bat\n");
     }
 
-    private void logProcessOutput(Process process) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), "GBK"))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                final String output = line;
-                javafx.application.Platform.runLater(() -> appendLog(output));
+    private Thread logProcessOutputAsync(Process process, Charset charset, StringBuilder outputBuffer) {
+        Thread outputReader = new Thread(() -> {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), charset))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (outputBuffer != null) {
+                        synchronized (outputBuffer) {
+                            outputBuffer.append(line).append("\n");
+                        }
+                    }
+                    final String output = line;
+                    javafx.application.Platform.runLater(() -> appendLog(output));
+                }
+            } catch (IOException e) {
+                logger.warn("读取打包命令输出失败", e);
             }
+        }, "package-command-output-reader");
+        outputReader.setDaemon(true);
+        outputReader.start();
+        return outputReader;
+    }
+
+    private int waitForProcess(Process process, String operation, int timeoutSeconds) throws InterruptedException {
+        boolean completed = process.waitFor(timeoutSeconds, TimeUnit.SECONDS);
+        if (!completed) {
+            process.destroyForcibly();
+            process.waitFor(5, TimeUnit.SECONDS);
+            throw new RuntimeException(operation + "超时（" + timeoutSeconds + "秒）");
         }
+        return process.exitValue();
+    }
+
+    private void shutdownExecutor() {
+        executorService.shutdownNow();
     }
 
     private void deleteDirectory(File dir) throws IOException {

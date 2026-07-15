@@ -3,9 +3,11 @@ package com.cashier.controller;
 import com.cashier.i18n.I18nKeys;
 
 import com.cashier.i18n.I18nManager;
+import com.cashier.dao.CategoryDAO;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
 import com.cashier.dao.TransactionDAO;
+import com.cashier.model.Category;
 import com.cashier.model.Product;
 import com.cashier.model.Transaction;
 import com.cashier.util.CurrencyUtil;
@@ -158,6 +160,8 @@ public class InventoryReportController {
     private static final double DEFAULT_TURNOVER_THRESHOLD = 1.0;  // 周转率阈值
     private static final int DEFAULT_SLOW_SALES_THRESHOLD = 10;   // 滞销阈值（销量）
     private static final int DEFAULT_INVENTORY_DAYS = 90;          // 库存天数阈值
+    private static final int FIRST_PAGE = 1;
+    private static final int INVENTORY_REPORT_PRODUCT_LIMIT = 5000;
 
     /**
      * 初始化方法
@@ -288,16 +292,9 @@ public class InventoryReportController {
      */
     private void loadData() {
         try {
-            allProducts = productDAO.findAll();
+            allProducts = new ArrayList<>();
             allTransactions = new ArrayList<>();
-            allCategories = new TreeSet<>();
-
-            // 收集所有分类
-            for (Product product : allProducts) {
-                if (product.category != null && !product.category.isEmpty()) {
-                    allCategories.add(product.category);
-                }
-            }
+            allCategories = loadAllCategoryNames();
 
             // 加载分类列表到下拉框
             javafx.collections.ObservableList<String> categoryList = javafx.collections.FXCollections.observableArrayList();
@@ -308,7 +305,7 @@ public class InventoryReportController {
                 "全部分类".equals(value) ? I18nManager.getInstance().get(I18nKeys.Filter.ALL_CATEGORIES) : value);
             categoryComboBox.getSelectionModel().select(0);
 
-            logger.info("成功加载 {} 个商品", allProducts.size());
+            logger.info("成功加载 {} 个库存报表分类", allCategories.size());
         } catch (SQLException e) {
             logger.error("加载数据失败", e);
             showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
@@ -316,6 +313,16 @@ public class InventoryReportController {
             allTransactions = new ArrayList<>();
             allCategories = new TreeSet<>();
         }
+    }
+
+    private Set<String> loadAllCategoryNames() throws SQLException {
+        Set<String> categories = new TreeSet<>();
+        for (Category category : CategoryDAO.findAll()) {
+            if (category.name != null && !category.name.isBlank()) {
+                categories.add(category.name);
+            }
+        }
+        return categories;
     }
 
     /**
@@ -408,6 +415,9 @@ public class InventoryReportController {
      */
     private void calculateStatistics(LocalDate startDate, LocalDate endDate, String categoryName,
                                     double turnoverThreshold, int slowSalesThreshold, int inventoryDaysThreshold) {
+        if (!loadProductsForReport(categoryName)) {
+            return;
+        }
         loadTransactions(startDate, endDate);
         Map<String, SalesStats> salesStatsMap = buildSalesStatsMap();
 
@@ -537,6 +547,27 @@ public class InventoryReportController {
 
         // 更新图表
         updateCharts(productRecords, categoryQuantityMap, categoryAmountMap);
+    }
+
+    private boolean loadProductsForReport(String categoryName) {
+        try {
+            if (categoryName != null && !"全部分类".equals(categoryName)) {
+                allProducts = productDAO.findByCategory(
+                    categoryName,
+                    FIRST_PAGE,
+                    INVENTORY_REPORT_PRODUCT_LIMIT
+                ).getData();
+            } else {
+                allProducts = productDAO.findAll(FIRST_PAGE, INVENTORY_REPORT_PRODUCT_LIMIT).getData();
+            }
+            logger.info("库存报表加载商品 {} 条，单次上限 {}", allProducts.size(), INVENTORY_REPORT_PRODUCT_LIMIT);
+            return true;
+        } catch (SQLException e) {
+            logger.error("加载库存报表商品失败", e);
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
+            allProducts = new ArrayList<>();
+            return false;
+        }
     }
 
     private void loadTransactions(LocalDate startDate, LocalDate endDate) {

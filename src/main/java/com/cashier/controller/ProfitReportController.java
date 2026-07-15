@@ -3,15 +3,15 @@ package com.cashier.controller;
 import com.cashier.i18n.I18nKeys;
 
 import com.cashier.i18n.I18nManager;
+import com.cashier.dao.CategoryDAO;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
 import com.cashier.dao.PurchaseInboundItemDAO;
 import com.cashier.dao.TransactionDAO;
 import com.cashier.util.CurrencyUtil;
 import com.cashier.util.DateTimeFormats;
+import com.cashier.model.Category;
 import com.cashier.model.Product;
-import com.cashier.model.PurchaseInbound;
-import com.cashier.model.PurchaseInboundItem;
 import com.cashier.model.Transaction;
 import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
@@ -143,7 +143,6 @@ public class ProfitReportController {
     @FXML
     private Button exportButton;
 
-    private List<Product> allProducts;
     private List<Transaction> allTransactions;
     private Map<String, Double> productActualCostMap; // 商品实际成本（加权平均）
     private Map<String, Product> productNameMap; // 商品名称到商品的映射
@@ -270,28 +269,11 @@ public class ProfitReportController {
      */
     private void loadData() {
         try {
-            allProducts = productDAO.findAll();
             allTransactions = findTransactionsByDateRange(startDatePicker.getValue(), endDatePicker.getValue());
             productActualCostMap = new HashMap<>();
-            productNameMap = new HashMap<>();
-            allCategories = new TreeSet<>();
-
+            productNameMap = loadProductNameMap(allTransactions);
+            allCategories = loadAllCategoryNames();
             loadProductActualCosts();
-
-            // 构建商品名称映射（用于快速查找）
-            productNameMap = new HashMap<>();
-            for (Product product : allProducts) {
-                if (product.name != null && !product.name.isEmpty()) {
-                    productNameMap.put(product.name, product);
-                }
-            }
-
-            // 收集所有分类
-            for (Product product : allProducts) {
-                if (product.category != null && !product.category.isEmpty()) {
-                    allCategories.add(product.category);
-                }
-            }
 
             // 加载分类列表到下拉框
             javafx.collections.ObservableList<String> categoryList = javafx.collections.FXCollections.observableArrayList();
@@ -302,12 +284,11 @@ public class ProfitReportController {
                 "全部分类".equals(value) ? I18nManager.getInstance().get(I18nKeys.Filter.ALL_CATEGORIES) : value);
             categoryComboBox.getSelectionModel().select(0);
 
-            logger.info("成功加载 {} 个商品，{} 条交易记录，{} 个商品实际成本",
-                allProducts.size(), allTransactions.size(), productActualCostMap.size());
+            logger.info("成功加载 {} 个交易相关商品，{} 条交易记录，{} 个商品实际成本",
+                productNameMap.size(), allTransactions.size(), productActualCostMap.size());
         } catch (SQLException e) {
             logger.error("加载数据失败", e);
             showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
-            allProducts = new ArrayList<>();
             allTransactions = new ArrayList<>();
             productActualCostMap = new HashMap<>();
             productNameMap = new HashMap<>();
@@ -315,12 +296,37 @@ public class ProfitReportController {
         }
     }
 
+    private Map<String, Product> loadProductNameMap(List<Transaction> transactions) throws SQLException {
+        Set<String> productNames = new HashSet<>();
+        for (Transaction transaction : transactions) {
+            if (transaction.items == null) {
+                continue;
+            }
+            for (Product item : transaction.items) {
+                if (item.name != null && !item.name.isBlank()) {
+                    productNames.add(item.name);
+                }
+            }
+        }
+        return productDAO.findByNames(productNames);
+    }
+
+    private Set<String> loadAllCategoryNames() throws SQLException {
+        Set<String> categories = new TreeSet<>();
+        for (Category category : CategoryDAO.findAll()) {
+            if (category.name != null && !category.name.isBlank()) {
+                categories.add(category.name);
+            }
+        }
+        return categories;
+    }
+
     /**
      * 加载每个商品的加权平均采购成本
      */
     private void loadProductActualCosts() throws SQLException {
         Map<Integer, BigDecimal> averageCostByProductId = PurchaseInboundItemDAO.findAverageUnitCostByProductId();
-        for (Product product : allProducts) {
+        for (Product product : productNameMap.values()) {
             BigDecimal averageCost = averageCostByProductId.get(product.id);
             if (averageCost != null && product.name != null && !product.name.isEmpty()) {
                 productActualCostMap.put(product.name, averageCost.doubleValue());
@@ -399,10 +405,15 @@ public class ProfitReportController {
 
         try {
             allTransactions = findTransactionsByDateRange(startDate, endDate);
+            productNameMap = loadProductNameMap(allTransactions);
+            productActualCostMap = new HashMap<>();
+            loadProductActualCosts();
         } catch (SQLException e) {
             logger.error("加载利润报表交易记录失败", e);
             showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
             allTransactions = new ArrayList<>();
+            productNameMap = new HashMap<>();
+            productActualCostMap = new HashMap<>();
             return;
         }
 

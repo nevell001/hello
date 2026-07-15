@@ -179,7 +179,11 @@ public class LoginController {
      */
     @FXML
     public void handleExit() {
-        System.exit(0);
+        if (application != null) {
+            application.requestExit();
+        } else {
+            javafx.application.Platform.exit();
+        }
     }
 
     /**

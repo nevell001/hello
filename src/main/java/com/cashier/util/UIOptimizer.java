@@ -9,6 +9,8 @@ import org.slf4j.Logger;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
@@ -24,42 +26,47 @@ public class UIOptimizer {
         t.setDaemon(true);
         return t;
     });
+
+    private static final ScheduledExecutorService cleanupExecutor =
+        Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "UI-Cache-Cleanup");
+            t.setDaemon(true);
+            return t;
+        });
     
     // 简单的对象缓存
-    private static final java.util.Map<String, Object> cache = new java.util.WeakHashMap<>();
+    private static final java.util.Map<String, Object> cache =
+        java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>());
     private static final long CACHE_EXPIRE_TIME = 5 * 60 * 1000; // 5分钟
     // 使用 LinkedHashMap 实现 LRU，避免内存泄漏
-    private static final java.util.Map<String, Long> cacheTime = new java.util.LinkedHashMap<String, Long>(16, 0.75f, true) {
-        @Override
-        protected boolean removeEldestEntry(java.util.Map.Entry<String, Long> eldest) {
-            // 当缓存时间戳超过 1000 个时，移除最旧的条目
-            return size() > 1000;
-        }
-    };
+    private static final java.util.Map<String, Long> cacheTime =
+        java.util.Collections.synchronizedMap(new java.util.LinkedHashMap<String, Long>(16, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(java.util.Map.Entry<String, Long> eldest) {
+                // 当缓存时间戳超过 1000 个时，移除最旧的条目
+                return size() > 1000;
+            }
+        });
 
     static {
         // 定期清理过期缓存时间戳（每分钟）
-        java.util.concurrent.ScheduledExecutorService cleanupExecutor =
-            java.util.concurrent.Executors.newSingleThreadScheduledExecutor(r -> {
-                Thread t = new Thread(r, "UI-Cache-Cleanup");
-                t.setDaemon(true);
-                return t;
-            });
         cleanupExecutor.scheduleAtFixedRate(() -> {
             try {
                 long now = System.currentTimeMillis();
-                cacheTime.entrySet().removeIf(entry -> {
-                    long age = now - entry.getValue();
-                    if (age > CACHE_EXPIRE_TIME) {
-                        cache.remove(entry.getKey());
-                        return true;
-                    }
-                    return false;
-                });
+                synchronized (cacheTime) {
+                    cacheTime.entrySet().removeIf(entry -> {
+                        long age = now - entry.getValue();
+                        if (age > CACHE_EXPIRE_TIME) {
+                            cache.remove(entry.getKey());
+                            return true;
+                        }
+                        return false;
+                    });
+                }
             } catch (Exception e) {
                 logger.error("缓存清理失败", e);
             }
-        }, 1, 1, java.util.concurrent.TimeUnit.MINUTES);
+        }, 1, 1, TimeUnit.MINUTES);
     }
     
     /**
@@ -114,14 +121,17 @@ public class UIOptimizer {
             });
         
         scheduler.schedule(() -> {
-            Platform.runLater(() -> {
-                try {
-                    updateTask.run();
-                } catch (Exception e) {
-                    logger.error("延迟UI更新失败", e);
-                }
-            });
-            scheduler.shutdown();
+            try {
+                Platform.runLater(() -> {
+                    try {
+                        updateTask.run();
+                    } catch (Exception e) {
+                        logger.error("延迟UI更新失败", e);
+                    }
+                });
+            } finally {
+                scheduler.shutdown();
+            }
         }, delayMs, java.util.concurrent.TimeUnit.MILLISECONDS);
     }
     
@@ -262,7 +272,21 @@ public class UIOptimizer {
      * 关闭异步线程池
      */
     public static void shutdown() {
-        asyncExecutor.shutdown();
+        shutdownExecutor(asyncExecutor, "UI优化线程池");
+        shutdownExecutor(cleanupExecutor, "UI缓存清理线程池");
         logger.info("UI优化线程池已关闭");
+    }
+
+    private static void shutdownExecutor(java.util.concurrent.ExecutorService executor, String name) {
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+                executor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            executor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+        logger.info("{}已关闭", name);
     }
 }

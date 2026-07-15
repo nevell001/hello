@@ -436,8 +436,7 @@ public class CartController {
             }
         } catch (Exception e) {
             logger.error("从数据库加载商品失败", e);
-            // 降级处理：尝试从 DataService 加载（如果数据库失败）
-            inventoryMap = DataService.loadInventory();
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
         logger.info("CartController: 加载了 {} 个商品", inventoryMap.size());
         productList.setAll(inventoryMap.values());
@@ -780,8 +779,7 @@ public class CartController {
             member = MemberDAO.findByPhone(phone);
         } catch (Exception e) {
             logger.error("从数据库查找会员失败", e);
-            Map<String, Member> members = DataService.loadMembers();
-            member = members.get(phone);
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
         }
 
         if (member != null) {

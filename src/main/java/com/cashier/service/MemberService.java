@@ -234,23 +234,12 @@ public class MemberService {
     public static Map<String, Object> getMemberStatistics() {
         Map<String, Object> stats = new HashMap<>();
         try {
-            List<Member> members = MemberDAO.findAll();
+            Map<String, Object> summary = MemberDAO.getMemberSummary();
+            BigDecimal totalBalance = (BigDecimal) summary.getOrDefault("totalBalance", BigDecimal.ZERO);
+            BigDecimal totalPoints = (BigDecimal) summary.getOrDefault("totalPoints", BigDecimal.ZERO);
+            Map<String, Integer> levelStats = MemberDAO.countByLevel();
 
-            int totalCount = members.size();
-            BigDecimal totalBalance = members.stream()
-                .map(Member::getBalance)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-            BigDecimal totalPoints = members.stream()
-                .map(Member::getPoints)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-            // 按等级统计
-            Map<String, Integer> levelStats = new HashMap<>();
-            for (Member member : members) {
-                levelStats.merge(member.level, 1, Integer::sum);
-            }
-
-            stats.put("totalCount", totalCount);
+            stats.put("totalCount", ((Number) summary.getOrDefault("totalCount", 0L)).intValue());
             stats.put("totalBalance", totalBalance.doubleValue());
             stats.put("totalPoints", totalPoints.doubleValue());
             stats.put("levelStats", levelStats);

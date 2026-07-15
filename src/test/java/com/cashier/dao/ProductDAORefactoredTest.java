@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -233,6 +234,44 @@ public class ProductDAORefactoredTest extends DatabaseTestBase {
 
         productDAO.delete(lowStockProduct.id);
         productDAO.delete(healthyProduct.id);
+    }
+
+    @Test
+    @Order(7)
+    @DisplayName("测试根据商品名称批量查询")
+    void testFindByNames() throws SQLException {
+        Product firstProduct = new Product();
+        firstProduct.productCode = "NAME_BATCH_001";
+        firstProduct.name = "批量名称商品一";
+        firstProduct.price = BigDecimal.valueOf(12.0);
+        firstProduct.quantity = 5;
+        firstProduct.category = "批量测试";
+        firstProduct.unit = "个";
+        firstProduct.minStock = 1;
+        firstProduct.cost = BigDecimal.valueOf(6.0);
+
+        Product secondProduct = new Product();
+        secondProduct.productCode = "NAME_BATCH_002";
+        secondProduct.name = "批量名称商品二";
+        secondProduct.price = BigDecimal.valueOf(18.0);
+        secondProduct.quantity = 8;
+        secondProduct.category = "批量测试";
+        secondProduct.unit = "个";
+        secondProduct.minStock = 1;
+        secondProduct.cost = BigDecimal.valueOf(9.0);
+
+        productDAO.insert(firstProduct);
+        productDAO.insert(secondProduct);
+
+        var products = productDAO.findByNames(Set.of("批量名称商品一", "批量名称商品二", "不存在商品"));
+
+        assertEquals(2, products.size());
+        assertEquals("NAME_BATCH_001", products.get("批量名称商品一").productCode);
+        assertEquals("NAME_BATCH_002", products.get("批量名称商品二").productCode);
+        assertFalse(products.containsKey("不存在商品"));
+
+        productDAO.delete(firstProduct.id);
+        productDAO.delete(secondProduct.id);
     }
 
     @AfterAll

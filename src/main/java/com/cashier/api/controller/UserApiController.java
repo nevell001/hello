@@ -1,6 +1,7 @@
 package com.cashier.api.controller;
 
 import com.cashier.dao.UserDAO;
+import com.cashier.model.PageResult;
 import com.cashier.model.User;
 import com.cashier.util.PasswordUtil;
 import io.javalin.http.Context;
@@ -9,7 +10,6 @@ import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -51,16 +51,13 @@ public class UserApiController {
         if (!checkAdmin(ctx)) return;
         
         try {
-            List<User> users = UserDAO.findAll();
+            ApiPagination.PageRequest page = ApiPagination.from(ctx);
+            PageResult<User> users = UserDAO.findAll(page.page(), page.pageSize());
             
             // 移除密码字段
-            users.forEach(u -> u.password = null);
+            users.getData().forEach(u -> u.password = null);
             
-            Map<String, Object> result = new HashMap<>();
-            result.put(KEY_SUCCESS, true);
-            result.put(KEY_DATA, users);
-            result.put(KEY_TOTAL, users.size());
-            ctx.json(result);
+            ctx.json(ApiPagination.success(users));
         } catch (Exception e) {
             logger.error("获取用户列表失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)

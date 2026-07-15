@@ -19,6 +19,8 @@ import java.util.*;
 public class DataService {
     private static final Logger logger = LoggerFactoryUtil.getLogger(DataService.class);
     public static final String DEFAULT_SQL_BACKUP_PATH = "backup/sql";
+    private static final int FIRST_PAGE = 1;
+    private static final int LEGACY_LOAD_LIMIT = 5000;
     private static final com.cashier.dao.ProductDAORefactored productDAO = com.cashier.dao.DAOFactory.getInstance().getProductDAO();
 
     /**
@@ -26,7 +28,7 @@ public class DataService {
      */
     public static Map<String, Product> loadInventory() {
         try {
-            List<Product> products = productDAO.findAll();
+            List<Product> products = productDAO.findAll(FIRST_PAGE, LEGACY_LOAD_LIMIT).getData();
             Map<String, Product> inventory = new HashMap<>();
             for (Product product : products) {
                 inventory.put(product.name, product);
@@ -62,7 +64,7 @@ public class DataService {
      */
     public static Map<String, User> loadUsers() {
         try {
-            List<User> users = UserDAO.findAll();
+            List<User> users = UserDAO.findAll(FIRST_PAGE, LEGACY_LOAD_LIMIT).getData();
             Map<String, User> userMap = new HashMap<>();
             for (User user : users) {
                 userMap.put(user.username, user);
@@ -91,7 +93,7 @@ public class DataService {
      */
     public static Map<String, Member> loadMembers() {
         try {
-            List<Member> members = MemberDAO.findAll();
+            List<Member> members = MemberDAO.findAll(FIRST_PAGE, LEGACY_LOAD_LIMIT).getData();
             Map<String, Member> memberMap = new HashMap<>();
             for (Member member : members) {
                 memberMap.put(member.phone, member);
@@ -120,7 +122,7 @@ public class DataService {
      */
     public static List<Transaction> loadTransactions() {
         try {
-            return TransactionDAO.findAll();
+            return TransactionDAO.findRecent(LEGACY_LOAD_LIMIT);
         } catch (SQLException e) {
             logger.error("加载交易数据失败", e);
             return new ArrayList<>();
@@ -173,7 +175,7 @@ public class DataService {
      */
     public static List<RechargeRecord> loadRechargeRecords() {
         try {
-            return RechargeRecordDAO.findAll();
+            return RechargeRecordDAO.findRecent(LEGACY_LOAD_LIMIT);
         } catch (SQLException e) {
             logger.error("加载充值记录失败", e);
             return new ArrayList<>();
@@ -232,7 +234,7 @@ public class DataService {
      */
     public static List<OperationLog> loadOperationLogs() {
         try {
-            return OperationLogDAO.findAll();
+            return OperationLogDAO.findRecent(LEGACY_LOAD_LIMIT);
         } catch (SQLException e) {
             logger.error("加载操作日志失败", e);
             return new ArrayList<>();

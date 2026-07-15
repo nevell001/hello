@@ -43,7 +43,7 @@ public class DatabaseConfigDialog {
 
     public void show() {
         frame = new JFrame("LiSuan - Database Configuration");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setSize(550, 450);
         frame.setLocationRelativeTo(null);
         frame.setResizable(false);
@@ -116,8 +116,7 @@ public class DatabaseConfigDialog {
         saveButton = new JButton("Save & Start");
 
         cancelButton.addActionListener(e -> {
-            frame.dispose();
-            System.exit(0);
+            exitDialog();
         });
         testButton.addActionListener(e -> testConnection());
         saveButton.addActionListener(e -> saveAndStart());
@@ -389,7 +388,13 @@ public class DatabaseConfigDialog {
             startApplication();
         }
 
-        frame.dispose();
+        exitDialog();
+    }
+
+    private void exitDialog() {
+        if (frame != null) {
+            frame.dispose();
+        }
         System.exit(0);
     }
 

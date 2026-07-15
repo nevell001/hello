@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SettingsBackupRestoreFeedbackPolicyTest {
@@ -69,5 +70,17 @@ class SettingsBackupRestoreFeedbackPolicyTest {
         assertTrue(settingsController.contains("String backupBasePath = DataService.resolveSqlBackupPath(backupPathField.getText())"));
         assertTrue(settingsController.contains("final String backupBasePath = DataService.resolveSqlBackupPath(backupPathField.getText())"));
         assertTrue(settingsController.contains("backupPathField.setText(DataService.DEFAULT_SQL_BACKUP_PATH)"));
+    }
+
+    @Test
+    @DisplayName("CSV 导入完成后不得阻塞 JavaFX 线程")
+    void csvImportProgressHideUsesPauseTransition() throws Exception {
+        String settingsController = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/SettingsController.java"
+        ));
+
+        assertTrue(settingsController.contains("PauseTransition hideProgressDelay"));
+        assertTrue(settingsController.contains("Duration.seconds(2)"));
+        assertFalse(settingsController.contains("Thread.sleep(2000)"));
     }
 }

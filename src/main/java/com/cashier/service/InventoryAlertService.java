@@ -21,7 +21,7 @@ public class InventoryAlertService {
     private static final ProductDAORefactored productDAO = DAOFactory.getInstance().getProductDAO();
     private static InventoryAlertService instance;
     
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private ScheduledExecutorService scheduler;
     private volatile boolean isRunning = false;
     
     // 默认检查间隔：5分钟
@@ -37,6 +37,7 @@ public class InventoryAlertService {
     private long alertCooldown = 60 * 60 * 1000;
     
     private InventoryAlertService() {
+        scheduler = createScheduler();
         logger.info("库存预警服务初始化完成");
     }
     
@@ -56,6 +57,10 @@ public class InventoryAlertService {
             return;
         }
         
+        if (scheduler == null || scheduler.isShutdown() || scheduler.isTerminated()) {
+            scheduler = createScheduler();
+        }
+
         isRunning = true;
         
         // 立即执行一次检查
@@ -93,6 +98,10 @@ public class InventoryAlertService {
         }
         
         logger.info("库存预警服务已停止");
+    }
+
+    private ScheduledExecutorService createScheduler() {
+        return Executors.newScheduledThreadPool(1);
     }
     
     /**

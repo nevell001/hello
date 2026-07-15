@@ -20,6 +20,8 @@ import java.util.Locale;
  */
 public class InventoryService {
     private static final Logger logger = LoggerFactoryUtil.getLogger(InventoryService.class);
+    private static final int FIRST_PAGE = 1;
+    private static final int INVENTORY_LOAD_LIMIT = 5000;
     private static ProductDAORefactored productDAO = DAOFactory.getInstance().getProductDAO();
 
     // 用于测试
@@ -45,12 +47,12 @@ public class InventoryService {
         Map<String, Product> inventory = new HashMap<>();
         try {
             logger.info("缓存未命中，从数据库加载库存...");
-            List<Product> products = productDAO.findAll();
+            List<Product> products = productDAO.findAll(FIRST_PAGE, INVENTORY_LOAD_LIMIT).getData();
             for (Product product : products) {
                 inventory.put(product.name, product);
             }
             com.cashier.util.CacheManager.batchAddToCache(products);
-            logger.info("从数据库加载 {} 个商品并写入缓存", inventory.size());
+            logger.info("从数据库加载 {} 个商品并写入缓存，单次上限 {}", inventory.size(), INVENTORY_LOAD_LIMIT);
         } catch (SQLException e) {
             logger.error("加载库存数据失败", e);
         }

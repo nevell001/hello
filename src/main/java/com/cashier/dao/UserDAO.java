@@ -1,5 +1,6 @@
 package com.cashier.dao;
 
+import com.cashier.model.PageResult;
 import com.cashier.model.User;
 import com.cashier.util.DatabaseManager;
 
@@ -76,6 +77,54 @@ public class UserDAO {
             }
         }
         return users;
+    }
+
+    /**
+     * 分页查询用户，用于 REST API 避免一次性加载全部用户。
+     */
+    public static PageResult<User> findAll(int pageNum, int pageSize) throws SQLException {
+        if (pageNum < 1) {
+            pageNum = 1;
+        }
+        if (pageSize < 1) {
+            pageSize = 20;
+        }
+
+        List<User> users = new ArrayList<>();
+        long total = count();
+        int offset = (pageNum - 1) * pageSize;
+        String sql = "SELECT id, username, password, name, role, create_time, last_login_time, active, force_password_change " +
+                     "FROM users ORDER BY username LIMIT ? OFFSET ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, pageSize);
+            pstmt.setInt(2, offset);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                users.add(mapRowToUser(rs));
+            }
+        }
+        return new PageResult<>(users, pageNum, pageSize, total);
+    }
+
+    /**
+     * 统计用户总数。
+     */
+    public static long count() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM users";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            if (rs.next()) {
+                return rs.getLong(1);
+            }
+        }
+        return 0;
     }
 
     /**

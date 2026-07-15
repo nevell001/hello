@@ -13,6 +13,8 @@ import org.slf4j.Logger;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -24,6 +26,9 @@ public class BackupApiController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(BackupApiController.class);
     private static final String BACKUP_ID_FIELD = "backupId";
     private static final String CONTENT_TYPE_FIELD = "contentType";
+    private static final int DEFAULT_BACKUP_LIST_LIMIT = 20;
+    private static final int MAX_BACKUP_LIST_LIMIT = 200;
+    private static final String DEFAULT_BACKUP_DIR = "backup";
     
     /**
      * 执行备份
@@ -66,7 +71,8 @@ public class BackupApiController {
      * GET /api/backup/list?limit=20
      */
     public static void listBackups(Context ctx) {
-        int limit = ctx.queryParamAsClass("limit", Integer.class).getOrDefault(20);
+        int requestedLimit = ctx.queryParamAsClass("limit", Integer.class).getOrDefault(DEFAULT_BACKUP_LIST_LIMIT);
+        int limit = Math.max(1, Math.min(requestedLimit, MAX_BACKUP_LIST_LIMIT));
         
         try {
             List<BackupRecord> records = BackupDAO.findRecent(limit);
@@ -164,18 +170,18 @@ public class BackupApiController {
                 return;
             }
             
-            File file = new File(record.localPath);
+            File file = resolveDownloadableBackupFile(record);
             
-            if (!file.exists()) {
+            if (!file.exists() || !file.isFile()) {
                 ctx.status(404).json(Map.of(
                     "success", false,
-                    "error", "文件不存在: " + record.localPath
+                    "error", "文件不存在"
                 ));
                 return;
             }
             
             // 返回文件
-            ctx.header("Content-Disposition", "attachment; filename=\"" + record.fileName + "\"");
+            ctx.header("Content-Disposition", "attachment; filename=\"" + sanitizeDownloadFileName(record.fileName) + "\"");
             ctx.header("Content-Type", "application/zip");
             ctx.result(new FileInputStream(file));
             
@@ -191,6 +197,30 @@ public class BackupApiController {
                 "error", "文件不存在"
             ));
         }
+    }
+
+    private static File resolveDownloadableBackupFile(BackupRecord record) throws SQLException, FileNotFoundException {
+        BackupConfig config = BackupDAO.getConfig();
+        Path backupRoot = Path.of(
+            config.localBackupPath == null || config.localBackupPath.isBlank()
+                ? DEFAULT_BACKUP_DIR
+                : config.localBackupPath
+        ).toAbsolutePath().normalize();
+        Path backupFile = Path.of(record.localPath).toAbsolutePath().normalize();
+
+        if (!backupFile.startsWith(backupRoot) || !Files.isRegularFile(backupFile)) {
+            logger.warn("拒绝下载备份目录外文件: backupId={}, path={}", record.backupId, record.localPath);
+            throw new FileNotFoundException("备份文件不存在");
+        }
+        return backupFile.toFile();
+    }
+
+    private static String sanitizeDownloadFileName(String fileName) {
+        if (fileName == null || fileName.isBlank()) {
+            return "backup.zip";
+        }
+        String sanitized = fileName.replaceAll("[\\\\/\\r\\n\"]", "_");
+        return sanitized.isBlank() ? "backup.zip" : sanitized;
     }
     
     /**

@@ -187,12 +187,25 @@ public class PaymentDAO {
      * 查询待支付订单
      */
     public static List<PaymentOrder> findWaitingOrders() throws SQLException {
-        String sql = "SELECT * FROM payment_orders WHERE status IN ('CREATED', 'WAITING') AND expire_time > NOW() ORDER BY create_time DESC";
+        return findWaitingOrders(100);
+    }
+
+    /**
+     * 查询待支付订单。
+     *
+     * @param limit 最大返回数量
+     */
+    public static List<PaymentOrder> findWaitingOrders(int limit) throws SQLException {
+        int safeLimit = limit > 0 ? limit : 100;
+        String sql = "SELECT * FROM payment_orders WHERE status IN ('CREATED', 'WAITING') " +
+                     "AND expire_time > NOW() ORDER BY create_time DESC LIMIT ?";
         List<PaymentOrder> orders = new ArrayList<>();
         
         try (Connection conn = DatabaseManager.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, safeLimit);
+            ResultSet rs = pstmt.executeQuery();
             
             while (rs.next()) {
                 orders.add(mapResultSetToPaymentOrder(rs));

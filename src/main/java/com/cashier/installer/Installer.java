@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 狸算(LiSuan)收银系统图形化安装程序
@@ -18,6 +19,10 @@ public class Installer {
     private static final Logger LOGGER = Logger.getLogger(Installer.class.getName());
     private static final String APP_VERSION = "2.5.9";
     private static final String DB_NAME = "lisuan_system";
+    private static final int MYSQL_READY_TIMEOUT_SECONDS = 60;
+    private static final int MYSQL_READY_CHECK_INTERVAL_SECONDS = 2;
+    private static final int COMMAND_CHECK_TIMEOUT_SECONDS = 10;
+    private static final int INSTALL_COMMAND_TIMEOUT_SECONDS = 10 * 60;
     
     private JFrame frame;
     private JTextArea logArea;
@@ -45,7 +50,7 @@ public class Installer {
     public void start() {
         SwingUtilities.invokeLater(() -> {
             frame = new JFrame("狸算(LiSuan)收银系统安装程序 v" + APP_VERSION);
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             frame.setSize(700, 500);
             frame.setLocationRelativeTo(null);
             frame.setResizable(false);
@@ -92,7 +97,7 @@ public class Installer {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         
         cancelButton = new JButton("取消");
-        cancelButton.addActionListener(e -> System.exit(0));
+        cancelButton.addActionListener(e -> exitInstaller());
         
         nextButton = new JButton("下一步");
         nextButton.addActionListener(this::handleNext);
@@ -230,14 +235,19 @@ public class Installer {
             currentStep = 0;
         } else {
             // Cancel
-            System.exit(0);
+            exitInstaller();
         }
     }
     
     private boolean checkCommand(String command) {
         try {
             Process process = Runtime.getRuntime().exec(command);
-            process.waitFor();
+            boolean completed = process.waitFor(COMMAND_CHECK_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            if (!completed) {
+                process.destroyForcibly();
+                process.waitFor(1, TimeUnit.SECONDS);
+                return false;
+            }
             return process.exitValue() == 0;
         } catch (Exception e) {
             return false;
@@ -400,9 +410,16 @@ public class Installer {
                 JOptionPane.showMessageDialog(frame, 
                     "安装完成！\n\n请运行 start.bat 启动应用", 
                     "完成", JOptionPane.INFORMATION_MESSAGE);
-                System.exit(0);
+                exitInstaller();
             });
         });
+    }
+
+    private void exitInstaller() {
+        if (frame != null) {
+            frame.dispose();
+        }
+        System.exit(0);
     }
     
     private void setupDatabase() throws Exception {
@@ -413,7 +430,7 @@ public class Installer {
             
             // Wait for MySQL to be ready
             log("  等待 MySQL 启动...");
-            Thread.sleep(10000);
+            waitForDockerMysqlReady();
             
             // Import sample data
             log("  导入示例数据...");
@@ -424,6 +441,21 @@ public class Installer {
             log("  配置本地 MySQL...");
             // Just update config, user needs to ensure MySQL is running
         }
+    }
+
+    private void waitForDockerMysqlReady() throws Exception {
+        String command = "docker exec lisuan-mysql mysqladmin ping -uroot -p" + dbPassword + " --silent";
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(MYSQL_READY_TIMEOUT_SECONDS);
+
+        while (System.nanoTime() < deadline) {
+            if (commandSucceeds(command, new File("."))) {
+                log("  MySQL 已就绪");
+                return;
+            }
+            TimeUnit.SECONDS.sleep(MYSQL_READY_CHECK_INTERVAL_SECONDS);
+        }
+
+        throw new Exception("MySQL 在 " + MYSQL_READY_TIMEOUT_SECONDS + " 秒内未就绪，请检查 Docker 容器和数据库密码配置");
     }
     
     private void createConfigFiles() throws Exception {
@@ -470,24 +502,70 @@ public class Installer {
         }
         
         Process process = pb.start();
-        
+
         // Read output with appropriate encoding
         java.nio.charset.Charset charset = isWindows()
                 ? java.nio.charset.Charset.forName("GBK")
                 : StandardCharsets.UTF_8;
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(process.getInputStream(), charset))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (!line.trim().isEmpty()) {
-                    log("    " + line);
-                }
-            }
-        }
-        
-        int exitCode = process.waitFor();
+        Thread outputReader = readProcessOutputAsync(process, charset);
+
+        int exitCode = waitForProcess(process, command, INSTALL_COMMAND_TIMEOUT_SECONDS);
+        outputReader.join(TimeUnit.SECONDS.toMillis(1));
         if (exitCode != 0) {
             throw new Exception("命令执行失败，退出码: " + exitCode);
+        }
+    }
+
+    private Thread readProcessOutputAsync(Process process, java.nio.charset.Charset charset) {
+        Thread outputReader = new Thread(() -> {
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream(), charset))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (!line.trim().isEmpty()) {
+                        log("    " + line);
+                    }
+                }
+            } catch (IOException e) {
+                log("    读取命令输出失败: " + e.getMessage());
+            }
+        }, "installer-command-output-reader");
+        outputReader.setDaemon(true);
+        outputReader.start();
+        return outputReader;
+    }
+
+    private int waitForProcess(Process process, String command, int timeoutSeconds) throws InterruptedException {
+        boolean completed = process.waitFor(timeoutSeconds, TimeUnit.SECONDS);
+        if (!completed) {
+            process.destroyForcibly();
+            process.waitFor(5, TimeUnit.SECONDS);
+            throw new InterruptedException("命令执行超时（" + timeoutSeconds + "秒）: " + command);
+        }
+        return process.exitValue();
+    }
+
+    private boolean commandSucceeds(String command, File directory) {
+        try {
+            ProcessBuilder pb = new ProcessBuilder();
+            if (isWindows()) {
+                pb.command("cmd", "/c", command);
+            } else {
+                pb.command("sh", "-c", command);
+            }
+            pb.directory(directory);
+            pb.redirectErrorStream(true);
+
+            Process process = pb.start();
+            boolean completed = process.waitFor(MYSQL_READY_CHECK_INTERVAL_SECONDS, TimeUnit.SECONDS);
+            if (!completed) {
+                process.destroyForcibly();
+                return false;
+            }
+            return process.exitValue() == 0;
+        } catch (Exception e) {
+            LOGGER.log(Level.FINE, "命令尚未成功: {0}", command);
+            return false;
         }
     }
     

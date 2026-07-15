@@ -17,6 +17,8 @@ import java.util.List;
  */
 public class ProductService {
     private static final Logger logger = LoggerFactoryUtil.getLogger(ProductService.class);
+    private static final int FIRST_PAGE = 1;
+    private static final int DEFAULT_PRODUCT_LIST_LIMIT = 5000;
     
     private final ProductDAORefactored productDAO;
     
@@ -51,15 +53,15 @@ public class ProductService {
     }
 
     /**
-     * 获取所有商品
+     * 获取商品列表。为避免服务层误用时全量加载大表，默认返回第一页有界数据。
      * @return 商品列表
      */
     public List<Product> getAllProducts() {
         try {
-            return productDAO.findAll();
+            return productDAO.findAll(FIRST_PAGE, DEFAULT_PRODUCT_LIST_LIMIT).getData();
         } catch (SQLException e) {
-            logger.error("查询所有商品失败", e);
-            throw DatabaseException.queryFailed("SELECT all products", e);
+            logger.error("查询商品列表失败", e);
+            throw DatabaseException.queryFailed("SELECT products", e);
         }
     }
 

@@ -1,6 +1,7 @@
 package com.cashier.dao;
 
 import com.cashier.model.User;
+import com.cashier.model.PageResult;
 import com.cashier.util.DatabaseManager;
 import com.cashier.util.DatabaseTestBase;
 import com.cashier.util.PasswordUtil;
@@ -85,6 +86,22 @@ public class UserDAOTest extends DatabaseTestBase {
 
     @Test
     @Order(5)
+    @DisplayName("测试分页查询用户")
+    public void testFindAllPaged() throws Exception {
+        UserDAO.insert(createUser("alpha_user", "Alpha", "cashier"));
+        UserDAO.insert(createUser("beta_user", "Beta", "cashier"));
+
+        PageResult<User> page = UserDAO.findAll(1, 2);
+
+        assertEquals(1, page.getPageNum());
+        assertEquals(2, page.getPageSize());
+        assertTrue(page.getTotal() >= 3);
+        assertEquals(2, page.getData().size());
+        assertTrue(page.getPages() >= 2);
+    }
+
+    @Test
+    @Order(6)
     @DisplayName("测试更新用户")
     public void testUpdateUser() throws Exception {
         testUser.name = "更新后的测试用户";
@@ -101,7 +118,7 @@ public class UserDAOTest extends DatabaseTestBase {
     }
 
     @Test
-    @Order(6)
+    @Order(7)
     @DisplayName("测试更新最后登录时间")
     public void testUpdateLastLoginTime() throws Exception {
         long before = System.currentTimeMillis();
@@ -115,7 +132,7 @@ public class UserDAOTest extends DatabaseTestBase {
     }
 
     @Test
-    @Order(7)
+    @Order(8)
     @DisplayName("测试验证用户密码")
     public void testVerifyPassword() throws Exception {
         User user = UserDAO.findByUsername(testUser.username);

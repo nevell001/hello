@@ -18,6 +18,7 @@ import java.util.Properties;
 import java.nio.file.Files;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 数据库管理器
@@ -52,6 +53,8 @@ public class DatabaseManager {
     private static final String CONSOLE_SEPARATOR = "========================================";
     private static final String DEFAULT_DATABASE_NAME = "lisuan_system";
     private static final String OPERATION_LOGS_TABLE = "operation_logs";
+    private static final long DATABASE_COMMAND_TIMEOUT_SECONDS = 30 * 60;
+    private static final long DOCKER_STATUS_TIMEOUT_SECONDS = 10;
 
     static {
         // 检查是否在测试环境中运行
@@ -1252,7 +1255,7 @@ public class DatabaseManager {
 
         logger.info("执行 Docker 备份命令...");
         Process process = Runtime.getRuntime().exec(command);
-        int exitCode = process.waitFor();
+        int exitCode = waitForProcess(process, "Docker 数据库备份", DATABASE_COMMAND_TIMEOUT_SECONDS);
 
         if (exitCode != 0) {
             // 读取错误输出
@@ -1273,7 +1276,7 @@ public class DatabaseManager {
         };
 
         Process copyProcess = Runtime.getRuntime().exec(copyCommand);
-        int copyExitCode = copyProcess.waitFor();
+        int copyExitCode = waitForProcess(copyProcess, "复制 Docker 数据库备份", DATABASE_COMMAND_TIMEOUT_SECONDS);
 
         if (copyExitCode == 0) {
             // 清理容器中的临时文件
@@ -1310,7 +1313,7 @@ public class DatabaseManager {
 
         logger.info("执行本地备份命令...");
         Process process = pb.start();
-        int exitCode = process.waitFor();
+        int exitCode = waitForProcess(process, "本地数据库备份", DATABASE_COMMAND_TIMEOUT_SECONDS);
 
         if (exitCode == 0) {
             logger.info("数据库备份成功: {}", backupFile.getAbsolutePath());
@@ -1368,14 +1371,8 @@ public class DatabaseManager {
         logger.info("执行 Docker 恢复命令...");
 
         Process process = pb.start();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                logger.info(line);
-            }
-        }
-
-        int exitCode = process.waitFor();
+        int exitCode = waitForProcess(process, "Docker 数据库恢复", DATABASE_COMMAND_TIMEOUT_SECONDS);
+        logProcessOutput(process);
 
         if (exitCode == 0) {
             logger.info("数据库恢复成功: {}", backupFile.getAbsolutePath());
@@ -1410,16 +1407,8 @@ public class DatabaseManager {
         logger.info("执行本地恢复命令...");
 
         Process process = pb.start();
-
-        // 读取输出
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                logger.info(line);
-            }
-        }
-
-        int exitCode = process.waitFor();
+        int exitCode = waitForProcess(process, "本地数据库恢复", DATABASE_COMMAND_TIMEOUT_SECONDS);
+        logProcessOutput(process);
 
         if (exitCode == 0) {
             logger.info("数据库恢复成功: {}", backupFile.getAbsolutePath());
@@ -1438,7 +1427,7 @@ public class DatabaseManager {
             Process process = Runtime.getRuntime().exec(new String[]{
                 "docker", "ps", "--filter", "name=" + containerName, "--format", "{{.Names}}"
             });
-            int exitCode = process.waitFor();
+            int exitCode = waitForProcess(process, "检查 Docker 容器状态", DOCKER_STATUS_TIMEOUT_SECONDS);
             if (exitCode != 0) {
                 return false;
             }
@@ -1455,6 +1444,30 @@ public class DatabaseManager {
             return false;
         } catch (Exception e) {
             return false;
+        }
+    }
+
+    private static int waitForProcess(Process process, String operation, long timeoutSeconds)
+            throws InterruptedException {
+        boolean completed = process.waitFor(timeoutSeconds, TimeUnit.SECONDS);
+        if (!completed) {
+            process.destroyForcibly();
+            process.waitFor(5, TimeUnit.SECONDS);
+            logger.error("{}超时（{}秒），已终止进程", operation, timeoutSeconds);
+            return -1;
+        }
+        return process.exitValue();
+    }
+
+    private static void logProcessOutput(Process process) throws IOException {
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (!line.isBlank()) {
+                    logger.info(line);
+                }
+            }
         }
     }
 

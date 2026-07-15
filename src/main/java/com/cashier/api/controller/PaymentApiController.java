@@ -25,6 +25,8 @@ public class PaymentApiController {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String PAYMENT_ID_FIELD = "paymentId";
     private static final String OUT_TRADE_NO_FIELD = "out_trade_no";
+    private static final int DEFAULT_WAITING_PAYMENT_LIMIT = 100;
+    private static final int MAX_WAITING_PAYMENT_LIMIT = 500;
     
     /**
      * 创建支付订单
@@ -260,7 +262,9 @@ public class PaymentApiController {
      */
     public static void getWaitingOrders(Context ctx) {
         try {
-            List<PaymentOrder> orders = PaymentDAO.findWaitingOrders();
+            int requestedLimit = ctx.queryParamAsClass("limit", Integer.class).getOrDefault(DEFAULT_WAITING_PAYMENT_LIMIT);
+            int limit = Math.max(1, Math.min(requestedLimit, MAX_WAITING_PAYMENT_LIMIT));
+            List<PaymentOrder> orders = PaymentDAO.findWaitingOrders(limit);
             
             List<Map<String, Object>> orderList = orders.stream()
                 .map(order -> Map.<String, Object>of(
@@ -277,6 +281,7 @@ public class PaymentApiController {
             ctx.json(Map.of(
                 "success", true,
                 "data", orderList,
+                "limit", limit,
                 "total", orderList.size()
             ));
             

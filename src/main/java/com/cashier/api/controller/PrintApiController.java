@@ -16,6 +16,7 @@ import java.net.InetSocketAddress;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -32,6 +33,17 @@ public class PrintApiController {
     private static final String PAPER_WIDTH_FIELD = "paperWidth";
     private static final String INVOICE_ID_FIELD = "invoiceId";
     private static final String PRINTER_NOT_FOUND_PREFIX = "打印机不存在: ";
+    private static final int DEFAULT_PRINT_HISTORY_LIMIT = 100;
+    private static final int MAX_PRINT_HISTORY_LIMIT = 500;
+    private static final int DEFAULT_DISCOVERY_HOST_LIMIT = 64;
+    private static final int MAX_DISCOVERY_HOST_LIMIT = 254;
+    private static final int DEFAULT_DISCOVERY_TIMEOUT_MS = 150;
+    private static final int MAX_DISCOVERY_TIMEOUT_MS = 1000;
+    private static final Pattern IPV4_SUBNET_PATTERN = Pattern.compile(
+        "^(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\." +
+        "(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\." +
+        "(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)$"
+    );
     
     /**
      * 获取所有打印机列表
@@ -653,7 +665,9 @@ public class PrintApiController {
      */
     public static void getPrintHistory(Context ctx) {
         PrinterManager manager = PrinterManager.getInstance();
-        List<PrintTask> history = manager.getPrintHistory();
+        int requestedLimit = ctx.queryParamAsClass("limit", Integer.class).getOrDefault(DEFAULT_PRINT_HISTORY_LIMIT);
+        int limit = Math.max(1, Math.min(requestedLimit, MAX_PRINT_HISTORY_LIMIT));
+        List<PrintTask> history = manager.getRecentPrintHistory(limit);
         
         List<Map<String, Object>> historyList = history.stream()
             .map(task -> {
@@ -674,30 +688,43 @@ public class PrintApiController {
         ctx.json(Map.of(
             "success", true,
             "data", historyList,
+            "limit", limit,
             "total", historyList.size()
         ));
     }
     
     /**
      * 发现网络打印机（扫描局域网）
-     * GET /api/printers/discover?subnet=192.168.1&port=9100
+     * GET /api/printers/discover?subnet=192.168.1&port=9100&limit=64&timeoutMs=150
      */
     public static void discoverPrinters(Context ctx) {
         String subnet = ctx.queryParam("subnet");
-        Integer port = ctx.queryParamAsClass("port", Integer.class).getOrDefault(9100);
+        Integer requestedPort = ctx.queryParamAsClass("port", Integer.class).getOrDefault(9100);
+        int port = Math.max(1, Math.min(requestedPort, 65535));
+        int requestedLimit = ctx.queryParamAsClass("limit", Integer.class).getOrDefault(DEFAULT_DISCOVERY_HOST_LIMIT);
+        int hostLimit = Math.max(1, Math.min(requestedLimit, MAX_DISCOVERY_HOST_LIMIT));
+        int requestedTimeout = ctx.queryParamAsClass("timeoutMs", Integer.class).getOrDefault(DEFAULT_DISCOVERY_TIMEOUT_MS);
+        int timeoutMs = Math.max(50, Math.min(requestedTimeout, MAX_DISCOVERY_TIMEOUT_MS));
         
         if (subnet == null) {
             // 自动获取本机所在子网
             subnet = getDefaultSubnet();
         }
+        if (!IPV4_SUBNET_PATTERN.matcher(subnet).matches()) {
+            ctx.status(400).json(Map.of(
+                "success", false,
+                "message", "子网格式无效，应为类似 192.168.1 的 IPv4 前三段"
+            ));
+            return;
+        }
         
         List<Map<String, Object>> discovered = new ArrayList<>();
         
         // 扫描子网中的打印机端口
-        for (int i = 1; i < 255; i++) {
+        for (int i = 1; i <= hostLimit; i++) {
             String host = subnet + "." + i;
             
-            if (checkPrinterPort(host, port)) {
+            if (checkPrinterPort(host, port, timeoutMs)) {
                 discovered.add(Map.of(
                     "host", host,
                     "port", port,
@@ -712,6 +739,8 @@ public class PrintApiController {
             "data", discovered,
             "subnet", subnet,
             "port", port,
+            "scannedHosts", hostLimit,
+            "timeoutMs", timeoutMs,
             "total", discovered.size()
         ));
     }
@@ -732,9 +761,9 @@ public class PrintApiController {
     /**
      * 检查打印机端口是否可用
      */
-    private static boolean checkPrinterPort(String host, int port) {
+    private static boolean checkPrinterPort(String host, int port, int timeoutMs) {
         try (Socket socket = new Socket()) {
-            socket.connect(new InetSocketAddress(host, port), 500);
+            socket.connect(new InetSocketAddress(host, port), timeoutMs);
             return true;
         } catch (Exception e) {
             return false;

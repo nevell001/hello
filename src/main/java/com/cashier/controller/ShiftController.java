@@ -33,6 +33,7 @@ import java.util.*;
 public class ShiftController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(ShiftController.class);
     private static final String BEGINNING_OF_TIME = "0000-01-01 00:00:00";
+    private static final int SHIFT_HISTORY_LIMIT = 500;
 
     @FXML
     private TableView<Shift> shiftTable;
@@ -197,7 +198,7 @@ public class ShiftController {
     private void loadShifts() {
         logger.info("ShiftController: 开始加载交接班数据...");
         try {
-            allShifts = ShiftDAO.findAll();
+            allShifts = ShiftDAO.findRecent(SHIFT_HISTORY_LIMIT);
         } catch (SQLException e) {
             logger.error("加载交接班数据失败", e);
             showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());

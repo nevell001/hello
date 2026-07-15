@@ -4,6 +4,7 @@ import com.cashier.model.Member;
 import com.cashier.model.PageResult;
 import com.cashier.util.DatabaseManager;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.*;
 
@@ -138,6 +139,54 @@ public class MemberDAO {
             }
         }
         return 0;
+    }
+
+    /**
+     * 聚合会员总数、余额和积分，避免统计时加载全部会员。
+     */
+    public static Map<String, Object> getMemberSummary() throws SQLException {
+        String sql = "SELECT COUNT(*) AS total_count, " +
+                     "COALESCE(SUM(balance), 0) AS total_balance, " +
+                     "COALESCE(SUM(points), 0) AS total_points " +
+                     "FROM members";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            if (rs.next()) {
+                Map<String, Object> summary = new HashMap<>();
+                summary.put("totalCount", rs.getLong("total_count"));
+                summary.put("totalBalance", rs.getBigDecimal("total_balance"));
+                summary.put("totalPoints", rs.getBigDecimal("total_points"));
+                return summary;
+            }
+        }
+
+        Map<String, Object> emptySummary = new HashMap<>();
+        emptySummary.put("totalCount", 0L);
+        emptySummary.put("totalBalance", BigDecimal.ZERO);
+        emptySummary.put("totalPoints", BigDecimal.ZERO);
+        return emptySummary;
+    }
+
+    /**
+     * 按会员等级统计数量。
+     */
+    public static Map<String, Integer> countByLevel() throws SQLException {
+        Map<String, Integer> levelStats = new HashMap<>();
+        String sql = "SELECT level, COUNT(*) AS level_count FROM members GROUP BY level";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                String level = rs.getString("level");
+                levelStats.put(level, rs.getInt("level_count"));
+            }
+        }
+        return levelStats;
     }
 
     /**

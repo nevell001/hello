@@ -32,6 +32,31 @@ public class RechargeRecordDAO {
     }
 
     /**
+     * 查询最近充值记录，避免默认列表一次性加载全部历史。
+     */
+    public static List<RechargeRecord> findRecent(int limit) throws SQLException {
+        if (limit < 1) {
+            return List.of();
+        }
+
+        List<RechargeRecord> records = new ArrayList<>();
+        String sql = "SELECT record_id, member_phone, member_name, amount, payment_method, " +
+                     "timestamp, operator FROM recharge_records ORDER BY timestamp DESC LIMIT ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, limit);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    records.add(mapRowToRechargeRecord(rs));
+                }
+            }
+        }
+        return records;
+    }
+
+    /**
      * 根据ID查找充值记录
      */
     public static RechargeRecord findById(String recordId) throws SQLException {
@@ -64,6 +89,33 @@ public class RechargeRecordDAO {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, memberPhone);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                records.add(mapRowToRechargeRecord(rs));
+            }
+        }
+        return records;
+    }
+
+    /**
+     * 根据会员手机号查询最近充值记录。
+     */
+    public static List<RechargeRecord> findRecentByMemberPhone(String memberPhone, int limit) throws SQLException {
+        if (memberPhone == null || memberPhone.isBlank() || limit < 1) {
+            return List.of();
+        }
+
+        List<RechargeRecord> records = new ArrayList<>();
+        String sql = "SELECT record_id, member_phone, member_name, amount, payment_method, " +
+                     "timestamp, operator FROM recharge_records WHERE member_phone = ? " +
+                     "ORDER BY timestamp DESC LIMIT ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, memberPhone);
+            pstmt.setInt(2, limit);
             ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {

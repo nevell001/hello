@@ -117,6 +117,33 @@ public class ShiftDAO {
     }
 
     /**
+     * 查询最近班次，避免交接班页面默认加载全部历史。
+     */
+    public static List<Shift> findRecent(int limit) throws SQLException {
+        if (limit < 1) {
+            return List.of();
+        }
+
+        List<Shift> shifts = new ArrayList<>();
+        String sql = "SELECT shift_id, operator_username, operator_name, start_time, end_time, " +
+                     "opening_revenue, closing_revenue, shift_revenue, opening_transaction_count, " +
+                     "closing_transaction_count, shift_transaction_count, cash_revenue, wechat_revenue, " +
+                     "alipay_revenue, card_revenue, notes FROM shifts ORDER BY start_time DESC LIMIT ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, limit);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    shifts.add(mapRowToShift(rs));
+                }
+            }
+        }
+        return shifts;
+    }
+
+    /**
      * 查找活跃班次（未结束的班次）
      */
     public static Shift findActiveShift() throws SQLException {

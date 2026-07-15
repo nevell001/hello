@@ -8,6 +8,7 @@ import com.cashier.service.PaymentService;
 import com.cashier.i18n.I18nManager;
 import com.cashier.util.FormValidator;
 import com.cashier.util.DatabaseManager;
+import javafx.animation.PauseTransition;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -17,6 +18,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
+import javafx.util.Duration;
 import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
 import java.io.File;
@@ -1341,15 +1343,10 @@ public class SettingsController {
                         showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + result.get("error"));
                     }
                     
-                    // 延迟隐藏进度条
-                    javafx.application.Platform.runLater(() -> {
-                        try {
-                            Thread.sleep(2000);
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                        }
-                        importProgressBar.setVisible(false);
-                    });
+                    // 延迟隐藏进度条，避免阻塞 JavaFX UI 线程。
+                    PauseTransition hideProgressDelay = new PauseTransition(Duration.seconds(2));
+                    hideProgressDelay.setOnFinished(event -> importProgressBar.setVisible(false));
+                    hideProgressDelay.play();
                 });
             } catch (Exception e) {
                 logger.error("从 CSV 导入数据失败", e);

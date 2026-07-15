@@ -285,10 +285,14 @@ public class CacheManager {
     public static void warmupCache() {
         try {
             long startTime = System.currentTimeMillis();
-            List<Product> products = com.cashier.dao.DAOFactory.getInstance().getProductDAO().findAll();
+            List<Product> products = com.cashier.dao.DAOFactory.getInstance()
+                .getProductDAO()
+                .findAll(1, MAX_CACHE_SIZE)
+                .getData();
             batchAddToCache(products);
             long elapsed = System.currentTimeMillis() - startTime;
-            logger.info("缓存预热完成，共加载 {} 个商品，耗时: {}ms", products.size(), elapsed);
+            logger.info("缓存预热完成，最多预热 {} 个商品，实际加载 {} 个，耗时: {}ms",
+                MAX_CACHE_SIZE, products.size(), elapsed);
         } catch (Exception e) {
             logger.error("缓存预热失败", e);
         }

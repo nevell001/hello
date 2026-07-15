@@ -16,6 +16,8 @@ import java.util.*;
  */
 public class ReportApiController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(ReportApiController.class);
+    private static final int DEFAULT_TOP_PRODUCTS_LIMIT = 10;
+    private static final int MAX_TOP_PRODUCTS_LIMIT = 100;
     
     /**
      * 销售日报
@@ -125,7 +127,8 @@ public class ReportApiController {
      */
     public static void topProducts(Context ctx) {
         try {
-            int limit = ctx.queryParamAsClass("limit", Integer.class).getOrDefault(10);
+            int requestedLimit = ctx.queryParamAsClass("limit", Integer.class).getOrDefault(DEFAULT_TOP_PRODUCTS_LIMIT);
+            int limit = Math.max(1, Math.min(requestedLimit, MAX_TOP_PRODUCTS_LIMIT));
             List<Map<String, Object>> topList = TransactionDAO.getTopProducts(limit);
             
             ctx.json(Map.of("success", true, "data", topList));

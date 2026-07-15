@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PrinterManager {
     
     private static final Logger logger = LoggerFactoryUtil.getLogger(PrinterManager.class);
+    private static final int MAX_PRINT_HISTORY_SIZE = 500;
     
     /**
      * 单例实例
@@ -276,6 +277,24 @@ public class PrinterManager {
             return new ArrayList<>(printHistory);
         }
     }
+
+    /**
+     * 获取最近打印历史。
+     * @param limit 最大返回数量
+     * @return 最近打印历史记录
+     */
+    public List<PrintTask> getRecentPrintHistory(int limit) {
+        if (limit < 1) {
+            return List.of();
+        }
+
+        synchronized (printHistory) {
+            int fromIndex = Math.max(0, printHistory.size() - limit);
+            List<PrintTask> recent = new ArrayList<>(printHistory.subList(fromIndex, printHistory.size()));
+            Collections.reverse(recent);
+            return recent;
+        }
+    }
     
     /**
      * 清空打印历史
@@ -385,6 +404,9 @@ public class PrinterManager {
     private void addToHistory(PrintTask task) {
         synchronized (printHistory) {
             printHistory.add(task);
+            while (printHistory.size() > MAX_PRINT_HISTORY_SIZE) {
+                printHistory.remove(0);
+            }
         }
     }
 }

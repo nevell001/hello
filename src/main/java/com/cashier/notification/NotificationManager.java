@@ -19,7 +19,7 @@ public class NotificationManager {
     private static NotificationManager instance;
     
     private final ObservableList<Notification> notifications = FXCollections.observableArrayList();
-    private final Queue<Notification> notificationQueue = new LinkedList<>();
+    private final Queue<Notification> notificationQueue = new ConcurrentLinkedQueue<>();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
     private final Map<NotificationType, List<NotificationListener>> listeners = new ConcurrentHashMap<>();
     

@@ -90,4 +90,27 @@ class PrinterManagerTest {
         
         assertEquals(1, printerManager.getPrintHistory().size());
     }
+
+    @Test
+    void testPrintHistoryIsBoundedAndRecentFirst() {
+        PrinterDevice mockDevice = mock(PrinterDevice.class);
+        when(mockDevice.getDeviceId()).thenReturn("test-printer");
+        when(mockDevice.isConnected()).thenReturn(true);
+        when(mockDevice.print(any())).thenReturn(true);
+
+        printerManager.registerDevice(mockDevice);
+        printerManager.setDefaultPrinter("test-printer");
+
+        for (int i = 0; i < 505; i++) {
+            PrintTask task = mock(PrintTask.class);
+            when(task.getTaskId()).thenReturn("task-" + i);
+            printerManager.print(task);
+        }
+
+        assertEquals(500, printerManager.getPrintHistory().size());
+        List<PrintTask> recent = printerManager.getRecentPrintHistory(2);
+        assertEquals("task-504", recent.get(0).getTaskId());
+        assertEquals("task-503", recent.get(1).getTaskId());
+        assertTrue(printerManager.getRecentPrintHistory(0).isEmpty());
+    }
 }

@@ -2,6 +2,7 @@ package com.cashier.dao;
 
 import com.cashier.model.Invoice;
 import com.cashier.model.InvoiceItem;
+import com.cashier.model.PageResult;
 import com.cashier.util.DatabaseManager;
 import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
@@ -227,7 +228,97 @@ public class InvoiceDAO {
         }
         return invoices;
     }
-    
+
+    /**
+     * 分页查询发票，支持按日期和状态过滤。
+     */
+    public static PageResult<Invoice> findPage(
+            LocalDate startDate,
+            LocalDate endDate,
+            String status,
+            int pageNum,
+            int pageSize
+    ) throws SQLException {
+        if (pageNum < 1) {
+            pageNum = 1;
+        }
+        if (pageSize < 1) {
+            pageSize = 20;
+        }
+
+        QueryFilter filter = buildQueryFilter(startDate, endDate, status);
+        long total = countByFilter(filter);
+        List<Invoice> invoices = new ArrayList<>();
+        int offset = (pageNum - 1) * pageSize;
+        String sql = "SELECT * FROM invoices " + filter.whereClause() + " ORDER BY create_time DESC LIMIT ? OFFSET ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            bindFilterParameters(pstmt, filter.parameters());
+            int nextIndex = filter.parameters().size() + 1;
+            pstmt.setInt(nextIndex, pageSize);
+            pstmt.setInt(nextIndex + 1, offset);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Invoice invoice = mapResultSetToInvoice(rs);
+                    invoice.items = findItemsByInvoiceId(conn, invoice.invoiceId);
+                    invoices.add(invoice);
+                }
+            }
+        }
+        return new PageResult<>(invoices, pageNum, pageSize, total);
+    }
+
+    private static long countByFilter(QueryFilter filter) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM invoices " + filter.whereClause();
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            bindFilterParameters(pstmt, filter.parameters());
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getLong(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+    private static QueryFilter buildQueryFilter(LocalDate startDate, LocalDate endDate, String status) {
+        List<String> conditions = new ArrayList<>();
+        List<Object> parameters = new ArrayList<>();
+
+        if (startDate != null && endDate != null) {
+            conditions.add("create_time BETWEEN ? AND ?");
+            parameters.add(Timestamp.from(startDate.atStartOfDay(ZoneId.systemDefault()).toInstant()));
+            parameters.add(Timestamp.from(endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant()));
+        }
+        if (status != null && !status.isBlank()) {
+            conditions.add("status = ?");
+            parameters.add(status);
+        }
+
+        String whereClause = conditions.isEmpty() ? "" : "WHERE " + String.join(" AND ", conditions);
+        return new QueryFilter(whereClause, parameters);
+    }
+
+    private static void bindFilterParameters(PreparedStatement pstmt, List<Object> parameters) throws SQLException {
+        for (int i = 0; i < parameters.size(); i++) {
+            Object parameter = parameters.get(i);
+            if (parameter instanceof Timestamp timestamp) {
+                pstmt.setTimestamp(i + 1, timestamp);
+            } else {
+                pstmt.setObject(i + 1, parameter);
+            }
+        }
+    }
+
+    private record QueryFilter(String whereClause, List<Object> parameters) {
+    }
+
     /**
      * 查询发票商品明细
      */
