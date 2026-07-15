@@ -535,6 +535,27 @@ class PerformancePolicyTest {
     }
 
     @Test
+    @DisplayName("生产环境安装配置不得落盘数据库密码")
+    void productionInstallersDoNotPersistDatabasePassword() throws Exception {
+        String installer = Files.readString(Path.of(
+            "src/main/java/com/cashier/installer/Installer.java"
+        ));
+        String databaseDialog = Files.readString(Path.of(
+            "src/main/java/com/cashier/installer/DatabaseConfigDialog.java"
+        ));
+
+        assertTrue(installer.contains("Production deployments should provide the password through CASHER_DB_PASSWORD."));
+        assertTrue(installer.contains("passwordValueForConfig()"));
+        assertTrue(installer.contains("isProductionEnvironment() ? \"\" : dbPassword"));
+        assertTrue(installer.contains("\"production\".equalsIgnoreCase(System.getenv(\"ENVIRONMENT\"))"));
+
+        assertTrue(databaseDialog.contains("Production deployments should provide the password through CASHER_DB_PASSWORD."));
+        assertTrue(databaseDialog.contains("passwordValueForConfig(input.pass())"));
+        assertTrue(databaseDialog.contains("isProductionEnvironment() ? \"\" : password"));
+        assertTrue(databaseDialog.contains("\"production\".equalsIgnoreCase(System.getenv(\"ENVIRONMENT\"))"));
+    }
+
+    @Test
     @DisplayName("桌面交易相关页面必须避免默认全量交易加载")
     void desktopTransactionViewsUseDateRangeOrAggregates() throws Exception {
         String transactionController = Files.readString(Path.of(

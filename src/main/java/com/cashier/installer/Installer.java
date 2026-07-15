@@ -470,6 +470,7 @@ public class Installer {
         
         String dbConfig = String.format(
             "# Database Configuration\n" +
+            "# Production deployments should provide the password through CASHER_DB_PASSWORD.\n" +
             "db.url=%s\n" +
             "db.username=%s\n" +
             "db.password=%s\n" +
@@ -477,11 +478,22 @@ public class Installer {
             "db.connection.timeout=30000\n" +
             "db.idle.timeout=600000\n" +
             "db.max.lifetime=1800000\n",
-            dbUrl, dbUsername, dbPassword);
+            dbUrl, dbUsername, passwordValueForConfig());
         
         Files.write(Paths.get("config/database.properties"), dbConfig.getBytes(StandardCharsets.UTF_8));
         
         log("  已创建 config/database.properties");
+        if (isProductionEnvironment()) {
+            log("  生产环境未写入数据库密码，请通过 CASHER_DB_PASSWORD 环境变量提供");
+        }
+    }
+
+    private String passwordValueForConfig() {
+        return isProductionEnvironment() ? "" : dbPassword;
+    }
+
+    private boolean isProductionEnvironment() {
+        return "production".equalsIgnoreCase(System.getenv("ENVIRONMENT"));
     }
     
     private void executeCommand(String command, File directory) throws Exception {
