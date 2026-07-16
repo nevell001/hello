@@ -930,4 +930,27 @@ class PerformancePolicyTest {
         assertFalse(productionSources.contains("DataService.saveRechargeRecords("));
         assertFalse(productionSources.contains("DataService.saveOperationLogs("));
     }
+
+    @Test
+    @DisplayName("遗留库存保存入口不得整表覆盖商品")
+    void legacyInventorySaveDoesNotReplaceAllProducts() throws Exception {
+        String dataService = Files.readString(Path.of(
+            "src/main/java/com/cashier/service/DataService.java"
+        ));
+
+        assertTrue(dataService.contains("productDAO.findByNames(inventory.keySet())"));
+        assertFalse(dataService.contains("List<Product> existing = productDAO.findAll()"));
+        assertFalse(dataService.contains("productDAO.delete(p.id)"));
+        assertFalse(dataService.contains("productDAO.batchInsert(products)"));
+    }
+
+    @Test
+    @DisplayName("生产工具类不得直接写标准输出")
+    void productionUtilitiesDoNotWriteDirectlyToStdout() throws Exception {
+        String databaseManager = Files.readString(Path.of(
+            "src/main/java/com/cashier/util/DatabaseManager.java"
+        ));
+
+        assertFalse(databaseManager.contains("System.out.println("));
+    }
 }

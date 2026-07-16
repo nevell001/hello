@@ -44,16 +44,28 @@ public class DataService {
      * 保存库存数据
      */
     public static void saveInventory(Map<String, Product> inventory) {
+        if (inventory == null || inventory.isEmpty()) {
+            return;
+        }
         try {
-            // 批量删除所有商品
-            List<Product> existing = productDAO.findAll();
-            for (Product p : existing) {
-                productDAO.delete(p.id);
-            }
+            Map<String, Product> existingProducts = productDAO.findByNames(inventory.keySet());
+            for (Product product : inventory.values()) {
+                if (product == null || product.name == null || product.name.isBlank()) {
+                    continue;
+                }
 
-            // 批量插入新商品
-            List<Product> products = new ArrayList<>(inventory.values());
-            productDAO.batchInsert(products);
+                Product existingProduct = existingProducts.get(product.name);
+                if (existingProduct == null) {
+                    productDAO.insert(product);
+                } else {
+                    product.id = existingProduct.id;
+                    product.version = existingProduct.version;
+                    if (product.productCode == null || product.productCode.isBlank()) {
+                        product.productCode = existingProduct.productCode;
+                    }
+                    productDAO.update(product);
+                }
+            }
         } catch (SQLException e) {
             logger.error("保存商品数据失败", e);
         }

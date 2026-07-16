@@ -1032,11 +1032,12 @@ public class DatabaseManager {
     }
 
     private static void printInitialAdminPassword(String initialPassword) {
-        // NOSONAR - 有意使用 System.out 而非 logger，确保密码仅输出到控制台而不写入日志文件
-        System.out.println(CONSOLE_SEPARATOR);
-        System.out.println("  默认管理员初始密码: " + initialPassword);
-        System.out.println("  请妥善保存，首次登录后需立即修改！");
-        System.out.println(CONSOLE_SEPARATOR);
+        Console console = System.console();
+        PrintWriter writer = console == null ? new PrintWriter(System.err, true, StandardCharsets.UTF_8) : console.writer();
+        writer.println(CONSOLE_SEPARATOR);
+        writer.println("  默认管理员初始密码: " + initialPassword);
+        writer.println("  请妥善保存，首次登录后需立即修改！");
+        writer.println(CONSOLE_SEPARATOR);
     }
 
     /**
