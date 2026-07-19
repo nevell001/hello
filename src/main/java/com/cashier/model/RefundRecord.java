@@ -1,12 +1,15 @@
 package com.cashier.model;
 
 import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.util.Date;
 
 /**
  * 退款记录模型
  */
 public class RefundRecord {
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     
     /**
      * 退款ID
@@ -128,6 +131,6 @@ public class RefundRecord {
      * 生成退款单号
      */
     private static String generateRefundNo() {
-        return "RFD" + System.currentTimeMillis() + String.format("%04d", (int)(Math.random() * 10000));
+        return "RFD" + System.currentTimeMillis() + String.format("%04d", SECURE_RANDOM.nextInt(10000));
     }
 }

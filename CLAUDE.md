@@ -340,6 +340,39 @@ productDAO.update(product);
 - Use `@DisplayName` for clear descriptions
 - Tests located in `src/test/java/com/cashier/`
 
+**TestFX UI Testing**:
+- Extend `ApplicationExtension` for UI tests
+- Use `@Start` to initialize JavaFX stage
+- Keep UI tests simple - avoid complex FXML loading in headless environments
+- Test component visibility, IDs, and basic interactions
+- Example: `LoginControllerUITest.java` demonstrates simplified UI testing pattern
+
+```java
+@ExtendWith(ApplicationExtension.class)
+public class YourControllerUITest extends DatabaseTestBase {
+    @Start
+    public void start(Stage stage) {
+        // Initialize test database
+        if (!DatabaseTestBase.isInitialized()) {
+            DatabaseTestBase.initTestDatabase();
+        }
+        // Create simple UI components directly
+        TextField field = new TextField();
+        field.setId("testField");
+        Scene scene = new Scene(field);
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    @Test
+    @DisplayName("Test component properties")
+    void testComponent(FxRobot robot) {
+        robot.clickOn("#testField");
+        // Verify behavior
+    }
+}
+```
+
 ## Performance Optimizations (v2.4.0+)
 
 **UI Rendering:**
@@ -382,6 +415,44 @@ productDAO.update(product);
 - Support for: COLOR, SIZE, MATERIAL, OTHER specification types
 - SKU-based inventory with price adjustments per specification
 - Unique constraints: specification codes, specification value codes, SKU codes, and product-specification-value combinations
+
+## Security Best Practices
+
+### Random Number Generation
+**CRITICAL**: For security-sensitive random values (order IDs, tokens), use `SecureRandom`, never `Math.random()`:
+```java
+private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+String randomCode = String.format("%04d", SECURE_RANDOM.nextInt(10000));
+```
+
+### Password Storage
+All passwords are hashed using BCrypt via `PasswordUtil`. Never store plaintext passwords.
+
+### SQL Injection Prevention
+Always use `PreparedStatement` with parameterized queries. Never concatenate user input into SQL strings.
+
+### JDBC Resource Management
+Always use try-with-resources for `ResultSet` and `Statement`:
+```java
+try (Connection conn = DatabaseManager.getConnection();
+     PreparedStatement ps = conn.prepareStatement(sql)) {
+    // ... operations
+}
+```
+
+### Validation Rules
+Use `FormValidator.Rules` for consistent validation. For numeric range validation, prefer `Double.parseDouble()` over regex:
+```java
+// Example: DISCOUNT rule validates 0-10 range
+value -> {
+    try {
+        double d = Double.parseDouble(value);
+        return d >= 0 && d <= 10;
+    } catch (NumberFormatException e) {
+        return false;
+    }
+}
+```
 
 ## Common Patterns to Follow
 
@@ -578,3 +649,14 @@ productDAO.findAll();
 ```
 
 When working on files that still use the old `ProductDAO`, consider migrating them to the new pattern.
+
+## Known Issues
+
+### JavaFX Class Loading Warning (macOS + Homebrew JDK)
+When running tests on macOS with Homebrew's OpenJDK 17, you may see:
+```
+objc[XXXXX]: Class ButtonAccessibility is implemented in both
+/opt/homebrew/Cellar/openjdk@17/.../libawt_lwawt.dylib and
+/Users/nevell/.openjfx/cache/17.0.12/libglass.dylib
+```
+This is a platform-specific warning caused by Homebrew JDK bundling JavaFX native libraries alongside OpenJFX. It does not affect functionality or test results. No fix is required - this warning does not appear in production (packaged) builds.

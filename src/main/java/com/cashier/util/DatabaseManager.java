@@ -367,20 +367,20 @@ public class DatabaseManager {
                     AND TABLE_NAME = 'members'
                     AND COLUMN_NAME = 'member_code'
                 """;
-                ResultSet rs = stmt.executeQuery(checkColumnSql);
-                if (rs.next() && rs.getInt(1) == 0) {
-                    stmt.execute("ALTER TABLE members ADD COLUMN member_code VARCHAR(50) UNIQUE COMMENT '会员编号' AFTER id");
-                    logger.info("已为 members 表添加 member_code 字段");
-                    
-                    // 为现有会员生成会员编号
-                    stmt.execute("""
-                        UPDATE members 
-                        SET member_code = CONCAT('M', LPAD(id, 6, '0'))
-                        WHERE member_code IS NULL OR member_code = ''
-                    """);
-                    logger.info("已为现有会员生成会员编号");
+                try (ResultSet rs = stmt.executeQuery(checkColumnSql)) {
+                    if (rs.next() && rs.getInt(1) == 0) {
+                        stmt.execute("ALTER TABLE members ADD COLUMN member_code VARCHAR(50) UNIQUE COMMENT '会员编号' AFTER id");
+                        logger.info("已为 members 表添加 member_code 字段");
+
+                        // 为现有会员生成会员编号
+                        stmt.execute("""
+                            UPDATE members
+                            SET member_code = CONCAT('M', LPAD(id, 6, '0'))
+                            WHERE member_code IS NULL OR member_code = ''
+                        """);
+                        logger.info("已为现有会员生成会员编号");
+                    }
                 }
-                rs.close();
             } catch (SQLException e) {
                 logger.warn("检查或添加 member_code 字段时出错（可能已存在）: " + e.getMessage());
             }
@@ -997,38 +997,38 @@ public class DatabaseManager {
     private static void createDefaultAdminUser(Statement stmt) throws SQLException {
         logger.info("检查默认用户...");
 
-        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as count FROM users");
-        if (rs.next() && rs.getInt("count") == 0) {
-            logger.info("创建默认管理员用户...");
-            // 生成随机初始密码并加密存储
-            String initialPassword = generateRandomPassword();
-            String hashedPassword = com.cashier.util.PasswordUtil.hashPassword(initialPassword);
-            long currentTime = System.currentTimeMillis();
+        try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as count FROM users")) {
+            if (rs.next() && rs.getInt("count") == 0) {
+                logger.info("创建默认管理员用户...");
+                // 生成随机初始密码并加密存储
+                String initialPassword = generateRandomPassword();
+                String hashedPassword = com.cashier.util.PasswordUtil.hashPassword(initialPassword);
+                long currentTime = System.currentTimeMillis();
 
-            // 使用 PreparedStatement 防止 SQL 注入
-            String sql = "INSERT INTO users (username, password, name, role, active, force_password_change, create_time, last_login_time) " +
-                         "VALUES (?, ?, ?, ?, ?, ?, ?, NULL)";
-            
-            try (Connection conn = getConnection();
-                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                pstmt.setString(1, "admin");
-                pstmt.setString(2, hashedPassword);
-                pstmt.setString(3, "系统管理员");
-                pstmt.setString(4, "admin");
-                pstmt.setInt(5, 1);
-                pstmt.setInt(6, 1);
-                pstmt.setLong(7, currentTime);
-                pstmt.executeUpdate();
+                // 使用 PreparedStatement 防止 SQL 注入
+                String sql = "INSERT INTO users (username, password, name, role, active, force_password_change, create_time, last_login_time) " +
+                             "VALUES (?, ?, ?, ?, ?, ?, ?, NULL)";
+
+                try (Connection conn = getConnection();
+                     PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                    pstmt.setString(1, "admin");
+                    pstmt.setString(2, hashedPassword);
+                    pstmt.setString(3, "系统管理员");
+                    pstmt.setString(4, "admin");
+                    pstmt.setInt(5, 1);
+                    pstmt.setInt(6, 1);
+                    pstmt.setLong(7, currentTime);
+                    pstmt.executeUpdate();
+                }
+
+                logger.info("默认管理员用户创建成功");
+                // 安全提示：不在日志中记录用户名和明文密码，避免日志泄露凭据
+                logger.info("  初始密码已生成并使用 BCrypt 加密存储，请查看控制台输出获取临时密码");
+                printInitialAdminPassword(initialPassword);
+            } else {
+                logger.info("用户表已有数据，跳过创建默认用户");
             }
-
-            logger.info("默认管理员用户创建成功");
-            // 安全提示：不在日志中记录用户名和明文密码，避免日志泄露凭据
-            logger.info("  初始密码已生成并使用 BCrypt 加密存储，请查看控制台输出获取临时密码");
-            printInitialAdminPassword(initialPassword);
-        } else {
-            logger.info("用户表已有数据，跳过创建默认用户");
         }
-        rs.close();
     }
 
     private static void printInitialAdminPassword(String initialPassword) {

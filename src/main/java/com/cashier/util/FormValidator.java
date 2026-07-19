@@ -116,8 +116,17 @@ public class FormValidator {
         /** 折扣验证 */
         public static final ValidationRule DISCOUNT = new ValidationRule(
                 "discount",
-                value -> value == null || value.isEmpty() ||
-                        Pattern.matches("^([0-9]|10)(\\.\\d)?$", value),
+                value -> {
+                    if (value == null || value.isEmpty()) {
+                        return true;
+                    }
+                    try {
+                        double d = Double.parseDouble(value);
+                        return d >= 0 && d <= 10;
+                    } catch (NumberFormatException e) {
+                        return false;
+                    }
+                },
                 "请输入0-10之间的折扣值"
         );
 

@@ -1,6 +1,7 @@
 package com.cashier.model;
 
 import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.util.Date;
 
 /**
@@ -8,6 +9,8 @@ import java.util.Date;
  * 用于电子支付（微信、支付宝）的订单记录
  */
 public class PaymentOrder {
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     
     /**
      * 支付订单ID（支付平台返回）
@@ -275,7 +278,7 @@ public class PaymentOrder {
      * 生成商户订单号
      */
     private static String generateMerchantOrderNo() {
-        return "PAY" + System.currentTimeMillis() + String.format("%04d", (int)(Math.random() * 10000));
+        return "PAY" + System.currentTimeMillis() + String.format("%04d", SECURE_RANDOM.nextInt(10000));
     }
     
     @Override

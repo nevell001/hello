@@ -4,7 +4,7 @@
 
 狸算(LiSuan)收银系统是一个基于 JavaFX 17 的桌面 POS 收银系统，面向零售门店的收银、商品、会员、采购、库存、退货、报表、用户权限、数据备份和硬件接入等日常经营场景。
 
-**当前版本**: v2.5.9 | **最新更新**: 2026-07-05
+**当前版本**: v2.5.9 | **最新更新**: 2026-07-19 | **测试覆盖**: 380 个测试用例
 
 ![Java](https://img.shields.io/badge/Java-17-orange)
 ![JavaFX](https://img.shields.io/badge/JavaFX-17.0.12-blue)
@@ -70,7 +70,7 @@
 
 ### REST API 与同步
 - 内置 Javalin API 服务，默认端口 `8080`
-- 当前注册 92 个 HTTP/WebSocket 路由
+- 当前注册 90+ HTTP 路由和 WebSocket 同步端点
 - 覆盖认证、商品、会员、交易、库存、报表、设置、发票、用户、打印、支付、备份、国际化和同步状态
 - Token 身份认证、角色授权、请求限流和安全响应头
 - WebSocket 同步端点：`/ws/sync`
@@ -297,6 +297,25 @@ src/main/resources/
 └── images/                # 应用图标和图片资源
 ```
 
+## 代码质量与安全
+
+### 安全措施
+- **密码存储**: 使用 BCrypt 加密，禁止明文存储
+- **SQL 注入防护**: 全部使用 `PreparedStatement` 参数化查询
+- **随机数生成**: 安全敏感场景使用 `SecureRandom`
+- **资源管理**: JDBC 连接使用 try-with-resources 防止泄漏
+- **API 认证**: Token 基础认证，24 小时过期
+- **角色授权**: 三级权限（管理员、收银员、财务）
+- **请求限流**: 每 IP 每分钟最多 60 次请求
+- **安全响应头**: X-Content-Type-Options, X-Frame-Options, X-XSS-Protection
+
+### 代码质量
+- **单元测试**: 380 个测试用例，覆盖核心业务逻辑
+- **静态检查**: SpotBugs 高风险缺陷门禁
+- **依赖管理**: Maven Enforcer 插件确保依赖一致性
+- **日志规范**: 统一使用 SLF4J + LoggerFactoryUtil
+- **代码规范**: 遵循 CLAUDE.md 中的行为指南
+
 ## 开发约定
 
 - 日志统一使用 `LoggerFactoryUtil.getLogger()`。
@@ -308,6 +327,14 @@ src/main/resources/
 - 代码质量警告修复后至少运行编译，涉及公共逻辑时补跑测试。
 
 ## 最近更新
+
+### v2.5.9 (2026-07-19)
+- 安全加固：支付订单和退款记录使用 `SecureRandom` 生成随机码
+- 修复 FormValidator DISCOUNT 验证规则边界值问题（10.1 应无效）
+- 修复 DatabaseManager JDBC 资源泄漏问题（ResultSet 未关闭）
+- 依赖更新：Jackson 2.18.2, SLF4J 2.0.16, Mockito 5.15.2, JUnit 5.11.3, H2 2.3.232
+- 测试增强：新增 FormValidatorTest (33 个测试) 和 LoginControllerUITest (17 个测试)
+- 380 个测试用例全部通过，测试覆盖率持续提升
 
 ### v2.5.9-maintenance (2026-07-05)
 - 修复了 API Token 的安全测试失败问题

@@ -4,7 +4,7 @@
 
 LiSuan Cashier System is a desktop POS (Point of Sale) cashier system built with JavaFX 17. It is designed for daily retail operations, covering checkout, products, members, purchasing, inventory, returns, reports, user permissions, data backup, and hardware integration.
 
-**Current Version**: v2.5.9 | **Latest Update**: 2026-07-05
+**Current Version**: v2.5.9 | **Latest Update**: 2026-07-19 | **Test Coverage**: 380 test cases
 
 ![Java](https://img.shields.io/badge/Java-17-orange)
 ![JavaFX](https://img.shields.io/badge/JavaFX-17.0.12-blue)
@@ -72,7 +72,7 @@ LiSuan Cashier System is a desktop POS (Point of Sale) cashier system built with
 
 ### REST API & Synchronization
 - Built-in Javalin API service, running on port `8080` by default.
-- Currently registers 92 HTTP/WebSocket routes.
+- Currently registers 90+ HTTP routes and WebSocket sync endpoints.
 - Covers auth, products, members, transactions, inventory, reports, settings, invoices, users, printing, payments, backup, i18n, and sync status.
 - Token-based authentication, role-based authorization, rate limiting, and security headers.
 - WebSocket sync endpoint: `/ws/sync`.
@@ -315,6 +315,27 @@ src/main/resources/
 
 ---
 
+## Code Quality & Security
+
+### Security Measures
+- **Password Storage**: Uses BCrypt encryption, plaintext passwords are prohibited
+- **SQL Injection Prevention**: All queries use `PreparedStatement` parameterization
+- **Random Number Generation**: Security-sensitive scenarios use `SecureRandom`
+- **Resource Management**: JDBC connections use try-with-resources to prevent leaks
+- **API Authentication**: Token-based authentication with 24-hour expiration
+- **Role Authorization**: Three-tier permissions (Administrator, Cashier, Accountant)
+- **Rate Limiting**: Maximum 60 requests per IP per minute
+- **Security Headers**: X-Content-Type-Options, X-Frame-Options, X-XSS-Protection
+
+### Code Quality
+- **Unit Tests**: 380 test cases covering core business logic
+- **Static Analysis**: SpotBugs high-risk defect gate
+- **Dependency Management**: Maven Enforcer plugin ensures dependency consistency
+- **Logging Standards**: Unified use of SLF4J + LoggerFactoryUtil
+- **Code Standards**: Follows guidelines in CLAUDE.md
+
+---
+
 ## Development Conventions
 
 - Logs must uniformly use `LoggerFactoryUtil.getLogger()`.
@@ -328,6 +349,14 @@ src/main/resources/
 ---
 
 ## Recent Updates
+
+### v2.5.9 (2026-07-19)
+- Security hardening: Payment orders and refund records now use `SecureRandom` for random code generation
+- Fixed FormValidator DISCOUNT validation rule boundary issue (10.1 should be invalid)
+- Fixed DatabaseManager JDBC resource leak (ResultSet not closed)
+- Dependency updates: Jackson 2.18.2, SLF4J 2.0.16, Mockito 5.15.2, JUnit 5.11.3, H2 2.3.232
+- Test enhancements: Added FormValidatorTest (33 tests) and LoginControllerUITest (17 tests)
+- All 380 test cases passing, test coverage continuously improving
 
 ### v2.5.9-maintenance (2026-07-05)
 - Fixed API Token security test failure.
