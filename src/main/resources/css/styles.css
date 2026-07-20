@@ -97,7 +97,7 @@
 
 /* ========== 登录界面样式 ========== */
 .login-scene {
-    -fx-background-color: linear-gradient(to bottom right, #315C72 0%, #4C6A7D 48%, #6D5D84 100%);
+    -fx-background-color: linear-gradient(135deg, #E3F2FD 0%, #F3E5F5 50%, #E8F5E9 100%);
 }
 
 .login-brand {
@@ -120,20 +120,20 @@
 .login-logo-text {
     -fx-font-size: 32px;
     -fx-font-weight: bold;
-    -fx-text-fill: #FFFFFF;
+    -fx-text-fill: #37474F;
 }
 
 .login-title {
     -fx-font-size: 38px;
     -fx-font-weight: bold;
-    -fx-text-fill: #FFFFFF;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 3, 0, 0, 2);
+    -fx-text-fill: #37474F;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 2, 0, 0, 1);
 }
 
 .login-subtitle {
     -fx-font-size: 14px;
-    -fx-text-fill: rgba(255, 255, 255, 0.85);
-    -fx-font-weight: 300;
+    -fx-text-fill: #616161;
+    -fx-font-weight: 400;
 }
 
 .login-card {
@@ -277,13 +277,13 @@
 
 .hint-label {
     -fx-font-size: 12px;
-    -fx-text-fill: rgba(255, 255, 255, 0.75);
+    -fx-text-fill: #757575;
     -fx-font-weight: 400;
 }
 
 .version-label {
     -fx-font-size: 11px;
-    -fx-text-fill: rgba(255, 255, 255, 0.6);
+    -fx-text-fill: #9E9E9E;
 }
 
 /* ========== 密码重置对话框样式 ========== */
