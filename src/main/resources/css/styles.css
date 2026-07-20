@@ -97,7 +97,7 @@
 
 /* ========== 登录界面样式 ========== */
 .login-scene {
-    -fx-background-color: linear-gradient(135deg, #E3F2FD 0%, #F3E5F5 50%, #E8F5E9 100%);
+    -fx-background-color: linear-gradient(135deg, #F5F7FA 0%, #E8ECF1 100%);
 }
 
 .login-brand {
