@@ -552,9 +552,9 @@
     -fx-background-color: rgba(184, 92, 27, 0.045);
 }
 
-/* ========== LiSuan 全局覆盖：统一公共样式中的默认蓝色 ========== */
+/* ========== LiSuan 全局覆盖：统一公共样式中的默认橙色 ========== */
 .login-scene {
-    -fx-background-color: linear-gradient(to bottom right, -lisuan-primary-active 0%, -lisuan-primary 46%, -lisuan-info 100%);
+    -fx-background-color: linear-gradient(to bottom right, #FFAA66 0%, #FFCC66 46%, #FFE6B3 100%);
 }
 
 .login-input:focused,
@@ -562,6 +562,7 @@
     -fx-background-color: -lisuan-surface;
     -fx-border-color: -lisuan-primary;
     -fx-border-width: 2px;
+    -fx-effect: dropshadow(gaussian, rgba(184, 92, 27, 0.12), 4, 0, 0, 0);
 }
 
 .forgot-password-link {
@@ -577,17 +578,17 @@
 }
 
 .login-button {
-    -fx-background-color: linear-gradient(to right, -lisuan-primary 0%, -lisuan-primary-active 100%);
-    -fx-effect: dropshadow(three-pass-box, rgba(184, 92, 27, 0.28), 5, 0, 0, 2);
+    -fx-background-color: -lisuan-primary;
+    -fx-effect: dropshadow(three-pass-box, rgba(184, 92, 27, 0.18), 4, 0, 0, 1);
 }
 
 .login-button:hover {
-    -fx-background-color: linear-gradient(to right, -lisuan-primary-hover 0%, -lisuan-primary 100%);
-    -fx-effect: dropshadow(three-pass-box, rgba(184, 92, 27, 0.36), 8, 0, 0, 3);
+    -fx-background-color: -lisuan-primary-hover;
+    -fx-effect: dropshadow(three-pass-box, rgba(184, 92, 27, 0.24), 6, 0, 0, 2);
 }
 
 .login-button:pressed {
-    -fx-background-color: linear-gradient(to right, -lisuan-primary-active 0%, -lisuan-primary-deep 100%);
+    -fx-background-color: -lisuan-primary-active;
 }
 
 .remember-checkbox:selected .box {

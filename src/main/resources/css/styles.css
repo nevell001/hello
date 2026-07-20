@@ -97,7 +97,7 @@
 
 /* ========== 登录界面样式 ========== */
 .login-scene {
-    -fx-background-color: linear-gradient(135deg, #F5F7FA 0%, #E8ECF1 100%);
+    -fx-background-color: linear-gradient(to bottom right, #FFAA66 0%, #FFCC66 46%, #FFE6B3 100%);
 }
 
 .login-brand {
@@ -109,12 +109,12 @@
     -fx-pref-height: 96px;
     -fx-max-width: 108px;
     -fx-max-height: 96px;
-    -fx-background-color: rgba(255, 255, 255, 0.92);
+    -fx-background-color: #FFFFFF;
     -fx-background-radius: 22px;
-    -fx-border-color: rgba(255, 255, 255, 0.78);
+    -fx-border-color: rgba(184, 92, 27, 0.12);
     -fx-border-radius: 22px;
     -fx-border-width: 1px;
-    -fx-effect: dropshadow(three-pass-box, rgba(17,26,68,0.18), 12, 0, 0, 4);
+    -fx-effect: dropshadow(three-pass-box, rgba(111, 50, 12, 0.22), 16, 0, 0, 6);
 }
 
 .login-logo-text {
@@ -138,10 +138,11 @@
 
 .login-card {
     -fx-background-color: #FFFFFF;
-    -fx-background-radius: 8px;
-    -fx-border-color: transparent;
-    -fx-border-radius: 8px;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 20, 0, 0, 10);
+    -fx-background-radius: 16px;
+    -fx-border-color: rgba(184, 92, 27, 0.15);
+    -fx-border-radius: 16px;
+    -fx-border-width: 1px;
+    -fx-effect: dropshadow(three-pass-box, rgba(127, 57, 14, 0.18), 24, 0, 0, 8);
 }
 
 .login-card-title {
@@ -163,7 +164,7 @@
 
 .login-input:focused {
     -fx-background-color: #FFFFFF;
-    -fx-border-color: #667eea;
+    -fx-border-color: #E67E4A;
     -fx-border-width: 2px;
 }
 
@@ -191,8 +192,8 @@
 }
 
 .remember-checkbox:selected .box {
-    -fx-background-color: #667eea;
-    -fx-border-color: #667eea;
+    -fx-background-color: #E67E4A;
+    -fx-border-color: #E67E4A;
 }
 
 /* 登录视图特定样式 */
@@ -223,14 +224,14 @@
 }
 
 .forgot-password-link {
-    -fx-text-fill: #667eea;
+    -fx-text-fill: #D95A1B;
     -fx-font-size: 13px;
     -fx-border-color: transparent;
     -fx-underline: true;
 }
 
 .forgot-password-link:hover {
-    -fx-text-fill: #764ba2;
+    -fx-text-fill: #B85C1B;
     -fx-underline: true;
 }
 
@@ -247,26 +248,26 @@
 }
 
 .loading-indicator {
-    -fx-progress-color: #667eea;
+    -fx-progress-color: #E67E4A;
 }
 
 .login-button {
-    -fx-background-color: linear-gradient(to right, #667eea 0%, #764ba2 100%);
+    -fx-background-color: #E67E4A;
     -fx-text-fill: #FFFFFF;
     -fx-font-size: 15px;
     -fx-font-weight: bold;
     -fx-background-radius: 6px;
     -fx-cursor: hand;
-    -fx-effect: dropshadow(three-pass-box, rgba(102, 126, 234, 0.3), 5, 0, 0, 2);
+    -fx-effect: dropshadow(three-pass-box, rgba(230, 126, 74, 0.25), 4, 0, 0, 1);
 }
 
 .login-button:hover {
-    -fx-background-color: linear-gradient(to right, #764ba2 0%, #667eea 100%);
-    -fx-effect: dropshadow(three-pass-box, rgba(102, 126, 234, 0.5), 8, 0, 0, 3);
+    -fx-background-color: #D95A1B;
+    -fx-effect: dropshadow(three-pass-box, rgba(217, 90, 27, 0.35), 6, 0, 0, 2);
 }
 
 .login-button:pressed {
-    -fx-background-color: linear-gradient(to right, #5568d3 0%, #653a8b 100%);
+    -fx-background-color: #B85C1B;
 }
 
 .login-button:disabled {
