@@ -36,8 +36,12 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.FlowPane;
+import javafx.stage.Modality;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.shape.Circle;
+import javafx.animation.Timeline;
+import javafx.animation.KeyFrame;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.slf4j.Logger;
@@ -88,10 +92,29 @@ public class TouchCartController implements CartViewHost {
     @FXML private Label totalAmountLabel;
     @FXML private Label discountLabel;
     @FXML private Label finalAmountLabel;
-    @FXML private Button checkoutBtn;
+
+    // 顶部工具栏
+    @FXML private Label storeNameLabel;
+    @FXML private Label userNameLabel;
+    @FXML private Label userRoleLabel;
+    @FXML private Circle avatarCircle;
+    @FXML private Label avatarText;
+    @FXML private Button exitButton;
+
+    // 购物车
+    @FXML private Label cartCountLabel;
+
+    // 底部状态栏
+    @FXML private Label dateLabel;
+    @FXML private Label timeLabel;
+    @FXML private Button shiftButton;
+    @FXML private Label statusLabel;
 
     private CashierSystemFXApplication application;
     private User currentUser;
+
+    /** 时钟更新定时器 */
+    private javafx.animation.Timeline clockTimeline;
 
     private final ObservableList<CartItem> cartItems = FXCollections.observableArrayList();
     /** 库存快照,key = Product.name({@code TransactionService.executeTransaction} 契约要求) */
@@ -107,11 +130,82 @@ public class TouchCartController implements CartViewHost {
     @FXML
     private void initialize() {
         logger.info("触屏版收银视图初始化");
+        startClock();
         loadCategories();
         loadProducts(null);
         refreshCartView();
         updateSummary();
         setupShortcuts();
+        updateStatus();
+    }
+
+    // ===== 时钟更新 =====
+
+    private void startClock() {
+        clockTimeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> updateDateTime()));
+        clockTimeline.setCycleCount(Timeline.INDEFINITE);
+        clockTimeline.play();
+        updateDateTime(); // 立即更新一次
+    }
+
+    private void updateDateTime() {
+        LocalDateTime now = LocalDateTime.now();
+        if (dateLabel != null) {
+            dateLabel.setText(now.format(DateTimeFormats.DATE));
+        }
+        if (timeLabel != null) {
+            timeLabel.setText(now.format(DateTimeFormats.TIME));
+        }
+    }
+
+    private void updateStatus() {
+        if (statusLabel != null) {
+            boolean hasShift = com.cashier.service.DataService.hasActiveShift();
+            statusLabel.setText(hasShift ? i18n.get("pos.ready") : i18n.get("pos.no_shift"));
+        }
+    }
+
+    // ===== 按钮事件 =====
+
+    @FXML
+    private void handleExit() {
+        if (!isCartEmpty()) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle(i18n.get("runtime.confirm"));
+            alert.setHeaderText(i18n.get("runtime.cart_not_empty"));
+            String message = i18n.get("runtime.cart_exit_confirm");
+            alert.setContentText(message);
+            if (alert.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
+                return;
+            }
+        }
+        if (application != null) {
+            application.logoutToLoginView();
+        }
+    }
+
+    @FXML
+    private void handleShift() {
+        try {
+            javafx.fxml.FXMLLoader loader = com.cashier.util.FXMLUtils.loadFXMLLoader("/com/cashier/view/ShiftView.fxml");
+            VBox root = loader.load();
+
+            com.cashier.controller.ShiftController controller = loader.getController();
+            controller.setCurrentUser(currentUser);
+
+            javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.setTitle(i18n.get("runtime.shift_handover"));
+            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            stage.setScene(new javafx.scene.Scene(root));
+            stage.showAndWait();
+
+            StatusBarManager.updateSuccess("交接班操作完成");
+            updateStatus();
+
+        } catch (java.io.IOException e) {
+            logger.error("加载交接班界面失败", e);
+            StatusBarManager.updateError(i18n.get("label.error") + ": " + e.getMessage());
+        }
     }
 
     // ===== 快捷键 =====
@@ -144,7 +238,7 @@ public class TouchCartController implements CartViewHost {
                 searchField.selectAll();
             } else if (code == KeyCode.F2) {
                 event.consume();
-                handleCheckout();
+                handleCashPayment();
             } else if (code == KeyCode.F4) {
                 event.consume();
                 if (memberPhoneField != null) {
@@ -182,6 +276,33 @@ public class TouchCartController implements CartViewHost {
     @Override
     public void setCurrentUser(User user) {
         this.currentUser = user;
+        updateUserInfo();
+    }
+
+    private void updateUserInfo() {
+        // 加载店铺名称
+        try {
+            Map<String, String> settings = com.cashier.service.DataService.loadSettings();
+            String storeName = settings.getOrDefault("storeName", "便利店");
+            if (storeNameLabel != null) {
+                storeNameLabel.setText(storeName);
+            }
+        } catch (Exception e) {
+            logger.warn("加载店铺名称失败", e);
+        }
+
+        if (currentUser == null) {
+            return;
+        }
+        if (userNameLabel != null) {
+            userNameLabel.setText(currentUser.name);
+        }
+        if (userRoleLabel != null) {
+            userRoleLabel.setText(currentUser.getRoleDisplayName());
+        }
+        if (avatarText != null && currentUser.name != null && !currentUser.name.isEmpty()) {
+            avatarText.setText(currentUser.name.substring(0, 1).toUpperCase());
+        }
     }
 
     @Override
@@ -198,14 +319,29 @@ public class TouchCartController implements CartViewHost {
 
     // ===== 分类导航 =====
 
+    private static final String HOT_CATEGORY_KEY = "hot";
+    private static final String ALL_CATEGORY_KEY = null;
+
     private void loadCategories() {
         try {
             List<Category> cats = CategoryDAO.findAll();
+            logger.info("加载分类完成,共{}个分类", cats.size());
             categoryBox.getChildren().clear();
             ToggleGroup group = new ToggleGroup();
-            categoryBox.getChildren().add(buildCategoryButton(i18n.get("tpos.all_categories"), null, group));
+
+            // 热销推荐 - 置顶
+            ToggleButton hotBtn = buildCategoryButton("🔥 " + i18n.get("tpos.hot_products"), HOT_CATEGORY_KEY, group);
+            categoryBox.getChildren().add(hotBtn);
+            logger.info("已添加'热销推荐'分类按钮");
+
+            // 全部商品
+            ToggleButton allBtn = buildCategoryButton(i18n.get("tpos.all_categories"), ALL_CATEGORY_KEY, group);
+            categoryBox.getChildren().add(allBtn);
+            logger.info("已添加'全部商品'分类按钮");
+
             for (Category c : cats) {
                 categoryBox.getChildren().add(buildCategoryButton(c.name, c.name, group));
+                logger.debug("添加分类按钮: {}", c.name);
             }
             group.selectedToggleProperty().addListener((obs, o, n) -> {
                 if (n != null) {
@@ -213,7 +349,7 @@ public class TouchCartController implements CartViewHost {
                 }
             });
             if (!group.getToggles().isEmpty()) {
-                group.selectToggle(group.getToggles().get(0));
+                group.selectToggle(group.getToggles().get(0)); // 默认选中热销
             }
         } catch (SQLException e) {
             logger.error("加载分类失败", e);
@@ -225,7 +361,7 @@ public class TouchCartController implements CartViewHost {
         ToggleButton btn = new ToggleButton(label);
         btn.getStyleClass().add("tpos-category-btn");
         btn.setMaxWidth(Double.MAX_VALUE);
-        btn.setUserData(categoryName); // null = 全部
+        btn.setUserData(categoryName); // HOT_CATEGORY_KEY = 热销, null = 全部, 其他 = 分类名
         btn.setToggleGroup(group);
         return btn;
     }
@@ -246,7 +382,11 @@ public class TouchCartController implements CartViewHost {
             List<Product> products;
             if (currentKeyword != null && !currentKeyword.isBlank()) {
                 products = filterByKeyword(productDAO.findAll(), currentKeyword);
-            } else if (categoryName == null) {
+            } else if (HOT_CATEGORY_KEY.equals(categoryName)) {
+                // 热销推荐：加载所有商品(后续可基于销售统计排序)
+                products = productDAO.findAll();
+                logger.debug("加载热销商品，共{}个", products.size());
+            } else if (ALL_CATEGORY_KEY == categoryName) {
                 products = productDAO.findAll();
             } else {
                 products = productDAO.findByCategory(categoryName);
@@ -401,45 +541,75 @@ public class TouchCartController implements CartViewHost {
     }
 
     private HBox buildCartRow(CartItem item) {
-        HBox row = new HBox(8);
+        HBox row = new HBox(10);
         row.getStyleClass().add("tpos-cart-row");
         row.setAlignment(Pos.CENTER_LEFT);
 
-        VBox info = new VBox(2);
+        // 左侧：商品信息
+        VBox info = new VBox(4);
         HBox.setHgrow(info, Priority.ALWAYS);
+        info.getStyleClass().add("tpos-cart-row-content");
+
+        // 第一行：商品名称
         Label name = new Label(item.product.name);
         name.getStyleClass().add("tpos-cart-row-name");
-        Label meta = new Label(CurrencyUtil.format(item.product.getPrice().doubleValue()) + " × " + item.quantity);
-        meta.getStyleClass().add("tpos-cart-row-meta");
+        name.setMaxWidth(200);
+
+        // 第二行：单价 × 数量
+        String unitSuffix = (item.product.unit != null && !item.product.unit.isEmpty())
+            ? "/" + item.product.unit : "";
+        Label priceQty = new Label(String.format("%s × %d%s",
+            CurrencyUtil.format(item.product.getPrice().doubleValue()), item.quantity, unitSuffix));
+        priceQty.getStyleClass().add("tpos-cart-row-price-qty");
+
+        info.getChildren().addAll(name, priceQty);
+
+        // 右侧：小计 + 控制按钮
+        VBox right = new VBox(6);
+        right.setAlignment(Pos.TOP_RIGHT);
+
+        // 小计金额
         Label subtotal = new Label(CurrencyUtil.format(item.subtotal.doubleValue()));
         subtotal.getStyleClass().add("tpos-cart-row-subtotal");
-        info.getChildren().addAll(name, meta, subtotal);
 
-        HBox stepper = new HBox(4);
-        stepper.setAlignment(Pos.CENTER);
+        // 控制按钮行
+        HBox ctrl = new HBox(6);
+        ctrl.getStyleClass().add("tpos-cart-row-ctrl");
+        ctrl.setAlignment(Pos.CENTER_RIGHT);
+
         Button minus = new Button("−");
         minus.getStyleClass().add("tpos-qty-minus");
         minus.setOnAction(e -> decrementQty(item));
+
         Label qty = new Label(String.valueOf(item.quantity));
         qty.getStyleClass().add("tpos-qty-val");
+
         Button plus = new Button("+");
         plus.getStyleClass().add("tpos-qty-plus");
         plus.setOnAction(e -> incrementQty(item));
-        stepper.getChildren().addAll(minus, qty, plus);
 
         Button remove = new Button("×");
         remove.getStyleClass().add("tpos-remove-btn");
         remove.setOnAction(e -> removeItem(item));
 
-        row.getChildren().addAll(info, stepper, remove);
+        ctrl.getChildren().addAll(minus, qty, plus, remove);
+        right.getChildren().addAll(subtotal, ctrl);
+
+        row.getChildren().addAll(info, right);
         return row;
     }
 
     private void updateSummary() {
+        int count = cartItems.size();
         int qty = cartItems.stream().mapToInt(i -> i.quantity).sum();
         BigDecimal total = TransactionService.calculateTotalAmount(cartItems);
         BigDecimal finalAmt = TransactionService.calculateFinalAmount(cartItems, currentMember);
         BigDecimal discount = total.subtract(finalAmt);
+
+        // 更新购物车数量
+        if (cartCountLabel != null) {
+            cartCountLabel.setText("(" + count + ")");
+        }
         totalQtyLabel.setText(String.valueOf(qty));
         totalAmountLabel.setText(CurrencyUtil.format(total.doubleValue()));
         discountLabel.setText("-" + CurrencyUtil.format(discount.doubleValue()));
@@ -631,11 +801,6 @@ public class TouchCartController implements CartViewHost {
 
     // ===== 结账大按钮(默认走现金支付流程) =====
 
-    @FXML
-    private void handleCheckout() {
-        handleCashPayment();
-    }
-
     // ===== 电子支付(微信/支付宝) =====
 
     @FXML
@@ -683,7 +848,14 @@ public class TouchCartController implements CartViewHost {
             dialog.getDialogPane().getStylesheets().addAll(productGrid.getScene().getStylesheets());
         }
 
-        ImageView qrView = new ImageView(QrCodeImageUtil.create(paymentOrder.qrCodeContent, 260));
+        ImageView qrView;
+        try {
+            qrView = new ImageView(QrCodeImageUtil.create(paymentOrder.qrCodeContent, 260));
+        } catch (com.google.zxing.WriterException e) {
+            logger.error("生成二维码失败", e);
+            warn(i18n.get("payment.qr.generate.failed") + ": " + e.getMessage());
+            return;
+        }
         Label status = new Label(i18n.get("payment.waiting"));
         Label orderLabel = new Label(paymentOrder.merchantOrderNo);
         orderLabel.getStyleClass().add("tpos-muted"); orderLabel.setStyle("-fx-font-size: 12;");
@@ -895,6 +1067,7 @@ public class TouchCartController implements CartViewHost {
         }
         refreshCartView();
         updateSummary();
+        updateStatus();
         loadProducts(currentCategoryName); // 刷新库存显示(库存已扣减)
     }
 

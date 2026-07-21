@@ -487,7 +487,7 @@ public class CashierSystemFXApplication extends Application {
     }
 
     /**
-     * 加载POS模式界面（专为收银员设计）
+     * 加载POS模式界面（专为收银员设计的触屏版）
      * @param user 当前登录用户
      */
     private void switchToPosModeView(User user) {
@@ -499,11 +499,12 @@ public class CashierSystemFXApplication extends Application {
             logger.info("用户 {} 的语言偏好: {}, I18nManager 当前语言: {}",
                        user.username, userLanguage, com.cashier.i18n.I18nManager.getInstance().getCurrentLanguageTag());
 
-            FXMLLoader loader = FXMLUtils.loadFXMLLoader("/com/cashier/view/PosModeView.fxml");
+            // 收银员使用新的触屏版收银界面
+            FXMLLoader loader = FXMLUtils.loadFXMLLoader("/com/cashier/view/TouchCartView.fxml");
             Parent root = loader.load();
 
             // 获取控制器并设置应用程序引用
-            PosModeController controller = loader.getController();
+            com.cashier.controller.TouchCartController controller = loader.getController();
             controller.setApplication(this);
             controller.setCurrentUser(user);
             currentController = controller; // 保存控制器引用
@@ -523,9 +524,9 @@ public class CashierSystemFXApplication extends Application {
             primaryStage.setScene(scene);
 
             // 更新窗口标题
-            primaryStage.setTitle(APP_TITLE + " - 收银台 - " + user.name);
+            primaryStage.setTitle(APP_TITLE + " - 触屏收银台 - " + user.name);
 
-            logger.info("用户 {} ({}) 进入POS模式", user.name, user.getRoleDisplayName());
+            logger.info("用户 {} ({}) 进入触屏收银台", user.name, user.getRoleDisplayName());
 
             // 启动库存预警服务
             try {
@@ -544,7 +545,7 @@ public class CashierSystemFXApplication extends Application {
             }
 
         } catch (IOException e) {
-            logger.error("加载POS模式界面失败", e);
+            logger.error("加载触屏收银台界面失败", e);
         }
     }
 

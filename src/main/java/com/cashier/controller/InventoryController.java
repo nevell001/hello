@@ -80,6 +80,9 @@ public class InventoryController extends BaseController<Product> {
     private TextField searchField;
 
     @FXML
+    private ComboBox<String> categoryFilterComboBox;
+
+    @FXML
     private ComboBox<String> sortComboBox;
 
     @FXML
@@ -113,6 +116,9 @@ public class InventoryController extends BaseController<Product> {
      */
     @FXML
     private void initialize() {
+        // 初始化分类筛选列表
+        loadCategories();
+
         // 初始化排序列表
         sortComboBox.setItems(FXCollections.observableArrayList(
             i18n.get("inventory.sort.default"),
@@ -124,6 +130,9 @@ public class InventoryController extends BaseController<Product> {
         ));
         sortComboBox.getSelectionModel().select(0);
         sortComboBox.setOnAction(event -> sortInventory());
+
+        // 分类筛选监听
+        categoryFilterComboBox.setOnAction(event -> handleCategoryFilter());
 
         // 设置表格列
         setupTableColumns();
@@ -143,6 +152,88 @@ public class InventoryController extends BaseController<Product> {
         // 启用 UI 性能优化（固定行高启用更好的虚拟流）
         inventoryTable.setFixedCellSize(40.0);
         inventoryTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+    }
+
+    /**
+     * 加载分类列表到筛选下拉框
+     */
+    private void loadCategories() {
+        ObservableList<String> categories = FXCollections.observableArrayList();
+        categories.add(i18n.get("inventory.all_categories")); // 全部分类
+        try {
+            List<Category> categoryList = CategoryDAO.findAll();
+            for (Category c : categoryList) {
+                categories.add(c.name);
+            }
+        } catch (SQLException e) {
+            logger.error("加载分类列表失败", e);
+        }
+        categoryFilterComboBox.setItems(categories);
+        categoryFilterComboBox.getSelectionModel().select(0); // 默认选中"全部"
+    }
+
+    /**
+     * 处理分类筛选
+     */
+    @FXML
+    private void handleCategoryFilter() {
+        applyFilters();
+    }
+
+    /**
+     * 应用搜索和分类筛选
+     */
+    private void applyFilters() {
+        String searchText = searchField.getText().trim();
+        String selectedCategory = categoryFilterComboBox.getSelectionModel().getSelectedItem();
+        boolean isAllCategories = i18n.get("inventory.all_categories").equals(selectedCategory);
+
+        try {
+            if (searchText.isEmpty() && isAllCategories) {
+                // 无筛选，加载全部
+                loadTableData();
+            } else if (!searchText.isEmpty() && isAllCategories) {
+                // 仅搜索关键词
+                PageResult<Product> results = productDAO.search(searchText, FIRST_PAGE, DESKTOP_PAGE_SIZE);
+                totalProducts = results.getTotal();
+                setLoadedProducts(results.getData());
+                inventoryList.setAll(inventoryMap.values());
+            } else if (searchText.isEmpty() && !isAllCategories) {
+                // 仅按分类筛选
+                PageResult<Product> results = productDAO.findByCategory(selectedCategory, FIRST_PAGE, DESKTOP_PAGE_SIZE);
+                totalProducts = results.getTotal();
+                setLoadedProducts(results.getData());
+                inventoryList.setAll(inventoryMap.values());
+            } else {
+                // 同时按关键词和分类筛选
+                List<Product> allProducts = productDAO.findAll();
+                List<Product> filtered = new java.util.ArrayList<>();
+                String searchLower = searchText.toLowerCase();
+
+                for (Product p : allProducts) {
+                    boolean matchesCategory = selectedCategory.equals(p.category);
+                    boolean matchesSearch = containsIgnoreCase(p.name, searchText)
+                        || containsIgnoreCase(p.barcode, searchText)
+                        || containsIgnoreCase(p.productCode, searchText);
+
+                    if (matchesCategory && matchesSearch) {
+                        filtered.add(p);
+                    }
+                }
+
+                totalProducts = filtered.size();
+                setLoadedProducts(filtered);
+                inventoryList.setAll(inventoryMap.values());
+            }
+            updateCountLabel();
+        } catch (SQLException e) {
+            logger.error("筛选商品失败", e);
+            showError(i18n.get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
+        }
+    }
+
+    private static boolean containsIgnoreCase(String text, String keyword) {
+        return text != null && text.toLowerCase().contains(keyword.toLowerCase());
     }
 
     /**
@@ -422,21 +513,7 @@ public class InventoryController extends BaseController<Product> {
     @Override
     @FXML
     public void handleSearch() {
-        String searchText = searchField.getText().trim();
-        if (searchText.isEmpty()) {
-            loadTableData();
-        } else {
-            try {
-                PageResult<Product> results = productDAO.search(searchText, FIRST_PAGE, DESKTOP_PAGE_SIZE);
-                totalProducts = results.getTotal();
-                setLoadedProducts(results.getData());
-                inventoryList.setAll(inventoryMap.values());
-            } catch (SQLException e) {
-                logger.error("搜索商品失败", e);
-                showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
-            }
-        }
-        updateCountLabel();
+        applyFilters();
     }
 
     /**
@@ -445,7 +522,8 @@ public class InventoryController extends BaseController<Product> {
     @FXML
     public void handleClearSearch() {
         searchField.clear();
-        loadTableData();
+        categoryFilterComboBox.getSelectionModel().select(0); // 重置分类为"全部"
+        applyFilters();
     }
 
     /**
