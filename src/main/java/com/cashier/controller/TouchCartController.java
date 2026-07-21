@@ -186,9 +186,11 @@ public class TouchCartController implements CartViewHost {
 
     @FXML
     private void handleShift() {
+        logger.info("交接班按钮被点击");
         try {
             javafx.fxml.FXMLLoader loader = com.cashier.util.FXMLUtils.loadFXMLLoader("/com/cashier/view/ShiftView.fxml");
             VBox root = loader.load();
+            logger.info("ShiftView 加载成功");
 
             com.cashier.controller.ShiftController controller = loader.getController();
             controller.setCurrentUser(currentUser);

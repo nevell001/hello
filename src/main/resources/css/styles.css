@@ -3210,6 +3210,8 @@
 .tpos-avatar-text { -fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #FFFFFF; }
 .tpos-exit-btn { -fx-background-color: rgba(255,255,255,0.15); -fx-text-fill: #FFFFFF; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 13; }
 .tpos-exit-btn:hover { -fx-background-color: rgba(255,255,255,0.25); }
+.tpos-shift-btn { -fx-background-color: rgba(255,255,255,0.15); -fx-text-fill: #FFFFFF; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 13; }
+.tpos-shift-btn:hover { -fx-background-color: rgba(255,255,255,0.25); }
 
 /* —— 左侧分类导航 —— */
 .tpos-sidebar { -fx-background-color: -lisuan-primary-deep; -fx-padding: 8; -fx-spacing: 0; }
