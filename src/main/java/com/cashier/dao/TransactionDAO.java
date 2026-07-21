@@ -120,7 +120,10 @@ public class TransactionDAO {
      */
     private static List<Product> loadItems(String transactionId) throws SQLException {
         List<Product> items = new ArrayList<>();
-        String sql = "SELECT product_id, product_code, barcode, product_name, price, quantity FROM transaction_items WHERE transaction_id = ?";
+        String sql = "SELECT ti.product_id, ti.product_code, ti.barcode, ti.product_name, ti.price, ti.quantity, p.category " +
+                     "FROM transaction_items ti " +
+                     "LEFT JOIN products p ON ti.product_id = p.id " +
+                     "WHERE ti.transaction_id = ?";
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -136,6 +139,7 @@ public class TransactionDAO {
                 product.name = rs.getString("product_name");
                 product.price = rs.getBigDecimal("price");
                 product.quantity = rs.getInt("quantity");
+                product.category = rs.getString("category"); // 获取分类信息
                 items.add(product);
             }
         }
@@ -149,13 +153,16 @@ public class TransactionDAO {
         Map<String, Transaction> transactionMap = new LinkedHashMap<>();
 
         // LEFT JOIN users 表兜底：当 operator_name 为 NULL 时从 users 表获取收银员姓名
+        // LEFT JOIN products 表获取商品分类
         String sql = "SELECT t.transaction_id, t.timestamp, t.total_amount, t.tax, t.final_amount, t.payment_method, " +
                      "t.member_phone, t.operator_username, " +
                      "COALESCE(t.operator_name, u.name, t.operator_username) AS operator_name, " +
-                     "ti.id as item_id, ti.product_id, ti.product_code, ti.barcode, ti.product_name, ti.price, ti.quantity, ti.subtotal " +
+                     "ti.id as item_id, ti.product_id, ti.product_code, ti.barcode, ti.product_name, ti.price, ti.quantity, ti.subtotal, " +
+                     "p.category AS category " +
                      "FROM transactions t " +
                      "LEFT JOIN users u ON t.operator_username = u.username " +
                      "LEFT JOIN transaction_items ti ON t.transaction_id = ti.transaction_id " +
+                     "LEFT JOIN products p ON ti.product_id = p.id " +
                      "ORDER BY t.timestamp DESC";
 
         try (Connection conn = DatabaseManager.getConnection();
@@ -181,11 +188,13 @@ public class TransactionDAO {
         String sql = "SELECT t.transaction_id, t.timestamp, t.total_amount, t.tax, t.final_amount, t.payment_method, " +
                      "t.member_phone, t.operator_username, " +
                      "COALESCE(t.operator_name, u.name, t.operator_username) AS operator_name, " +
-                     "ti.id as item_id, ti.product_id, ti.product_code, ti.barcode, ti.product_name, ti.price, ti.quantity, ti.subtotal " +
+                     "ti.id as item_id, ti.product_id, ti.product_code, ti.barcode, ti.product_name, ti.price, ti.quantity, ti.subtotal, " +
+                     "p.category AS category " +
                      "FROM (SELECT transaction_id, timestamp, total_amount, tax, final_amount, payment_method, " +
                      "member_phone, operator_username, operator_name FROM transactions ORDER BY timestamp DESC LIMIT ?) t " +
                      "LEFT JOIN users u ON t.operator_username = u.username " +
                      "LEFT JOIN transaction_items ti ON t.transaction_id = ti.transaction_id " +
+                     "LEFT JOIN products p ON ti.product_id = p.id " +
                      "ORDER BY t.timestamp DESC";
 
         try (Connection conn = DatabaseManager.getConnection();
@@ -208,13 +217,16 @@ public class TransactionDAO {
         Map<String, Transaction> transactionMap = new LinkedHashMap<>();
 
         // LEFT JOIN users 表兜底：当 operator_name 为 NULL 时从 users 表获取收银员姓名
+        // LEFT JOIN products 表获取商品分类
         String sql = "SELECT t.transaction_id, t.timestamp, t.total_amount, t.tax, t.final_amount, t.payment_method, " +
                      "t.member_phone, t.operator_username, " +
                      "COALESCE(t.operator_name, u.name, t.operator_username) AS operator_name, " +
-                     "ti.id as item_id, ti.product_id, ti.product_code, ti.barcode, ti.product_name, ti.price, ti.quantity, ti.subtotal " +
+                     "ti.id as item_id, ti.product_id, ti.product_code, ti.barcode, ti.product_name, ti.price, ti.quantity, ti.subtotal, " +
+                     "p.category AS category " +
                      "FROM transactions t " +
                      "LEFT JOIN users u ON t.operator_username = u.username " +
                      "LEFT JOIN transaction_items ti ON t.transaction_id = ti.transaction_id " +
+                     "LEFT JOIN products p ON ti.product_id = p.id " +
                      "WHERE t.timestamp BETWEEN ? AND ? " +
                      "ORDER BY t.timestamp DESC";
 
@@ -369,6 +381,7 @@ public class TransactionDAO {
         product.name = productName;
         product.price = rs.getBigDecimal("price");
         product.quantity = rs.getInt("quantity");
+        product.category = rs.getString("category"); // 获取分类信息
         transaction.items.add(product);
     }
 

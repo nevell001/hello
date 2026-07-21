@@ -199,6 +199,14 @@ public class ShiftController {
         logger.info("ShiftController: 开始加载交接班数据...");
         try {
             allShifts = ShiftDAO.findRecent(SHIFT_HISTORY_LIMIT);
+
+            // 收银员只能查看自己的班次
+            if (currentUser != null && "cashier".equals(currentUser.role)) {
+                allShifts = allShifts.stream()
+                    .filter(s -> currentUser.username.equals(s.username))
+                    .collect(java.util.stream.Collectors.toList());
+                logger.info("收银员 {} 只能查看自己的班次，共 {} 条", currentUser.username, allShifts.size());
+            }
         } catch (SQLException e) {
             logger.error("加载交接班数据失败", e);
             showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
@@ -629,6 +637,9 @@ public class ShiftController {
             // 更新主界面的班次信息
             MainController.updateShiftInfoGlobal();
 
+            // 关闭窗口
+            closeWindow();
+
         } catch (Exception e) {
             showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
             logger.error("开班失败", e);
@@ -757,8 +768,8 @@ try {
             // 更新主界面的班次信息
             MainController.updateShiftInfoGlobal();
 
-            // 退出登录
-            handleLogout();
+            // 关闭窗口
+            closeWindow();
 
         } catch (Exception e) {
             showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
@@ -772,6 +783,58 @@ try {
      */
     public void setCurrentUser(com.cashier.model.User user) {
         this.currentUser = user;
+        setupRoleBasedUI();
+    }
+
+    /**
+     * 根据用户角色设置界面权限
+     */
+    private void setupRoleBasedUI() {
+        if (currentUser == null) {
+            return;
+        }
+
+        boolean isCashier = "cashier".equals(currentUser.role);
+
+        if (isCashier) {
+            // 收银员：隐藏导出、筛选栏、图表
+            if (exportButton != null) {
+                exportButton.setVisible(false);
+                exportButton.setManaged(false);
+            }
+
+            // 隐藏筛选栏
+            if (startDatePicker != null && startDatePicker.getParent() != null) {
+                javafx.scene.layout.Pane filterBar = (javafx.scene.layout.Pane) startDatePicker.getParent().getParent();
+                if (filterBar != null) {
+                    filterBar.setVisible(false);
+                    filterBar.setManaged(false);
+                }
+            }
+
+            // 隐藏图表区域
+            if (shiftRevenueBarChart != null && shiftRevenueBarChart.getParent() != null) {
+                javafx.scene.layout.Pane chartScroll = (javafx.scene.layout.Pane) shiftRevenueBarChart.getParent().getParent().getParent();
+                if (chartScroll != null) {
+                    chartScroll.setVisible(false);
+                    chartScroll.setManaged(false);
+                }
+            }
+
+            // 收银员只能查看自己的班次，筛选条件自动设置为当前用户
+            // 在 loadShifts() 中会处理
+        }
+    }
+
+    /**
+     * 关闭当前窗口
+     */
+    private void closeWindow() {
+        javafx.scene.Node node = startShiftButton; // 任意UI元素
+        if (node.getScene() != null && node.getScene().getWindow() != null) {
+            javafx.stage.Window window = node.getScene().getWindow();
+            window.hide();
+        }
     }
 
     /**

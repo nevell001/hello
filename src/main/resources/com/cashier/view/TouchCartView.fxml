@@ -111,7 +111,7 @@
 
         <!-- ========== 右侧购物车/摘要/支付 ========== -->
         <right>
-            <VBox styleClass="tpos-right" prefWidth="440" spacing="0">
+            <VBox styleClass="tpos-right" prefWidth="520" spacing="0">
                 <!-- 购物车头 -->
                 <HBox styleClass="tpos-cart-header" alignment="CENTER_LEFT">
                     <padding>
@@ -148,23 +148,28 @@
 
                 <Separator styleClass="tpos-separator"/>
 
-                <!-- 订单摘要 - 单行紧凑 -->
-                <HBox styleClass="tpos-summary-compact" alignment="CENTER_LEFT">
+                <!-- 订单摘要 - 两行布局 -->
+                <VBox styleClass="tpos-summary-compact" spacing="4">
                     <padding>
                         <Insets top="8" right="12" bottom="8" left="12"/>
                     </padding>
-                    <Label text="%cart.total_quantity" styleClass="tpos-summary-label-compact"/>
-                    <Label fx:id="totalQtyLabel" text="0" styleClass="tpos-summary-val-compact"/>
-                    <Label text="│" styleClass="tpos-summary-separator"/>
-                    <Label text="%cart.total_amount" styleClass="tpos-summary-label-compact"/>
-                    <Label fx:id="totalAmountLabel" text="¥0.00" styleClass="tpos-summary-val-compact"/>
-                    <Label text="│" styleClass="tpos-summary-separator"/>
-                    <Label text="%cart.member_discount" styleClass="tpos-summary-label-compact"/>
-                    <Label fx:id="discountLabel" text="-¥0.00" styleClass="tpos-summary-val-discount-compact"/>
-                    <Region HBox.hgrow="ALWAYS"/>
-                    <Label text="%cart.final_amount" styleClass="tpos-final-label-compact"/>
-                    <Label fx:id="finalAmountLabel" text="¥0.00" styleClass="tpos-final-val-compact"/>
-                </HBox>
+                    <!-- 第一行：数量、总额、折扣 -->
+                    <HBox alignment="CENTER_LEFT" spacing="8">
+                        <Label text="%cart.total_quantity" styleClass="tpos-summary-label-compact"/>
+                        <Label fx:id="totalQtyLabel" text="0" styleClass="tpos-summary-val-compact"/>
+                        <Label text="│" styleClass="tpos-summary-separator"/>
+                        <Label text="%cart.total_amount" styleClass="tpos-summary-label-compact"/>
+                        <Label fx:id="totalAmountLabel" text="¥0.00" styleClass="tpos-summary-val-compact"/>
+                        <Label text="│" styleClass="tpos-summary-separator"/>
+                        <Label text="%cart.member_discount" styleClass="tpos-summary-label-compact"/>
+                        <Label fx:id="discountLabel" text="-¥0.00" styleClass="tpos-summary-val-discount-compact"/>
+                    </HBox>
+                    <!-- 第二行：应付金额（突出显示） -->
+                    <HBox alignment="CENTER_RIGHT" spacing="4">
+                        <Label text="%cart.final_amount" styleClass="tpos-final-label-compact"/>
+                        <Label fx:id="finalAmountLabel" text="¥0.00" styleClass="tpos-final-val-compact"/>
+                    </HBox>
+                </VBox>
 
                 <Separator styleClass="tpos-separator"/>
 

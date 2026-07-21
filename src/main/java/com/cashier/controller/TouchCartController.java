@@ -126,6 +126,8 @@ public class TouchCartController implements CartViewHost {
     private String currentKeyword = null;
     /** 支付进行中标志,防止重复结算 */
     private boolean paymentInProgress = false;
+    /** 现金部分支付累计金额 */
+    private BigDecimal cashReceivedAmount = BigDecimal.ZERO;
 
     @FXML
     private void initialize() {
@@ -198,7 +200,12 @@ public class TouchCartController implements CartViewHost {
             javafx.stage.Stage stage = new javafx.stage.Stage();
             stage.setTitle(i18n.get("runtime.shift_handover"));
             stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
-            stage.setScene(new javafx.scene.Scene(root));
+            javafx.scene.Scene scene = new javafx.scene.Scene(root);
+            // 复制样式表以确保主题一致
+            if (searchField.getScene() != null) {
+                scene.getStylesheets().addAll(searchField.getScene().getStylesheets());
+            }
+            stage.setScene(scene);
             stage.showAndWait();
 
             StatusBarManager.updateSuccess("交接班操作完成");
@@ -217,10 +224,14 @@ public class TouchCartController implements CartViewHost {
             Scene scene = searchField.getScene();
             if (scene != null) {
                 bindShortcuts(scene);
+                // 默认聚焦搜索框
+                focusSearchField();
             } else {
                 searchField.sceneProperty().addListener((obs, o, n) -> {
                     if (n != null) {
                         bindShortcuts(n);
+                        // 默认聚焦搜索框
+                        focusSearchField();
                     }
                 });
             }
@@ -228,44 +239,112 @@ public class TouchCartController implements CartViewHost {
     }
 
     /**
-     * 绑定快捷键。使用 addEventFilter(capture 阶段)优先于 PosModeController 在 scene 上
-     * 注册的 F8 handler(它仅 consume 不动作),确保 F8 等键由触屏视图处理而不被拦截。
+     * 绑定快捷键。使用 addEventFilter(capture 阶段)优先于其他控制器
      */
     private void bindShortcuts(Scene scene) {
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             KeyCode code = event.getCode();
+
+            // 调试日志
+            logger.debug("按键事件: code={}, text={}, ctrl={}, shift={}, alt={}",
+                code, event.getText(), event.isControlDown(), event.isShiftDown(), event.isAltDown());
+
+            // F1 - 搜索框
             if (code == KeyCode.F1) {
                 event.consume();
                 focusSearchField();
                 searchField.selectAll();
-            } else if (code == KeyCode.F2) {
+            }
+            // F2 - 现金支付
+            else if (code == KeyCode.F2) {
                 event.consume();
                 handleCashPayment();
-            } else if (code == KeyCode.F4) {
+            }
+            // F3 - 会员手机号
+            else if (code == KeyCode.F3) {
                 event.consume();
                 if (memberPhoneField != null) {
                     memberPhoneField.requestFocus();
                 }
-            } else if (code == KeyCode.F5) {
+            }
+            // F4 - 清空购物车
+            else if (code == KeyCode.F4) {
                 event.consume();
                 handleClear();
-            } else if (code == KeyCode.F8) {
+            }
+            // F5 - 刷新/重新加载当前分类
+            else if (code == KeyCode.F5) {
                 event.consume();
-                handleCashPayment();
-            } else if (event.isControlDown() && code == KeyCode.DIGIT1) {
+                refreshCurrentCategory();
+            }
+            // F6 - 结算（完成交易）
+            else if (code == KeyCode.F6) {
                 event.consume();
-                handleWechatPayment();
-            } else if (event.isControlDown() && code == KeyCode.DIGIT2) {
-                event.consume();
-                handleAlipayPayment();
-            } else if (event.isControlDown() && code == KeyCode.DIGIT3) {
-                event.consume();
-                handleCardPayment();
-            } else if (code == KeyCode.DELETE) {
+                handleSettlement();
+            }
+            // F7 - 删除购物车最后一项
+            else if (code == KeyCode.F7) {
                 event.consume();
                 if (!cartItems.isEmpty()) {
                     removeItem(cartItems.get(cartItems.size() - 1));
                 }
+            }
+            // F8 - 挂单
+            else if (code == KeyCode.F8) {
+                event.consume();
+                handleHoldOrder();
+            }
+            // F9 - 取单
+            else if (code == KeyCode.F9) {
+                event.consume();
+                handleRecallOrder();
+            }
+            // F10 - 交接班
+            else if (code == KeyCode.F10) {
+                event.consume();
+                handleShift();
+            }
+            // F12 - 锁屏/返回登录
+            else if (code == KeyCode.F12) {
+                event.consume();
+                handleLockScreen();
+            }
+            // ESC - 取消当前操作/关闭对话框
+            else if (code == KeyCode.ESCAPE) {
+                event.consume();
+                handleEscape();
+            }
+            // Ctrl+1 - 微信支付
+            else if (event.isControlDown() && code == KeyCode.DIGIT1) {
+                event.consume();
+                handleWechatPayment();
+            }
+            // Ctrl+2 - 支付宝支付
+            else if (event.isControlDown() && code == KeyCode.DIGIT2) {
+                event.consume();
+                handleAlipayPayment();
+            }
+            // Ctrl+3 - 银行卡支付
+            else if (event.isControlDown() && code == KeyCode.DIGIT3) {
+                event.consume();
+                handleCardPayment();
+            }
+            // Ctrl+L - 清空购物车
+            else if (event.isControlDown() && code == KeyCode.L) {
+                event.consume();
+                handleClear();
+            }
+            // DELETE - 删除购物车最后一项
+            else if (code == KeyCode.DELETE) {
+                event.consume();
+                if (!cartItems.isEmpty()) {
+                    removeItem(cartItems.get(cartItems.size() - 1));
+                }
+            }
+            // ENTER - 在搜索框时添加商品
+            else if (code == KeyCode.ENTER && event.getSource() == searchField) {
+                event.consume();
+                handleSearchAction();
             }
         });
     }
@@ -332,7 +411,7 @@ public class TouchCartController implements CartViewHost {
             ToggleGroup group = new ToggleGroup();
 
             // 热销推荐 - 置顶
-            ToggleButton hotBtn = buildCategoryButton("🔥 " + i18n.get("tpos.hot_products"), HOT_CATEGORY_KEY, group);
+            ToggleButton hotBtn = buildCategoryButton("● " + i18n.get("tpos.hot_products"), HOT_CATEGORY_KEY, group);
             categoryBox.getChildren().add(hotBtn);
             logger.info("已添加'热销推荐'分类按钮");
 
@@ -385,9 +464,8 @@ public class TouchCartController implements CartViewHost {
             if (currentKeyword != null && !currentKeyword.isBlank()) {
                 products = filterByKeyword(productDAO.findAll(), currentKeyword);
             } else if (HOT_CATEGORY_KEY.equals(categoryName)) {
-                // 热销推荐：加载所有商品(后续可基于销售统计排序)
-                products = productDAO.findAll();
-                logger.debug("加载热销商品，共{}个", products.size());
+                // 热销推荐：混合模式（手动标记 + 销量统计）
+                products = loadHotProductsHybrid();
             } else if (ALL_CATEGORY_KEY == categoryName) {
                 products = productDAO.findAll();
             } else {
@@ -402,6 +480,47 @@ public class TouchCartController implements CartViewHost {
             logger.error("加载商品失败", e);
             StatusBarManager.updateError(i18n.get("label.error") + ": " + e.getMessage());
             refreshProductGrid(new ArrayList<>());
+        }
+    }
+
+    /**
+     * 加载热销商品（混合模式）
+     * 优先显示手动标记的热销商品，不足时补充销量高的商品
+     */
+    private List<Product> loadHotProductsHybrid() {
+        try {
+            List<Product> hotProducts = new ArrayList<>();
+            // 1. 获取手动标记的热销商品
+            List<Product> manualHot = productDAO.findHotProducts();
+            hotProducts.addAll(manualHot);
+            logger.info("手动标记热销商品: {}个", manualHot.size());
+            for (Product p : manualHot) {
+                logger.info("  - {} (ID: {}, isHot: {})", p.name, p.id, p.isHot);
+            }
+
+            // 2. 如果不足12个，补充销量高的商品（最近30天）
+            final int TARGET_COUNT = 12;
+            if (hotProducts.size() < TARGET_COUNT) {
+                List<Product> topSelling = productDAO.findTopSellingProducts(30, TARGET_COUNT * 2);
+                for (Product p : topSelling) {
+                    // 避免重复添加
+                    boolean exists = hotProducts.stream().anyMatch(h -> h.id == p.id);
+                    if (!exists && hotProducts.size() < TARGET_COUNT) {
+                        hotProducts.add(p);
+                    }
+                }
+                logger.info("补充销量商品后，共{}个", hotProducts.size());
+            }
+
+            logger.info("loadHotProductsHybrid 返回: {}个商品", hotProducts.size());
+            for (Product p : hotProducts) {
+                logger.info("  返回商品: {} (ID: {})", p.name, p.id);
+            }
+            return hotProducts;
+        } catch (SQLException e) {
+            logger.error("加载热销商品失败", e);
+            StatusBarManager.updateError(i18n.get("label.error") + ": " + e.getMessage());
+            return new ArrayList<>();
         }
     }
 
@@ -426,6 +545,10 @@ public class TouchCartController implements CartViewHost {
     }
 
     private void refreshProductGrid(List<Product> products) {
+        logger.info("刷新商品网格: 商品数量={}", products.size());
+        for (Product p : products) {
+            logger.info("  添加商品卡片: {} (ID: {})", p.name, p.id);
+        }
         productGrid.getChildren().clear();
         for (Product p : products) {
             productGrid.getChildren().add(buildProductCard(p));
@@ -637,6 +760,7 @@ public class TouchCartController implements CartViewHost {
         if (alert.showAndWait().orElse(ButtonType.NO) == ButtonType.YES) {
             cartItems.clear();
             currentMember = null;
+            cashReceivedAmount = BigDecimal.ZERO; // 重置现金累计金额
             if (memberPhoneField != null) {
                 memberPhoneField.clear();
             }
@@ -646,6 +770,135 @@ public class TouchCartController implements CartViewHost {
             refreshCartView();
             updateSummary();
         }
+    }
+
+    /** F6 - 结算完成交易 */
+    private void handleSettlement() {
+        if (cartItems.isEmpty()) {
+            warn(i18n.get("runtime.cart_empty"));
+            return;
+        }
+        // 显示支付方式选择
+        showPaymentMethodDialog();
+    }
+
+    /** F5 - 刷新当前分类 */
+    private void refreshCurrentCategory() {
+        if (currentCategoryName != null) {
+            loadProducts(currentCategoryName);
+        }
+    }
+
+    /** F8 - 挂单 */
+    private void handleHoldOrder() {
+        if (cartItems.isEmpty()) {
+            warn(i18n.get("runtime.cart_empty"));
+            return;
+        }
+        // TODO: 实现挂单功能
+        warn("挂单功能待实现");
+    }
+
+    /** F9 - 取单 */
+    private void handleRecallOrder() {
+        // TODO: 实现取单功能
+        warn("取单功能待实现");
+    }
+
+    /** F12 - 锁屏/返回登录 */
+    private void handleLockScreen() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
+            "确定要退出收银界面吗？", ButtonType.YES, ButtonType.NO);
+        alert.setHeaderText(null);
+        if (alert.showAndWait().orElse(ButtonType.NO) == ButtonType.YES) {
+            handleExit();
+        }
+    }
+
+    /** ESC - 取消当前操作 */
+    private void handleEscape() {
+        // 如果搜索框有焦点且有内容，清空搜索
+        if (searchField != null && searchField.isFocused() && !searchField.getText().isEmpty()) {
+            searchField.clear();
+            if (currentCategoryName != null) {
+                loadProducts(currentCategoryName);
+            }
+        } else {
+            // 其他情况可以在这里添加行为
+        }
+    }
+
+    /** ENTER - 搜索框回车处理 */
+    private void handleSearchAction() {
+        String keyword = searchField.getText();
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            currentKeyword = keyword;
+            if (currentCategoryName != null) {
+                loadProducts(currentCategoryName);
+            }
+        }
+    }
+
+    /** 显示支付方式选择对话框 */
+    private void showPaymentMethodDialog() {
+        // 创建支付方式选择对话框
+        Dialog<String> dialog = new Dialog<>();
+        dialog.setTitle(i18n.get("tpos.payment_method"));
+        dialog.setHeaderText(null);
+
+        // 支付方式按钮
+        VBox content = new VBox(10);
+        content.setPadding(new Insets(20));
+
+        HBox row1 = new HBox(10);
+        Button cashBtn = new Button(i18n.get("payment.cash"));
+        cashBtn.setPrefSize(120, 60);
+        cashBtn.getStyleClass().addAll("primary-button", "payment-button");
+
+        Button wechatBtn = new Button(i18n.get("payment.wechat"));
+        wechatBtn.setPrefSize(120, 60);
+        wechatBtn.getStyleClass().addAll("success-button", "payment-button");
+
+        Button alipayBtn = new Button(i18n.get("payment.alipay"));
+        alipayBtn.setPrefSize(120, 60);
+        alipayBtn.getStyleClass().addAll("success-button", "payment-button");
+
+        row1.getChildren().addAll(cashBtn, wechatBtn, alipayBtn);
+
+        HBox row2 = new HBox(10);
+        Button cardBtn = new Button(i18n.get("payment.card"));
+        cardBtn.setPrefSize(120, 60);
+        cardBtn.getStyleClass().addAll("info-button", "payment-button");
+
+        Button cancelBtn = new Button(i18n.get("common.cancel"));
+        cancelBtn.setPrefSize(120, 60);
+        cancelBtn.getStyleClass().addAll("secondary-button", "payment-button");
+
+        row2.getChildren().addAll(cardBtn, cancelBtn);
+
+        content.getChildren().addAll(row1, row2);
+
+        dialog.getDialogPane().setContent(content);
+        if (productGrid != null && productGrid.getScene() != null) {
+            dialog.initOwner(productGrid.getScene().getWindow());
+            dialog.getDialogPane().getStylesheets().addAll(productGrid.getScene().getStylesheets());
+        }
+
+        // 按钮事件
+        cashBtn.setOnAction(e -> { dialog.setResult("cash"); dialog.close(); });
+        wechatBtn.setOnAction(e -> { dialog.setResult("wechat"); dialog.close(); });
+        alipayBtn.setOnAction(e -> { dialog.setResult("alipay"); dialog.close(); });
+        cardBtn.setOnAction(e -> { dialog.setResult("card"); dialog.close(); });
+        cancelBtn.setOnAction(e -> { dialog.close(); });
+
+        dialog.showAndWait().ifPresent(method -> {
+            switch (method) {
+                case "cash": handleCashPayment(); break;
+                case "wechat": handleWechatPayment(); break;
+                case "alipay": handleAlipayPayment(); break;
+                case "card": handleCardPayment(); break;
+            }
+        });
     }
 
     @FXML
@@ -692,7 +945,7 @@ public class TouchCartController implements CartViewHost {
         return true;
     }
 
-    // ===== 现金支付 =====
+    // ===== 现金支付（支持部分支付）=====
 
     @FXML
     private void handleCashPayment() {
@@ -700,6 +953,12 @@ public class TouchCartController implements CartViewHost {
             return;
         }
         final BigDecimal finalAmount = TransactionService.calculateFinalAmount(cartItems, currentMember);
+        // 如果是首次支付，重置累计金额
+        if (cashReceivedAmount.compareTo(BigDecimal.ZERO) == 0) {
+            // 首次支付，继续
+        }
+        // 计算剩余需支付金额
+        final BigDecimal remainingAmount = finalAmount.subtract(cashReceivedAmount);
 
         Dialog<BigDecimal> dialog = new Dialog<>();
         dialog.setTitle(i18n.get("cart.cash_payment"));
@@ -708,22 +967,43 @@ public class TouchCartController implements CartViewHost {
         VBox content = new VBox(12);
         content.setPadding(new Insets(20));
 
-        Label dueLabel = new Label(i18n.get("runtime.amount_due", CurrencyUtil.format(finalAmount.doubleValue())));
-        dueLabel.setStyle("-fx-font-size: 22; -fx-font-weight: bold;");
+        // 显示应付金额和已付金额
+        String symbol = CurrencyUtil.getSymbol();
+        Label dueLabel = new Label();
+        if (cashReceivedAmount.compareTo(BigDecimal.ZERO) > 0) {
+            dueLabel.setText(String.format("应付: %s | 已付: %s | 剩余: %s",
+                CurrencyUtil.format(finalAmount.doubleValue()),
+                CurrencyUtil.format(cashReceivedAmount.doubleValue()),
+                CurrencyUtil.format(remainingAmount.doubleValue())));
+        } else {
+            dueLabel.setText(i18n.get("runtime.amount_due", CurrencyUtil.format(finalAmount.doubleValue())));
+        }
+        dueLabel.setStyle("-fx-font-size: 18; -fx-font-weight: bold;");
 
         TextField receivedField = new TextField();
-        receivedField.setPromptText(i18n.get("runtime.payment_amount_hint"));
+        receivedField.setPromptText("本次收款金额");
         receivedField.setPrefHeight(42);
         receivedField.setStyle("-fx-font-size: 18;");
 
-        Label changeLabel = new Label(i18n.get("runtime.change_amount", CurrencyUtil.format(0)));
-        changeLabel.getStyleClass().setAll("tpos-change-ok"); changeLabel.setStyle("-fx-font-size: 18;");
+        // 状态标签（显示找零或剩余）
+        Label statusLabel = new Label();
+        statusLabel.setStyle("-fx-font-size: 16;");
 
-        String symbol = CurrencyUtil.getSymbol();
+        // 快捷金额按钮（基于剩余金额动态生成）
         HBox quickBtns = new HBox(8);
-        for (int amt : new int[]{100, 50, 20, 10, 5}) {
+        int[] amounts;
+        if (remainingAmount.compareTo(new BigDecimal("100")) > 0) {
+            amounts = new int[]{100, 50, 20, 10, 5};
+        } else if (remainingAmount.compareTo(new BigDecimal("50")) > 0) {
+            amounts = new int[]{50, 20, 10, 5, 1};
+        } else if (remainingAmount.compareTo(new BigDecimal("20")) > 0) {
+            amounts = new int[]{20, 10, 5, 1};
+        } else {
+            amounts = new int[]{10, 5, 1};
+        }
+        for (int amt : amounts) {
             Button b = new Button(symbol + amt);
-            b.setPrefSize(88, 50);
+            b.setPrefSize(70, 45);
             b.setStyle("-fx-font-size: 16; -fx-font-weight: bold;");
             b.setOnAction(e -> {
                 receivedField.setText(String.valueOf(amt));
@@ -732,52 +1012,73 @@ public class TouchCartController implements CartViewHost {
             quickBtns.getChildren().add(b);
         }
 
+        // 当用户输入金额时更新状态
         receivedField.textProperty().addListener((o, ov, nv) -> {
             try {
-                BigDecimal received = new BigDecimal(nv.trim());
-                BigDecimal diff = received.subtract(finalAmount);
-                if (diff.compareTo(BigDecimal.ZERO) >= 0) {
-                    changeLabel.setText(i18n.get("runtime.change_amount", CurrencyUtil.format(diff.doubleValue())));
-                    changeLabel.getStyleClass().setAll("tpos-change-ok"); changeLabel.setStyle("-fx-font-size: 18;");
+                BigDecimal thisPayment = new BigDecimal(nv.trim());
+                BigDecimal totalAfterThis = cashReceivedAmount.add(thisPayment);
+                BigDecimal diff = totalAfterThis.subtract(finalAmount);
+
+                if (thisPayment.compareTo(BigDecimal.ZERO) <= 0) {
+                    statusLabel.setText("请输入收款金额");
+                    statusLabel.setStyle("-fx-font-size: 16; -fx-text-fill: #888;");
+                } else if (totalAfterThis.compareTo(finalAmount) < 0) {
+                    // 仍需支付更多
+                    BigDecimal stillNeed = finalAmount.subtract(totalAfterThis);
+                    statusLabel.setText("还需: " + CurrencyUtil.format(stillNeed.doubleValue()));
+                    statusLabel.setStyle("-fx-font-size: 16; -fx-text-fill: #FF9800; -fx-font-weight: bold;");
                 } else {
-                    changeLabel.setText(i18n.get("tpos.cash_short"));
-                    changeLabel.getStyleClass().setAll("tpos-change-short"); changeLabel.setStyle("-fx-font-size: 18;");
+                    // 需要找零
+                    statusLabel.setText("找零: " + CurrencyUtil.format(diff.doubleValue()));
+                    statusLabel.setStyle("-fx-font-size: 18; -fx-text-fill: #4CAF50; -fx-font-weight: bold;");
                 }
             } catch (NumberFormatException e) {
-                changeLabel.setText(i18n.get("runtime.change_amount", CurrencyUtil.format(0)));
-                changeLabel.getStyleClass().setAll("tpos-change-ok"); changeLabel.setStyle("-fx-font-size: 18;");
+                statusLabel.setText("请输入收款金额");
+                statusLabel.setStyle("-fx-font-size: 16; -fx-text-fill: #888;");
             }
         });
 
-        content.getChildren().addAll(dueLabel, receivedField, quickBtns, changeLabel);
+        Button continueBtn = new Button("确认收款");
+        continueBtn.setDefaultButton(true);
+        continueBtn.setStyle("-fx-font-size: 16; -fx-font-weight: bold; -fx-pref-height: 45;");
+
+        content.getChildren().addAll(dueLabel, receivedField, quickBtns, statusLabel, continueBtn);
         dialog.getDialogPane().setContent(content);
-        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        dialog.getDialogPane().getButtonTypes().clear();
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.CANCEL);
 
-        dialog.setResultConverter(btn -> {
-            if (btn == ButtonType.OK) {
-                try {
-                    BigDecimal received = new BigDecimal(receivedField.getText().trim());
-                    if (received.compareTo(BigDecimal.ZERO) <= 0) {
-                        return null;
-                    }
-                    return received;
-                } catch (NumberFormatException e) {
-                    return null;
+        continueBtn.setOnAction(e -> {
+            try {
+                BigDecimal thisPayment = new BigDecimal(receivedField.getText().trim());
+                if (thisPayment.compareTo(BigDecimal.ZERO) <= 0) {
+                    return;
                 }
+                // 累加收款金额
+                cashReceivedAmount = cashReceivedAmount.add(thisPayment);
+
+                if (cashReceivedAmount.compareTo(finalAmount) >= 0) {
+                    // 已付清，计算找零并完成交易
+                    BigDecimal change = cashReceivedAmount.subtract(finalAmount);
+                    dialog.close();
+                    executePayment("现金", cashReceivedAmount, change);
+                    cashReceivedAmount = BigDecimal.ZERO; // 重置
+                } else {
+                    // 未付清，显示提示并允许继续支付
+                    BigDecimal stillNeed = finalAmount.subtract(cashReceivedAmount);
+                    Alert info = new Alert(Alert.AlertType.INFORMATION);
+                    info.setHeaderText(null);
+                    info.setContentText("收款成功！还需: " + CurrencyUtil.format(stillNeed.doubleValue()));
+                    info.showAndWait();
+                    dialog.close();
+                    // 重新打开支付对话框
+                    handleCashPayment();
+                }
+            } catch (NumberFormatException ex) {
+                warn("请输入有效的金额");
             }
-            return null;
         });
 
-        BigDecimal received = dialog.showAndWait().orElse(null);
-        if (received == null) {
-            return;
-        }
-        if (received.compareTo(finalAmount) < 0) {
-            warn(i18n.get("tpos.cash_short"));
-            return;
-        }
-        BigDecimal change = received.subtract(finalAmount);
-        executePayment("现金", received, change);
+        dialog.showAndWait();
     }
 
     // ===== 银行卡支付 =====
@@ -1061,6 +1362,7 @@ public class TouchCartController implements CartViewHost {
     private void resetAfterPayment() {
         cartItems.clear();
         currentMember = null;
+        cashReceivedAmount = BigDecimal.ZERO; // 重置现金累计金额
         if (memberPhoneField != null) {
             memberPhoneField.clear();
         }

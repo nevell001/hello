@@ -12,6 +12,7 @@ import com.cashier.model.PageResult;
 import com.cashier.model.Product;
 import com.cashier.model.Unit;
 import com.cashier.model.User;
+import com.cashier.util.CacheManager;
 import com.cashier.util.FXMLUtils;
 import com.cashier.util.StatusBarManager;
 import com.cashier.util.FormValidator;
@@ -19,6 +20,7 @@ import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
 
 import java.sql.SQLException;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -72,6 +74,9 @@ public class InventoryController extends BaseController<Product> {
 
     @FXML
     private TableColumn<Product, String> categoryColumn;
+
+    @FXML
+    private TableColumn<Product, Product> hotColumn;
 
     @FXML
     private TableColumn<Product, String> warningColumn;
@@ -150,7 +155,7 @@ public class InventoryController extends BaseController<Product> {
         setupTableDoubleClickListener(inventoryTable);
 
         // 启用 UI 性能优化（固定行高启用更好的虚拟流）
-        inventoryTable.setFixedCellSize(40.0);
+        inventoryTable.setFixedCellSize(50.0);
         inventoryTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 
@@ -247,6 +252,37 @@ public class InventoryController extends BaseController<Product> {
         quantityColumn.setCellValueFactory(new PropertyValueFactory<>("quantity"));
         minStockColumn.setCellValueFactory(new PropertyValueFactory<>("minStock"));
         categoryColumn.setCellValueFactory(new PropertyValueFactory<>("category"));
+
+        // 热销列：显示●图标，点击可切换
+        // 使用 Object-based 单元格，直接访问 Product 对象
+        hotColumn.setCellValueFactory(features -> new SimpleObjectProperty<>(features.getValue()));
+        hotColumn.setCellFactory(column -> new TableCell<Product, Product>() {
+            {
+                setStyle("-fx-cursor: hand; -fx-font-size: 20px; -fx-text-fill: #666;");
+                setOnMouseClicked(event -> {
+                    Product p = getItem();
+                    if (p != null) {
+                        logger.info("点击切换热销状态: {} (当前状态: {})", p.name, p.isHot);
+                        toggleHotStatus(p);
+                    }
+                });
+            }
+
+            @Override
+            protected void updateItem(Product product, boolean empty) {
+                super.updateItem(product, empty);
+                if (empty || product == null) {
+                    setText(null);
+                    setStyle("-fx-cursor: hand; -fx-font-size: 20px; -fx-text-fill: #666;");
+                } else {
+                    setText(product.isHot ? "●" : "○");
+                    setAlignment(Pos.CENTER);
+                    setStyle("-fx-cursor: hand; -fx-font-size: 20px; -fx-text-fill: #666;");
+                    logger.debug("渲染热销单元格: 商品={}, isHot={}", product.name, product.isHot);
+                }
+            }
+        });
+
         warningColumn.setCellValueFactory(cellData -> {
             Product p = cellData.getValue();
             if (p.quantity <= 0) {
@@ -906,6 +942,34 @@ public class InventoryController extends BaseController<Product> {
         for (Button button : List.of(addButton, editButton, deleteButton, restockButton, categoryButton, unitButton)) {
             button.setVisible(canManage);
             button.setManaged(canManage);
+        }
+    }
+
+    /**
+     * 切换商品热销状态
+     * @param product 商品
+     */
+    private void toggleHotStatus(Product product) {
+        try {
+            boolean newHotStatus = !product.isHot;
+            logger.info("切换热销状态: {} -> {}, 商品: {}", product.isHot, newHotStatus, product.name);
+            boolean success = productDAO.updateHotStatus(product.id, newHotStatus);
+            if (success) {
+                product.isHot = newHotStatus;
+                logger.info("本地对象已更新: {}, isHot = {}", product.name, product.isHot);
+                // 清除缓存，确保触屏界面能获取最新数据
+                CacheManager.clearCache();
+                inventoryTable.refresh();
+                String msg = newHotStatus
+                    ? i18n.get("product.hot_marked") + ": " + product.name
+                    : i18n.get("product.hot_unmarked") + ": " + product.name;
+                StatusBarManager.updateSuccess(msg);
+            } else {
+                StatusBarManager.updateError(i18n.get("label.error") + ": " + i18n.get("operation.failed"));
+            }
+        } catch (SQLException e) {
+            logger.error("更新热销状态失败", e);
+            StatusBarManager.updateError(i18n.get("label.error") + ": " + e.getMessage());
         }
     }
 

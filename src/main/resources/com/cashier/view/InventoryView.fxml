@@ -109,6 +109,7 @@
             <TableColumn fx:id="quantityColumn" text="%product.stock" prefWidth="70"/>
             <TableColumn fx:id="minStockColumn" text="%inventory.min_stock" prefWidth="70"/>
             <TableColumn fx:id="categoryColumn" text="%product.category" prefWidth="100"/>
+            <TableColumn fx:id="hotColumn" text="%product.hot" prefWidth="60"/>
             <TableColumn fx:id="warningColumn" text="%inventory.warning_status" prefWidth="80"/>
         </columns>
         <placeholder>
