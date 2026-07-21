@@ -3012,3 +3012,92 @@
     -fx-min-width: 110px;
     -fx-wrap-text: true;
 }
+
+/* ========================================================================
+   TouchCart 触屏版收银样式 (v2.6.0)
+   沿用 -lisuan-primary 主色,全部 tpos- 前缀与现有 cart-/pos- 隔离
+   ======================================================================== */
+
+.tpos-root { -fx-background-color: -lisuan-surface; }
+
+/* —— 左侧分类导航 —— */
+.tpos-sidebar { -fx-background-color: -lisuan-primary-deep; -fx-padding: 12; -fx-spacing: 8; }
+.tpos-sidebar-title { -fx-text-fill: #FFFFFF; -fx-font-size: 14; -fx-font-weight: bold; -fx-padding: 4 12 12 12; }
+.tpos-sidebar-scroll, .tpos-product-scroll, .tpos-cart-scroll { -fx-background-color: transparent; }
+.tpos-sidebar-scroll > .viewport, .tpos-product-scroll > .viewport, .tpos-cart-scroll > .viewport { -fx-background-color: transparent; }
+.tpos-category-list { -fx-spacing: 6; }
+.tpos-category-btn { -fx-background-color: transparent; -fx-text-fill: #FFFFFF; -fx-alignment: CENTER-LEFT;
+    -fx-padding: 12 16; -fx-font-size: 15; -fx-background-radius: 8; -fx-cursor: hand; -fx-border-width: 0; }
+.tpos-category-btn:hover { -fx-background-color: rgba(255,255,255,0.08); }
+.tpos-category-btn:selected { -fx-background-color: -lisuan-primary; -fx-font-weight: bold; }
+
+/* —— 中间商品区 —— */
+.tpos-center { -fx-background-color: -lisuan-surface; }
+.tpos-search-bar { -fx-padding: 12 16; -fx-spacing: 8; -fx-alignment: CENTER_LEFT; -fx-background-color: -lisuan-surface; }
+.tpos-search-field { -fx-font-size: 15; -fx-pref-height: 40; -fx-background-radius: 8; }
+.tpos-search-btn { -fx-background-color: -lisuan-primary; -fx-text-fill: #FFFFFF; -fx-background-radius: 8; -fx-pref-height: 40; -fx-cursor: hand; }
+.tpos-product-grid { -fx-padding: 16; }
+
+/* 商品卡片 */
+.tpos-product-card { -fx-background-color: -lisuan-surface; -fx-background-radius: 12; -fx-border-color: #E7E9EE;
+    -fx-border-width: 1.5; -fx-border-radius: 12; -fx-padding: 10; -fx-spacing: 6; -fx-pref-width: 160; -fx-cursor: hand; }
+.tpos-product-card:hover { -fx-border-color: -lisuan-primary; -fx-background-color: derive(-lisuan-primary, 88%); }
+.tpos-product-card--out { -fx-opacity: 0.45; -fx-cursor: default; }
+.tpos-product-card-initial { -fx-background-color: -lisuan-primary; -fx-text-fill: #FFFFFF; -fx-font-size: 26;
+    -fx-font-weight: bold; -fx-background-radius: 12; -fx-pref-size: 72 72; -fx-min-size: 72 72; -fx-max-size: 72 72; -fx-alignment: CENTER; }
+.tpos-product-card-name { -fx-font-size: 14; -fx-text-fill: -lisuan-text; -fx-wrap-text: true; -fx-max-height: 40; }
+.tpos-product-card-meta { -fx-font-size: 12; -fx-text-fill: -lisuan-text-disabled; }
+.tpos-product-card-price { -fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: -lisuan-primary; }
+
+/* —— 右侧购物车 —— */
+.tpos-right { -fx-background-color: -lisuan-surface; -fx-border-color: #E7E9EE; -fx-border-width: 0 0 0 1; }
+.tpos-cart-header { -fx-padding: 14 16; -fx-spacing: 8; -fx-alignment: CENTER_LEFT; -fx-border-color: #E7E9EE; -fx-border-width: 0 0 1 0; }
+.tpos-cart-title { -fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: -lisuan-text; }
+.tpos-clear-btn { -fx-background-color: transparent; -fx-text-fill: -lisuan-primary; -fx-border-color: -lisuan-primary-border;
+    -fx-border-radius: 6; -fx-background-radius: 6; -fx-cursor: hand; }
+.tpos-cart-list { -fx-padding: 8; -fx-spacing: 8; }
+.tpos-cart-empty { -fx-padding: 40 16; -fx-alignment: CENTER; -fx-text-fill: -lisuan-text-disabled; -fx-font-size: 14; }
+.tpos-cart-row { -fx-background-color: -lisuan-surface-muted; -fx-background-radius: 8; -fx-padding: 10; -fx-spacing: 6;
+    -fx-border-color: #E7E9EE; -fx-border-radius: 8; }
+.tpos-cart-row-name { -fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: -lisuan-text; }
+.tpos-cart-row-meta { -fx-font-size: 12; -fx-text-fill: -lisuan-text-disabled; }
+.tpos-cart-row-subtotal { -fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: -lisuan-primary; }
+.tpos-qty-minus, .tpos-qty-plus { -fx-background-radius: 16; -fx-min-size: 32 32; -fx-font-size: 16; -fx-font-weight: bold; -fx-cursor: hand; }
+.tpos-qty-minus { -fx-background-color: -lisuan-surface; -fx-border-color: -lisuan-primary-border; -fx-text-fill: -lisuan-primary; }
+.tpos-qty-plus { -fx-background-color: -lisuan-primary; -fx-text-fill: #FFFFFF; }
+.tpos-qty-val { -fx-font-size: 15; -fx-font-weight: bold; -fx-pref-width: 36; -fx-alignment: CENTER; }
+.tpos-remove-btn { -fx-background-color: transparent; -fx-text-fill: #C0392B; -fx-font-size: 12; -fx-cursor: hand; }
+
+/* —— 会员 —— */
+.tpos-member-row { -fx-padding: 10 16; -fx-spacing: 6; -fx-border-color: #E7E9EE; -fx-border-width: 1 0; -fx-background-color: -lisuan-surface-muted; }
+.tpos-member-label { -fx-font-size: 12; -fx-text-fill: -lisuan-text-disabled; }
+.tpos-member-phone { -fx-font-size: 14; -fx-background-radius: 6; }
+.tpos-member-btn { -fx-background-color: -lisuan-primary; -fx-text-fill: #FFFFFF; -fx-background-radius: 6; -fx-cursor: hand; }
+.tpos-member-info { -fx-font-size: 13; -fx-text-fill: -lisuan-primary-active; -fx-font-weight: bold; }
+
+/* —— 订单摘要 —— */
+.tpos-summary { -fx-padding: 10 16; -fx-spacing: 4; }
+.tpos-summary-row { -fx-alignment: CENTER_LEFT; -fx-pref-height: 22; }
+.tpos-summary-label { -fx-font-size: 13; -fx-text-fill: -lisuan-text-disabled; }
+.tpos-summary-val { -fx-font-size: 14; -fx-text-fill: -lisuan-text; }
+.tpos-final-row { -fx-alignment: CENTER_LEFT; -fx-background-color: derive(-lisuan-primary, 88%); -fx-background-radius: 8; -fx-padding: 10 12; -fx-spacing: 8; }
+.tpos-final-label { -fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: -lisuan-primary-active; }
+.tpos-final-val { -fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: -lisuan-primary-active; }
+
+/* —— 支付与结账 —— */
+.tpos-pay-buttons { -fx-padding: 8 16; -fx-spacing: 8; -fx-alignment: CENTER; }
+.tpos-pay-btn { -fx-text-fill: #FFFFFF; -fx-font-size: 14; -fx-font-weight: bold; -fx-pref-height: 52; -fx-background-radius: 10; -fx-cursor: hand; }
+.tpos-pay-cash { -fx-background-color: -lisuan-primary; }
+.tpos-pay-wechat { -fx-background-color: #09BB07; }
+.tpos-pay-alipay { -fx-background-color: #1677FF; }
+.tpos-pay-card { -fx-background-color: -lisuan-primary-deep; }
+.tpos-checkout-btn { -fx-background-color: -lisuan-primary; -fx-text-fill: #FFFFFF; -fx-font-size: 22; -fx-font-weight: bold;
+    -fx-background-radius: 10; -fx-cursor: hand; -fx-pref-height: 64; -fx-padding: 0 16; -fx-border-color: transparent; }
+.tpos-checkout-btn:hover { -fx-background-color: -lisuan-primary-hover; }
+.tpos-checkout-btn:pressed { -fx-background-color: -lisuan-primary-active; }
+
+/* TouchCart 状态色(替代内联 setStyle,ThemeStylePolicyTest 要求语义 styleClass) */
+.tpos-product-card-initial-text { -fx-text-fill: #FFFFFF; }
+.tpos-change-ok { -fx-text-fill: #16B364; }
+.tpos-change-short { -fx-text-fill: #E5484D; }
+.tpos-muted { -fx-text-fill: #8A8F99; }

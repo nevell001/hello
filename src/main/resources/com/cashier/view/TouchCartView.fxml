@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  触屏版收银视图 — 三栏布局(分类导航 + 商品卡片 + 购物车/摘要/支付)
+  沿用主项目 -lisuan-primary 主色,styleClass 全部 tpos- 前缀
+-->
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.cashier.controller.TouchCartController"
+            styleClass="tpos-root">
+
+    <!-- ========== 左侧分类导航 ========== -->
+    <left>
+        <VBox styleClass="tpos-sidebar" prefWidth="200">
+            <Label text="%tpos.all_categories" styleClass="tpos-sidebar-title"/>
+            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" VBox.vgrow="ALWAYS" styleClass="tpos-sidebar-scroll">
+                <VBox fx:id="categoryBox" styleClass="tpos-category-list"/>
+            </ScrollPane>
+        </VBox>
+    </left>
+
+    <!-- ========== 中间商品浏览 ========== -->
+    <center>
+        <VBox styleClass="tpos-center">
+            <HBox styleClass="tpos-search-bar" alignment="CENTER_LEFT">
+                <TextField fx:id="searchField" promptText="%cart.scan_or_search"
+                           HBox.hgrow="ALWAYS" styleClass="tpos-search-field"
+                           onAction="#handleSearch"/>
+                <Button text="%cart.search_button" onAction="#handleSearch" styleClass="tpos-search-btn"/>
+            </HBox>
+            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" VBox.vgrow="ALWAYS" styleClass="tpos-product-scroll">
+                <FlowPane fx:id="productGrid" styleClass="tpos-product-grid" hgap="14" vgap="14"/>
+            </ScrollPane>
+        </VBox>
+    </center>
+
+    <!-- ========== 右侧购物车/摘要/支付 ========== -->
+    <right>
+        <VBox styleClass="tpos-right" prefWidth="380" spacing="0">
+            <!-- 购物车头 -->
+            <HBox styleClass="tpos-cart-header" alignment="CENTER_LEFT">
+                <Label text="%pos.cart" styleClass="tpos-cart-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button fx:id="clearBtn" text="%pos.clear" onAction="#handleClear" styleClass="tpos-clear-btn"/>
+            </HBox>
+
+            <!-- 购物车列表 -->
+            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" VBox.vgrow="ALWAYS" styleClass="tpos-cart-scroll">
+                <VBox fx:id="cartList" styleClass="tpos-cart-list"/>
+            </ScrollPane>
+
+            <!-- 会员 -->
+            <VBox styleClass="tpos-member-row">
+                <Label text="%cart.member_phone" styleClass="tpos-member-label"/>
+                <HBox spacing="6" alignment="CENTER_LEFT">
+                    <TextField fx:id="memberPhoneField" promptText="%cart.enter_phone"
+                               HBox.hgrow="ALWAYS" styleClass="tpos-member-phone"
+                               onAction="#handleSearchMember"/>
+                    <Button text="%cart.search_button" onAction="#handleSearchMember" styleClass="tpos-member-btn"/>
+                </HBox>
+                <Label fx:id="memberInfoLabel" styleClass="tpos-member-info"/>
+            </VBox>
+
+            <!-- 订单摘要 -->
+            <VBox styleClass="tpos-summary">
+                <HBox styleClass="tpos-summary-row" alignment="CENTER_LEFT">
+                    <Label text="%cart.total_quantity" styleClass="tpos-summary-label"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="totalQtyLabel" text="0" styleClass="tpos-summary-val"/>
+                </HBox>
+                <HBox styleClass="tpos-summary-row" alignment="CENTER_LEFT">
+                    <Label text="%cart.total_amount" styleClass="tpos-summary-label"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="totalAmountLabel" text="¥0.00" styleClass="tpos-summary-val"/>
+                </HBox>
+                <HBox styleClass="tpos-summary-row" alignment="CENTER_LEFT">
+                    <Label text="%cart.member_discount" styleClass="tpos-summary-label"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="discountLabel" text="-¥0.00" styleClass="tpos-summary-val"/>
+                </HBox>
+                <HBox styleClass="tpos-final-row" alignment="CENTER_LEFT">
+                    <Label text="%cart.final_amount" styleClass="tpos-final-label"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="finalAmountLabel" text="¥0.00" styleClass="tpos-final-val"/>
+                </HBox>
+            </VBox>
+
+            <!-- 支付方式 -->
+            <HBox styleClass="tpos-pay-buttons">
+                <Button text="%cart.cash_payment" onAction="#handleCashPayment"
+                        styleClass="tpos-pay-btn, tpos-pay-cash" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                <Button text="%cart.wechat_payment" onAction="#handleWechatPayment"
+                        styleClass="tpos-pay-btn, tpos-pay-wechat" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                <Button text="%cart.alipay_payment" onAction="#handleAlipayPayment"
+                        styleClass="tpos-pay-btn, tpos-pay-alipay" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                <Button text="%cart.card_payment" onAction="#handleCardPayment"
+                        styleClass="tpos-pay-btn, tpos-pay-card" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+            </HBox>
+
+            <!-- 结账大按钮 -->
+            <Button fx:id="checkoutBtn" text="%pos.pay" onAction="#handleCheckout"
+                    styleClass="tpos-checkout-btn" maxWidth="Infinity"/>
+        </VBox>
+    </right>
+</BorderPane>

@@ -97,7 +97,7 @@ public class PosModeController {
 
     private CashierSystemFXApplication application;
     private User currentUser;
-    private CartController cartController;
+    private CartViewHost cartController;
     private Timeline timeTimeline;
 
     /**
@@ -226,7 +226,7 @@ public class PosModeController {
      */
     private void loadCartView() {
         try {
-            FXMLLoader loader = FXMLUtils.loadFXMLLoader("/com/cashier/view/CartView.fxml");
+            FXMLLoader loader = FXMLUtils.loadFXMLLoader("/com/cashier/view/TouchCartView.fxml");
             VBox cartView = loader.load();
 
             // 获取CartController并设置当前用户

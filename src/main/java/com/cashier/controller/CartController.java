@@ -50,7 +50,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * 处理购物车的增删改查和结算
  * 已重构为使用重构版 DAO
  */
-public class CartController {
+public class CartController implements CartViewHost {
     private static final Logger logger = LoggerFactoryUtil.getLogger(CartController.class);
     private static final int FIRST_PAGE = 1;
     private static final int CART_PRODUCT_PAGE_SIZE = 500;
