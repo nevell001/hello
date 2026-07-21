@@ -69,7 +69,7 @@
             <padding>
                 <Insets top="12" right="12" bottom="12" left="12"/>
             </padding>
-            <Label text="%shift.count" styleClass="shift-stat-label"/>
+            <Label text="%shift.stat_count" styleClass="shift-stat-label"/>
             <Label fx:id="countLabel" styleClass="shift-stat-value"/>
         </VBox>
 
@@ -77,7 +77,7 @@
             <padding>
                 <Insets top="12" right="12" bottom="12" left="12"/>
             </padding>
-            <Label text="%shift.total_revenue" styleClass="shift-stat-label"/>
+            <Label text="%shift.stat_revenue" styleClass="shift-stat-label"/>
             <Label fx:id="totalRevenueLabel" styleClass="shift-stat-value shift-stat-value-success"/>
         </VBox>
 
@@ -85,7 +85,7 @@
             <padding>
                 <Insets top="12" right="12" bottom="12" left="12"/>
             </padding>
-            <Label text="%shift.total_transactions" styleClass="shift-stat-label"/>
+            <Label text="%shift.stat_transactions" styleClass="shift-stat-label"/>
             <Label fx:id="totalTransactionLabel" styleClass="shift-stat-value shift-stat-value-warning"/>
         </VBox>
     </HBox>
