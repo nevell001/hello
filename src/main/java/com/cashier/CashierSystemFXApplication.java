@@ -652,6 +652,8 @@ public class CashierSystemFXApplication extends Application {
                 ((com.cashier.controller.MainController) currentController).cleanup();
             } else if (currentController instanceof com.cashier.controller.PosModeController) {
                 ((com.cashier.controller.PosModeController) currentController).cleanup();
+            } else if (currentController instanceof com.cashier.controller.TouchCartController) {
+                ((com.cashier.controller.TouchCartController) currentController).cleanup();
             }
         } catch (Exception e) {
             logger.error("清理控制器资源时发生错误", e);

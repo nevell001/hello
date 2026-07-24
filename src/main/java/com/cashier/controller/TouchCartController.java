@@ -154,6 +154,14 @@ public class TouchCartController implements CartViewHost {
         updateDateTime(); // 立即更新一次
     }
 
+    /** 清理资源（登出/切换视图时调用），停止时钟动画防止 Timeline 泄漏 */
+    public void cleanup() {
+        if (clockTimeline != null) {
+            clockTimeline.stop();
+            clockTimeline = null;
+        }
+    }
+
     private void updateDateTime() {
         LocalDateTime now = LocalDateTime.now();
         if (dateLabel != null) {
@@ -581,7 +589,17 @@ public class TouchCartController implements CartViewHost {
 
     // ===== 购物车操作 =====
 
+    /** 支付进行中时阻止修改购物车（电子支付二维码非模态，期间篡改会导致交易错乱） */
+    private boolean blockIfPaymentInProgress() {
+        if (paymentInProgress) {
+            warn(i18n.get("tpos.payment_in_progress"));
+            return true;
+        }
+        return false;
+    }
+
     private void addToCart(Product product) {
+        if (blockIfPaymentInProgress()) return;
         if (product == null) {
             return;
         }
@@ -603,6 +621,7 @@ public class TouchCartController implements CartViewHost {
     }
 
     private void incrementQty(CartItem item) {
+        if (blockIfPaymentInProgress()) return;
         int stock = currentStock(item.product);
         if (item.quantity + 1 > stock) {
             warn(i18n.get("tpos.out_of_stock_warn", item.product.name));
@@ -614,6 +633,7 @@ public class TouchCartController implements CartViewHost {
     }
 
     private void decrementQty(CartItem item) {
+        if (blockIfPaymentInProgress()) return;
         if (item.quantity <= 1) {
             cartItems.remove(item);
         } else {
@@ -624,6 +644,7 @@ public class TouchCartController implements CartViewHost {
     }
 
     private void removeItem(CartItem item) {
+        if (blockIfPaymentInProgress()) return;
         cartItems.remove(item);
         refreshCartView();
         updateSummary();
@@ -742,6 +763,7 @@ public class TouchCartController implements CartViewHost {
 
     @FXML
     private void handleClear() {
+        if (blockIfPaymentInProgress()) return;
         if (cartItems.isEmpty()) {
             return;
         }
@@ -765,6 +787,7 @@ public class TouchCartController implements CartViewHost {
 
     /** F8 - 挂单：保存当前购物车到数据库，清空界面 */
     private void handleHoldOrder() {
+        if (blockIfPaymentInProgress()) return;
         if (cartItems.isEmpty()) {
             warn(i18n.get("cart.hold.empty_cart"));
             return;
@@ -798,6 +821,7 @@ public class TouchCartController implements CartViewHost {
 
     /** F9 - 取单：列出当前用户挂单，选择恢复 */
     private void handleRecallOrder() {
+        if (blockIfPaymentInProgress()) return;
         try {
             int userId = currentUser != null ? currentUser.id : 0;
             List<HoldOrder> holdOrders = userId > 0
