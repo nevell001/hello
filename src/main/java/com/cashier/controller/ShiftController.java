@@ -113,10 +113,8 @@ public class ShiftController {
      */
     @FXML
     private void initialize() {
-        // 设置默认日期范围（今天）
-        java.time.LocalDate today = java.time.LocalDate.now();
-        startDatePicker.setValue(today);
-        endDatePicker.setValue(today);
+        // 日期范围默认不限（startDatePicker/endDatePicker 保持 null），与列表默认显示
+        // 全部班次一致；用户需按日期过滤时再选日期并点搜索。
 
         // 设置表格列
         setupTableColumns();
@@ -124,8 +122,8 @@ public class ShiftController {
         // 初始化图表
         initializeCharts();
 
-        // 加载交接班数据
-        loadShifts();
+        // 数据加载放到 setCurrentUser(user) 中：initialize 由 FXMLLoader 在 load() 阶段
+        // 触发，此时 currentUser 必为 null，若在此加载会绕过收银员过滤导致越权。
 
         // 设置表格选择模式
         shiftTable.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
@@ -390,8 +388,9 @@ public class ShiftController {
      */
     @FXML
     public void handleClearSearch() {
-        startDatePicker.setValue(java.time.LocalDate.now());
-        endDatePicker.setValue(java.time.LocalDate.now());
+        // 清除=恢复不限日期（null），与默认视图一致，显示全部班次
+        startDatePicker.setValue(null);
+        endDatePicker.setValue(null);
         searchField.clear();
         applyFilters();
     }
@@ -406,9 +405,11 @@ public class ShiftController {
             .filter(s -> {
                 // 日期筛选
                 if (startDatePicker.getValue() != null || endDatePicker.getValue() != null) {
-                    java.time.LocalDate shiftDate = s.startTime != null
-                        ? s.startTime.atZone(java.time.ZoneId.systemDefault()).toLocalDate()
-                        : null;
+                    // 无开始时间的班次无法按日期判断，指定了日期范围时排除，避免 shiftDate 为 null 触发 NPE
+                    if (s.startTime == null) {
+                        return false;
+                    }
+                    java.time.LocalDate shiftDate = s.startTime.atZone(java.time.ZoneId.systemDefault()).toLocalDate();
 
                     if (startDatePicker.getValue() != null && shiftDate.isBefore(startDatePicker.getValue())) {
                         return false;
@@ -659,7 +660,7 @@ public class ShiftController {
     public void handleEndShift() {
         // 检查是否有活跃班次
         Shift activeShift = null;
-try {
+        try {
             activeShift = ShiftDAO.findActiveShift();
         } catch (SQLException e) {
             logger.error("获取活跃班次失败", e);
@@ -790,6 +791,9 @@ try {
     public void setCurrentUser(com.cashier.model.User user) {
         this.currentUser = user;
         setupRoleBasedUI();
+        // initialize() 由 FXMLLoader 在 load() 阶段触发，那时 currentUser 尚为 null，
+        // loadShifts 会绕过收银员过滤；此处用户已注入，按角色正确加载（收银员只看自己的班次）。
+        loadShifts();
     }
 
     /**
