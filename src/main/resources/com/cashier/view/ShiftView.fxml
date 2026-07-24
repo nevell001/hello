@@ -37,7 +37,7 @@
     <Separator styleClass="shift-separator"/>
 
     <!-- 筛选栏 -->
-    <HBox spacing="12" styleClass="shift-filter-bar" alignment="CENTER_LEFT">
+    <HBox fx:id="filterBar" spacing="12" styleClass="shift-filter-bar" alignment="CENTER_LEFT">
         <padding>
             <Insets top="10" right="16" bottom="10" left="16"/>
         </padding>
@@ -91,7 +91,7 @@
     </HBox>
 
     <!-- 图表区域 -->
-    <ScrollPane fitToWidth="true" VBox.vgrow="NEVER" prefHeight="280" styleClass="shift-charts-scroll">
+    <ScrollPane fx:id="chartsScrollPane" fitToWidth="true" VBox.vgrow="NEVER" prefHeight="280" styleClass="shift-charts-scroll">
         <HBox spacing="12" styleClass="shift-charts-container">
             <padding>
                 <Insets top="12" right="16" bottom="12" left="16"/>

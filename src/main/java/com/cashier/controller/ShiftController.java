@@ -98,6 +98,12 @@ public class ShiftController {
     @FXML
     private Button endShiftButton;
 
+    @FXML
+    private javafx.scene.layout.HBox filterBar;
+
+    @FXML
+    private javafx.scene.control.ScrollPane chartsScrollPane;
+
     private ObservableList<Shift> shiftList;
     private List<Shift> allShifts;
     private com.cashier.model.User currentUser;
@@ -803,22 +809,16 @@ try {
                 exportButton.setManaged(false);
             }
 
-            // 隐藏筛选栏
-            if (startDatePicker != null && startDatePicker.getParent() != null) {
-                javafx.scene.layout.Pane filterBar = (javafx.scene.layout.Pane) startDatePicker.getParent().getParent();
-                if (filterBar != null) {
-                    filterBar.setVisible(false);
-                    filterBar.setManaged(false);
-                }
+            // 隐藏筛选栏（直接引用 fx:id，避免 getParent 链误伤根 VBox 导致整页空白）
+            if (filterBar != null) {
+                filterBar.setVisible(false);
+                filterBar.setManaged(false);
             }
 
             // 隐藏图表区域
-            if (shiftRevenueBarChart != null && shiftRevenueBarChart.getParent() != null) {
-                javafx.scene.layout.Pane chartScroll = (javafx.scene.layout.Pane) shiftRevenueBarChart.getParent().getParent().getParent();
-                if (chartScroll != null) {
-                    chartScroll.setVisible(false);
-                    chartScroll.setManaged(false);
-                }
+            if (chartsScrollPane != null) {
+                chartsScrollPane.setVisible(false);
+                chartsScrollPane.setManaged(false);
             }
 
             // 收银员只能查看自己的班次，筛选条件自动设置为当前用户
