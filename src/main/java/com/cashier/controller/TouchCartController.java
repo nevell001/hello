@@ -204,16 +204,14 @@ public class TouchCartController implements CartViewHost {
             javafx.stage.Stage stage = new javafx.stage.Stage();
             stage.setTitle(i18n.get("runtime.shift_handover"));
             stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
-            javafx.scene.Scene scene = new javafx.scene.Scene(root);
+            // Scene 显式尺寸：new Scene(root) 不带尺寸会 sizeToScene，把 VBox.vgrow=ALWAYS 的表格区
+            // 算成 0，弹窗只剩标题栏。显式 1100x750 让内容区有空间渲染。
+            javafx.scene.Scene scene = new javafx.scene.Scene(root, 1100, 750);
             // 复制样式表以确保主题一致
             if (searchField.getScene() != null) {
                 scene.getStylesheets().addAll(searchField.getScene().getStylesheets());
             }
             stage.setScene(scene);
-            // ShiftView 在 MainView 里是标签页（靠 TabPane 撑满），弹窗模式 sizeToScene 会把
-            // VBox.vgrow=ALWAYS 的表格区算成 0，导致只剩标题栏。这里给固定尺寸保证内容显示。
-            stage.setWidth(1100);
-            stage.setHeight(750);
             stage.showAndWait();
 
             StatusBarManager.updateSuccess("交接班操作完成");

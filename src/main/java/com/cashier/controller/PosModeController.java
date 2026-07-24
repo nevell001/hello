@@ -346,9 +346,7 @@ public class PosModeController {
             Stage stage = new Stage();
             stage.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.shift_handover"));
             stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setScene(new Scene(root));
-            stage.setWidth(1100);
-            stage.setHeight(750);
+            stage.setScene(new Scene(root, 1100, 750));
             stage.showAndWait();
 
             StatusBarManager.updateSuccess("交接班操作完成");
