@@ -603,7 +603,14 @@ public class TouchCartController implements CartViewHost {
         if (product == null) {
             return;
         }
-        inventoryMap.putIfAbsent(product.name, product);
+        // 刷新最新库存，避免使用陈旧快照（切分类/多终端变动后前端校验误导）
+        try {
+            Product fresh = productDAO.findById(product.id);
+            inventoryMap.put(product.name, fresh != null ? fresh : product);
+        } catch (java.sql.SQLException ex) {
+            logger.warn("刷新商品库存失败 (ID:{}): {}", product.id, ex.getMessage());
+            inventoryMap.putIfAbsent(product.name, product);
+        }
         int stock = currentStock(product);
         CartItem existing = findCartItem(product.id);
         int inCart = existing != null ? existing.quantity : 0;
@@ -749,7 +756,9 @@ public class TouchCartController implements CartViewHost {
         }
         totalQtyLabel.setText(String.valueOf(qty));
         totalAmountLabel.setText(CurrencyUtil.format(total.doubleValue()));
-        discountLabel.setText("-" + CurrencyUtil.format(discount.doubleValue()));
+        discountLabel.setText(discount.compareTo(BigDecimal.ZERO) > 0
+            ? "-" + CurrencyUtil.format(discount.doubleValue())
+            : CurrencyUtil.format(BigDecimal.ZERO));
         finalAmountLabel.setText(CurrencyUtil.format(finalAmt.doubleValue()));
     }
 
@@ -819,7 +828,7 @@ public class TouchCartController implements CartViewHost {
         }
     }
 
-    /** F9 - 取单：列出当前用户挂单，选择恢复 */
+    /** F3 - 取单：列出当前用户挂单，选择恢复 */
     private void handleRecallOrder() {
         if (blockIfPaymentInProgress()) return;
         try {
@@ -1112,10 +1121,6 @@ public class TouchCartController implements CartViewHost {
             return;
         }
         final BigDecimal finalAmount = TransactionService.calculateFinalAmount(cartItems, currentMember);
-        // 如果是首次支付，重置累计金额
-        if (cashReceivedAmount.compareTo(BigDecimal.ZERO) == 0) {
-            // 首次支付，继续
-        }
         // 计算剩余需支付金额
         final BigDecimal remainingAmount = finalAmount.subtract(cashReceivedAmount);
 
@@ -1243,6 +1248,11 @@ public class TouchCartController implements CartViewHost {
         if (!preCheck()) {
             return;
         }
+        // 已部分现金支付时强制用现金完成，避免混合支付导致已收现金未记账
+        if (cashReceivedAmount.compareTo(BigDecimal.ZERO) > 0) {
+            warn(i18n.get("tpos.cash_partial_cash_only"));
+            return;
+        }
         BigDecimal finalAmount = TransactionService.calculateFinalAmount(cartItems, currentMember);
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setHeaderText(null);
@@ -1269,6 +1279,11 @@ public class TouchCartController implements CartViewHost {
 
     private void startElectronicPayment(PaymentOrder.PaymentChannel channel, String paymentMethod) {
         if (!preCheck()) {
+            return;
+        }
+        // 已部分现金支付时强制用现金完成，避免混合支付导致已收现金未记账
+        if (cashReceivedAmount.compareTo(BigDecimal.ZERO) > 0) {
+            warn(i18n.get("tpos.cash_partial_cash_only"));
             return;
         }
         if (!PaymentService.isChannelAvailable(channel)) {
