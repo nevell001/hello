@@ -3332,3 +3332,6 @@
 .tpos-change-ok { -fx-text-fill: #16B364; }
 .tpos-change-short { -fx-text-fill: #E5484D; }
 .tpos-muted { -fx-text-fill: #8A8F99; }
+
+/* TouchCart 现金对话框状态色 */
+.tpos-status-warn { -fx-text-fill: #FF9800; }

@@ -258,7 +258,7 @@ public class InventoryController extends BaseController<Product> {
         hotColumn.setCellValueFactory(features -> new SimpleObjectProperty<>(features.getValue()));
         hotColumn.setCellFactory(column -> new TableCell<Product, Product>() {
             {
-                setStyle("-fx-cursor: hand; -fx-font-size: 20px; -fx-text-fill: #666;");
+                setStyle("-fx-cursor: hand; -fx-font-size: 20px;");
                 setOnMouseClicked(event -> {
                     Product p = getItem();
                     if (p != null) {
@@ -273,11 +273,11 @@ public class InventoryController extends BaseController<Product> {
                 super.updateItem(product, empty);
                 if (empty || product == null) {
                     setText(null);
-                    setStyle("-fx-cursor: hand; -fx-font-size: 20px; -fx-text-fill: #666;");
+                    setStyle("-fx-cursor: hand; -fx-font-size: 20px;");
                 } else {
                     setText(product.isHot ? "●" : "○");
                     setAlignment(Pos.CENTER);
-                    setStyle("-fx-cursor: hand; -fx-font-size: 20px; -fx-text-fill: #666;");
+                    setStyle("-fx-cursor: hand; -fx-font-size: 20px;");
                     logger.debug("渲染热销单元格: 商品={}, isHot={}", product.name, product.isHot);
                 }
             }

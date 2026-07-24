@@ -231,9 +231,15 @@ public class PosModeController {
 
             // 获取CartController并设置当前用户
             cartController = loader.getController();
-            if (cartController != null && currentUser != null) {
-                cartController.setCurrentUser(currentUser);
-                logger.debug("已将当前用户传递给CartController");
+            if (cartController != null) {
+                if (currentUser != null) {
+                    cartController.setCurrentUser(currentUser);
+                    logger.debug("已将当前用户传递给CartController");
+                }
+                // 触屏版自带顶栏退出按钮，需要 application 引用以退出登录
+                if (cartController instanceof TouchCartController touch) {
+                    touch.setApplication(application);
+                }
             }
 
             // 添加到容器

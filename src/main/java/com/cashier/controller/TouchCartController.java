@@ -57,6 +57,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import com.cashier.model.PaymentOrder;
+import com.cashier.model.HoldOrder;
+import com.cashier.dao.HoldOrderDAO;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import com.cashier.service.PaymentService;
 import com.cashier.util.QrCodeImageUtil;
 import javafx.animation.KeyFrame;
@@ -789,20 +793,219 @@ public class TouchCartController implements CartViewHost {
         }
     }
 
-    /** F8 - 挂单 */
+    /** F8 - 挂单：保存当前购物车到数据库，清空界面 */
     private void handleHoldOrder() {
         if (cartItems.isEmpty()) {
-            warn(i18n.get("runtime.cart_empty"));
+            warn(i18n.get("cart.hold.empty_cart"));
             return;
         }
-        // TODO: 实现挂单功能
-        warn("挂单功能待实现");
+        try {
+            HoldOrder holdOrder = new HoldOrder();
+            holdOrder.orderNumber = HoldOrder.generateOrderNumber();
+            holdOrder.userId = currentUser != null ? currentUser.id : 0;
+            if (currentMember != null) {
+                holdOrder.memberId = currentMember.id;
+                holdOrder.memberName = currentMember.name;
+                holdOrder.memberPhone = currentMember.phone;
+            }
+            BigDecimal total = TransactionService.calculateTotalAmount(cartItems);
+            BigDecimal finalAmt = TransactionService.calculateFinalAmount(cartItems, currentMember);
+            holdOrder.totalAmount = total;
+            holdOrder.discountAmount = total.subtract(finalAmt);
+            holdOrder.finalAmount = finalAmt;
+            holdOrder.itemCount = cartItems.size();
+            holdOrder.itemsJson = serializeCartItems();
+            HoldOrderDAO.insert(holdOrder);
+
+            clearCartForHold();
+            showInfo(i18n.get("cart.hold.success", holdOrder.orderNumber));
+            logger.info("挂单成功: {}", holdOrder.orderNumber);
+        } catch (SQLException e) {
+            logger.error("挂单失败", e);
+            warn(i18n.get("cart.hold.error") + ": " + e.getMessage());
+        }
     }
 
-    /** F9 - 取单 */
+    /** F9 - 取单：列出当前用户挂单，选择恢复 */
     private void handleRecallOrder() {
-        // TODO: 实现取单功能
-        warn("取单功能待实现");
+        try {
+            int userId = currentUser != null ? currentUser.id : 0;
+            List<HoldOrder> holdOrders = userId > 0
+                ? HoldOrderDAO.findActiveByUserId(userId)
+                : HoldOrderDAO.findAllActive();
+            if (holdOrders.isEmpty()) {
+                showInfo(i18n.get("cart.hold.no_orders"));
+                return;
+            }
+            showHoldOrderSelectionDialog(holdOrders);
+        } catch (SQLException e) {
+            logger.error("获取挂单列表失败", e);
+            warn(i18n.get("cart.hold.load_error") + ": " + e.getMessage());
+        }
+    }
+
+    /** 挂单选择对话框 */
+    private void showHoldOrderSelectionDialog(List<HoldOrder> holdOrders) {
+        Dialog<HoldOrder> dialog = new Dialog<>();
+        dialog.setTitle(i18n.get("cart.hold.resume_title"));
+        dialog.setHeaderText(i18n.get("cart.hold.resume_header"));
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.CANCEL, ButtonType.OK);
+
+        ListView<HoldOrder> listView = new ListView<>();
+        listView.getItems().addAll(holdOrders);
+        listView.setCellFactory(param -> new ListCell<HoldOrder>() {
+            @Override
+            protected void updateItem(HoldOrder order, boolean empty) {
+                super.updateItem(order, empty);
+                if (empty || order == null) {
+                    setText(null);
+                } else {
+                    String member = order.memberName != null ? order.memberName : i18n.get("runtime.non_member");
+                    setText(i18n.get("runtime.held_order_item", order.orderNumber, order.holdDate,
+                        member, CurrencyUtil.format(order.finalAmount.doubleValue()), order.itemCount));
+                }
+            }
+        });
+        listView.getSelectionModel().selectFirst();
+        dialog.getDialogPane().setContent(listView);
+        if (productGrid.getScene() != null) {
+            dialog.initOwner(productGrid.getScene().getWindow());
+            dialog.getDialogPane().getStylesheets().addAll(productGrid.getScene().getStylesheets());
+        }
+        dialog.setResultConverter(btn -> {
+            if (btn == ButtonType.OK) {
+                return listView.getSelectionModel().getSelectedItem();
+            }
+            return null;
+        });
+        dialog.showAndWait().ifPresent(order -> {
+            if (order != null) {
+                resumeHoldOrder(order);
+            }
+        });
+    }
+
+    /** 恢复挂单到购物车 */
+    private void resumeHoldOrder(HoldOrder order) {
+        // 当前购物车非空时确认是否覆盖
+        if (!cartItems.isEmpty()) {
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                i18n.get("tpos.hold.overwrite_confirm"), ButtonType.YES, ButtonType.NO);
+            confirm.setHeaderText(null);
+            if (confirm.showAndWait().orElse(ButtonType.NO) != ButtonType.YES) {
+                return; // 用户取消，挂单保持不变
+            }
+        }
+        try {
+            cartItems.clear();
+            currentMember = null;
+            cashReceivedAmount = BigDecimal.ZERO;
+            deserializeHoldCartItems(order.itemsJson);
+            if (order.memberId != null) {
+                try {
+                    currentMember = MemberDAO.findById(order.memberId);
+                    if (currentMember != null) {
+                        if (memberPhoneField != null) {
+                            memberPhoneField.setText(currentMember.phone);
+                        }
+                        if (memberInfoLabel != null) {
+                            String discountStr = currentMember.getDiscount().stripTrailingZeros().toPlainString();
+                            memberInfoLabel.setText(i18n.get("tpos.member_info", currentMember.name, currentMember.level, discountStr));
+                        }
+                    }
+                } catch (SQLException e) {
+                    logger.warn("恢复会员信息失败: {}", e.getMessage());
+                }
+            }
+            for (CartItem ci : cartItems) {
+                inventoryMap.putIfAbsent(ci.product.name, ci.product);
+            }
+            HoldOrderDAO.updateStatus(order.id, 1);
+            refreshCartView();
+            updateSummary();
+            showInfo(i18n.get("cart.hold.resume_success", order.orderNumber));
+            logger.info("恢复挂单成功: {}", order.orderNumber);
+        } catch (Exception e) {
+            logger.error("恢复挂单失败", e);
+            warn(i18n.get("cart.hold.resume_error") + ": " + e.getMessage());
+        }
+    }
+
+    /** 挂单后清空购物车（保留分类/商品显示） */
+    private void clearCartForHold() {
+        cartItems.clear();
+        currentMember = null;
+        cashReceivedAmount = BigDecimal.ZERO;
+        if (memberPhoneField != null) {
+            memberPhoneField.clear();
+        }
+        if (memberInfoLabel != null) {
+            memberInfoLabel.setText("");
+        }
+        refreshCartView();
+        updateSummary();
+    }
+
+    /** 序列化购物车为 JSON（与 CartController 格式一致，便于互通） */
+    private String serializeCartItems() {
+        StringBuilder json = new StringBuilder("[");
+        for (int i = 0; i < cartItems.size(); i++) {
+            CartItem item = cartItems.get(i);
+            if (i > 0) json.append(",");
+            json.append("{\"productId\":").append(item.product.id)
+                .append(",\"quantity\":").append(item.quantity).append("}");
+        }
+        json.append("]");
+        return json.toString();
+    }
+
+    /** 从 JSON 反序列化恢复购物车 */
+    private void deserializeHoldCartItems(String json) {
+        if (json == null || json.isEmpty()) return;
+        json = json.trim();
+        if (!json.startsWith("[") || !json.endsWith("]")) return;
+        String body = json.substring(1, json.length() - 1);
+        if (body.isEmpty()) return;
+        String[] items = body.split("\\},\\{");
+        for (String item : items) {
+            item = item.replace("{", "").replace("}", "");
+            String[] fields = item.split(",");
+            int productId = 0;
+            int quantity = 1;
+            for (String field : fields) {
+                String[] kv = field.split(":");
+                if (kv.length == 2) {
+                    String key = kv[0].replace("\"", "").trim();
+                    String value = kv[1].trim();
+                    try {
+                        if ("productId".equals(key)) {
+                            productId = Integer.parseInt(value);
+                        } else if ("quantity".equals(key)) {
+                            quantity = Integer.parseInt(value);
+                        }
+                    } catch (NumberFormatException ignored) {
+                        // 解析失败跳过该字段
+                    }
+                }
+            }
+            try {
+                Product product = productDAO.findById(productId);
+                if (product != null) {
+                    cartItems.add(new CartItem(product, quantity));
+                }
+            } catch (SQLException e) {
+                logger.warn("恢复商品失败 (ID:{}): {}", productId, e.getMessage());
+            }
+        }
+    }
+
+    /** 信息提示（同步状态栏） */
+    private void showInfo(String msg) {
+        StatusBarManager.updateSuccess(msg);
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setHeaderText(null);
+        alert.setContentText(msg);
+        alert.showAndWait();
     }
 
     /** F12 - 锁屏/返回登录 */
@@ -824,7 +1027,8 @@ public class TouchCartController implements CartViewHost {
                 loadProducts(currentCategoryName);
             }
         } else {
-            // 其他情况可以在这里添加行为
+            // 其余情况：退出登录（购物车非空时 handleExit 会弹确认）
+            handleExit();
         }
     }
 
@@ -1021,20 +1225,20 @@ public class TouchCartController implements CartViewHost {
 
                 if (thisPayment.compareTo(BigDecimal.ZERO) <= 0) {
                     statusLabel.setText("请输入收款金额");
-                    statusLabel.setStyle("-fx-font-size: 16; -fx-text-fill: #888;");
+                    statusLabel.getStyleClass().setAll("tpos-muted"); statusLabel.setStyle("-fx-font-size: 16;");
                 } else if (totalAfterThis.compareTo(finalAmount) < 0) {
                     // 仍需支付更多
                     BigDecimal stillNeed = finalAmount.subtract(totalAfterThis);
                     statusLabel.setText("还需: " + CurrencyUtil.format(stillNeed.doubleValue()));
-                    statusLabel.setStyle("-fx-font-size: 16; -fx-text-fill: #FF9800; -fx-font-weight: bold;");
+                    statusLabel.getStyleClass().setAll("tpos-status-warn"); statusLabel.setStyle("-fx-font-size: 16; -fx-font-weight: bold;");
                 } else {
                     // 需要找零
                     statusLabel.setText("找零: " + CurrencyUtil.format(diff.doubleValue()));
-                    statusLabel.setStyle("-fx-font-size: 18; -fx-text-fill: #4CAF50; -fx-font-weight: bold;");
+                    statusLabel.getStyleClass().setAll("tpos-change-ok"); statusLabel.setStyle("-fx-font-size: 18; -fx-font-weight: bold;");
                 }
             } catch (NumberFormatException e) {
                 statusLabel.setText("请输入收款金额");
-                statusLabel.setStyle("-fx-font-size: 16; -fx-text-fill: #888;");
+                statusLabel.getStyleClass().setAll("tpos-muted"); statusLabel.setStyle("-fx-font-size: 16;");
             }
         });
 
