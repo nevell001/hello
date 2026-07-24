@@ -340,6 +340,14 @@ public class DatabaseManager {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
                 """);
 
+            // 确保 products.is_hot 列存在（旧库可能没有；CREATE TABLE IF NOT EXISTS 对已存在的表不会补列）
+            try {
+                stmt.execute("ALTER TABLE products ADD COLUMN is_hot TINYINT DEFAULT 0 COMMENT '是否热销'");
+            } catch (SQLException e) {
+                // 列已存在会抛 Duplicate column 错误，属于正常情况，忽略
+                logger.debug("products.is_hot 列已存在或添加失败: {}", e.getMessage());
+            }
+
             // 挂单表
             try {
                 com.cashier.dao.HoldOrderDAO.createTable();

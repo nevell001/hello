@@ -177,7 +177,7 @@ public class TouchCartController implements CartViewHost {
     private void handleExit() {
         // 退出前总是确认（购物车非空提示将丢失，否则确认是否退出）
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle(i18n.get("runtime.confirm"));
+        alert.setTitle(i18n.get("common.confirm"));
         alert.setHeaderText(null);
         alert.setContentText(isCartEmpty()
             ? i18n.get("tpos.exit_confirm")
@@ -210,6 +210,10 @@ public class TouchCartController implements CartViewHost {
                 scene.getStylesheets().addAll(searchField.getScene().getStylesheets());
             }
             stage.setScene(scene);
+            // ShiftView 在 MainView 里是标签页（靠 TabPane 撑满），弹窗模式 sizeToScene 会把
+            // VBox.vgrow=ALWAYS 的表格区算成 0，导致只剩标题栏。这里给固定尺寸保证内容显示。
+            stage.setWidth(1100);
+            stage.setHeight(750);
             stage.showAndWait();
 
             StatusBarManager.updateSuccess("交接班操作完成");

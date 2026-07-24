@@ -831,10 +831,17 @@ try {
      */
     private void closeWindow() {
         javafx.scene.Node node = startShiftButton; // 任意UI元素
-        if (node.getScene() != null && node.getScene().getWindow() != null) {
-            javafx.stage.Window window = node.getScene().getWindow();
-            window.hide();
+        if (node == null || node.getScene() == null || node.getScene().getWindow() == null) {
+            return;
         }
+        javafx.stage.Window window = node.getScene().getWindow();
+        // 标签页模式下 ShiftView 嵌在主窗口里，window 即主舞台，hide() 会把整个主窗口关掉（表现为“退出”）。
+        // 因此只关闭独立弹窗；主窗口内嵌时（如 admin MainView 的交接班标签页）不关，让用户留在标签页。
+        com.cashier.CashierSystemFXApplication app = com.cashier.CashierSystemFXApplication.getInstance();
+        if (app != null && window == app.getPrimaryStage()) {
+            return;
+        }
+        window.hide();
     }
 
     /**

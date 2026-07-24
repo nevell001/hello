@@ -44,6 +44,11 @@ public class CashierSystemFXApplication extends Application {
     private static CashierSystemFXApplication instance;
 
     private Stage primaryStage;
+
+    /** 获取主舞台（供子控制器判断当前窗口是否为主窗口，避免误关主窗口） */
+    public Stage getPrimaryStage() {
+        return primaryStage;
+    }
     private User currentUser;
     private Object currentController; // 当前活动的控制器，用于清理资源
 
