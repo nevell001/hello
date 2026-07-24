@@ -3,6 +3,8 @@ package com.cashier.dao;
 import com.cashier.model.InventoryStatistics;
 import com.cashier.model.PageResult;
 import com.cashier.model.Product;
+import com.cashier.util.LoggerFactoryUtil;
+import org.slf4j.Logger;
 
 import java.math.BigDecimal;
 import java.sql.*;
@@ -17,10 +19,11 @@ import java.util.Map;
  * 支持实例方法和分页查询，使用 BaseDAO 通用方法简化代码
  */
 public class ProductDAORefactored extends BaseDAO {
+    private static final Logger logger = LoggerFactoryUtil.getLogger(ProductDAORefactored.class);
 
     private static final String SELECT_COLUMNS =
         "id, product_code, name, price, quantity, category, barcode, unit, description, " +
-        "brand, supplier, spec, min_stock, cost, version";
+        "brand, supplier, spec, min_stock, cost, version, is_hot";
 
     // 行映射器（静态复用）
     private static final RowMapper<Product> PRODUCT_MAPPER = new RowMapper<Product>() {
@@ -43,6 +46,7 @@ public class ProductDAORefactored extends BaseDAO {
                 rs.getBigDecimal("cost")
             );
             product.version = rs.getInt("version");
+            product.isHot = rs.getBoolean("is_hot");
             return product;
         }
     };
@@ -633,5 +637,62 @@ public class ProductDAORefactored extends BaseDAO {
             }
         }
         return references.toString();
+    }
+
+    /**
+     * 查询手动标记的热销商品
+     * @return 热销商品列表
+     * @throws SQLException 数据库操作异常
+     */
+    public List<Product> findHotProducts() throws SQLException {
+        String sql = "SELECT " + SELECT_COLUMNS + " FROM products WHERE is_hot = 1 ORDER BY name";
+        List<Product> products = queryList(sql, PRODUCT_MAPPER);
+        logger.info("查询热销商品: SQL={}, 返回{}个", sql, products.size());
+        for (Product p : products) {
+            logger.info("  热销商品: {} (ID: {}, isHot: {})", p.name, p.id, p.isHot);
+        }
+        return products;
+    }
+
+    /**
+     * 查询最近N天销量最高的商品
+     * @param days 天数（如7天、30天）
+     * @param limit 返回数量限制
+     * @return 按销量降序排列的商品列表
+     * @throws SQLException 数据库操作异常
+     */
+    public List<Product> findTopSellingProducts(int days, int limit) throws SQLException {
+        // 为带表前缀的列创建别名，避免歧义
+        String sql =
+            "SELECT p.id, p.product_code, p.name, p.price, p.quantity, p.category, p.barcode, " +
+            "p.unit, p.description, p.brand, p.supplier, p.spec, p.min_stock, p.cost, p.version, p.is_hot, " +
+            "COALESCE(SUM(ti.quantity), 0) as total_sold " +
+            "FROM products p " +
+            "LEFT JOIN transaction_items ti ON p.name = ti.product_name " +
+            "LEFT JOIN transactions t ON ti.transaction_id = t.transaction_id " +
+            "  AND t.timestamp >= DATE_SUB(NOW(), INTERVAL ? DAY) " +
+            "GROUP BY p.id, p.product_code, p.name, p.price, p.quantity, p.category, p.barcode, " +
+            "p.unit, p.description, p.brand, p.supplier, p.spec, p.min_stock, p.cost, p.version, p.is_hot " +
+            "ORDER BY total_sold DESC, p.name " +
+            "LIMIT ?";
+        return queryList(sql, new RowMapper<Product>() {
+            @Override
+            public Product mapRow(ResultSet rs, int rowNum) throws SQLException {
+                Product product = PRODUCT_MAPPER.mapRow(rs, rowNum);
+                return product;
+            }
+        }, days, limit);
+    }
+
+    /**
+     * 更新商品的热销标记
+     * @param productId 商品ID
+     * @param isHot 是否热销
+     * @return 是否更新成功
+     * @throws SQLException 数据库操作异常
+     */
+    public boolean updateHotStatus(int productId, boolean isHot) throws SQLException {
+        String sql = "UPDATE products SET is_hot = ? WHERE id = ?";
+        return executeUpdate(sql, isHot ? 1 : 0, productId) > 0;
     }
 }

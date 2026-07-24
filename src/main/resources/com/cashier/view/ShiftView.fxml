@@ -9,87 +9,121 @@
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.cashier.controller.ShiftController"
       spacing="0"
-      styleClass="shift-view">
+      styleClass="shift-view-root">
 
-    <!-- 顶部工具栏：操作与日期筛选分两行 -->
-    <VBox spacing="6" styleClass="toolbar">
+    <!-- 顶部工具栏 -->
+    <HBox spacing="12" styleClass="shift-toolbar" alignment="CENTER_LEFT">
         <padding>
-            <Insets top="10" right="10" bottom="10" left="10"/>
+            <Insets top="12" right="16" bottom="12" left="16"/>
         </padding>
 
-        <HBox spacing="10" alignment="CENTER_LEFT">
-            <Button fx:id="startShiftButton" text="%shift.start" onAction="#handleStartShift"
-                    minWidth="100" styleClass="primary-button"/>
-            <Button fx:id="endShiftButton" text="%shift.end" onAction="#handleEndShift"
-                    minWidth="100" styleClass="warning-button"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Button fx:id="viewDetailButton" text="%shift.view_detail" onAction="#handleViewDetail"
-                    minWidth="110" styleClass="primary-button"/>
-            <Button fx:id="exportButton" text="%shift.export" onAction="#handleExport"
-                    minWidth="90" styleClass="secondary-button"/>
-            <Button fx:id="refreshButton" text="%shift.refresh" onAction="#handleRefresh"
-                    minWidth="90" styleClass="secondary-button"/>
-        </HBox>
+        <Label text="%shift.title" styleClass="shift-toolbar-title"/>
 
-        <HBox spacing="10" alignment="CENTER_LEFT">
-            <Label text="%shift.date_from"/>
-            <DatePicker fx:id="startDatePicker" minWidth="170"/>
-            <Label text="%shift.date_to"/>
-            <DatePicker fx:id="endDatePicker" minWidth="170"/>
-            <Separator orientation="VERTICAL"/>
-            <Label text="%shift.search_label"/>
-            <TextField fx:id="searchField" promptText="%shift.search_hint"
-                       minWidth="220" HBox.hgrow="ALWAYS" onAction="#handleSearch"/>
-            <Button text="%common.search" onAction="#handleSearch"
-                    minWidth="80" styleClass="secondary-button"/>
-            <Button text="%common.clear" onAction="#handleClearSearch"
-                    minWidth="80" styleClass="secondary-button"/>
-        </HBox>
-    </VBox>
+        <Region HBox.hgrow="ALWAYS"/>
 
-    <!-- 统计信息栏 -->
-    <HBox spacing="20" styleClass="status-bar" alignment="CENTER_LEFT">
+        <Button fx:id="startShiftButton" text="%shift.start" onAction="#handleStartShift"
+                prefWidth="100" prefHeight="38" styleClass="shift-btn, shift-btn-primary"/>
+        <Button fx:id="endShiftButton" text="%shift.end" onAction="#handleEndShift"
+                prefWidth="100" prefHeight="38" styleClass="shift-btn, shift-btn-warning"/>
+        <Button fx:id="viewDetailButton" text="%shift.view_detail" onAction="#handleViewDetail"
+                prefWidth="110" prefHeight="38" styleClass="shift-btn, shift-btn-secondary"/>
+        <Button fx:id="exportButton" text="%shift.export" onAction="#handleExport"
+                prefWidth="90" prefHeight="38" styleClass="shift-btn, shift-btn-secondary"/>
+        <Button fx:id="refreshButton" text="%shift.refresh" onAction="#handleRefresh"
+                prefWidth="90" prefHeight="38" styleClass="shift-btn, shift-btn-secondary"/>
+    </HBox>
+
+    <Separator styleClass="shift-separator"/>
+
+    <!-- 筛选栏 -->
+    <HBox fx:id="filterBar" spacing="12" styleClass="shift-filter-bar" alignment="CENTER_LEFT">
         <padding>
-            <Insets top="5" right="10" bottom="5" left="10"/>
+            <Insets top="10" right="16" bottom="10" left="16"/>
         </padding>
-        <Label fx:id="countLabel" text="%shift.count" styleClass="text-muted, text-md"/>
-        <Label fx:id="totalRevenueLabel" text="%shift.total_revenue" styleClass="text-success, text-md, font-bold"/>
-        <Label fx:id="totalTransactionLabel" text="%shift.total_transactions" styleClass="text-warning, text-md, font-bold"/>
+
+        <Label text="%shift.date_from" styleClass="shift-filter-label"/>
+        <DatePicker fx:id="startDatePicker" prefWidth="150" styleClass="shift-datepicker"/>
+
+        <Label text="%shift.date_to" styleClass="shift-filter-label"/>
+        <DatePicker fx:id="endDatePicker" prefWidth="150" styleClass="shift-datepicker"/>
+
+        <Label text="%shift.search_label" styleClass="shift-filter-label"/>
+        <TextField fx:id="searchField" promptText="%shift.search_hint"
+                   prefWidth="200" styleClass="shift-search-field" onAction="#handleSearch"/>
+        <Button text="%common.search" onAction="#handleSearch"
+                prefWidth="70" prefHeight="34" styleClass="shift-btn, shift-btn-secondary"/>
+        <Button text="%common.clear" onAction="#handleClearSearch"
+                prefWidth="70" prefHeight="34" styleClass="shift-btn, shift-btn-secondary"/>
+    </HBox>
+
+    <!-- 统计卡片 -->
+    <HBox spacing="12" styleClass="shift-stats-container">
+        <padding>
+            <Insets top="12" right="16" bottom="0" left="16"/>
+        </padding>
+
+        <VBox styleClass="shift-stat-card" spacing="4" HBox.hgrow="ALWAYS">
+            <padding>
+                <Insets top="12" right="12" bottom="12" left="12"/>
+            </padding>
+            <Label text="%shift.stat_count" styleClass="shift-stat-label"/>
+            <Label fx:id="countLabel" styleClass="shift-stat-value"/>
+        </VBox>
+
+        <VBox styleClass="shift-stat-card" spacing="4" HBox.hgrow="ALWAYS">
+            <padding>
+                <Insets top="12" right="12" bottom="12" left="12"/>
+            </padding>
+            <Label text="%shift.stat_revenue" styleClass="shift-stat-label"/>
+            <Label fx:id="totalRevenueLabel" styleClass="shift-stat-value shift-stat-value-success"/>
+        </VBox>
+
+        <VBox styleClass="shift-stat-card" spacing="4" HBox.hgrow="ALWAYS">
+            <padding>
+                <Insets top="12" right="12" bottom="12" left="12"/>
+            </padding>
+            <Label text="%shift.stat_transactions" styleClass="shift-stat-label"/>
+            <Label fx:id="totalTransactionLabel" styleClass="shift-stat-value shift-stat-value-warning"/>
+        </VBox>
     </HBox>
 
     <!-- 图表区域 -->
-    <ScrollPane fitToWidth="true" VBox.vgrow="NEVER" prefHeight="300">
-        <HBox spacing="15" styleClass="charts-container">
+    <ScrollPane fx:id="chartsScrollPane" fitToWidth="true" VBox.vgrow="NEVER" prefHeight="280" styleClass="shift-charts-scroll">
+        <HBox spacing="12" styleClass="shift-charts-container">
             <padding>
-                <Insets top="10" right="10" bottom="10" left="10"/>
+                <Insets top="12" right="16" bottom="12" left="16"/>
             </padding>
 
-            <!-- 班次收入对比柱状图 -->
-            <VBox spacing="5" styleClass="chart-card" HBox.hgrow="ALWAYS">
-                <padding>
-                    <Insets top="10" right="10" bottom="10" left="10"/>
-                </padding>
-                <Label text="%shift.revenue_chart" styleClass="text-primary, section-heading"/>
-                <BarChart fx:id="shiftRevenueBarChart" prefHeight="250">
-                    <xAxis>
-                        <CategoryAxis label="%shift.shift_axis"/>
-                    </xAxis>
-                    <yAxis>
-                        <NumberAxis label="%shift.revenue_axis"/>
-                    </yAxis>
-                </BarChart>
+            <!-- 班次收入柱状图 -->
+            <VBox spacing="8" styleClass="shift-chart-card" HBox.hgrow="ALWAYS">
+                <Label text="%shift.revenue_chart" styleClass="shift-chart-title"/>
+                <BorderPane VBox.vgrow="ALWAYS">
+                    <center>
+                        <BarChart fx:id="shiftRevenueBarChart" prefHeight="200" legendVisible="false">
+                            <xAxis>
+                                <CategoryAxis label="%shift.shift_axis"/>
+                            </xAxis>
+                            <yAxis>
+                                <NumberAxis label="%shift.revenue_axis"/>
+                            </yAxis>
+                        </BarChart>
+                    </center>
+                </BorderPane>
             </VBox>
 
-            <!-- 支付方式分布饼图 -->
-            <VBox spacing="5" styleClass="chart-card" prefWidth="400">
-                <padding>
-                    <Insets top="10" right="10" bottom="10" left="10"/>
-                </padding>
-                <Label text="%shift.payment_chart" styleClass="text-success, section-heading"/>
-                <PieChart fx:id="paymentMethodPieChart" prefWidth="380" prefHeight="250" legendSide="RIGHT"/>
+            <!-- 支付方式饼图 -->
+            <VBox spacing="8" styleClass="shift-chart-card" prefWidth="350">
+                <Label text="%shift.payment_chart" styleClass="shift-chart-title"/>
+                <BorderPane VBox.vgrow="ALWAYS">
+                    <center>
+                        <PieChart fx:id="paymentMethodPieChart" prefHeight="200" legendSide="RIGHT"/>
+                    </center>
+                </BorderPane>
             </VBox>
         </HBox>
     </ScrollPane>
+
+    <Separator styleClass="shift-separator"/>
 
     <!-- 交接班记录表格 -->
     <TableView fx:id="shiftTable"
@@ -105,7 +139,7 @@
             <TableColumn fx:id="paymentColumn" text="%shift.payment_methods" prefWidth="300"/>
         </columns>
         <placeholder>
-            <Label text="%shift.no_data" styleClass="text-muted, text-lg"/>
+            <Label text="%shift.no_data" styleClass="shift-placeholder"/>
         </placeholder>
     </TableView>
 

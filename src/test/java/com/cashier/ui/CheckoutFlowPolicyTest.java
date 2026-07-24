@@ -23,7 +23,8 @@ class CheckoutFlowPolicyTest {
 
         assertFalse(mainController.contains("CheckoutView.fxml"));
         assertTrue(mainController.contains("/com/cashier/view/CartView.fxml"));
-        assertTrue(posModeController.contains("/com/cashier/view/CartView.fxml"));
+        // cashier 角色现在使用触屏版 TouchCartView(同样走事务化流程)
+        assertTrue(posModeController.contains("/com/cashier/view/TouchCartView.fxml"));
         assertFalse(Files.exists(Path.of(
             "src/main/java/com/cashier/controller/CheckoutController.java"
         )));
@@ -42,5 +43,16 @@ class CheckoutFlowPolicyTest {
         assertTrue(cartController.contains("TransactionService.executeTransaction("));
         assertFalse(cartController.contains("DataService.saveInventory("));
         assertFalse(cartController.contains("DataService.saveMembers("));
+    }
+
+    @Test
+    @DisplayName("触屏版结算必须委托统一事务服务")
+    void touchCheckoutDelegatesToTransactionService() throws Exception {
+        String touchController = Files.readString(Path.of(
+            "src/main/java/com/cashier/controller/TouchCartController.java"
+        ));
+
+        assertTrue(touchController.contains("TransactionService.executeTransaction("));
+        assertFalse(touchController.contains("DataService.saveInventory("));
     }
 }

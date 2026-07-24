@@ -26,7 +26,6 @@
         <mockito.version>5.15.2</mockito.version>
         <bytebuddy.version>1.15.10</bytebuddy.version>
         <jacocoArgLine></jacocoArgLine>
-        <innosetup.skip>true</innosetup.skip>
     </properties>
 
     <repositories>
@@ -508,33 +507,6 @@
                     <icon>src/main/resources/images/logos/app-icon.ico</icon>
                 </configuration>
             </plugin>
-
-            <!-- Inno Setup 安装程序插件 (仅 Windows) -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.1.0</version>
-                <executions>
-                    <!-- 创建安装程序 (需安装 Inno Setup) -->
-                    <execution>
-                        <id>create-installer</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <skip>${innosetup.skip}</skip>
-                            <executable>ISCC.exe</executable>
-                            <arguments>
-                                <argument>/O+${project.build.directory}\installer-output</argument>
-                                <argument>/DAppVersion=${project.version}</argument>
-                                <argument>${project.basedir}\installer\lisuan-installer.iss</argument>
-                            </arguments>
-                            <workingDirectory>${project.basedir}</workingDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
 
         <resources>
@@ -603,7 +575,6 @@
             </activation>
             <properties>
                 <javafx.runtime.path>${env.JAVA_HOME}/javafx-sdk-${javafx.version}/lib</javafx.runtime.path>
-                <innosetup.skip>false</innosetup.skip>
             </properties>
         </profile>
 

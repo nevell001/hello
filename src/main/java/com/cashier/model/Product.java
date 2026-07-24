@@ -20,6 +20,7 @@ public class Product {
     public int minStock;         // 最低库存预警
     public BigDecimal cost;      // 成本价
     public int version;          // 版本号（用于乐观锁）
+    public boolean isHot;        // 是否热销商品
 
     public Product() {
         this.id = 0;  // 默认ID为0，表示未保存到数据库

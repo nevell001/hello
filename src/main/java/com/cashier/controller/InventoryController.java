@@ -12,6 +12,7 @@ import com.cashier.model.PageResult;
 import com.cashier.model.Product;
 import com.cashier.model.Unit;
 import com.cashier.model.User;
+import com.cashier.util.CacheManager;
 import com.cashier.util.FXMLUtils;
 import com.cashier.util.StatusBarManager;
 import com.cashier.util.FormValidator;
@@ -19,6 +20,7 @@ import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
 
 import java.sql.SQLException;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -74,10 +76,16 @@ public class InventoryController extends BaseController<Product> {
     private TableColumn<Product, String> categoryColumn;
 
     @FXML
+    private TableColumn<Product, Product> hotColumn;
+
+    @FXML
     private TableColumn<Product, String> warningColumn;
 
     @FXML
     private TextField searchField;
+
+    @FXML
+    private ComboBox<String> categoryFilterComboBox;
 
     @FXML
     private ComboBox<String> sortComboBox;
@@ -113,6 +121,9 @@ public class InventoryController extends BaseController<Product> {
      */
     @FXML
     private void initialize() {
+        // 初始化分类筛选列表
+        loadCategories();
+
         // 初始化排序列表
         sortComboBox.setItems(FXCollections.observableArrayList(
             i18n.get("inventory.sort.default"),
@@ -124,6 +135,9 @@ public class InventoryController extends BaseController<Product> {
         ));
         sortComboBox.getSelectionModel().select(0);
         sortComboBox.setOnAction(event -> sortInventory());
+
+        // 分类筛选监听
+        categoryFilterComboBox.setOnAction(event -> handleCategoryFilter());
 
         // 设置表格列
         setupTableColumns();
@@ -141,8 +155,86 @@ public class InventoryController extends BaseController<Product> {
         setupTableDoubleClickListener(inventoryTable);
 
         // 启用 UI 性能优化（固定行高启用更好的虚拟流）
-        inventoryTable.setFixedCellSize(40.0);
+        inventoryTable.setFixedCellSize(50.0);
         inventoryTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+    }
+
+    /**
+     * 加载分类列表到筛选下拉框
+     */
+    private void loadCategories() {
+        ObservableList<String> categories = FXCollections.observableArrayList();
+        categories.add(i18n.get("inventory.all_categories")); // 全部分类
+        try {
+            List<Category> categoryList = CategoryDAO.findAll();
+            for (Category c : categoryList) {
+                categories.add(c.name);
+            }
+        } catch (SQLException e) {
+            logger.error("加载分类列表失败", e);
+        }
+        categoryFilterComboBox.setItems(categories);
+        categoryFilterComboBox.getSelectionModel().select(0); // 默认选中"全部"
+    }
+
+    /**
+     * 处理分类筛选
+     */
+    @FXML
+    private void handleCategoryFilter() {
+        applyFilters();
+    }
+
+    /**
+     * 应用搜索和分类筛选
+     */
+    private void applyFilters() {
+        String searchText = searchField.getText().trim();
+        String selectedCategory = categoryFilterComboBox.getSelectionModel().getSelectedItem();
+        boolean isAllCategories = i18n.get("inventory.all_categories").equals(selectedCategory);
+
+        try {
+            if (searchText.isEmpty() && isAllCategories) {
+                // 无筛选，加载全部
+                loadTableData();
+            } else if (!searchText.isEmpty() && isAllCategories) {
+                // 仅搜索关键词
+                PageResult<Product> results = productDAO.search(searchText, FIRST_PAGE, DESKTOP_PAGE_SIZE);
+                totalProducts = results.getTotal();
+                setLoadedProducts(results.getData());
+                inventoryList.setAll(inventoryMap.values());
+            } else if (searchText.isEmpty() && !isAllCategories) {
+                // 仅按分类筛选
+                PageResult<Product> results = productDAO.findByCategory(selectedCategory, FIRST_PAGE, DESKTOP_PAGE_SIZE);
+                totalProducts = results.getTotal();
+                setLoadedProducts(results.getData());
+                inventoryList.setAll(inventoryMap.values());
+            } else {
+                // 同时按关键词和分类筛选：按分类分页查询后在结果内过滤关键词（避免全量加载）
+                PageResult<Product> results = productDAO.findByCategory(selectedCategory, FIRST_PAGE, DESKTOP_PAGE_SIZE);
+                List<Product> filtered = new java.util.ArrayList<>();
+
+                for (Product p : results.getData()) {
+                    if (containsIgnoreCase(p.name, searchText)
+                        || containsIgnoreCase(p.barcode, searchText)
+                        || containsIgnoreCase(p.productCode, searchText)) {
+                        filtered.add(p);
+                    }
+                }
+
+                totalProducts = filtered.size();
+                setLoadedProducts(filtered);
+                inventoryList.setAll(inventoryMap.values());
+            }
+            updateCountLabel();
+        } catch (SQLException e) {
+            logger.error("筛选商品失败", e);
+            showError(i18n.get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
+        }
+    }
+
+    private static boolean containsIgnoreCase(String text, String keyword) {
+        return text != null && text.toLowerCase().contains(keyword.toLowerCase());
     }
 
     /**
@@ -156,6 +248,37 @@ public class InventoryController extends BaseController<Product> {
         quantityColumn.setCellValueFactory(new PropertyValueFactory<>("quantity"));
         minStockColumn.setCellValueFactory(new PropertyValueFactory<>("minStock"));
         categoryColumn.setCellValueFactory(new PropertyValueFactory<>("category"));
+
+        // 热销列：显示●图标，点击可切换
+        // 使用 Object-based 单元格，直接访问 Product 对象
+        hotColumn.setCellValueFactory(features -> new SimpleObjectProperty<>(features.getValue()));
+        hotColumn.setCellFactory(column -> new TableCell<Product, Product>() {
+            {
+                setStyle("-fx-cursor: hand; -fx-font-size: 20px;");
+                setOnMouseClicked(event -> {
+                    Product p = getItem();
+                    if (p != null) {
+                        logger.info("点击切换热销状态: {} (当前状态: {})", p.name, p.isHot);
+                        toggleHotStatus(p);
+                    }
+                });
+            }
+
+            @Override
+            protected void updateItem(Product product, boolean empty) {
+                super.updateItem(product, empty);
+                if (empty || product == null) {
+                    setText(null);
+                    setStyle("-fx-cursor: hand; -fx-font-size: 20px;");
+                } else {
+                    setText(product.isHot ? "●" : "○");
+                    setAlignment(Pos.CENTER);
+                    setStyle("-fx-cursor: hand; -fx-font-size: 20px;");
+                    logger.debug("渲染热销单元格: 商品={}, isHot={}", product.name, product.isHot);
+                }
+            }
+        });
+
         warningColumn.setCellValueFactory(cellData -> {
             Product p = cellData.getValue();
             if (p.quantity <= 0) {
@@ -422,21 +545,7 @@ public class InventoryController extends BaseController<Product> {
     @Override
     @FXML
     public void handleSearch() {
-        String searchText = searchField.getText().trim();
-        if (searchText.isEmpty()) {
-            loadTableData();
-        } else {
-            try {
-                PageResult<Product> results = productDAO.search(searchText, FIRST_PAGE, DESKTOP_PAGE_SIZE);
-                totalProducts = results.getTotal();
-                setLoadedProducts(results.getData());
-                inventoryList.setAll(inventoryMap.values());
-            } catch (SQLException e) {
-                logger.error("搜索商品失败", e);
-                showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
-            }
-        }
-        updateCountLabel();
+        applyFilters();
     }
 
     /**
@@ -445,7 +554,8 @@ public class InventoryController extends BaseController<Product> {
     @FXML
     public void handleClearSearch() {
         searchField.clear();
-        loadTableData();
+        categoryFilterComboBox.getSelectionModel().select(0); // 重置分类为"全部"
+        applyFilters();
     }
 
     /**
@@ -828,6 +938,34 @@ public class InventoryController extends BaseController<Product> {
         for (Button button : List.of(addButton, editButton, deleteButton, restockButton, categoryButton, unitButton)) {
             button.setVisible(canManage);
             button.setManaged(canManage);
+        }
+    }
+
+    /**
+     * 切换商品热销状态
+     * @param product 商品
+     */
+    private void toggleHotStatus(Product product) {
+        try {
+            boolean newHotStatus = !product.isHot;
+            logger.info("切换热销状态: {} -> {}, 商品: {}", product.isHot, newHotStatus, product.name);
+            boolean success = productDAO.updateHotStatus(product.id, newHotStatus);
+            if (success) {
+                product.isHot = newHotStatus;
+                logger.info("本地对象已更新: {}, isHot = {}", product.name, product.isHot);
+                // 清除缓存，确保触屏界面能获取最新数据
+                CacheManager.clearCache();
+                inventoryTable.refresh();
+                String msg = newHotStatus
+                    ? i18n.get("product.hot_marked") + ": " + product.name
+                    : i18n.get("product.hot_unmarked") + ": " + product.name;
+                StatusBarManager.updateSuccess(msg);
+            } else {
+                StatusBarManager.updateError(i18n.get("label.error") + ": " + i18n.get("operation.failed"));
+            }
+        } catch (SQLException e) {
+            logger.error("更新热销状态失败", e);
+            StatusBarManager.updateError(i18n.get("label.error") + ": " + e.getMessage());
         }
     }
 

@@ -329,6 +329,7 @@ public class DatabaseManager {
                     min_stock INT DEFAULT 0,
                     cost DECIMAL(10,2),
                     version INT DEFAULT 0 COMMENT '版本号（用于乐观锁）',
+                    is_hot TINYINT DEFAULT 0 COMMENT '是否热销',
                     created_at BIGINT,
                     updated_at BIGINT,
                     INDEX idx_product_code (product_code),
@@ -338,6 +339,21 @@ public class DatabaseManager {
                     FULLTEXT idx_ft_name (name)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
                 """);
+
+            // 确保 products.is_hot 列存在（旧库可能没有；CREATE TABLE IF NOT EXISTS 对已存在的表不会补列）
+            try {
+                stmt.execute("ALTER TABLE products ADD COLUMN is_hot TINYINT DEFAULT 0 COMMENT '是否热销'");
+            } catch (SQLException e) {
+                // 列已存在会抛 Duplicate column 错误，属于正常情况，忽略
+                logger.debug("products.is_hot 列已存在或添加失败: {}", e.getMessage());
+            }
+
+            // 挂单表
+            try {
+                com.cashier.dao.HoldOrderDAO.createTable();
+            } catch (SQLException e) {
+                logger.warn("创建挂单表失败", e);
+            }
 
             // 创建会员表
             stmt.execute("""

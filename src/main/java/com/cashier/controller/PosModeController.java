@@ -97,7 +97,7 @@ public class PosModeController {
 
     private CashierSystemFXApplication application;
     private User currentUser;
-    private CartController cartController;
+    private CartViewHost cartController;
     private Timeline timeTimeline;
 
     /**
@@ -226,14 +226,20 @@ public class PosModeController {
      */
     private void loadCartView() {
         try {
-            FXMLLoader loader = FXMLUtils.loadFXMLLoader("/com/cashier/view/CartView.fxml");
+            FXMLLoader loader = FXMLUtils.loadFXMLLoader("/com/cashier/view/TouchCartView.fxml");
             VBox cartView = loader.load();
 
             // 获取CartController并设置当前用户
             cartController = loader.getController();
-            if (cartController != null && currentUser != null) {
-                cartController.setCurrentUser(currentUser);
-                logger.debug("已将当前用户传递给CartController");
+            if (cartController != null) {
+                if (currentUser != null) {
+                    cartController.setCurrentUser(currentUser);
+                    logger.debug("已将当前用户传递给CartController");
+                }
+                // 触屏版自带顶栏退出按钮，需要 application 引用以退出登录
+                if (cartController instanceof TouchCartController touch) {
+                    touch.setApplication(application);
+                }
             }
 
             // 添加到容器
@@ -340,7 +346,7 @@ public class PosModeController {
             Stage stage = new Stage();
             stage.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.shift_handover"));
             stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setScene(new Scene(root));
+            stage.setScene(new Scene(root, 1100, 750));
             stage.showAndWait();
 
             StatusBarManager.updateSuccess("交接班操作完成");

@@ -79,7 +79,7 @@ for %%f in (target\lisuan-fx-*-jar-with-dependencies.jar) do (
 if "%JAR_FILE%"=="" (
     echo [WARNING] JAR file not found, building project...
     echo.
-    call mvn clean package -DskipTests -Dinnosetup.skip=true
+    call mvn clean package -DskipTests
     if errorlevel 1 (
         echo [ERROR] Build failed
         pause

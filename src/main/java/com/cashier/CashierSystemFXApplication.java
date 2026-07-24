@@ -379,35 +379,52 @@ public class CashierSystemFXApplication extends Application {
      * 请求退出应用，统一执行退出确认和 JavaFX 生命周期清理。
      */
     public void requestExit() {
-        // 检查是否有进行中的班次
-        if (DataService.hasActiveShift()) {
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("确认退出");
-            alert.setHeaderText(null);
-            alert.setContentText("当前有活跃班次未交班！\n\n确定要退出系统吗？\n\n提示：建议先交班后再退出。");
-    
-            ButtonType yesButton = new ButtonType("先交班", ButtonBar.ButtonData.YES);
-            ButtonType noButton = new ButtonType("直接退出", ButtonBar.ButtonData.NO);
-            ButtonType cancelButton = new ButtonType("取消", ButtonBar.ButtonData.CANCEL_CLOSE);
-    
-            alert.getButtonTypes().setAll(yesButton, noButton, cancelButton);
-    
-            alert.showAndWait().ifPresent(buttonType -> {
-                if (buttonType == yesButton) {
-                    // 用户选择先交班，这里不执行任何操作
-                    // 因为无法直接切换到交班页面，用户需要手动操作
-                    logger.info("用户选择先交班");
-                } else if (buttonType == noButton) {
-                    // 用户选择直接退出
-                    exitApplication();
-                }
-                // 如果选择取消，不做任何操作
-            });
-        } else {
-            // 没有活跃班次，直接退出
+        boolean hasActiveShift = DataService.hasActiveShift();
+        User user = getCurrentUser();
+
+        if (!hasActiveShift) {
+            // 没有活跃班次，直接确认退出
             if (FXUtils.showConfirmAlert("确认退出", "确定要退出系统吗？")) {
                 exitApplication();
             }
+            return;
+        }
+
+        // 有活跃班次：按是否已登录区分
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("确认退出");
+        alert.setHeaderText(null);
+
+        if (user == null) {
+            // 未登录（登录界面）：无法在此交班，不提供"先交班"，仅"直接退出/取消"
+            alert.setContentText("当前有活跃班次未交班！\n\n请重新登录后进行交班，或直接退出系统。");
+            ButtonType noButton = new ButtonType("直接退出", ButtonBar.ButtonData.NO);
+            ButtonType cancelButton = new ButtonType("取消", ButtonBar.ButtonData.CANCEL_CLOSE);
+            alert.getButtonTypes().setAll(noButton, cancelButton);
+            alert.showAndWait().ifPresent(bt -> {
+                if (bt == noButton) {
+                    exitApplication();
+                }
+            });
+        } else {
+            // 已登录：三选，"先交班"取消退出并引导前往交接班入口（不再空操作）
+            alert.setContentText("当前有活跃班次未交班！\n\n确定要退出系统吗？\n\n提示：建议先交班后再退出。");
+            ButtonType yesButton = new ButtonType("先交班", ButtonBar.ButtonData.YES);
+            ButtonType noButton = new ButtonType("直接退出", ButtonBar.ButtonData.NO);
+            ButtonType cancelButton = new ButtonType("取消", ButtonBar.ButtonData.CANCEL_CLOSE);
+            alert.getButtonTypes().setAll(yesButton, noButton, cancelButton);
+            alert.showAndWait().ifPresent(buttonType -> {
+                if (buttonType == yesButton) {
+                    Alert tip = new Alert(Alert.AlertType.INFORMATION);
+                    tip.setTitle("请前往交接班");
+                    tip.setHeaderText(null);
+                    tip.setContentText("请点击界面上的「交接班」按钮完成交班后再退出。");
+                    tip.showAndWait();
+                    logger.info("用户选择先交班，已引导前往交接班入口");
+                } else if (buttonType == noButton) {
+                    exitApplication();
+                }
+            });
         }
     }
 
@@ -487,7 +504,7 @@ public class CashierSystemFXApplication extends Application {
     }
 
     /**
-     * 加载POS模式界面（专为收银员设计）
+     * 加载POS模式界面（专为收银员设计的触屏版）
      * @param user 当前登录用户
      */
     private void switchToPosModeView(User user) {
@@ -499,11 +516,12 @@ public class CashierSystemFXApplication extends Application {
             logger.info("用户 {} 的语言偏好: {}, I18nManager 当前语言: {}",
                        user.username, userLanguage, com.cashier.i18n.I18nManager.getInstance().getCurrentLanguageTag());
 
-            FXMLLoader loader = FXMLUtils.loadFXMLLoader("/com/cashier/view/PosModeView.fxml");
+            // 收银员使用新的触屏版收银界面
+            FXMLLoader loader = FXMLUtils.loadFXMLLoader("/com/cashier/view/TouchCartView.fxml");
             Parent root = loader.load();
 
             // 获取控制器并设置应用程序引用
-            PosModeController controller = loader.getController();
+            com.cashier.controller.TouchCartController controller = loader.getController();
             controller.setApplication(this);
             controller.setCurrentUser(user);
             currentController = controller; // 保存控制器引用
@@ -523,9 +541,9 @@ public class CashierSystemFXApplication extends Application {
             primaryStage.setScene(scene);
 
             // 更新窗口标题
-            primaryStage.setTitle(APP_TITLE + " - 收银台 - " + user.name);
+            primaryStage.setTitle(APP_TITLE + " - 触屏收银台 - " + user.name);
 
-            logger.info("用户 {} ({}) 进入POS模式", user.name, user.getRoleDisplayName());
+            logger.info("用户 {} ({}) 进入触屏收银台", user.name, user.getRoleDisplayName());
 
             // 启动库存预警服务
             try {
@@ -544,7 +562,7 @@ public class CashierSystemFXApplication extends Application {
             }
 
         } catch (IOException e) {
-            logger.error("加载POS模式界面失败", e);
+            logger.error("加载触屏收银台界面失败", e);
         }
     }
 
@@ -634,6 +652,8 @@ public class CashierSystemFXApplication extends Application {
                 ((com.cashier.controller.MainController) currentController).cleanup();
             } else if (currentController instanceof com.cashier.controller.PosModeController) {
                 ((com.cashier.controller.PosModeController) currentController).cleanup();
+            } else if (currentController instanceof com.cashier.controller.TouchCartController) {
+                ((com.cashier.controller.TouchCartController) currentController).cleanup();
             }
         } catch (Exception e) {
             logger.error("清理控制器资源时发生错误", e);

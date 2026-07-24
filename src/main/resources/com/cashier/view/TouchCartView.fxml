@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.shape.Circle?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.text.Text?>
+
+<!--
+  触屏版收银视图 — 精简优化布局 (方案一)
+  - 顶部：Logo + 品牌 + 店铺名称 + 用户信息 + 退出
+  - 左侧：热销推荐 + 分类导航
+  - 中间：搜索 + 商品网格
+  - 右侧：购物车(最大空间) + 会员(单行) + 摘要(紧凑) + 支付
+  - 底部：日期时间 + 交接班 + 状态
+-->
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.cashier.controller.TouchCartController"
+      spacing="0"
+      styleClass="tpos-root">
+
+    <!-- 顶部工具栏 -->
+    <HBox spacing="20" styleClass="tpos-toolbar" alignment="CENTER_LEFT">
+        <padding>
+            <Insets top="10" right="20" bottom="10" left="20"/>
+        </padding>
+
+        <!-- Logo + 品牌 + 店铺名称 -->
+        <HBox spacing="12" alignment="CENTER_LEFT">
+            <StackPane prefWidth="40" prefHeight="40" styleClass="tpos-brand-logo">
+                <ImageView fitWidth="34" fitHeight="34" preserveRatio="true" styleClass="tpos-brand-icon">
+                    <Image url="@/images/logos/logo.png"/>
+                </ImageView>
+            </StackPane>
+            <VBox spacing="2">
+                <Label text="%app.name" styleClass="tpos-brand-name"/>
+                <Label fx:id="storeNameLabel" text="便利店" styleClass="tpos-store-name"/>
+            </VBox>
+        </HBox>
+
+        <Region HBox.hgrow="ALWAYS"/>
+
+        <!-- 当前用户信息 + 按钮 -->
+        <HBox spacing="12" alignment="CENTER_RIGHT">
+            <StackPane fx:id="avatarContainer" prefWidth="40" prefHeight="40">
+                <Circle fx:id="avatarCircle" radius="20" styleClass="tpos-avatar-circle"/>
+                <Label fx:id="avatarText" text="U" styleClass="tpos-avatar-text"/>
+            </StackPane>
+            <VBox spacing="2" alignment="CENTER_RIGHT">
+                <Label fx:id="userNameLabel" text="%pos.user" styleClass="tpos-user-name"/>
+                <Label fx:id="userRoleLabel" text="%pos.cashier_role" styleClass="tpos-secondary-text"/>
+            </VBox>
+
+            <!-- 交接班按钮 -->
+            <Button fx:id="shiftButton"
+                    text="%pos.shift"
+                    onAction="#handleShift"
+                    prefWidth="100"
+                    prefHeight="38"
+                    styleClass="tpos-shift-btn"/>
+
+            <!-- 退出按钮 -->
+            <Button fx:id="exitButton"
+                    text="%pos.exit"
+                    onAction="#handleExit"
+                    prefWidth="100"
+                    prefHeight="38"
+                    styleClass="tpos-exit-btn"/>
+        </HBox>
+    </HBox>
+
+    <!-- 主内容区域 -->
+    <BorderPane VBox.vgrow="ALWAYS" styleClass="tpos-content">
+        <!-- ========== 左侧分类导航 ========== -->
+        <left>
+            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="tpos-sidebar-scroll" prefWidth="180">
+                <VBox fx:id="categoryBox" styleClass="tpos-sidebar, tpos-category-list"/>
+            </ScrollPane>
+        </left>
+
+        <!-- ========== 中间商品浏览 ========== -->
+        <center>
+            <VBox styleClass="tpos-center" spacing="8">
+                <padding>
+                    <Insets top="8" right="12" bottom="8" left="12"/>
+                </padding>
+
+                <!-- 搜索栏 -->
+                <HBox styleClass="tpos-search-bar" alignment="CENTER_LEFT">
+                    <TextField fx:id="searchField" promptText="%cart.scan_or_search"
+                               HBox.hgrow="ALWAYS" styleClass="tpos-search-field"
+                               onAction="#handleSearch"/>
+                    <Button text="%cart.search_button" onAction="#handleSearch" styleClass="tpos-search-btn"/>
+                </HBox>
+
+                <!-- 商品网格 -->
+                <ScrollPane fitToWidth="true" hbarPolicy="NEVER" VBox.vgrow="ALWAYS" styleClass="tpos-product-scroll">
+                    <FlowPane fx:id="productGrid" styleClass="tpos-product-grid" hgap="12" vgap="12"/>
+                </ScrollPane>
+            </VBox>
+        </center>
+
+        <!-- ========== 右侧购物车/摘要/支付 ========== -->
+        <right>
+            <VBox styleClass="tpos-right" prefWidth="520" spacing="0">
+                <!-- 购物车头 -->
+                <HBox styleClass="tpos-cart-header" alignment="CENTER_LEFT">
+                    <padding>
+                        <Insets top="10" right="14" bottom="10" left="14"/>
+                    </padding>
+                    <Label text="🛒" styleClass="tpos-cart-icon"/>
+                    <Label text="%pos.cart" styleClass="tpos-cart-title"/>
+                    <Label fx:id="cartCountLabel" text="(0)" styleClass="tpos-cart-count"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="clearBtn" text="%pos.clear" onAction="#handleClear" styleClass="tpos-clear-btn"/>
+                </HBox>
+
+                <Separator styleClass="tpos-separator"/>
+
+                <!-- 购物车列表 - 占据所有可用空间 -->
+                <ScrollPane fitToWidth="true" hbarPolicy="NEVER" VBox.vgrow="ALWAYS" styleClass="tpos-cart-scroll">
+                    <VBox fx:id="cartList" styleClass="tpos-cart-list"/>
+                </ScrollPane>
+
+                <Separator styleClass="tpos-separator"/>
+
+                <!-- 会员区域 - 单行紧凑布局 -->
+                <HBox styleClass="tpos-member-row" alignment="CENTER_LEFT" spacing="8">
+                    <padding>
+                        <Insets top="8" right="12" bottom="8" left="12"/>
+                    </padding>
+                    <Label text="📱" styleClass="tpos-member-icon"/>
+                    <TextField fx:id="memberPhoneField" promptText="%cart.enter_phone"
+                               HBox.hgrow="ALWAYS" styleClass="tpos-member-phone"
+                               onAction="#handleSearchMember"/>
+                    <Button text="%cart.search_button" onAction="#handleSearchMember" styleClass="tpos-member-btn-compact"/>
+                    <Label fx:id="memberInfoLabel" styleClass="tpos-member-info-compact"/>
+                </HBox>
+
+                <Separator styleClass="tpos-separator"/>
+
+                <!-- 订单摘要 - 两行布局 -->
+                <VBox styleClass="tpos-summary-compact" spacing="4">
+                    <padding>
+                        <Insets top="8" right="12" bottom="8" left="12"/>
+                    </padding>
+                    <!-- 第一行：数量、总额、折扣 -->
+                    <HBox alignment="CENTER_LEFT" spacing="8">
+                        <Label text="%cart.total_quantity" styleClass="tpos-summary-label-compact"/>
+                        <Label fx:id="totalQtyLabel" text="0" styleClass="tpos-summary-val-compact"/>
+                        <Label text="│" styleClass="tpos-summary-separator"/>
+                        <Label text="%cart.total_amount" styleClass="tpos-summary-label-compact"/>
+                        <Label fx:id="totalAmountLabel" text="¥0.00" styleClass="tpos-summary-val-compact"/>
+                        <Label text="│" styleClass="tpos-summary-separator"/>
+                        <Label text="%cart.member_discount" styleClass="tpos-summary-label-compact"/>
+                        <Label fx:id="discountLabel" text="-¥0.00" styleClass="tpos-summary-val-discount-compact"/>
+                    </HBox>
+                    <!-- 第二行：应付金额（突出显示） -->
+                    <HBox alignment="CENTER_RIGHT" spacing="4">
+                        <Label text="%cart.final_amount" styleClass="tpos-final-label-compact"/>
+                        <Label fx:id="finalAmountLabel" text="¥0.00" styleClass="tpos-final-val-compact"/>
+                    </HBox>
+                </VBox>
+
+                <Separator styleClass="tpos-separator"/>
+
+                <!-- 支付方式 -->
+                <VBox styleClass="tpos-pay-section">
+                    <padding>
+                        <Insets top="10" right="10" bottom="10" left="10"/>
+                    </padding>
+                    <GridPane hgap="8" vgap="8">
+                        <Button text="%cart.cash_payment" onAction="#handleCashPayment"
+                                styleClass="tpos-pay-btn, tpos-pay-cash" GridPane.columnIndex="0" GridPane.rowIndex="0" maxWidth="Infinity"/>
+                        <Button text="%cart.wechat_payment" onAction="#handleWechatPayment"
+                                styleClass="tpos-pay-btn, tpos-pay-wechat" GridPane.columnIndex="1" GridPane.rowIndex="0" maxWidth="Infinity"/>
+                        <Button text="%cart.alipay_payment" onAction="#handleAlipayPayment"
+                                styleClass="tpos-pay-btn, tpos-pay-alipay" GridPane.columnIndex="0" GridPane.rowIndex="1" maxWidth="Infinity"/>
+                        <Button text="%cart.card_payment" onAction="#handleCardPayment"
+                                styleClass="tpos-pay-btn, tpos-pay-card" GridPane.columnIndex="1" GridPane.rowIndex="1" maxWidth="Infinity"/>
+                    </GridPane>
+                </VBox>
+            </VBox>
+        </right>
+    </BorderPane>
+
+    <!-- 底部状态栏 -->
+    <HBox spacing="15" styleClass="tpos-status-bar" alignment="CENTER_LEFT">
+        <padding>
+            <Insets top="8" right="20" bottom="8" left="20"/>
+        </padding>
+
+        <Label fx:id="dateLabel" text="2026-02-23" styleClass="tpos-status-text"/>
+        <Label fx:id="timeLabel" text="18:00:00" styleClass="tpos-status-text"/>
+
+        <Region HBox.hgrow="ALWAYS"/>
+
+        <Label fx:id="statusLabel" text="%pos.ready" styleClass="tpos-status-ready"/>
+    </HBox>
+
+</VBox>

@@ -135,6 +135,7 @@ public abstract class DatabaseTestBase {
                 min_stock INT DEFAULT 0,
                 cost DECIMAL(10,2),
                 version INT DEFAULT 0,
+                is_hot TINYINT DEFAULT 0,
                 created_at BIGINT,
                 updated_at BIGINT
             )

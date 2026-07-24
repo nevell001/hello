@@ -98,6 +98,12 @@ public class ShiftController {
     @FXML
     private Button endShiftButton;
 
+    @FXML
+    private javafx.scene.layout.HBox filterBar;
+
+    @FXML
+    private javafx.scene.control.ScrollPane chartsScrollPane;
+
     private ObservableList<Shift> shiftList;
     private List<Shift> allShifts;
     private com.cashier.model.User currentUser;
@@ -107,10 +113,8 @@ public class ShiftController {
      */
     @FXML
     private void initialize() {
-        // 设置默认日期范围（今天）
-        java.time.LocalDate today = java.time.LocalDate.now();
-        startDatePicker.setValue(today);
-        endDatePicker.setValue(today);
+        // 日期范围默认不限（startDatePicker/endDatePicker 保持 null），与列表默认显示
+        // 全部班次一致；用户需按日期过滤时再选日期并点搜索。
 
         // 设置表格列
         setupTableColumns();
@@ -118,8 +122,8 @@ public class ShiftController {
         // 初始化图表
         initializeCharts();
 
-        // 加载交接班数据
-        loadShifts();
+        // 数据加载放到 setCurrentUser(user) 中：initialize 由 FXMLLoader 在 load() 阶段
+        // 触发，此时 currentUser 必为 null，若在此加载会绕过收银员过滤导致越权。
 
         // 设置表格选择模式
         shiftTable.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
@@ -199,6 +203,14 @@ public class ShiftController {
         logger.info("ShiftController: 开始加载交接班数据...");
         try {
             allShifts = ShiftDAO.findRecent(SHIFT_HISTORY_LIMIT);
+
+            // 收银员只能查看自己的班次
+            if (currentUser != null && "cashier".equals(currentUser.role)) {
+                allShifts = allShifts.stream()
+                    .filter(s -> currentUser.username.equals(s.username))
+                    .collect(java.util.stream.Collectors.toList());
+                logger.info("收银员 {} 只能查看自己的班次，共 {} 条", currentUser.username, allShifts.size());
+            }
         } catch (SQLException e) {
             logger.error("加载交接班数据失败", e);
             showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
@@ -376,8 +388,9 @@ public class ShiftController {
      */
     @FXML
     public void handleClearSearch() {
-        startDatePicker.setValue(java.time.LocalDate.now());
-        endDatePicker.setValue(java.time.LocalDate.now());
+        // 清除=恢复不限日期（null），与默认视图一致，显示全部班次
+        startDatePicker.setValue(null);
+        endDatePicker.setValue(null);
         searchField.clear();
         applyFilters();
     }
@@ -392,9 +405,11 @@ public class ShiftController {
             .filter(s -> {
                 // 日期筛选
                 if (startDatePicker.getValue() != null || endDatePicker.getValue() != null) {
-                    java.time.LocalDate shiftDate = s.startTime != null
-                        ? s.startTime.atZone(java.time.ZoneId.systemDefault()).toLocalDate()
-                        : null;
+                    // 无开始时间的班次无法按日期判断，指定了日期范围时排除，避免 shiftDate 为 null 触发 NPE
+                    if (s.startTime == null) {
+                        return false;
+                    }
+                    java.time.LocalDate shiftDate = s.startTime.atZone(java.time.ZoneId.systemDefault()).toLocalDate();
 
                     if (startDatePicker.getValue() != null && shiftDate.isBefore(startDatePicker.getValue())) {
                         return false;
@@ -629,6 +644,9 @@ public class ShiftController {
             // 更新主界面的班次信息
             MainController.updateShiftInfoGlobal();
 
+            // 关闭窗口
+            closeWindow();
+
         } catch (Exception e) {
             showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
             logger.error("开班失败", e);
@@ -642,7 +660,7 @@ public class ShiftController {
     public void handleEndShift() {
         // 检查是否有活跃班次
         Shift activeShift = null;
-try {
+        try {
             activeShift = ShiftDAO.findActiveShift();
         } catch (SQLException e) {
             logger.error("获取活跃班次失败", e);
@@ -757,8 +775,8 @@ try {
             // 更新主界面的班次信息
             MainController.updateShiftInfoGlobal();
 
-            // 退出登录
-            handleLogout();
+            // 关闭窗口
+            closeWindow();
 
         } catch (Exception e) {
             showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
@@ -772,6 +790,62 @@ try {
      */
     public void setCurrentUser(com.cashier.model.User user) {
         this.currentUser = user;
+        setupRoleBasedUI();
+        // initialize() 由 FXMLLoader 在 load() 阶段触发，那时 currentUser 尚为 null，
+        // loadShifts 会绕过收银员过滤；此处用户已注入，按角色正确加载（收银员只看自己的班次）。
+        loadShifts();
+    }
+
+    /**
+     * 根据用户角色设置界面权限
+     */
+    private void setupRoleBasedUI() {
+        if (currentUser == null) {
+            return;
+        }
+
+        boolean isCashier = "cashier".equals(currentUser.role);
+
+        if (isCashier) {
+            // 收银员：隐藏导出、筛选栏、图表
+            if (exportButton != null) {
+                exportButton.setVisible(false);
+                exportButton.setManaged(false);
+            }
+
+            // 隐藏筛选栏（直接引用 fx:id，避免 getParent 链误伤根 VBox 导致整页空白）
+            if (filterBar != null) {
+                filterBar.setVisible(false);
+                filterBar.setManaged(false);
+            }
+
+            // 隐藏图表区域
+            if (chartsScrollPane != null) {
+                chartsScrollPane.setVisible(false);
+                chartsScrollPane.setManaged(false);
+            }
+
+            // 收银员只能查看自己的班次，筛选条件自动设置为当前用户
+            // 在 loadShifts() 中会处理
+        }
+    }
+
+    /**
+     * 关闭当前窗口
+     */
+    private void closeWindow() {
+        javafx.scene.Node node = startShiftButton; // 任意UI元素
+        if (node == null || node.getScene() == null || node.getScene().getWindow() == null) {
+            return;
+        }
+        javafx.stage.Window window = node.getScene().getWindow();
+        // 标签页模式下 ShiftView 嵌在主窗口里，window 即主舞台，hide() 会把整个主窗口关掉（表现为“退出”）。
+        // 因此只关闭独立弹窗；主窗口内嵌时（如 admin MainView 的交接班标签页）不关，让用户留在标签页。
+        com.cashier.CashierSystemFXApplication app = com.cashier.CashierSystemFXApplication.getInstance();
+        if (app != null && window == app.getPrimaryStage()) {
+            return;
+        }
+        window.hide();
     }
 
     /**

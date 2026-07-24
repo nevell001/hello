@@ -1145,6 +1145,175 @@
     -fx-font-weight: bold;
 }
 
+/* ========== 交接班界面样式 ========== */
+.shift-view-root {
+    -fx-background-color: -lisuan-surface;
+}
+
+/* 顶部工具栏 */
+.shift-toolbar {
+    -fx-background-color: -lisuan-primary;
+    -fx-padding: 12px 16px;
+}
+
+.shift-toolbar-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.shift-btn {
+    -fx-background-color: rgba(255, 255, 255, 0.2);
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-font-weight: 500;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-border-color: rgba(255, 255, 255, 0.3);
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+}
+
+.shift-btn:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.3);
+}
+
+.shift-btn-primary {
+    -fx-background-color: #4CAF50;
+    -fx-border-color: #66BB6A;
+}
+
+.shift-btn-primary:hover {
+    -fx-background-color: #66BB6A;
+}
+
+.shift-btn-warning {
+    -fx-background-color: #FF9800;
+    -fx-border-color: #FFB74D;
+}
+
+.shift-btn-warning:hover {
+    -fx-background-color: #FFB74D;
+}
+
+.shift-separator {
+    -fx-background-color: -lisuan-primary-border;
+    -fx-padding: 0;
+}
+
+/* 筛选栏 */
+.shift-filter-bar {
+    -fx-background-color: white;
+    -fx-border-color: -lisuan-primary-border;
+    -fx-border-width: 0 0 1 0;
+}
+
+.shift-filter-label {
+    -fx-font-size: 13px;
+    -fx-text-fill: -lisuan-text-secondary;
+}
+
+.shift-datepicker {
+    -fx-background-color: -lisuan-surface;
+    -fx-background-radius: 6;
+}
+
+.shift-search-field {
+    -fx-background-color: -lisuan-surface;
+    -fx-background-radius: 6;
+    -fx-border-color: -lisuan-primary-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+}
+
+/* 统计卡片 */
+.shift-stats-container {
+    -fx-background-color: -lisuan-surface;
+    -fx-padding: 12px 16px 0 16px;
+}
+
+.shift-stat-card {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-color: -lisuan-primary-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.06), 3, 0, 0, 1);
+}
+
+.shift-stat-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: -lisuan-text-secondary;
+}
+
+.shift-stat-value {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -lisuan-primary-active;
+}
+
+.shift-stat-value-success {
+    -fx-text-fill: #4CAF50;
+}
+
+.shift-stat-value-warning {
+    -fx-text-fill: #FF9800;
+}
+
+/* 图表区域 */
+.shift-charts-scroll {
+    -fx-background-color: -lisuan-surface;
+    -fx-border-color: -lisuan-primary-border;
+    -fx-border-width: 0 0 1 0;
+}
+
+.shift-charts-container {
+    -fx-padding: 12px 16px;
+}
+
+.shift-chart-card {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-color: -lisuan-primary-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.06), 3, 0, 0, 1);
+}
+
+.shift-chart-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -lisuan-primary-active;
+}
+
+/* 表格 */
+.table-view.shift-table {
+    -fx-background-color: white;
+    -fx-border-color: -lisuan-primary-border;
+    -fx-border-width: 0;
+}
+
+.table-view.shift-table .column-header {
+    -fx-background-color: derive(-lisuan-primary, 90%);
+    -fx-font-weight: 600;
+    -fx-font-size: 13px;
+    -fx-text-fill: -lisuan-text;
+}
+
+.table-view.shift-table .table-row-cell {
+    -fx-background-color: white;
+}
+
+.table-view.shift-table .table-row-cell:selected {
+    -fx-background-color: derive(-lisuan-primary, 85%);
+    -fx-text-fill: -lisuan-text;
+}
+
+.shift-placeholder {
+    -fx-text-fill: -lisuan-text-secondary;
+    -fx-font-size: 14px;
+}
+
 .settings-section-title {
     -fx-font-size: 16px;
     -fx-font-weight: bold;
@@ -3012,3 +3181,148 @@
     -fx-min-width: 110px;
     -fx-wrap-text: true;
 }
+
+/* ========================================================================
+   TouchCart 触屏版收银样式 (v2.6.0)
+   沿用 -lisuan-primary 主色,全部 tpos- 前缀与现有 cart-/pos- 隔离
+   ======================================================================== */
+
+.tpos-root { -fx-background-color: -lisuan-surface; }
+
+/* —— 顶部工具栏 —— */
+.tpos-toolbar { -fx-background-color: -lisuan-primary; -fx-border-color: transparent; -fx-border-width: 0 0 1 0; }
+.tpos-brand-logo { -fx-background-color: rgba(255,255,255,0.15); -fx-background-radius: 50%; -fx-alignment: CENTER; }
+.tpos-brand-icon { -fx-font-size: 28; }
+.tpos-brand-name { -fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #FFFFFF; }
+.tpos-store-name { -fx-font-size: 12; -fx-text-fill: rgba(255,255,255,0.85); }
+.tpos-user-name { -fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #FFFFFF; }
+.tpos-secondary-text { -fx-font-size: 11; -fx-text-fill: rgba(255,255,255,0.7); }
+.tpos-avatar-circle { -fx-fill: rgba(255,255,255,0.2); }
+.tpos-avatar-text { -fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #FFFFFF; }
+.tpos-exit-btn { -fx-background-color: rgba(255,255,255,0.15); -fx-text-fill: #FFFFFF; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 13; -fx-border-color: rgba(255,255,255,0.4); -fx-border-width: 1; -fx-border-radius: 8; }
+.tpos-exit-btn:hover { -fx-background-color: rgba(255,255,255,0.25); -fx-border-color: rgba(255,255,255,0.6); }
+.tpos-shift-btn { -fx-background-color: rgba(255,255,255,0.15); -fx-text-fill: #FFFFFF; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 13; -fx-border-color: rgba(255,255,255,0.4); -fx-border-width: 1; -fx-border-radius: 8; }
+.tpos-shift-btn:hover { -fx-background-color: rgba(255,255,255,0.25); -fx-border-color: rgba(255,255,255,0.6); }
+
+/* —— 左侧分类导航 —— */
+.tpos-sidebar { -fx-background-color: -lisuan-primary-deep; -fx-padding: 8; -fx-spacing: 0; }
+.tpos-sidebar-title { -fx-text-fill: #FFFFFF; -fx-font-size: 14; -fx-font-weight: bold; -fx-padding: 4 12 12 12; }
+.tpos-sidebar-scroll, .tpos-product-scroll, .tpos-cart-scroll { -fx-background-color: transparent; }
+.tpos-sidebar-scroll > .viewport, .tpos-product-scroll > .viewport, .tpos-cart-scroll > .viewport { -fx-background-color: transparent; }
+.tpos-category-list { -fx-spacing: 6; }
+.tpos-category-btn { -fx-background-color: transparent; -fx-text-fill: #FFFFFF; -fx-alignment: CENTER-LEFT;
+    -fx-padding: 12 16; -fx-font-size: 15; -fx-background-radius: 8; -fx-cursor: hand; -fx-border-width: 0; -fx-min-height: 44; }
+.tpos-category-btn:hover { -fx-background-color: rgba(255,255,255,0.08); }
+.tpos-category-btn:selected { -fx-background-color: -lisuan-primary; -fx-font-weight: bold; }
+
+/* —— 中间商品区 —— */
+.tpos-center { -fx-background-color: -lisuan-surface; }
+.tpos-search-bar { -fx-padding: 12 16; -fx-spacing: 8; -fx-alignment: CENTER_LEFT; -fx-background-color: -lisuan-surface; }
+.tpos-search-field { -fx-font-size: 15; -fx-pref-height: 40; -fx-background-radius: 8; }
+.tpos-search-btn { -fx-background-color: -lisuan-primary; -fx-text-fill: #FFFFFF; -fx-background-radius: 8; -fx-pref-height: 40; -fx-cursor: hand; }
+.tpos-product-grid { -fx-padding: 16; }
+
+/* 商品卡片 */
+.tpos-product-card { -fx-background-color: -lisuan-surface; -fx-background-radius: 12; -fx-border-color: #E7E9EE;
+    -fx-border-width: 1.5; -fx-border-radius: 12; -fx-padding: 10; -fx-spacing: 6; -fx-pref-width: 160; -fx-cursor: hand; }
+.tpos-product-card:hover { -fx-border-color: -lisuan-primary; -fx-background-color: derive(-lisuan-primary, 88%); }
+.tpos-product-card--out { -fx-opacity: 0.45; -fx-cursor: default; }
+.tpos-product-card-initial { -fx-background-color: -lisuan-primary; -fx-text-fill: #FFFFFF; -fx-font-size: 26;
+    -fx-font-weight: bold; -fx-background-radius: 12; -fx-pref-size: 72 72; -fx-min-size: 72 72; -fx-max-size: 72 72; -fx-alignment: CENTER; }
+.tpos-product-card-name { -fx-font-size: 14; -fx-text-fill: -lisuan-text; -fx-wrap-text: true; -fx-max-height: 40; }
+.tpos-product-card-meta { -fx-font-size: 12; -fx-text-fill: -lisuan-text-disabled; }
+.tpos-product-card-price { -fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: -lisuan-primary; }
+
+/* —— 右侧购物车 —— */
+.tpos-right { -fx-background-color: -lisuan-surface; -fx-border-color: #E7E9EE; -fx-border-width: 0 0 0 1; }
+.tpos-cart-header { -fx-spacing: 8; -fx-alignment: CENTER_LEFT; }
+.tpos-cart-icon { -fx-font-size: 18; }
+.tpos-cart-title { -fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: -lisuan-text; }
+.tpos-cart-count { -fx-font-size: 14; -fx-text-fill: -lisuan-text-disabled; }
+.tpos-clear-btn { -fx-background-color: transparent; -fx-text-fill: -lisuan-primary; -fx-border-color: -lisuan-primary-border;
+    -fx-border-radius: 6; -fx-background-radius: 6; -fx-cursor: hand; -fx-pref-height: 32; }
+.tpos-cart-list { -fx-padding: 8; -fx-spacing: 8; }
+.tpos-cart-empty { -fx-padding: 40 16; -fx-alignment: CENTER; -fx-text-fill: -lisuan-text-disabled; -fx-font-size: 14; }
+.tpos-separator { -fx-border-color: transparent; -fx-border-width: 0 0 1 0; }
+
+/* 优化购物车行 - 三行布局 */
+.tpos-cart-row { -fx-background-color: -lisuan-surface-muted; -fx-background-radius: 8; -fx-padding: 12; -fx-spacing: 0;
+    -fx-border-color: #E7E9EE; -fx-border-width: 1; -fx-border-radius: 8; }
+.tpos-cart-row-content { -fx-spacing: 0; -fx-alignment: CENTER_LEFT; -fx-fill-height: true; }
+.tpos-cart-row-name { -fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: -lisuan-text; -fx-wrap-text: true; }
+.tpos-cart-row-price-qty { -fx-font-size: 13; -fx-text-fill: -lisuan-text-disabled; }
+.tpos-cart-row-subtotal { -fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: -lisuan-primary; }
+.tpos-cart-row-ctrl { -fx-spacing: 6; -fx-alignment: CENTER; }
+.tpos-qty-minus { -fx-background-radius: 16; -fx-min-size: 36 36; -fx-font-size: 18; -fx-font-weight: bold; -fx-cursor: hand;
+    -fx-background-color: -lisuan-surface; -fx-border-color: -lisuan-primary-border; -fx-text-fill: -lisuan-primary; }
+.tpos-qty-plus { -fx-background-radius: 16; -fx-min-size: 36 36; -fx-font-size: 18; -fx-font-weight: bold; -fx-cursor: hand;
+    -fx-background-color: -lisuan-primary; -fx-text-fill: #FFFFFF; }
+.tpos-qty-val { -fx-font-size: 16; -fx-font-weight: bold; -fx-pref-width: 40; -fx-alignment: CENTER; -fx-text-fill: -lisuan-text; }
+.tpos-remove-btn { -fx-background-color: transparent; -fx-text-fill: #E5484D; -fx-font-size: 14; -fx-cursor: hand; -fx-min-size: 36 36; -fx-background-radius: 18; }
+.tpos-remove-btn:hover { -fx-background-color: rgba(229,72,77,0.1); }
+
+/* —— 会员 —— */
+.tpos-member-row { -fx-spacing: 8; -fx-background-color: transparent; }
+.tpos-member-label { -fx-font-size: 13; -fx-text-fill: -lisuan-text-disabled; }
+.tpos-member-phone { -fx-font-size: 14; -fx-pref-height: 38; -fx-background-radius: 8; }
+.tpos-member-btn { -fx-background-color: -lisuan-primary; -fx-text-fill: #FFFFFF; -fx-background-radius: 8; -fx-cursor: hand; -fx-pref-height: 38; }
+.tpos-member-info { -fx-font-size: 13; -fx-text-fill: -lisuan-primary-active; -fx-font-weight: bold; }
+/* 紧凑会员样式 */
+.tpos-member-icon { -fx-font-size: 16; }
+.tpos-member-btn-compact { -fx-background-color: -lisuan-primary; -fx-text-fill: #FFFFFF; -fx-background-radius: 8; -fx-cursor: hand; -fx-pref-height: 34; -fx-pref-width: 60; -fx-font-size: 13; }
+.tpos-member-info-compact { -fx-font-size: 12; -fx-text-fill: -lisuan-primary-active; -fx-font-weight: bold; }
+
+/* —— 订单摘要 —— */
+.tpos-summary { -fx-spacing: 6; -fx-background-color: transparent; }
+.tpos-summary-row { -fx-alignment: CENTER_LEFT; }
+.tpos-summary-label { -fx-font-size: 13; -fx-text-fill: -lisuan-text-disabled; }
+.tpos-summary-val { -fx-font-size: 15; -fx-text-fill: -lisuan-text; -fx-font-weight: 500; }
+.tpos-summary-val-discount { -fx-font-size: 15; -fx-text-fill: #16B364; -fx-font-weight: 500; }
+.tpos-final-row { -fx-alignment: CENTER_LEFT; -fx-background-color: derive(-lisuan-primary, 94%); -fx-background-radius: 8; -fx-spacing: 8; }
+.tpos-final-label { -fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: -lisuan-primary-active; }
+.tpos-final-val { -fx-font-size: 26; -fx-font-weight: bold; -fx-text-fill: -lisuan-primary-active; }
+/* 紧凑摘要样式 */
+.tpos-summary-compact { -fx-background-color: derive(-lisuan-surface, 3%); }
+.tpos-summary-label-compact { -fx-font-size: 12; -fx-text-fill: -lisuan-text-disabled; }
+.tpos-summary-val-compact { -fx-font-size: 14; -fx-text-fill: -lisuan-text; -fx-font-weight: 500; }
+.tpos-summary-val-discount-compact { -fx-font-size: 14; -fx-text-fill: #16B364; -fx-font-weight: 500; }
+.tpos-summary-separator { -fx-text-fill: -lisuan-border; -fx-font-size: 12; }
+.tpos-final-label-compact { -fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: -lisuan-primary-active; }
+.tpos-final-val-compact { -fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: -lisuan-primary-active; }
+
+/* —— 支付与结账 —— */
+.tpos-pay-section { -fx-background-color: transparent; }
+.tpos-pay-section .grid-pane {
+    -fx-hgap: 8;
+    -fx-vgap: 8;
+}
+.tpos-pay-section .column {
+    -fx-percent-width: 50;
+}
+.tpos-pay-btn { -fx-text-fill: #FFFFFF; -fx-font-size: 16; -fx-font-weight: bold; -fx-pref-height: 64; -fx-max-width: Infinity; -fx-background-radius: 12; -fx-cursor: hand; -fx-border-width: 0; }
+.tpos-pay-cash { -fx-background-color: -lisuan-primary; }
+.tpos-pay-cash:hover { -fx-background-color: -lisuan-primary-hover; }
+.tpos-pay-cash:pressed { -fx-background-color: -lisuan-primary-active; }
+.tpos-pay-wechat { -fx-background-color: #09BB07; }
+.tpos-pay-wechat:hover { -fx-background-color: #08A006; }
+.tpos-pay-wechat:pressed { -fx-background-color: #079005; }
+.tpos-pay-alipay { -fx-background-color: #1677FF; }
+.tpos-pay-alipay:hover { -fx-background-color: #1466E6; }
+.tpos-pay-alipay:pressed { -fx-background-color: #1355D6; }
+.tpos-pay-card { -fx-background-color: -lisuan-primary-deep; }
+.tpos-pay-card:hover { -fx-background-color: derive(-lisuan-primary-deep, 15%); }
+.tpos-pay-card:pressed { -fx-background-color: derive(-lisuan-primary-deep, 20%); }
+.tpos-checkout-section { -fx-background-color: transparent; }
+.tpos-checkout-btn { -fx-background-color: -lisuan-primary; -fx-text-fill: #FFFFFF; -fx-font-size: 20; -fx-font-weight: bold;
+    -fx-background-radius: 10; -fx-cursor: hand; -fx-pref-height: 60; -fx-padding: 0 16; -fx-border-width: 0; }
+.tpos-checkout-btn:hover { -fx-background-color: -lisuan-primary-hover; }
+.tpos-checkout-btn:pressed { -fx-background-color: -lisuan-primary-active; }
+
+/* TouchCart 状态色(替代内联 setStyle,ThemeStylePolicyTest 要求语义 styleClass) */
+.tpos-product-card-initial-text { -fx-text-fill: #FFFFFF; }
+.tpos-change-ok { -fx-text-fill: #16B364; }
+.tpos-change-short { -fx-text-fill: #E5484D; }
+.tpos-muted { -fx-text-fill: #8A8F99; }
+
+/* TouchCart 现金对话框状态色 */
+.tpos-status-warn { -fx-text-fill: #FF9800; }
