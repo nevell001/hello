@@ -145,11 +145,11 @@ public class DatabaseManager {
             );
         }
 
-        poolSize = parseIntProperty(props, DatabaseConfigKeys.POOL_SIZE, 10);
-        connectionTimeout = parseLongProperty(props, "db.connection.timeout", 15000);
-        idleTimeout = parseLongProperty(props, "db.idle.timeout", 600000);
-        maxLifetime = parseLongProperty(props, "db.max.lifetime", 1800000);
-        leakDetectionThreshold = parseLongProperty(props, "db.connection.leakDetectionThreshold", 0);
+        poolSize = parseIntProperty(props, DatabaseConfigKeys.POOL_SIZE, poolSize);
+        connectionTimeout = parseLongProperty(props, "db.connection.timeout", connectionTimeout);
+        idleTimeout = parseLongProperty(props, "db.idle.timeout", idleTimeout);
+        maxLifetime = parseLongProperty(props, "db.max.lifetime", maxLifetime);
+        leakDetectionThreshold = parseLongProperty(props, "db.connection.leakDetectionThreshold", leakDetectionThreshold);
 
         connectionTestQuery = props.getProperty("db.connectionTestQuery", "SELECT 1");
         dockerMysqlContainerName = props.getProperty("backup.mysql.container", "lisuan-mysql").trim();
