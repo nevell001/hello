@@ -111,16 +111,10 @@ public class UIOptimizer {
     /**
      * 延迟UI更新
      * 避免频繁更新导致的性能问题
+     * H-26: 复用已有的 cleanupExecutor，不再每次创建新线程池
      */
     public static void delayedUpdate(Runnable updateTask, long delayMs) {
-        java.util.concurrent.ScheduledExecutorService scheduler = 
-            Executors.newSingleThreadScheduledExecutor(r -> {
-                Thread t = new Thread(r, "UI-Delayed-Update");
-                t.setDaemon(true);
-                return t;
-            });
-        
-        scheduler.schedule(() -> {
+        cleanupExecutor.schedule(() -> {
             try {
                 Platform.runLater(() -> {
                     try {
@@ -129,10 +123,10 @@ public class UIOptimizer {
                         logger.error("延迟UI更新失败", e);
                     }
                 });
-            } finally {
-                scheduler.shutdown();
+            } catch (Exception e) {
+                logger.error("延迟UI更新调度失败", e);
             }
-        }, delayMs, java.util.concurrent.TimeUnit.MILLISECONDS);
+        }, delayMs, TimeUnit.MILLISECONDS);
     }
     
     /**

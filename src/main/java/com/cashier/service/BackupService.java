@@ -3,6 +3,7 @@ package com.cashier.service;
 import com.cashier.model.BackupRecord;
 import com.cashier.model.BackupConfig;
 import com.cashier.dao.BackupDAO;
+import com.cashier.exception.DatabaseException;
 import com.cashier.i18n.I18nManager;
 import com.cashier.util.DatabaseManager;
 import com.cashier.api.sync.SyncManager;
@@ -27,13 +28,13 @@ import java.util.zip.*;
 public class BackupService {
     private static final Logger logger = LoggerFactoryUtil.getLogger(BackupService.class);
     
-    private static BackupService instance;
-    private static BackupConfig config;
+    private static volatile BackupService instance;
+    private static volatile BackupConfig config;
     private ScheduledExecutorService scheduler;
     
     private BackupService() {}
     
-    public static BackupService getInstance() {
+    public static synchronized BackupService getInstance() {
         if (instance == null) {
             instance = new BackupService();
         }
@@ -56,6 +57,7 @@ public class BackupService {
             logger.info("备份服务初始化成功");
         } catch (Exception e) {
             logger.error("备份服务初始化失败", e);
+            throw new DatabaseException("备份服务初始化失败", DatabaseException.DbErrorType.CONNECTION_FAILED, e);
         }
     }
     

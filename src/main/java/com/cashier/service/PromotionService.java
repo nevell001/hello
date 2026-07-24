@@ -71,7 +71,8 @@ public class PromotionService {
     public static Optional<BigDecimal> applyPromotion(int promotionId, BigDecimal amount) {
         try {
             BigDecimal result = DatabaseManager.executeInTransaction(conn -> {
-                Promotion promo = PromotionDAO.findById(promotionId);
+                // 使用事务连接读取，确保 check-then-act 在同一事务内
+                Promotion promo = PromotionDAO.findByIdWithConnection(conn, promotionId);
                 if (promo == null || !promo.enabled || !promo.isValid()) {
                     return null;
                 }
@@ -82,7 +83,12 @@ public class PromotionService {
 
                 BigDecimal discount = promo.calculateDiscount(amount);
                 if (discount.compareTo(BigDecimal.ZERO) > 0) {
-                    PromotionDAO.incrementUsageWithConnection(conn, promotionId);
+                    // incrementUsageWithConnection 已加并发保护（WHERE usage_count < max_usage）
+                    boolean incremented = PromotionDAO.incrementUsageWithConnection(conn, promotionId);
+                    if (!incremented) {
+                        logger.warn("促销 {} 使用次数已达上限，跳过", promo.name);
+                        return null;
+                    }
                     logger.info("促销 {} 已应用，折扣金额: {}", promo.name, discount);
                     return discount;
                 }

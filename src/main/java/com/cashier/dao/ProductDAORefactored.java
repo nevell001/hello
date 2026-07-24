@@ -251,6 +251,46 @@ public class ProductDAORefactored extends BaseDAO {
     }
 
     /**
+     * 使用指定连接根据商品名称批量查询商品（事务内调用）。
+     * @param conn 数据库连接
+     * @param names 商品名称集合
+     * @return 商品名称到 Product 的映射
+     * @throws SQLException 数据库操作异常
+     */
+    public Map<String, Product> findByNamesWithConnection(Connection conn, Collection<String> names) throws SQLException {
+        Map<String, Product> products = new HashMap<>();
+        if (names == null || names.isEmpty()) {
+            return products;
+        }
+
+        List<String> filteredNames = names.stream()
+            .filter(name -> name != null && !name.isBlank())
+            .distinct()
+            .toList();
+        if (filteredNames.isEmpty()) {
+            return products;
+        }
+
+        String placeholders = String.join(", ", Collections.nCopies(filteredNames.size(), "?"));
+        String sql = "SELECT " + SELECT_COLUMNS + " FROM products WHERE name IN (" + placeholders + ")";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            for (int i = 0; i < filteredNames.size(); i++) {
+                pstmt.setString(i + 1, filteredNames.get(i));
+            }
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                int rowNum = 0;
+                while (rs.next()) {
+                    Product product = PRODUCT_MAPPER.mapRow(rs, ++rowNum);
+                    products.put(product.name, product);
+                }
+            }
+        }
+        return products;
+    }
+
+    /**
      * 更新商品库存（用于交易）
      * @param id 商品ID
      * @param delta 变化量
@@ -579,6 +619,35 @@ public class ProductDAORefactored extends BaseDAO {
                 while (rs.next() && index < products.size()) {
                     products.get(index++).id = rs.getInt(1);
                 }
+            }
+        }
+    }
+
+    /**
+     * 使用指定连接批量更新商品（含乐观锁）
+     * @param conn 数据库连接
+     * @param products 商品列表
+     * @throws SQLException 数据库操作异常
+     */
+    public void batchUpdateWithConnection(Connection conn, List<Product> products) throws SQLException {
+        if (products == null || products.isEmpty()) {
+            return;
+        }
+        String sql = "UPDATE products SET product_code = ?, name = ?, price = ?, quantity = ?, " +
+                     "category = ?, barcode = ?, unit = ?, description = ?, brand = ?, supplier = ?, " +
+                     "spec = ?, min_stock = ?, cost = ?, version = version + 1 WHERE id = ? AND version = ?";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            for (Product product : products) {
+                setProductParameters(pstmt, product);
+                pstmt.setInt(14, product.id);
+                pstmt.setInt(15, product.version);
+                pstmt.addBatch();
+            }
+            pstmt.executeBatch();
+            // 批量更新成功后递增版本号
+            for (Product product : products) {
+                product.version++;
             }
         }
     }

@@ -9,6 +9,7 @@ import com.cashier.model.Product;
 import com.cashier.model.Transaction;
 import com.cashier.api.sync.SyncEventType;
 import org.slf4j.Logger;
+import com.cashier.util.DatabaseManager;
 import com.cashier.util.LoggerFactoryUtil;
 
 import java.math.BigDecimal;
@@ -57,27 +58,28 @@ public class InvoiceService {
         if (transaction == null) {
             throw new SQLException("交易不存在: " + transactionId);
         }
-        
-        // 检查是否已开具发票
-        Invoice existing = InvoiceDAO.findByTransactionId(transactionId);
-        if (existing != null && !"VOIDED".equals(existing.status)) {
-            throw new SQLException("该交易已开具发票: " + existing.invoiceId);
-        }
-        
+
         Invoice invoice = createBaseInvoice(request);
         invoice.transactionId = transactionId;
         invoice.items = createInvoiceItems(transaction);
         invoice.calculateAmounts();
         invoice.createBy = request.createBy != null ? request.createBy : transaction.operatorUsername;
-        
-        // 保存发票
-        InvoiceDAO.insert(invoice);
-        
+
+        // 检查+插入在同一事务内，消除 TOCTOU 竞态
+        DatabaseManager.executeBooleanTransaction(conn -> {
+            Invoice existing = InvoiceDAO.findByTransactionIdWithConnection(conn, transactionId);
+            if (existing != null && !"VOIDED".equals(existing.status)) {
+                throw new SQLException("该交易已开具发票: " + existing.invoiceId);
+            }
+            InvoiceDAO.insertWithConnection(conn, invoice);
+            return true;
+        });
+
         logger.info("发票创建成功: {} - 金额: {}", invoice.invoiceId, invoice.finalAmount);
-        
+
         // 广播发票创建事件
         broadcastInvoiceCreated(invoice, transactionId);
-        
+
         return invoice;
     }
     

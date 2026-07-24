@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>狸算收银系统 - 全面代码审计报告</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-soft: #f6f8fa;
+    --border: #d0d7de;
+    --text: #1f2328;
+    --text-soft: #656d76;
+    --red: #cf222e;
+    --red-bg: #ffebe9;
+    --orange: #bc4c00;
+    --orange-bg: #fff1e5;
+    --yellow: #9a6700;
+    --yellow-bg: #fff8c5;
+    --blue: #0969da;
+    --blue-bg: #ddf4ff;
+    --green: #1a7f37;
+    --green-bg: #dafbe1;
+    --purple: #8250df;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", sans-serif;
+    background: var(--bg-soft);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 14px;
+  }
+  .container { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    padding: 40px 32px;
+    border-radius: 12px;
+    margin-bottom: 32px;
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+  }
+  .header h1 { font-size: 28px; margin-bottom: 8px; }
+  .header .meta { opacity: 0.9; font-size: 13px; }
+
+  /* Summary Cards */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .summary-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    transition: transform 0.2s;
+  }
+  .summary-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  .summary-card .num { font-size: 36px; font-weight: 700; line-height: 1.2; }
+  .summary-card .label { font-size: 13px; color: var(--text-soft); margin-top: 4px; }
+  .summary-card .bar { height: 4px; border-radius: 2px; margin-top: 12px; }
+
+  /* Section */
+  .section {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .section-header {
+    padding: 16px 20px;
+    font-size: 18px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+  }
+  .section-header:hover { background: var(--bg-soft); }
+  .section-header .badge {
+    font-size: 12px;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+  .section-header .arrow { margin-left: auto; transition: transform 0.2s; }
+  .section-header.collapsed .arrow { transform: rotate(-90deg); }
+  .section-body { padding: 0; }
+  .section-header.collapsed + .section-body { display: none; }
+
+  /* Issue */
+  .issue {
+    border-bottom: 1px solid var(--border);
+    padding: 20px;
+    transition: background 0.15s;
+  }
+  .issue:last-child { border-bottom: none; }
+  .issue:hover { background: var(--bg-soft); }
+  .issue-title {
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .issue-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+    font-size: 12px;
+  }
+  .tag {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .tag-critical { background: var(--red-bg); color: var(--red); }
+  .tag-high { background: var(--orange-bg); color: var(--orange); }
+  .tag-medium { background: var(--yellow-bg); color: var(--yellow); }
+  .tag-low { background: var(--blue-bg); color: var(--blue); }
+  .tag-cat { background: var(--bg-soft); color: var(--text-soft); border: 1px solid var(--border); }
+  .tag-file { background: var(--purple); color: #fff; font-family: 'SF Mono', Consolas, monospace; font-size: 11px; }
+
+  .issue-desc { color: var(--text-soft); margin-bottom: 10px; }
+  .issue-code {
+    background: #f6f8fa;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 10px 0;
+    overflow-x: auto;
+    font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+  .issue-code .comment { color: #6a737d; }
+  .issue-code .keyword { color: #d73a49; }
+  .issue-code .string { color: #032f62; }
+  .issue-code .highlight { background: #fff8c5; }
+
+  .issue-fix {
+    background: var(--green-bg);
+    border-left: 3px solid var(--green);
+    padding: 10px 16px;
+    border-radius: 0 6px 6px 0;
+    margin-top: 10px;
+    font-size: 13px;
+  }
+  .issue-fix strong { color: var(--green); }
+
+  /* Color variants */
+  .critical .section-header { background: var(--red-bg); }
+  .critical .section-header .badge { background: var(--red); color: #fff; }
+  .critical .summary-card .num { color: var(--red); }
+  .critical .summary-card .bar { background: var(--red); }
+
+  .high .section-header { background: var(--orange-bg); }
+  .high .section-header .badge { background: var(--orange); color: #fff; }
+  .high .summary-card .num { color: var(--orange); }
+  .high .summary-card .bar { background: var(--orange); }
+
+  .medium .section-header { background: var(--yellow-bg); }
+  .medium .section-header .badge { background: var(--yellow); color: #fff; }
+  .medium .summary-card .num { color: var(--yellow); }
+  .medium .summary-card .bar { background: var(--yellow); }
+
+  .low .section-header { background: var(--blue-bg); }
+  .low .section-header .badge { background: var(--blue); color: #fff; }
+  .low .summary-card .num { color: var(--blue); }
+  .low .summary-card .bar { background: var(--blue); }
+
+  /* TOC */
+  .toc {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 32px;
+  }
+  .toc h3 { font-size: 15px; margin-bottom: 12px; }
+  .toc ul { list-style: none; }
+  .toc li { padding: 4px 0; }
+  .toc a { color: var(--blue); text-decoration: none; font-size: 13px; }
+  .toc a:hover { text-decoration: underline; }
+
+  /* Stats table */
+  .stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 24px;
+    font-size: 13px;
+  }
+  .stats-table th, .stats-table td {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    text-align: left;
+  }
+  .stats-table th { background: var(--bg-soft); font-weight: 600; }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    color: var(--text-soft);
+    font-size: 12px;
+    padding: 32px 0;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- Header -->
+<div class="header">
+  <h1>🐒 狸算收银系统 — 全面代码审计报告</h1>
+  <div class="meta">
+    版本 v2.5.9 &nbsp;|&nbsp; 审计日期 2026-07-24 &nbsp;|&nbsp; 审计范围：252 个 Java 源文件（DAO / Service / Controller / Util / Constant）<br>
+    审计维度：Bug与逻辑错误 · 安全漏洞 · 性能与内存 · 异常处理 · 代码规范与可维护性
+  </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="summary-grid">
+  <div class="summary-card critical">
+    <div class="num">11</div>
+    <div class="label">Critical 严重</div>
+    <div class="bar"></div>
+  </div>
+  <div class="summary-card high">
+    <div class="num">30</div>
+    <div class="label">High 高危</div>
+    <div class="bar"></div>
+  </div>
+  <div class="summary-card medium">
+    <div class="num">24</div>
+    <div class="label">Medium 中等</div>
+    <div class="bar"></div>
+  </div>
+  <div class="summary-card low">
+    <div class="num">8</div>
+    <div class="label">Low 低危</div>
+    <div class="bar"></div>
+  </div>
+  <div class="summary-card">
+    <div class="num" style="color: var(--purple);">73</div>
+    <div class="label">问题总计</div>
+    <div class="bar" style="background: var(--purple);"></div>
+  </div>
+</div>
+
+<!-- Category Stats -->
+<div class="section">
+  <div class="section-header">📊 按问题类别分布</div>
+  <div class="section-body" style="padding: 20px;">
+    <table class="stats-table">
+      <thead>
+        <tr><th>类别</th><th>Critical</th><th>High</th><th>Medium</th><th>Low</th><th>合计</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>🔒 SQL注入 / 路径遍历</td><td>4</td><td>0</td><td>2</td><td>0</td><td><strong>6</strong></td></tr>
+        <tr><td>💰 事务管理缺陷</td><td>2</td><td>4</td><td>1</td><td>0</td><td><strong>7</strong></td></tr>
+        <tr><td>⚡ 并发安全 / 竞态条件</td><td>2</td><td>2</td><td>5</td><td>0</td><td><strong>9</strong></td></tr>
+        <tr><td>🔢 金额精度 / 业务逻辑</td><td>1</td><td>4</td><td>2</td><td>1</td><td><strong>8</strong></td></tr>
+        <tr><td>🛡️ 资源泄漏</td><td>0</td><td>6</td><td>2</td><td>0</td><td><strong>8</strong></td></tr>
+        <tr><td>⚠️ 异常处理缺陷</td><td>1</td><td>3</td><td>3</td><td>0</td><td><strong>7</strong></td></tr>
+        <tr><td>🔐 密码 / 认证安全</td><td>1</td><td>3</td><td>1</td><td>1</td><td><strong>6</strong></td></tr>
+        <tr><td>🚫 权限控制</td><td>1</td><td>0</td><td>1</td><td>0</td><td><strong>2</strong></td></tr>
+        <tr><td>🐌 性能瓶颈</td><td>0</td><td>2</td><td>3</td><td>1</td><td><strong>6</strong></td></tr>
+        <tr><td>📝 代码规范 / 可维护性</td><td>0</td><td>0</td><td>4</td><td>5</td><td><strong>9</strong></td></tr>
+        <tr><td>💾 敏感信息泄露</td><td>0</td><td>4</td><td>0</td><td>0</td><td><strong>4</strong></td></tr>
+        <tr style="font-weight:700;"><td>合计</td><td>11</td><td>30</td><td>24</td><td>8</td><td>73</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ============ CRITICAL ============ -->
+<div class="section critical" id="critical">
+  <div class="section-header" onclick="toggleSection(this)">
+    🔴 Critical 严重问题（11项）
+    <span class="badge">需立即修复</span>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="section-body">
+
+    <!-- C-1 -->
+    <div class="issue">
+      <div class="issue-title">C-1. CacheManager 并发安全：LinkedHashMap access-order 在读锁下导致竞态条件</div>
+      <div class="issue-meta">
+        <span class="tag tag-critical">Critical</span>
+        <span class="tag tag-cat">并发安全</span>
+        <span class="tag tag-file">CacheManager.java:31-48</span>
+      </div>
+      <div class="issue-desc">productCache 使用 LinkedHashMap(128, 0.75f, <strong>true</strong>) 开启 access-order 模式，每次 get() 会修改内部链表结构。但 getProductFromCache 等方法使用读锁（ReadWriteLock），允许多线程同时进入，导致非线程安全的结构修改。高并发下可能死循环或数据损坏。</div>
+      <div class="issue-code"><span class="comment">// accessOrder=true — 每次 get() 修改链表结构</span>
+private static final Map&lt;Integer, Product&gt; productCache = new LinkedHashMap&lt;Integer, Product&gt;(128, 0.75f, <span class="keyword">true</span>) { ... };
+
+<span class="comment">// 使用读锁，但 get() 并非只读操作</span>
+lock.readLock().lock();       <span class="comment">// 多线程同时持有</span>
+try {
+    return productCache.get(productId);  <span class="highlight">// 修改链表 → 竞态条件</span>
+} finally {
+    lock.readLock().unlock();
+}</div>
+      <div class="issue-fix"><strong>修复建议：</strong>将 accessOrder 改为 false（放弃 LRU 自动排序），或将读操作改用写锁。最佳方案：替换为 ConcurrentHashMap + 手动 LRU，或引入 Caffeine/Guava Cache。</div>
+    </div>
+
+    <!-- C-2 -->
+    <div class="issue">
+      <div class="issue-title">C-2. ExportUtil 路径遍历漏洞</div>
+      <div class="issue-meta">
+        <span class="tag tag-critical">Critical</span>
+        <span class="tag tag-cat">路径遍历</span>
+        <span class="tag tag-file">ExportUtil.java:55-88</span>
+      </div>
+      <div class="issue-desc">export() 方法的 subDir 和 title 参数直接拼接到文件路径中，未做任何路径遍历检查。攻击者传入 subDir="../../etc" 可将文件写到导出目录之外。</div>
+      <div class="issue-code">Path exportPath = Paths.get(EXPORT_DIR, subDir);  <span class="highlight">// subDir 未验证</span>
+String filePath = exportPath + File.separator + fileName + ".xlsx";</div>
+      <div class="issue-fix"><strong>修复建议：</strong>验证 subDir 不含 ".." 和路径分隔符；用 Path.normalize() 并校验结果仍在 EXPORT_DIR 内：if (!exportPath.startsWith(EXPORT_DIR)) throw new SecurityException(...)。</div>
+    </div>
+
+    <!-- C-3 -->
+    <div class="issue">
+      <div class="issue-title">C-3. DatabaseManager Docker 备份命令中密码通过命令行参数传递</div>
+      <div class="issue-meta">
+        <span class="tag tag-critical">Critical</span>
+        <span class="tag tag-cat">密码泄露</span>
+        <span class="tag tag-file">DatabaseManager.java:1261-1271</span>
+      </div>
+      <div class="issue-desc">backupViaDocker 中数据库密码通过 -e MYSQL_PWD=xxx 命令行参数传递给 docker exec。在 Unix/Linux 上命令行参数可通过 ps / /proc/&lt;pid&gt;/cmdline 被其他用户看到。</div>
+      <div class="issue-code">String[] command = {
+    "docker", "exec", "-e", "MYSQL_PWD=" + dbPassword,  <span class="highlight">// 密码在 ps 中可见</span>
+    dockerMysqlContainerName, "mysqldump", "-u" + dbUsername, ...
+};</div>
+      <div class="issue-fix"><strong>修复建议：</strong>改用 ProcessBuilder.environment().put("MYSQL_PWD", dbPassword) 传递密码（backupViaLocalCommand 第1328行已正确实现此模式）。</div>
+    </div>
+
+    <!-- C-4 -->
+    <div class="issue">
+      <div class="issue-title">C-4. BatchOperationUtil SQL注入 + 不安全的 LOAD DATA INFILE</div>
+      <div class="issue-meta">
+        <span class="tag tag-critical">Critical</span>
+        <span class="tag tag-cat">SQL注入</span>
+        <span class="tag tag-file">BatchOperationUtil.java:107-148</span>
+      </div>
+      <div class="issue-desc">optimizedBatchInsert 通过 String.format 拼接 LOAD DATA LOCAL INFILE SQL，tableName 和 delimiter 直接插入。临时文件路径硬编码 /tmp/，Windows 不兼容。LOAD DATA LOCAL INFILE 本身要求 MySQL 开启 local_infile=1，是安全风险。</div>
+      <div class="issue-code">String tempFilePath = "/tmp/batch_insert_" + System.currentTimeMillis() + ".csv"; <span class="highlight">// Windows 不兼容</span>
+
+String sql = String.format(
+    "LOAD DATA LOCAL INFILE '%s' INTO TABLE %s FIELDS TERMINATED BY '%c'",
+    tempFilePath, tableName, delimiter  <span class="highlight">// tableName 未验证！</span>
+);</div>
+      <div class="issue-fix"><strong>修复建议：</strong>对 tableName 做白名单验证；用 System.getProperty("java.io.tmpdir") 替代硬编码 /tmp；废弃 LOAD DATA LOCAL INFILE，改用批量 PreparedStatement.addBatch()。</div>
+    </div>
+
+    <!-- C-5 -->
+    <div class="issue">
+      <div class="issue-title">C-5. 会员余额更新缺少乐观锁（并发扣款可能丢失余额）</div>
+      <div class="issue-meta">
+        <span class="tag tag-critical">Critical</span>
+        <span class="tag tag-cat">并发安全 / 事务</span>
+        <span class="tag tag-file">MemberDAO.java:307-322 · MemberService.java · TransactionService.java:129-164</span>
+      </div>
+      <div class="issue-desc">MemberDAO.updateWithConnection 的 SQL WHERE 子句只有 id=?，没有 version 字段。采用"读最新值→内存计算→覆盖写入"模式时，两个并发事务可能同时读到相同旧余额，各自计算后写入，后写覆盖先写，导致余额丢失。对比 ProductDAO 已有乐观锁（WHERE id=? AND version=?），会员却没有。</div>
+      <div class="issue-code"><span class="comment">// MemberDAO — 无乐观锁</span>
+String sql = "UPDATE members SET ... balance = ? WHERE id = ?";  <span class="highlight">// 没有 version 条件</span>
+
+<span class="comment">// ProductDAO — 已有乐观锁</span>
+String sql = "UPDATE products SET ... version = version + 1 WHERE id = ? AND version = ?";</div>
+      <div class="issue-fix"><strong>修复建议：</strong>为 members 表添加 version 字段，UPDATE 增加 AND version = ? 条件，SET 中 version = version + 1。与商品乐观锁保持一致。影响范围：MemberService.recharge / TransactionService.executeTransaction / ReturnService.completeReturnOrder。</div>
+    </div>
+
+    <!-- C-6 -->
+    <div class="issue">
+      <div class="issue-title">C-6. DataService 批量保存操作缺少事务保护（删除后插入失败导致数据永久丢失）</div>
+      <div class="issue-meta">
+        <span class="tag tag-critical">Critical</span>
+        <span class="tag tag-cat">事务管理</span>
+        <span class="tag tag-file">DataService.java:170-183, 229-242, 46-72, 296-305</span>
+      </div>
+      <div class="issue-desc">savePromotions 先全量删除再批量插入，两步无事务保护。如果删除成功但插入失败，促销数据永久丢失。saveCategories 同样问题。saveInventory 循环逐条 insert/update，中途失败留下不一致状态。saveSettings 逐条独立事务。</div>
+      <div class="issue-code"><span class="comment">// 先删除全部 → 再插入 → 中间失败 = 数据全没了</span>
+List&lt;Promotion&gt; existing = PromotionDAO.findAll();
+for (Promotion p : existing) {
+    PromotionDAO.delete(p.id);        <span class="highlight">// 逐条删除，无事务</span>
+}
+PromotionDAO.batchInsert(promotions);   <span class="highlight">// 如果失败，数据已丢失</span></div>
+      <div class="issue-fix"><strong>修复建议：</strong>将整个操作包裹在 DatabaseManager.executeBooleanTransaction 中，确保删除和插入原子提交或回滚。</div>
+    </div>
+
+    <!-- C-7 -->
+    <div class="issue">
+      <div class="issue-title">C-7. 金额字段使用 double 类型导致精度丢失</div>
+      <div class="issue-meta">
+        <span class="tag tag-critical">Critical</span>
+        <span class="tag tag-cat">业务逻辑 / 精度</span>
+        <span class="tag tag-file">MemberService.java:68,206-228 · TransactionService.java:67-73</span>
+      </div>
+      <div class="issue-desc">recharge(Member, double amount)、executeTransaction(..., double receivedAmount, double changeAmount) 等方法入参仍为 double。BigDecimal.valueOf(0.1) 不等于 new BigDecimal("0.1")。涉及资金计算的位置存在精度风险。</div>
+      <div class="issue-code"><span class="comment">// MemberService — double 入参</span>
+public static boolean recharge(Member member, <span class="highlight">double amount</span>, ...) {
+    BigDecimal rechargeAmount = BigDecimal.valueOf(amount); <span class="comment">// 0.1 → 0.1000000000000000055511151231257827021181583404541015625</span>
+}
+
+<span class="comment">// TransactionService — 收款/找零用 double</span>
+public static TransactionResult executeTransaction(...,
+    <span class="highlight">double receivedAmount, double changeAmount</span>, ...)</div>
+      <div class="issue-fix"><strong>修复建议：</strong>将所有金额参数从 double 改为 BigDecimal。调用方直接传入 BigDecimal.valueOf(string) 或 new BigDecimal("100.00")。</div>
+    </div>
+
+    <!-- C-8 -->
+    <div class="issue">
+      <div class="issue-title">C-8. 密码重置使用明文输入框（密码可见）</div>
+      <div class="issue-meta">
+        <span class="tag tag-critical">Critical</span>
+        <span class="tag tag-cat">密码安全</span>
+        <span class="tag tag-file">UserController.java:505-519</span>
+      </div>
+      <div class="issue-desc">handleResetPassword 使用 TextInputDialog（普通文本框），输入的密码以明文显示在屏幕上。无密码强度校验、无"确认密码"二次输入，极易误操作设置极弱密码。系统 SettingsController 中已定义 passwordComplexity / passwordMinLength 配置但此处未引用。</div>
+      <div class="issue-code">TextInputDialog dialog = new TextInputDialog();  <span class="highlight">// 密码明文可见！</span>
+dialog.showAndWait().ifPresent(newPassword -> {
+    selected.password = PasswordUtil.hashPassword(newPassword.trim()); <span class="comment">// 无强度校验</span>
+});</div>
+      <div class="issue-fix"><strong>修复建议：</strong>使用自定义 Dialog 配合两个 PasswordField（新密码 + 确认密码）；从系统配置读取 passwordMinLength 和 passwordComplexity 进行动态校验。</div>
+    </div>
+
+    <!-- C-9 -->
+    <div class="issue">
+      <div class="issue-title">C-9. Controller 内部缺少权限纵深校验（越权风险）</div>
+      <div class="issue-meta">
+        <span class="tag tag-critical">Critical</span>
+        <span class="tag tag-cat">权限控制</span>
+        <span class="tag tag-file">UserController.java:93-95,202,469,505</span>
+      </div>
+      <div class="issue-desc">UserController 仅在 MainController 导航前做 requirePermission 检查，Controller 内部无二次校验。角色下拉框允许任意有权限者创建 admin 用户；如果该 Controller 被非标准路径加载（如弹窗、直接 FXML），权限完全失控。</div>
+      <div class="issue-fix"><strong>修复建议：</strong>在每个写操作入口增加 requirePermission 或角色校验；禁止非 admin 用户创建 admin 角色用户；参考 InventoryController 已在内部做 hasPermission 检查的做法。</div>
+    </div>
+
+    <!-- C-10 -->
+    <div class="issue">
+      <div class="issue-title">C-10. DataService 多个 save 方法异常被吞没（调用方无法感知失败）</div>
+      <div class="issue-meta">
+        <span class="tag tag-critical">Critical</span>
+        <span class="tag tag-cat">异常处理</span>
+        <span class="tag tag-file">DataService.java:46-72,94-101,123-130,147-153,170-183,229-242,259-265,296-305</span>
+      </div>
+      <div class="issue-desc">8个 save 方法全部 catch SQLException 后仅记日志、返回 void，调用方完全无法知道保存是否成功。用户可能以为数据已保存而实际丢失。</div>
+      <div class="issue-code">public static void saveInventory(Map&lt;String, Product&gt; inventory) {
+    try { ... }
+    catch (SQLException e) {
+        logger.error("保存商品数据失败", e);  <span class="highlight">// 仅记日志，返回 void</span>
+    }
+}</div>
+      <div class="issue-fix"><strong>修复建议：</strong>抛出异常或返回 boolean，让调用方处理失败。建议统一抛出自定义 DataAccessException。</div>
+    </div>
+
+    <!-- C-11 -->
+    <div class="issue">
+      <div class="issue-title">C-11. BaseDAO.count() — whereClause/tableName 直接拼接到 SQL</div>
+      <div class="issue-meta">
+        <span class="tag tag-critical">Critical</span>
+        <span class="tag tag-cat">SQL注入</span>
+        <span class="tag tag-file">BaseDAO.java:268-274</span>
+      </div>
+      <div class="issue-desc">count() 方法将 tableName 和 whereClause 直接拼接到 SQL 字符串中。虽然 JDBC 不支持表名参数化，但 whereClause 如果由调用者构造不当就会引入注入风险。</div>
+      <div class="issue-code">StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM ").append(tableName);
+if (whereClause != null && !whereClause.isEmpty()) {
+    sql.append(" WHERE ").append(whereClause);  <span class="highlight">// 直接拼接</span>
+}</div>
+      <div class="issue-fix"><strong>修复建议：</strong>对 tableName 做白名单验证；whereClause 必须由程序内部生成，不接受用户输入；添加文档警告说明安全约束。</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============ HIGH ============ -->
+<div class="section high" id="high">
+  <div class="section-header" onclick="toggleSection(this)">
+    🟠 High 高危问题（30项）
+    <span class="badge">需尽快修复</span>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="section-body">
+
+    <!-- H-1 -->
+    <div class="issue">
+      <div class="issue-title">H-1. TransactionDAO.batchInsert() 手动连接管理，setAutoCommit 失败导致连接泄漏</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">资源泄漏 / 事务</span><span class="tag tag-file">TransactionDAO.java:429-498</span></div>
+      <div class="issue-desc">手动管理 Connection，setAutoCommit(true) 和 close() 在同一 try 块中，前者失败则后者不执行，连接泄漏到连接池。</div>
+      <div class="issue-fix"><strong>修复：</strong>分离 setAutoCommit 和 close 到独立 try-catch，或改用 executeInTransaction 模式。</div>
+    </div>
+
+    <!-- H-2 -->
+    <div class="issue">
+      <div class="issue-title">H-2. ReturnOrderItemDAO / ReturnOrderDAO — SQLException 被静默吞掉返回 false</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">异常处理</span><span class="tag tag-file">ReturnOrderItemDAO.java:21-26,62-67,127-130... · ReturnOrderDAO.java（多处）</span></div>
+      <div class="issue-desc">大量方法 catch SQLException 后仅记日志返回 false/null，调用方无法区分"记录不存在"和"数据库异常"。</div>
+      <div class="issue-fix"><strong>修复：</strong>让异常向上传播，或包装为自定义 DataAccessException。</div>
+    </div>
+
+    <!-- H-3 -->
+    <div class="issue">
+      <div class="issue-title">H-3. LanguagePreferenceDAO — 空catch块 + 递归调用可能导致无限循环</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">异常处理</span><span class="tag tag-file">LanguagePreferenceDAO.java:116-131</span></div>
+      <div class="issue-desc">基于异常消息字符串判断错误类型（不可靠），空catch块吞掉 ALTER TABLE 失败信息，递归调用 setCurrencyPreference() 可能无限循环。</div>
+      <div class="issue-fix"><strong>修复：</strong>用 DatabaseMetaData.getColumns() 检测列是否存在；不要在生产代码中用DDL自适应；采用数据库迁移脚本管理schema变更。</div>
+    </div>
+
+    <!-- H-4 -->
+    <div class="issue">
+      <div class="issue-title">H-4. DAOFactory — 非线程安全的 HashMap</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">并发安全</span><span class="tag tag-file">DAOFactory.java:12,37-39</span></div>
+      <div class="issue-desc">单例中使用 HashMap 而非 ConcurrentHashMap，并发注册/获取时可能 ConcurrentModificationException。</div>
+      <div class="issue-fix"><strong>修复：</strong>替换为 ConcurrentHashMap。</div>
+    </div>
+
+    <!-- H-5 -->
+    <div class="issue">
+      <div class="issue-title">H-5. InvoiceDAO.findAll() — N+1 查询（每条发票单独查明细）</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">性能</span><span class="tag tag-file">InvoiceDAO.java:215-229, 405-424, 235-272</span></div>
+      <div class="issue-desc">findAll / findByDateRange / findPage 均在循环中调用 findItemsByInvoiceId，100张发票 = 101次查询。</div>
+      <div class="issue-fix"><strong>修复：</strong>用 JOIN 一次查询或先收集所有 invoice_id 再批量 IN 查询。</div>
+    </div>
+
+    <!-- H-6 -->
+    <div class="issue">
+      <div class="issue-title">H-6. PromotionService.applyPromotion — 事务内读取使用外部连接</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">事务管理</span><span class="tag tag-file">PromotionService.java:71-97</span></div>
+      <div class="issue-desc">事务内调用 PromotionDAO.findById(promotionId) 未使用事务连接 conn，读取到的数据可能与事务内的 incrementUsage 不一致。usageCount 检查和递增之间无锁，并发可能超限。</div>
+      <div class="issue-fix"><strong>修复：</strong>使用 findByIdWithConnection(conn, ...)；UPDATE 语句中带条件 WHERE usage_count &lt; max_usage 避免并发超限。</div>
+    </div>
+
+    <!-- H-7 -->
+    <div class="issue">
+      <div class="issue-title">H-7. PaymentService.applyRefund — 退款操作外部调用与DB操作无补偿事务</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">事务管理</span><span class="tag tag-file">PaymentService.java:213-233</span></div>
+      <div class="issue-desc">先调用支付渠道退款（HTTP），再写数据库。如果渠道退款成功但 DB 写入失败，资金已退但系统无记录，无法对账。</div>
+      <div class="issue-fix"><strong>修复：</strong>采用 saga 模式：先在 DB 创建退款记录（PENDING），再调渠道，成功后更新 SUCCESS，失败标记 FAILED 并支持重试。</div>
+    </div>
+
+    <!-- H-8 -->
+    <div class="issue">
+      <div class="issue-title">H-8. PaymentService.handlePaymentNotify — 多次DB更新未在同一事务</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">事务管理</span><span class="tag tag-file">PaymentService.java:183-211</span></div>
+      <div class="issue-desc">updateNotifyInfo 和 updatePaymentSuccess 两次 DB 更新无事务保护，中间失败导致数据不一致。</div>
+      <div class="issue-fix"><strong>修复：</strong>包裹在 executeBooleanTransaction 中。</div>
+    </div>
+
+    <!-- H-9 -->
+    <div class="issue">
+      <div class="issue-title">H-9. InvoiceService 发票创建 check-then-act 竞态条件</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">事务 / 并发</span><span class="tag tag-file">InvoiceService.java:54-82</span></div>
+      <div class="issue-desc">先检查是否已开发票再创建，两个并发请求可能都通过检查并各自创建发票。</div>
+      <div class="issue-fix"><strong>修复：</strong>将检查和插入放入同一事务，数据库层面添加 UNIQUE(transaction_id) 约束。</div>
+    </div>
+
+    <!-- H-10 -->
+    <div class="issue">
+      <div class="issue-title">H-10. BackupService.getInstance() 非线程安全单例</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">并发安全</span><span class="tag tag-file">BackupService.java:36-41</span></div>
+      <div class="issue-desc">懒汉式单例无同步，多线程可能创建多个实例。</div>
+      <div class="issue-fix"><strong>修复：</strong>加 synchronized 或改为饿汉式。参考 InventoryAlertService.getInstance() 已使用 synchronized。</div>
+    </div>
+
+    <!-- H-11 -->
+    <div class="issue">
+      <div class="issue-title">H-11. ReturnService 退货金额统计使用 double</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">精度</span><span class="tag tag-file">ReturnService.java:238, 263-268</span></div>
+      <div class="issue-desc">totalReturnAmount 使用 double，BigDecimal 转 double 丢失精度。ReturnStatistics.totalReturnAmount 字段也应改为 BigDecimal。</div>
+      <div class="issue-fix"><strong>修复：</strong>将统计字段改为 BigDecimal，累加使用 BigDecimal.add()。</div>
+    </div>
+
+    <!-- H-12 -->
+    <div class="issue">
+      <div class="issue-title">H-12. TransactionService 税率通过 double 中转导致精度风险</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">精度</span><span class="tag tag-file">TransactionService.java:243-247</span></div>
+      <div class="issue-desc">Double.parseDouble("13.07") 可能得到 13.070000000000001，再转 BigDecimal 计算税额。</div>
+      <div class="issue-code">double taxRate = Double.parseDouble(settings.getOrDefault("taxRate", "0.0"));
+transaction.tax = transaction.getTotalAmount()
+    .multiply(BigDecimal.valueOf(taxRate))  <span class="highlight">// double 中转精度丢失</span>
+    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);</div>
+      <div class="issue-fix"><strong>修复：</strong>直接用 new BigDecimal(settings.getOrDefault("taxRate", "0.0"))。</div>
+    </div>
+
+    <!-- H-13 -->
+    <div class="issue">
+      <div class="issue-title">H-13. InvoicePrintService.toChineseAmount 金额转大写丢弃分角</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">业务逻辑</span><span class="tag tag-file">InvoicePrintService.java:230-264</span></div>
+      <div class="issue-desc">金额转中文大写时 setScale(0, RoundingMode.HALF_UP) 直接四舍五入到整元，100.50 → 101，没有处理"角"和"分"。发票金额大写必须精确到角分。</div>
+      <div class="issue-fix"><strong>修复：</strong>分离整数部分和小数部分，分别转换并拼接角和分（如"壹佰元零伍角整"）。</div>
+    </div>
+
+    <!-- H-14 -->
+    <div class="issue">
+      <div class="issue-title">H-14. WechatNativePaymentProvider.verifyNotification 吞没安全异常</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">异常处理 / 安全</span><span class="tag tag-file">WechatNativePaymentProvider.java:143-145</span></div>
+      <div class="issue-desc">验签失败、解密失败等可能是攻击行为，catch(Exception) 后直接 return false 无日志，安全事件无法追踪。</div>
+      <div class="issue-fix"><strong>修复：</strong>至少记录 warn 级别日志，包含异常信息。</div>
+    </div>
+
+    <!-- H-15 -->
+    <div class="issue">
+      <div class="issue-title">H-15. PaymentService.init / BackupService.init 初始化失败仅记日志</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">异常处理</span><span class="tag tag-file">PaymentService.java:41-49 · BackupService.java:46-60</span></div>
+      <div class="issue-desc">初始化失败后应用继续运行，但支付/备份功能不可用且无任何提示给用户。</div>
+      <div class="issue-fix"><strong>修复：</strong>初始化失败应通知用户或阻止应用启动。</div>
+    </div>
+
+    <!-- H-16 -->
+    <div class="issue">
+      <div class="issue-title">H-16. DataService.saveInventory 循环逐条数据库操作（性能瓶颈）</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">性能</span><span class="tag tag-file">DataService.java:46-72</span></div>
+      <div class="issue-desc">1000个商品 = 1000次独立事务和数据库连接。</div>
+      <div class="issue-fix"><strong>修复：</strong>使用批量操作方法或将整个循环放入单个事务。</div>
+    </div>
+
+    <!-- H-17 -->
+    <div class="issue">
+      <div class="issue-title">H-17. 首次登录密码修改强度要求过弱（仅6位无复杂度）</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">密码安全</span><span class="tag tag-file">LoginController.java:219,239</span></div>
+      <div class="issue-desc">强制密码修改硬编码6位长度，未读取系统配置 passwordMinLength / passwordComplexity。可设"123456"等极弱密码。</div>
+      <div class="issue-fix"><strong>修复：</strong>从 DataService.loadSettings() 读取配置，动态应用校验规则。</div>
+    </div>
+
+    <!-- H-18 -->
+    <div class="issue">
+      <div class="issue-title">H-18. 密码重置为模拟实现（不发邮件不生成令牌）</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">密码安全</span><span class="tag tag-file">PasswordResetController.java:111-125</span></div>
+      <div class="issue-desc">用 PauseTransition 模拟延迟，显示"重置链接已发送"假成功消息，实际什么都没发生。无速率限制。</div>
+      <div class="issue-fix"><strong>修复：</strong>实现真正的邮件发送+令牌机制，或明确标注为演示并禁用。</div>
+    </div>
+
+    <!-- H-19 -->
+    <div class="issue">
+      <div class="issue-title">H-19. 密码重置存在用户枚举漏洞</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">信息泄露</span><span class="tag tag-file">PasswordResetController.java:99-109</span></div>
+      <div class="issue-desc">返回不同错误消息（"用户名不存在" vs "邮箱不匹配"）让攻击者枚举有效用户名。user.email.equals(email) 在 email 为 null 时 NPE。</div>
+      <div class="issue-fix"><strong>修复：</strong>统一返回模糊消息；用 Objects.equals() 避免 NPE。</div>
+    </div>
+
+    <!-- H-20 -->
+    <div class="issue">
+      <div class="issue-title">H-20. 支付宝私钥以明文显示在 TextArea 中</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">敏感信息泄露</span><span class="tag tag-file">SettingsController.java:173,1105,1142</span></div>
+      <div class="issue-desc">支付宝私钥放在 TextArea（多行明文文本框）中显示，屏幕完全可见，可被截屏。对比微信 API 密钥已正确使用 PasswordField。</div>
+      <div class="issue-fix"><strong>修复：</strong>改为 PasswordField 或掩码输入框；提供"显示/隐藏"切换需二次确认。</div>
+    </div>
+
+    <!-- H-21 -->
+    <div class="issue">
+      <div class="issue-title">H-21. 异常消息直接暴露给用户（120+ 处系统级问题）</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">信息泄露</span><span class="tag tag-file">几乎所有 Controller</span></div>
+      <div class="issue-desc">e.getMessage() 被拼接进用户可见错误消息中，SQLException 可能暴露表名、列名、SQL 语句片段。</div>
+      <div class="issue-fix"><strong>修复：</strong>在 BaseController 中增加统一 handleError(userMessage, exception) 方法，向用户展示通用友好消息，详细异常仅写日志。</div>
+    </div>
+
+    <!-- H-22 -->
+    <div class="issue">
+      <div class="issue-title">H-22. DatabaseManager 静态初始化器执行重量级DB操作</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">设计缺陷</span><span class="tag tag-file">DatabaseManager.java:59-122</span></div>
+      <div class="issue-desc">static{} 块中创建连接池+初始化20+张表。数据库不可用时类加载失败抛 ExceptionInInitializerError，单元测试难以 Mock，启动时间长。</div>
+      <div class="issue-fix"><strong>修复：</strong>延迟初始化，首次 getConnection() 时初始化；将表结构初始化与连接池创建分离。</div>
+    </div>
+
+    <!-- H-23 -->
+    <div class="issue">
+      <div class="issue-title">H-23. DatabaseManager 线程安全问题（dataSource/initialized 无 volatile）</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">并发安全</span><span class="tag tag-file">DatabaseManager.java:36-38, 253-263, 1579-1597</span></div>
+      <div class="issue-desc">dataSource、initialized、testDataSource 无 volatile，getConnection() 无同步，reloadConfig() 修改时可能读到不一致状态。</div>
+      <div class="issue-fix"><strong>修复：</strong>字段标记 volatile，reloadConfig/setTestConnection 加同步。</div>
+    </div>
+
+    <!-- H-24 -->
+    <div class="issue">
+      <div class="issue-title">H-24. DatabaseManager.isDatabasePopulated() ResultSet 资源泄漏</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">资源泄漏</span><span class="tag tag-file">DatabaseManager.java:1081-1082</span></div>
+      <div class="issue-desc">ResultSet 未在 try-with-resources 中声明，异常时不关闭。</div>
+      <div class="issue-fix"><strong>修复：</strong>将 ResultSet 加入 try-with-resources。</div>
+    </div>
+
+    <!-- H-25 -->
+    <div class="issue">
+      <div class="issue-title">H-25. ExportUtil PDF 导出 PDPageContentStream 资源泄漏</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">资源泄漏</span><span class="tag tag-file">ExportUtil.java:320,362,372,428</span></div>
+      <div class="issue-desc">PDPageContentStream 多处手动 close()，异常路径下不关闭。换页时先关再创建，中间异常导致泄漏。</div>
+      <div class="issue-fix"><strong>修复：</strong>重构为 try-with-resources 或在 finally 块中确保关闭。</div>
+    </div>
+
+    <!-- H-26 -->
+    <div class="issue">
+      <div class="issue-title">H-26. UIOptimizer.delayedUpdate 每次调用创建新线程池</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">资源泄漏 / 性能</span><span class="tag tag-file">UIOptimizer.java:115-136</span></div>
+      <div class="issue-desc">每次调用创建新 ScheduledExecutorService，schedule 回调异常时不执行 shutdown()，频繁调用导致线程泄漏。</div>
+      <div class="issue-fix"><strong>修复：</strong>复用已有的 cleanupExecutor 或 asyncExecutor。</div>
+    </div>
+
+    <!-- H-27 -->
+    <div class="issue">
+      <div class="issue-title">H-27. ReceiptPrinter 命令执行未消费进程输出（可能挂起）</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">资源泄漏</span><span class="tag tag-file">ReceiptPrinter.java:192,195,198,265,268,271</span></div>
+      <div class="issue-desc">Runtime.exec() 不消费 stdout/stderr，缓冲区满时进程阻塞挂起。Process 未 waitFor/destroy。</div>
+      <div class="issue-fix"><strong>修复：</strong>用 ProcessBuilder.redirectErrorStream(true)，消费 getInputStream()，设超时 waitFor。</div>
+    </div>
+
+    <!-- H-28 -->
+    <div class="issue">
+      <div class="issue-title">H-28. DatabaseManager.reloadConfig() 配置不完整</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">配置管理</span><span class="tag tag-file">DatabaseManager.java:1579-1597</span></div>
+      <div class="issue-desc">重新创建 HikariDataSource 时遗漏连接泄漏检测、验证超时、预编译语句缓存等配置，重新加载后行为与初始启动不一致。</div>
+      <div class="issue-fix"><strong>修复：</strong>提取 createHikariConfig() 方法在静态初始化器和 reloadConfig() 中复用。</div>
+    </div>
+
+    <!-- H-29 -->
+    <div class="issue">
+      <div class="issue-title">H-29. UserDAO.mapRowToUser() — 用异常控制流程判断数据类型</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">异常处理</span><span class="tag tag-file">UserDAO.java:359-385</span></div>
+      <div class="issue-desc">try { rs.getLong("create_time") } catch(SQLException) { rs.getTimestamp("create_time") } — 用异常判断 MySQL(BIGINT) vs H2(TIMESTAMP)，SQLException 原因可能不是类型不匹配。</div>
+      <div class="issue-fix"><strong>修复：</strong>用 ResultSetMetaData.getColumnType() 检查列类型。</div>
+    </div>
+
+    <!-- H-30 -->
+    <div class="issue">
+      <div class="issue-title">H-30. DataService.savePromotions 逐条删除（N次独立事务）</div>
+      <div class="issue-meta"><span class="tag tag-high">High</span><span class="tag tag-cat">性能</span><span class="tag tag-file">DataService.java:172-176</span></div>
+      <div class="issue-desc">循环调用 PromotionDAO.delete(p.id)，每次独立事务。</div>
+      <div class="issue-fix"><strong>修复：</strong>用 DELETE FROM promotions 一次性删除，或放入批量事务。</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============ MEDIUM ============ -->
+<div class="section medium" id="medium">
+  <div class="section-header" onclick="toggleSection(this)">
+    🟡 Medium 中等问题（24项）
+    <span class="badge">建议计划修复</span>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="section-body">
+
+    <div class="issue">
+      <div class="issue-title">M-1. 多处 ResultSet 未在 try-with-resources 中声明</div>
+      <div class="issue-meta"><span class="tag tag-medium">Medium</span><span class="tag tag-cat">资源泄漏</span><span class="tag tag-file">CategoryDAO.java:43,64,150 · UnitDAO.java:43,64,150 · FontSizePreferenceDAO.java:23 · SystemSettingsDAO.java:22,55,103 · ThemePreferenceDAO.java:32</span></div>
+      <div class="issue-desc">11处 ResultSet 未在 try-with-resources 中声明，虽 Connection.close() 理论上级联关闭，但 JDBC 规范不强制。</div>
+      <div class="issue-fix"><strong>修复：</strong>统一放入 try-with-resources。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">M-2. MemberService.updateMemberLevel 读-改-写无事务</div>
+      <div class="issue-meta"><span class="tag tag-medium">Medium</span><span class="tag tag-cat">事务 / 并发</span><span class="tag tag-file">MemberService.java:142-163</span></div>
+      <div class="issue-desc">先读取会员再计算等级再写入，中间无锁，并发可能覆盖。</div>
+      <div class="issue-fix"><strong>修复：</strong>读-改-写放入同一事务，或用 UPDATE ... SET level = ? WHERE id = ? AND points &gt;= ? 原子更新。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">M-3. InventoryAlertService — checkInterval / alertCooldown 非 volatile</div>
+      <div class="issue-meta"><span class="tag tag-medium">Medium</span><span class="tag tag-cat">并发安全</span><span class="tag tag-file">InventoryAlertService.java:28-37</span></div>
+      <div class="issue-desc">主线程 set，调度线程读，缺少 volatile 可能看不到更新。</div>
+      <div class="issue-fix"><strong>修复：</strong>声明为 volatile。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">M-4. InvoiceService / InvoicePrintService — 静态可变字段非线程安全</div>
+      <div class="issue-meta"><span class="tag tag-medium">Medium</span><span class="tag tag-cat">并发安全</span><span class="tag tag-file">InvoiceService.java:32-37 · InvoicePrintService.java:29</span></div>
+      <div class="issue-desc">defaultSellerName、defaultTaxRate、outputDir 等静态可变字段非 volatile，跨线程不可见。</div>
+      <div class="issue-fix"><strong>修复：</strong>声明 volatile 或改用配置管理器。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">M-5. InvoiceService 发票号码生成可能重复</div>
+      <div class="issue-meta"><span class="tag tag-medium">Medium</span><span class="tag tag-cat">业务逻辑</span><span class="tag tag-file">InvoiceService.java:227-229</span></div>
+      <div class="issue-desc">System.currentTimeMillis() % 100000000，同毫秒生成相同号码。</div>
+      <div class="issue-fix"><strong>修复：</strong>加入序列号或随机因子，或使用数据库序列。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">M-6. TransactionService.calculateFinalAmount 结果未规整到2位小数</div>
+      <div class="issue-meta"><span class="tag tag-medium">Medium</span><span class="tag tag-cat">精度</span><span class="tag tag-file">TransactionService.java:278-286</span></div>
+      <div class="issue-desc">100.00 × 0.9500 = 95.0000，可能有多余小数位。</div>
+      <div class="issue-fix"><strong>修复：</strong>最终结果 setScale(2, RoundingMode.HALF_UP)。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">M-7. MemberService.findMemberByPhone 异常返回 null</div>
+      <div class="issue-meta"><span class="tag tag-medium">Medium</span><span class="tag tag-cat">异常处理</span><span class="tag tag-file">MemberService.java:51-58</span></div>
+      <div class="issue-desc">调用方无法区分"会员不存在"和"数据库异常"。</div>
+      <div class="issue-fix"><strong>修复：</strong>抛出异常或返回 Optional&lt;Member&gt;。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">M-8. InventoryService.batchUpdateInventory 异常返回 0</div>
+      <div class="issue-meta"><span class="tag tag-medium">Medium</span><span class="tag tag-cat">异常处理</span><span class="tag tag-file">InventoryService.java:110-159</span></div>
+      <div class="issue-desc">调用方无法区分"无更新项"和"更新失败"。</div>
+      <div class="issue-fix"><strong>修复：</strong>抛出异常或返回 -1 表示失败。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">M-9. TransactionService.getTransactionStatistics 全量加载到内存聚合</div>
+      <div class="issue-meta"><span class="tag tag-medium">Medium</span><span class="tag tag-cat">性能</span><span class="tag tag-file">TransactionService.java:306-337</span></div>
+      <div class="issue-desc">大日期范围可能加载数百万条交易记录到内存。</div>
+      <div class="issue-fix"><strong>修复：</strong>用 SQL 聚合查询 SELECT COUNT(*), SUM(final_amount) ... GROUP BY ...。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">M-10. ReturnService.calculateReturnStatistics 全量加载</div>
+      <div class="issue-meta"><span class="tag tag-medium">Medium</span><span class="tag tag-cat">性能</span><span class="tag tag-file">ReturnService.java:226-257</span></div>
+      <div class="issue-desc">同 M-9 问题。</div>
+      <div class="issue-fix"><strong>修复：</strong>用 SQL 聚合替代内存计算。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">M-11. 数据库查询在 UI 线程执行（界面卡顿）</div>
+      <div class="issue-meta"><span class="tag tag-medium">Medium</span><span class="tag tag-cat">UI线程安全</span><span class="tag tag-file">UserController.java:160-177 · MemberController.java:131-145 · AuditLogController.java:121-130 · RechargeController.java:138-148 等</span></div>
+      <div class="issue-desc">大量 DB 查询直接在 JavaFX Application Thread 上同步执行，阻塞 UI 渲染。</div>
+      <div class="issue-fix"><strong>修复：</strong>用 Task + Thread 或 ExecutorService 移至后台线程，Platform.runLater 更新 UI。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">M-12. 充值操作审计记录硬编码操作员为"系统"</div>
+      <div class="issue-meta"><span class="tag tag-medium">Medium</span><span class="tag tag-cat">审计完整性</span><span class="tag tag-file">RechargeController.java:197</span></div>
+      <div class="issue-desc">充值是资金操作，操作员硬编码为"系统"而非实际登录用户，无法追溯。</div>
+      <div class="issue-fix"><strong>修复：</strong>为 RechargeController 增加 setCurrentUser(User)，传入实际操作员。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">M-13. 登录锁定机制为实例级（重启即失效）</div>
+      <div class="issue-meta"><span class="tag tag-medium">Medium</span><span class="tag tag-cat">认证安全</span><span class="tag tag-file">LoginController.java:53-54,305-310</span></div>
+      <div class="issue-desc">登录尝试计数和锁定状态存在内存中，重启应用即重置。锁定是全局的不区分用户名。</div>
+      <div class="issue-fix"><strong>修复：</strong>持久化到数据库，按用户名分别锁定。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">M-14. 被忽略的异常（catch 块完全无日志）</div>
+      <div class="issue-meta"><span class="tag tag-medium">Medium</span><span class="tag tag-cat">异常处理</span><span class="tag tag-file">PurchaseOrderController.java:968,972 · TouchCartController.java:999,1466</span></div>
+      <div class="issue-desc">catch (Exception ignored) {} 完全吞掉异常，无日志记录。</div>
+      <div class="issue-fix"><strong>修复：</strong>至少添加 logger.debug 记录；catch (Exception) 应缩小范围或记录日志。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">M-15. CacheManager 缓存过期不清除数据（内存泄漏）</div>
+      <div class="issue-meta"><span class="tag tag-medium">Medium</span><span class="tag tag-cat">缓存 / 内存</span><span class="tag tag-file">CacheManager.java:233-245</span></div>
+      <div class="issue-desc">缓存过期时仅返回 false，不清除数据，过期数据持续占用内存（最多5000个Product对象）。</div>
+      <div class="issue-fix"><strong>修复：</strong>isCacheValid() 检测到过期时自动 clearCache()。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">M-16. CurrencyUtil 线程安全问题（DecimalFormat 非线程安全）</div>
+      <div class="issue-meta"><span class="tag tag-medium">Medium</span><span class="tag tag-cat">并发安全</span><span class="tag tag-file">CurrencyUtil.java:49-51,70-96,164-171</span></div>
+      <div class="issue-desc">cachedSymbol、currencyFormat 非 volatile，DecimalFormat 本身非线程安全，多线程调用 format() 可能产生错误结果。</div>
+      <div class="issue-fix"><strong>修复：</strong>volatile + ThreadLocal&lt;DecimalFormat&gt;。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">M-17. DatabaseManager columnMissing/tableMissing 使用 String.format 拼接 SQL</div>
+      <div class="issue-meta"><span class="tag tag-medium">Medium</span><span class="tag tag-cat">SQL注入</span><span class="tag tag-file">DatabaseManager.java:984-987,994-997,1006</span></div>
+      <div class="issue-desc">表名和列名直接插入 INFORMATION_SCHEMA 查询。目前只接收内部硬编码值，但将来有风险。</div>
+      <div class="issue-fix"><strong>修复：</strong>改用 PreparedStatement 参数化。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">M-18. DatabaseManager 连接池默认大小25（桌面应用过大）</div>
+      <div class="issue-meta"><span class="tag tag-medium">Medium</span><span class="tag tag-cat">连接池管理</span><span class="tag tag-file">DatabaseManager.java:45</span></div>
+      <div class="issue-desc">MySQL 默认 max_connections=151，多终端同时运行可能耗尽。桌面应用通常5-10足够。</div>
+      <div class="issue-fix"><strong>修复：</strong>默认值降至10，通过配置文件可调整。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">M-19. DatabaseConnectionHelper 错误消息中包含数据库用户名和生成的SQL</div>
+      <div class="issue-meta"><span class="tag tag-medium">Medium</span><span class="tag tag-cat">信息泄露</span><span class="tag tag-file">DatabaseConnectionHelper.java:185-198</span></div>
+      <div class="issue-desc">错误消息暴露 dbUsername，生成的 ALTER USER / GRANT 语句中用户名未转义。</div>
+      <div class="issue-fix"><strong>修复：</strong>不暴露用户名；生成的SQL中转义特殊字符。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">M-20. UIOptimizer 缓存清理竞态条件</div>
+      <div class="issue-meta"><span class="tag tag-medium">Medium</span><span class="tag tag-cat">并发安全</span><span class="tag tag-file">UIOptimizer.java:38-49,53-69,160-183</span></div>
+      <div class="issue-desc">cache（WeakHashMap）和 cacheTime（LinkedHashMap）两个独立Map无原子性保证。</div>
+      <div class="issue-fix"><strong>修复：</strong>用单个 ConcurrentHashMap&lt;String, CacheEntry&gt; 或 Caffeine Cache。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">M-21. QueryOptimizer EXPLAIN SQL 拼接</div>
+      <div class="issue-meta"><span class="tag tag-medium">Medium</span><span class="tag tag-cat">SQL注入</span><span class="tag tag-file">QueryOptimizer.java:57</span></div>
+      <div class="issue-desc">"EXPLAIN " + sql 直接拼接。如果 sql 来自不可信来源有注入风险。</div>
+      <div class="issue-fix"><strong>修复：</strong>确保只在内部调用，不接受用户输入。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">M-22. FormValidator setupRealTimeValidation 返回的清理函数未注销监听器</div>
+      <div class="issue-meta"><span class="tag tag-medium">Medium</span><span class="tag tag-cat">内存泄漏</span><span class="tag tag-file">FormValidator.java:301-327,332-355,360-383</span></div>
+      <div class="issue-desc">添加的 focusedProperty / textProperty 监听器在清理函数中未移除，控件复用场景下监听器持续累积。</div>
+      <div class="issue-fix"><strong>修复：</strong>保存监听器引用并在清理函数中 removeListener。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">M-23. BackupService.addFilesBackup 中 IOException 被吞没</div>
+      <div class="issue-meta"><span class="tag tag-medium">Medium</span><span class="tag tag-cat">异常处理</span><span class="tag tag-file">BackupService.java:200-230</span></div>
+      <div class="issue-desc">备份中文件IO异常仅 warn 不中断，备份可能不完整但上层认为成功。</div>
+      <div class="issue-fix"><strong>修复：</strong>收集失败文件，在返回结果中体现完整性状态。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">M-24. PromotionDAO 日期类型使用 long 存储（与项目其他 DAO 不一致）</div>
+      <div class="issue-meta"><span class="tag tag-medium">Medium</span><span class="tag tag-cat">数据类型不一致</span><span class="tag tag-file">PromotionDAO.java:140-141,175-176,243-244</span></div>
+      <div class="issue-desc">日期字段以 epoch 毫秒(BIGINT)存储，其他 DAO 使用 Timestamp。跨系统数据交换可能出问题。</div>
+      <div class="issue-fix"><strong>修复：</strong>统一为 Timestamp / DATETIME 类型。</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============ LOW ============ -->
+<div class="section low" id="low">
+  <div class="section-header" onclick="toggleSection(this)">
+    🔵 Low 低危问题（8项）
+    <span class="badge">有空再修</span>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="section-body">
+
+    <div class="issue">
+      <div class="issue-title">L-1. 积分截断方式需确认业务预期</div>
+      <div class="issue-meta"><span class="tag tag-low">Low</span><span class="tag tag-cat">业务逻辑</span><span class="tag tag-file">TransactionService.java:143-144</span></div>
+      <div class="issue-desc">RoundingMode.DOWN 总是向零截断，负数（退货场景）会变向上截断。确认业务预期。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">L-2. DatabaseManager 环境变量名称拼写不一致</div>
+      <div class="issue-meta"><span class="tag tag-low">Low</span><span class="tag tag-cat">代码规范</span><span class="tag tag-file">DatabaseManager.java:143,189,196</span></div>
+      <div class="issue-desc">应用名 "Cashier"，但环境变量为 CASHER_DB_PASSWORD，拼写错误。</div>
+      <div class="issue-fix"><strong>修复：</strong>统一为 CASHIER_DB_PASSWORD，保持旧名称向后兼容。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">L-3. CacheManager 缓存预热固定加载 MAX_CACHE_SIZE</div>
+      <div class="issue-meta"><span class="tag tag-low">Low</span><span class="tag tag-cat">性能</span><span class="tag tag-file">CacheManager.java:297-311</span></div>
+      <div class="issue-desc">商品数量远多于5000时只缓存前5000，命中率可能低。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">L-4. ShortcutManager.isValidShortcut NPE 风险</div>
+      <div class="issue-meta"><span class="tag tag-low">Low</span><span class="tag tag-cat">健壮性</span><span class="tag tag-file">ShortcutManager.java:319-321</span></div>
+      <div class="issue-desc">KeyCode.valueOf(parsed) 抛 IllegalArgumentException 而非返回 null，代码用 != null 检查是错误的。</div>
+      <div class="issue-fix"><strong>修复：</strong>用 try-catch 包裹 KeyCode.valueOf()。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">L-5. FXConstants 与 AppConstants 中 APP_TITLE 重复定义</div>
+      <div class="issue-meta"><span class="tag tag-low">Low</span><span class="tag tag-cat">代码规范</span><span class="tag tag-file">FXConstants.java:206-209 · AppConstants.java:21,26</span></div>
+      <div class="issue-fix"><strong>修复：</strong>移除 FXConstants 中的重复定义，统一使用 AppConstants。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">L-6. DateTimeFormats 缺少 null 安全检查</div>
+      <div class="issue-meta"><span class="tag tag-low">Low</span><span class="tag tag-cat">健壮性</span><span class="tag tag-file">DateTimeFormats.java:42-52</span></div>
+      <div class="issue-desc">formatStandard(null) 会抛 NPE。</div>
+      <div class="issue-fix"><strong>修复：</strong>添加 null 检查返回空字符串。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">L-7. DatabaseManager.generateRandomPassword 密码复杂度不足</div>
+      <div class="issue-meta"><span class="tag tag-low">Low</span><span class="tag tag-cat">密码安全</span><span class="tag tag-file">DatabaseManager.java:1063-1070</span></div>
+      <div class="issue-desc">生成密码仅含字母数字，长度10位，无特殊字符。</div>
+      <div class="issue-fix"><strong>修复：</strong>长度增至16位，加入特殊字符。</div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-title">L-8. SpacingConstants 引入不必要的 Swing 依赖</div>
+      <div class="issue-meta"><span class="tag tag-low">Low</span><span class="tag tag-cat">代码规范</span><span class="tag tag-file">SpacingConstants.java:151-180</span></div>
+      <div class="issue-desc">JavaFX 应用中返回 javax.swing.border.EmptyBorder，引入不必要的 Swing 依赖。</div>
+      <div class="issue-fix"><strong>修复：</strong>改为返回 javafx.geometry.Insets。</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============ POSITIVE ============ -->
+<div class="section" id="positive">
+  <div class="section-header" onclick="toggleSection(this)" style="background: var(--green-bg);">
+    ✅ 审计中发现的积极实践
+    <span class="badge" style="background: var(--green); color: #fff;">做得好的地方</span>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="section-body" style="padding: 20px;">
+    <ul style="padding-left: 20px; line-height: 2;">
+      <li><strong>BCrypt 密码哈希</strong>：PasswordUtil 使用 BCrypt（cost=12），而非 MD5/SHA1，密码存储安全。</li>
+      <li><strong>HikariCP 连接池</strong>：配置专业，包含 PreparedStatement 缓存、批量重写、连接泄漏检测（初始配置）。</li>
+      <li><strong>全面使用 PreparedStatement</strong>：DAO 层几乎所有查询都使用参数化，SQL 注入面极小。</li>
+      <li><strong>商品乐观锁</strong>：ProductDAO 的 UPDATE 带 version 条件，并发更新安全。</li>
+      <li><strong>LoggerFactoryUtil 统一日志</strong>：无 System.out.println / printStackTrace，日志规范。</li>
+      <li><strong>无命令注入 / XSS / 硬编码密码</strong>：Controller 层未发现命令执行、WebView 渲染、硬编码凭证。</li>
+      <li><strong>Service 层不直接管理 Connection</strong>：通过 DatabaseManager.executeBooleanTransaction 统一管理，无连接泄漏。</li>
+      <li><strong>H2 内存数据库测试</strong>：测试基础设施使用隔离的 H2 数据库，不影响生产数据。</li>
+      <li><strong>输入验证有部分覆盖</strong>：RechargeController 金额校验、MemberEditController 手机号/折扣/余额校验、RestockController 数量校验。</li>
+      <li><strong>LoginController 正确使用后台线程</strong>：登录验证在后台线程执行，不阻塞 UI。</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============ ROADMAP ============ -->
+<div class="section" id="roadmap">
+  <div class="section-header" onclick="toggleSection(this)" style="background: var(--purple); color: #fff;">
+    🗺️ 修复路线图
+    <span class="arrow" style="color: #fff;">▼</span>
+  </div>
+  <div class="section-body" style="padding: 20px;">
+    <table class="stats-table">
+      <thead>
+        <tr><th>优先级</th><th>问题</th><th>影响面</th><th>建议时间</th></tr>
+      </thead>
+      <tbody>
+        <tr style="background: var(--red-bg);">
+          <td><strong>P0 立即</strong></td>
+          <td>C-5 会员乐观锁 / C-6 DataService事务 / C-7 double→BigDecimal</td>
+          <td>资金安全</td>
+          <td>本周</td>
+        </tr>
+        <tr style="background: var(--red-bg);">
+          <td><strong>P0 立即</strong></td>
+          <td>C-1 CacheManager并发 / C-2 路径遍历 / C-3 密码泄露 / C-4 SQL注入</td>
+          <td>安全漏洞</td>
+          <td>本周</td>
+        </tr>
+        <tr style="background: var(--red-bg);">
+          <td><strong>P0 立即</strong></td>
+          <td>C-8 密码明文 / C-9 权限纵深 / C-10 异常吞没 / C-11 BaseDAO注入</td>
+          <td>认证+安全</td>
+          <td>本周</td>
+        </tr>
+        <tr style="background: var(--orange-bg);">
+          <td><strong>P1 尽快</strong></td>
+          <td>H-7 退款补偿事务 / H-9 发票竞态 / H-13 金额大写 / H-20 私钥明文</td>
+          <td>财务+凭证</td>
+          <td>2周内</td>
+        </tr>
+        <tr style="background: var(--orange-bg);">
+          <td><strong>P1 尽快</strong></td>
+          <td>H-21 异常消息暴露 / H-16 逐条DB操作 / H-22~28 DatabaseManager系列</td>
+          <td>系统稳定性</td>
+          <td>2周内</td>
+        </tr>
+        <tr style="background: var(--yellow-bg);">
+          <td><strong>P2 计划</strong></td>
+          <td>M-1~M-24 中等问题</td>
+          <td>代码质量</td>
+          <td>1个月内</td>
+        </tr>
+        <tr style="background: var(--blue-bg);">
+          <td><strong>P3 有空</strong></td>
+          <td>L-1~L-8 低危问题</td>
+          <td>代码规范</td>
+          <td>排期</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  <p>🐒 狸算收银系统 v2.5.9 代码审计报告 | 审计日期 2026-07-24</p>
+  <p>审计范围：252 Java 源文件 | 发现问题 73 项 | Critical 11 · High 30 · Medium 24 · Low 8</p>
+</div>
+
+</div>
+
+<script>
+function toggleSection(header) {
+  header.classList.toggle('collapsed');
+}
+</script>
+</body>
+</html>

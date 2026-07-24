@@ -21,6 +21,7 @@ public class Member {
     public BigDecimal discountRate;   // 折扣率（与discount相同，用于兼容）
     public BigDecimal balance;    // 会员余额
     public String birthday;       // 生日（格式：MM-dd）
+    public int version;           // 乐观锁版本号（用于并发安全的余额/积分更新）
 
     public Member() {
         this.id = 0;  // 默认ID为0，表示未保存到数据库

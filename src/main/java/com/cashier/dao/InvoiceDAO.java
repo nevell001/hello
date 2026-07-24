@@ -11,7 +11,9 @@ import java.sql.*;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 发票数据访问层
@@ -87,6 +89,12 @@ public class InvoiceDAO {
      * 插入发票
      */
     public static boolean insert(Invoice invoice) throws SQLException {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            return insertWithConnection(conn, invoice);
+        }
+    }
+
+    public static boolean insertWithConnection(Connection conn, Invoice invoice) throws SQLException {
         String sql = """
             INSERT INTO invoices (
                 invoice_id, invoice_code, invoice_number, transaction_id,
@@ -96,9 +104,8 @@ public class InvoiceDAO {
                 create_time, create_by, status, remark, payee, checker
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
-        
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
             pstmt.setString(1, invoice.invoiceId);
             pstmt.setString(2, invoice.invoiceCode);
@@ -191,13 +198,18 @@ public class InvoiceDAO {
      * 根据交易ID查找发票
      */
     public static Invoice findByTransactionId(String transactionId) throws SQLException {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            return findByTransactionIdWithConnection(conn, transactionId);
+        }
+    }
+
+    public static Invoice findByTransactionIdWithConnection(Connection conn, String transactionId) throws SQLException {
         String sql = "SELECT * FROM invoices WHERE transaction_id = ?";
-        
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
             pstmt.setString(1, transactionId);
-            
+
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     Invoice invoice = mapResultSetToInvoice(rs);
@@ -215,15 +227,26 @@ public class InvoiceDAO {
     public static List<Invoice> findAll() throws SQLException {
         String sql = "SELECT * FROM invoices ORDER BY create_time DESC";
         List<Invoice> invoices = new ArrayList<>();
-        
+        List<String> invoiceIds = new ArrayList<>();
+
         try (Connection conn = DatabaseManager.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
-            
+
             while (rs.next()) {
                 Invoice invoice = mapResultSetToInvoice(rs);
-                invoice.items = findItemsByInvoiceId(conn, invoice.invoiceId);
                 invoices.add(invoice);
+                invoiceIds.add(invoice.invoiceId);
+            }
+        }
+
+        // 批量查询明细，消除 N+1
+        if (!invoices.isEmpty()) {
+            try (Connection conn = DatabaseManager.getConnection()) {
+                Map<String, List<InvoiceItem>> itemsMap = findItemsByInvoiceIds(conn, invoiceIds);
+                for (Invoice inv : invoices) {
+                    inv.items = itemsMap.getOrDefault(inv.invoiceId, new ArrayList<>());
+                }
             }
         }
         return invoices;
@@ -260,11 +283,20 @@ public class InvoiceDAO {
             pstmt.setInt(nextIndex, pageSize);
             pstmt.setInt(nextIndex + 1, offset);
 
+            List<String> invoiceIds = new ArrayList<>();
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     Invoice invoice = mapResultSetToInvoice(rs);
-                    invoice.items = findItemsByInvoiceId(conn, invoice.invoiceId);
                     invoices.add(invoice);
+                    invoiceIds.add(invoice.invoiceId);
+                }
+            }
+
+            // 批量查询明细，消除 N+1
+            if (!invoices.isEmpty()) {
+                Map<String, List<InvoiceItem>> itemsMap = findItemsByInvoiceIds(conn, invoiceIds);
+                for (Invoice inv : invoices) {
+                    inv.items = itemsMap.getOrDefault(inv.invoiceId, new ArrayList<>());
                 }
             }
         }
@@ -331,21 +363,55 @@ public class InvoiceDAO {
             
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    InvoiceItem item = new InvoiceItem();
-                    item.productName = rs.getString("product_name");
-                    item.specification = rs.getString("specification");
-                    item.unit = rs.getString("unit");
-                    item.quantity = rs.getInt("quantity");
-                    item.unitPrice = rs.getBigDecimal("unit_price");
-                    item.amount = rs.getBigDecimal("amount");
-                    item.taxRate = rs.getBigDecimal("tax_rate");
-                    item.taxAmount = rs.getBigDecimal("tax_amount");
-                    item.totalAmount = rs.getBigDecimal("total_amount");
-                    items.add(item);
+                    items.add(mapResultSetToInvoiceItem(rs));
                 }
             }
         }
         return items;
+    }
+
+    /**
+     * 批量查询多张发票的明细（消除 N+1 查询）
+     */
+    private static Map<String, List<InvoiceItem>> findItemsByInvoiceIds(Connection conn, List<String> invoiceIds) throws SQLException {
+        if (invoiceIds == null || invoiceIds.isEmpty()) {
+            return new HashMap<>();
+        }
+        // 构建 IN (?, ?, ...) 占位符
+        String placeholders = String.join(",", java.util.Collections.nCopies(invoiceIds.size(), "?"));
+        String sql = "SELECT * FROM invoice_items WHERE invoice_id IN (" + placeholders + ")";
+        Map<String, List<InvoiceItem>> result = new HashMap<>();
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            for (int i = 0; i < invoiceIds.size(); i++) {
+                pstmt.setString(i + 1, invoiceIds.get(i));
+            }
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    String invId = rs.getString("invoice_id");
+                    InvoiceItem item = mapResultSetToInvoiceItem(rs);
+                    result.computeIfAbsent(invId, k -> new ArrayList<>()).add(item);
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * ResultSet 行映射为 InvoiceItem
+     */
+    private static InvoiceItem mapResultSetToInvoiceItem(ResultSet rs) throws SQLException {
+        InvoiceItem item = new InvoiceItem();
+        item.productName = rs.getString("product_name");
+        item.specification = rs.getString("specification");
+        item.unit = rs.getString("unit");
+        item.quantity = rs.getInt("quantity");
+        item.unitPrice = rs.getBigDecimal("unit_price");
+        item.amount = rs.getBigDecimal("amount");
+        item.taxRate = rs.getBigDecimal("tax_rate");
+        item.taxAmount = rs.getBigDecimal("tax_amount");
+        item.totalAmount = rs.getBigDecimal("total_amount");
+        return item;
     }
     
     /**
@@ -405,18 +471,27 @@ public class InvoiceDAO {
     public static List<Invoice> findByDateRange(LocalDate startDate, LocalDate endDate) throws SQLException {
         String sql = "SELECT * FROM invoices WHERE create_time BETWEEN ? AND ? ORDER BY create_time DESC";
         List<Invoice> invoices = new ArrayList<>();
-        
+        List<String> invoiceIds = new ArrayList<>();
+
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
+
             pstmt.setTimestamp(1, Timestamp.from(startDate.atStartOfDay(ZoneId.systemDefault()).toInstant()));
             pstmt.setTimestamp(2, Timestamp.from(endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant()));
-            
+
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     Invoice invoice = mapResultSetToInvoice(rs);
-                    invoice.items = findItemsByInvoiceId(conn, invoice.invoiceId);
                     invoices.add(invoice);
+                    invoiceIds.add(invoice.invoiceId);
+                }
+            }
+
+            // 批量查询明细，消除 N+1
+            if (!invoices.isEmpty()) {
+                Map<String, List<InvoiceItem>> itemsMap = findItemsByInvoiceIds(conn, invoiceIds);
+                for (Invoice inv : invoices) {
+                    inv.items = itemsMap.getOrDefault(inv.invoiceId, new ArrayList<>());
                 }
             }
         }

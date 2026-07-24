@@ -58,15 +58,15 @@ public class MemberService {
     }
 
     /**
-     * 会员充值
+     * 会员充值（BigDecimal 版本，推荐使用）
      * @param member 会员
      * @param amount 充值金额
      * @param paymentMethod 支付方式
      * @param operator 操作员
      * @return 是否成功
      */
-    public static boolean recharge(Member member, double amount, String paymentMethod, String operator) {
-        BigDecimal rechargeAmount = BigDecimal.valueOf(amount);
+    public static boolean recharge(Member member, BigDecimal amount, String paymentMethod, String operator) {
+        BigDecimal rechargeAmount = amount;
         BigDecimal bonusPoints = rechargeAmount.multiply(BigDecimal.TEN);
         try {
             boolean success = DatabaseManager.executeBooleanTransaction(conn -> {
@@ -106,6 +106,7 @@ public class MemberService {
                 member.level = latestMember.level;
                 member.discount = latestMember.discount;
                 member.discountRate = latestMember.discountRate;
+                member.version = latestMember.version;
                 return true;
             });
 
@@ -132,6 +133,15 @@ public class MemberService {
                 "会员=" + member.phone + ", 金额=" + rechargeAmount + ", 原因=" + e.getMessage());
             return false;
         }
+    }
+
+    /**
+     * 会员充值（double 版本，向后兼容，推荐使用 BigDecimal 版本）
+     * @deprecated 请使用 {@link #recharge(Member, BigDecimal, String, String)} 避免精度丢失
+     */
+    @Deprecated
+    public static boolean recharge(Member member, double amount, String paymentMethod, String operator) {
+        return recharge(member, BigDecimal.valueOf(amount), paymentMethod, operator);
     }
 
     /**
@@ -198,15 +208,15 @@ public class MemberService {
     }
 
     /**
-     * 检查会员余额是否充足
+     * 检查会员余额是否充足（BigDecimal 版本，推荐使用）
      * @param member 会员
      * @param amount 需要的金额
      * @return 是否充足
      */
-    public static boolean checkBalanceSufficient(Member member, double amount) {
+    public static boolean checkBalanceSufficient(Member member, BigDecimal amount) {
         try {
             Member latestMember = MemberDAO.findById(member.id);
-            return latestMember != null && latestMember.getBalance().compareTo(BigDecimal.valueOf(amount)) >= 0;
+            return latestMember != null && latestMember.getBalance().compareTo(amount) >= 0;
         } catch (SQLException e) {
             logger.error("检查会员余额失败", e);
             return false;
@@ -214,17 +224,35 @@ public class MemberService {
     }
 
     /**
-     * 计算会员折扣后金额
+     * 检查会员余额是否充足（double 版本，向后兼容）
+     * @deprecated 请使用 {@link #checkBalanceSufficient(Member, BigDecimal)} 避免精度丢失
+     */
+    @Deprecated
+    public static boolean checkBalanceSufficient(Member member, double amount) {
+        return checkBalanceSufficient(member, BigDecimal.valueOf(amount));
+    }
+
+    /**
+     * 计算会员折扣后金额（BigDecimal 版本，推荐使用）
      * @param originalAmount 原始金额
      * @param member 会员
      * @return 折扣后金额
      */
-    public static double calculateDiscountedAmount(double originalAmount, Member member) {
+    public static BigDecimal calculateDiscountedAmount(BigDecimal originalAmount, Member member) {
         if (member == null) {
             return originalAmount;
         }
         BigDecimal discountRate = member.getDiscount().divide(BigDecimal.TEN, 4, RoundingMode.HALF_UP);
-        return BigDecimal.valueOf(originalAmount).multiply(discountRate).doubleValue();
+        return originalAmount.multiply(discountRate);
+    }
+
+    /**
+     * 计算会员折扣后金额（double 版本，向后兼容）
+     * @deprecated 请使用 {@link #calculateDiscountedAmount(BigDecimal, Member)} 避免精度丢失
+     */
+    @Deprecated
+    public static double calculateDiscountedAmount(double originalAmount, Member member) {
+        return calculateDiscountedAmount(BigDecimal.valueOf(originalAmount), member).doubleValue();
     }
 
     /**

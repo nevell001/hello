@@ -90,6 +90,7 @@ CREATE TABLE IF NOT EXISTS members (
     discount DECIMAL(4,2) DEFAULT 10.00,
     join_date BIGINT,
     birthday VARCHAR(10),
+    version INT DEFAULT 0 COMMENT '乐观锁版本号',
     INDEX idx_member_code (member_code),
     INDEX idx_name (name),
     INDEX idx_level (level)

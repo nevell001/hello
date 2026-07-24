@@ -366,7 +366,7 @@ class ReturnServiceTest extends DatabaseTestBase {
         // 验证统计结果
         assertNotNull(stats);
         assertEquals(4, stats.totalReturnOrders); // 总共4个退货单
-        assertEquals(75.0, stats.totalReturnAmount, 0.01); // 10+20+30+15
+        assertEquals(0, new java.math.BigDecimal("75.00").compareTo(stats.totalReturnAmount)); // 10+20+30+15
         assertEquals(1, stats.approvedOrders); // 1个已批准（order2），order3已完成
         assertEquals(1, stats.rejectedOrders); // 1个已拒绝
         assertEquals(1, stats.completedOrders); // 1个已完成（order3）

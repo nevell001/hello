@@ -7,6 +7,7 @@ import com.cashier.constant.AppConstants;
 import com.cashier.dao.UserDAO;
 import com.cashier.i18n.I18nManager;
 import com.cashier.model.User;
+import com.cashier.service.DataService;
 import com.cashier.util.PasswordUtil;
 import com.cashier.util.StatusBarManager;
 import org.slf4j.Logger;
@@ -21,6 +22,7 @@ import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
 import java.time.Instant;
+import java.util.Map;
 
 /**
  * 登录控制器
@@ -166,7 +168,7 @@ public class LoginController {
             } catch (Exception e) {
                 AuditService.failure(null, "AUTH", "LOGIN", "登录处理异常: " + e.getClass().getSimpleName());
                 javafx.application.Platform.runLater(() -> {
-                    showError(I18nManager.getInstance().get("runtime.login_failed", e.getMessage()));
+                    showError(I18nManager.getInstance().get("runtime.login_failed", I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED)));
                     setLoginState(false);
                 });
                 logger.error("登录失败", e);
@@ -191,6 +193,11 @@ public class LoginController {
      */
     private void showPasswordChangeDialog(com.cashier.model.User user) {
         try {
+            // 读取系统密码策略配置
+            Map<String, String> settings = DataService.loadSettings();
+            int minPasswordLength = Integer.parseInt(settings.getOrDefault("passwordMinLength", "6"));
+            boolean requireComplexity = Boolean.parseBoolean(settings.getOrDefault("passwordComplexity", "true"));
+
             // 创建对话框
             javafx.scene.control.Dialog<ButtonType> dialog = new javafx.scene.control.Dialog<>();
             dialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("runtime.first_login_title"));
@@ -215,8 +222,12 @@ public class LoginController {
             grid.add(confirmPasswordLabel, 0, 1);
             grid.add(confirmPasswordField, 1, 1);
 
-            // 添加提示信息
-            javafx.scene.control.Label hintLabel = new javafx.scene.control.Label("密码要求：至少6位字符");
+            // 根据系统配置动态生成密码要求提示
+            String hint = "密码要求：至少" + minPasswordLength + "位字符";
+            if (requireComplexity) {
+                hint += "，需包含字母和数字";
+            }
+            javafx.scene.control.Label hintLabel = new javafx.scene.control.Label(hint);
             hintLabel.getStyleClass().addAll("text-muted", "caption-text");
             grid.add(hintLabel, 1, 2);
 
@@ -232,11 +243,16 @@ public class LoginController {
             javafx.scene.control.Button okButton = (javafx.scene.control.Button) dialog.getDialogPane().lookupButton(ButtonType.OK);
             okButton.setDisable(true);
 
-            // 验证输入
+            // 验证输入（基于系统配置的密码策略）
             Runnable validate = () -> {
                 String newPassword = newPasswordField.getText();
                 String confirmPassword = confirmPasswordField.getText();
-                boolean valid = newPassword.length() >= 6 && newPassword.equals(confirmPassword);
+                boolean valid = newPassword.length() >= minPasswordLength && newPassword.equals(confirmPassword);
+                if (requireComplexity && valid) {
+                    boolean hasLetter = newPassword.matches(".*[a-zA-Z].*");
+                    boolean hasDigit = newPassword.matches(".*\\d.*");
+                    valid = hasLetter && hasDigit;
+                }
                 okButton.setDisable(!valid);
             };
 
@@ -271,14 +287,14 @@ public class LoginController {
 
                     } catch (Exception e) {
                         logger.error("密码修改失败", e);
-                        showError(I18nManager.getInstance().get("runtime.password_change_failed", e.getMessage()));
+                        showError(I18nManager.getInstance().get("runtime.password_change_failed", I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED)));
                     }
                 }
             });
 
         } catch (Exception e) {
             logger.error("显示密码修改对话框失败", e);
-            showError(I18nManager.getInstance().get("runtime.password_dialog_failed", e.getMessage()));
+            showError(I18nManager.getInstance().get("runtime.password_dialog_failed", I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED)));
         }
     }
 

@@ -27,8 +27,11 @@ public class CacheManager {
     // 读写锁用于线程安全
     private static final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-    // LRU 缓存实现：按访问顺序排序的 LinkedHashMap
-    private static final Map<Integer, Product> productCache = new LinkedHashMap<Integer, Product>(128, 0.75f, true) {
+    // LRU 缓存实现：LinkedHashMap
+    // 注意：accessOrder 必须为 false —— accessOrder=true 时 get() 会修改链表结构，
+    // 在读锁（readLock）下多线程并发 get() 会导致竞态条件。
+    // 缓存每 5 分钟整体刷新，FIFO 驱逐（按插入顺序）已足够。
+    private static final Map<Integer, Product> productCache = new LinkedHashMap<Integer, Product>(128, 0.75f, false) {
         @Override
         protected boolean removeEldestEntry(Map.Entry<Integer, Product> eldest) {
             // 当缓存大小超过限制时，移除最久未使用的条目
@@ -48,8 +51,8 @@ public class CacheManager {
     };
 
     // 库存数据缓存（商品名称 -> 商品）
-    // 注意：所有访问都通过 ReadWriteLock 保护，不需要额外的同步
-    private static final Map<String, Product> productNameCache = new LinkedHashMap<>(128, 0.75f, true) {
+    // 注意：所有访问都通过 ReadWriteLock 保护，accessOrder=false 保证读操作不修改内部结构
+    private static final Map<String, Product> productNameCache = new LinkedHashMap<>(128, 0.75f, false) {
         @Override
         protected boolean removeEldestEntry(Map.Entry<String, Product> eldest) {
             return size() > MAX_CACHE_SIZE;
@@ -57,8 +60,8 @@ public class CacheManager {
     };
 
     // 库存数据缓存（商品条形码 -> 商品）
-    // 注意：所有访问都通过 ReadWriteLock 保护，不需要额外的同步
-    private static final Map<String, Product> productBarcodeCache = new LinkedHashMap<>(128, 0.75f, true) {
+    // 注意：所有访问都通过 ReadWriteLock 保护，accessOrder=false 保证读操作不修改内部结构
+    private static final Map<String, Product> productBarcodeCache = new LinkedHashMap<>(128, 0.75f, false) {
         @Override
         protected boolean removeEldestEntry(Map.Entry<String, Product> eldest) {
             return size() > MAX_CACHE_SIZE;
@@ -238,6 +241,8 @@ public class CacheManager {
         long age = System.currentTimeMillis() - cacheCreatedTime;
         if (age > CACHE_EXPIRY_TIME) {
             logger.debug("缓存已过期（{}ms > {}ms），需要刷新", age, CACHE_EXPIRY_TIME);
+            // 过期时自动清除数据，避免内存泄漏
+            clearCache();
             return false;
         }
 

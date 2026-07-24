@@ -247,44 +247,53 @@ public class PaymentDAO {
     public static boolean updatePaymentSuccess(String paymentId, String channelTransactionId,
                                                 String channelUserId, BigDecimal paidAmount,
                                                 BigDecimal discountAmount) throws SQLException {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            return updatePaymentSuccessWithConnection(conn, paymentId, channelTransactionId,
+                channelUserId, paidAmount, discountAmount);
+        }
+    }
+
+    public static boolean updatePaymentSuccessWithConnection(Connection conn, String paymentId, String channelTransactionId,
+                                                String channelUserId, BigDecimal paidAmount,
+                                                BigDecimal discountAmount) throws SQLException {
         String sql = """
-            UPDATE payment_orders SET 
-                status = 'SUCCESS', 
-                pay_time = ?, 
-                channel_transaction_id = ?, 
-                channel_user_id = ?, 
-                paid_amount = ?, 
+            UPDATE payment_orders SET
+                status = 'SUCCESS',
+                pay_time = ?,
+                channel_transaction_id = ?,
+                channel_user_id = ?,
+                paid_amount = ?,
                 discount_amount = ?
             WHERE payment_id = ?
             """;
-        
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
             pstmt.setString(2, channelTransactionId);
             pstmt.setString(3, channelUserId);
             pstmt.setBigDecimal(4, paidAmount);
             pstmt.setBigDecimal(5, discountAmount);
             pstmt.setString(6, paymentId);
-            
             return pstmt.executeUpdate() > 0;
         }
     }
-    
+
     /**
      * 更新回调信息
      */
     public static boolean updateNotifyInfo(String paymentId, String notifyContent) throws SQLException {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            return updateNotifyInfoWithConnection(conn, paymentId, notifyContent);
+        }
+    }
+
+    public static boolean updateNotifyInfoWithConnection(Connection conn, String paymentId, String notifyContent) throws SQLException {
         String sql = "UPDATE payment_orders SET notify_time = ?, notify_content = ? WHERE payment_id = ?";
-        
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
             pstmt.setString(2, notifyContent);
             pstmt.setString(3, paymentId);
-            
             return pstmt.executeUpdate() > 0;
         }
     }

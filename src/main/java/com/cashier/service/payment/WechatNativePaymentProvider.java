@@ -3,6 +3,7 @@ package com.cashier.service.payment;
 import com.cashier.model.PaymentOrder;
 import com.cashier.model.RefundRecord;
 import com.cashier.service.PaymentService;
+import com.cashier.util.LoggerFactoryUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -21,7 +22,10 @@ import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+
 public final class WechatNativePaymentProvider implements PaymentChannelProvider {
+    private static final Logger logger = LoggerFactoryUtil.getLogger(WechatNativePaymentProvider.class);
     private static final String API_BASE = "https://api.mch.weixin.qq.com";
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final DateTimeFormatter WECHAT_TIME =
@@ -114,6 +118,7 @@ public final class WechatNativePaymentProvider implements PaymentChannelProvider
             String message = timestamp + "\n" + nonce + "\n" + rawBody + "\n";
             PublicKey publicKey = PaymentCryptoUtil.loadPublicKeyFromCertificateOrPem(config.wechatCertPath);
             if (!PaymentCryptoUtil.verifySha256WithRsa(message, signature, publicKey)) {
+                logger.warn("微信支付回调签名验证失败，可能存在伪造请求");
                 return false;
             }
 
@@ -141,6 +146,7 @@ public final class WechatNativePaymentProvider implements PaymentChannelProvider
             notification.put("wechat_plain_body", plainText);
             return true;
         } catch (Exception e) {
+            logger.warn("微信支付回调验签或解密异常: {}", e.getMessage(), e);
             return false;
         }
     }

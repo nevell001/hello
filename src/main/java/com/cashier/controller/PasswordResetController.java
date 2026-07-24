@@ -9,6 +9,7 @@ import com.cashier.util.LoggerFactoryUtil;
 import com.cashier.util.StatusBarManager;
 
 import java.sql.SQLException;
+import java.util.Objects;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -49,6 +50,12 @@ public class PasswordResetController {
         // 设置回车键提交
         usernameField.setOnAction(event -> emailField.requestFocus());
         emailField.setOnAction(event -> handleSubmit());
+
+        // H-18: 标注为演示模式，禁用提交按钮
+        submitButton.setDisable(true);
+        submitButton.setText(com.cashier.i18n.I18nManager.getInstance().get("password_reset.demo_mode"));
+        submitButton.setTooltip(new Tooltip(com.cashier.i18n.I18nManager.getInstance().get("runtime.password_reset_demo_warning")));
+        logger.warn("密码重置功能当前为演示模式，实际邮件发送功能未实现");
     }
 
     /**
@@ -90,46 +97,39 @@ public class PasswordResetController {
                 try {
                     user = UserDAO.findByUsername(username);
                 } catch (SQLException e) {
-                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.user_query_failed", e.getMessage()));
+                    logger.error("查询用户失败", e);
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.password_reset_service_unavailable"));
                     setSubmitState(false);
                     return;
                 }
 
-                // 验证用户和邮箱
-                if (user == null) {
-                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.username_missing"));
+                // H-19: 统一返回模糊消息，防止用户枚举攻击
+                // 无论用户不存在还是邮箱不匹配，都返回相同的消息
+                boolean credentialsMatch = (user != null) && Objects.equals(user.email, email);
+                if (!credentialsMatch) {
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.password_reset_credentials_mismatch"));
                     setSubmitState(false);
                     return;
                 }
 
-                if (!user.email.equals(email)) {
-                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.email_mismatch"));
+                // H-18: 演示模式 — 不实际发送邮件
+                logger.warn("密码重置功能为演示模式，用户 {} 的重置请求未实际处理", username);
+                javafx.application.Platform.runLater(() -> {
                     setSubmitState(false);
-                    return;
-                }
-
-                // 使用 JavaFX PauseTransition 模拟发送重置邮件的延迟
-                setSubmitState(true); // 显示加载状态
-
-                javafx.animation.PauseTransition pause = new javafx.animation.PauseTransition(javafx.util.Duration.millis(1000));
-                pause.setOnFinished(event -> {
-                    setSubmitState(false); // 恢复提交状态
-                    // 显示成功消息
-                    showSuccess(com.cashier.i18n.I18nManager.getInstance().get("runtime.reset_link_sent"));
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.password_reset_demo_warning"));
 
                     // 3秒后关闭对话框
                     javafx.animation.PauseTransition closePause = new javafx.animation.PauseTransition(javafx.util.Duration.millis(3000));
                     closePause.setOnFinished(closeEvent -> dialogStage.close());
                     closePause.play();
                 });
-                pause.play();
 
             } catch (Exception e) {
+                logger.error("密码重置处理异常", e);
                 javafx.application.Platform.runLater(() -> {
-                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.send_failed", e.getMessage()));
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.password_reset_service_unavailable"));
                     setSubmitState(false);
                 });
-                logger.error("发送失败", e);
             }
         }).start();
     }
@@ -195,8 +195,9 @@ public class PasswordResetController {
         javafx.application.Platform.runLater(() -> {
             usernameField.setDisable(loading);
             emailField.setDisable(loading);
-            submitButton.setDisable(loading);
-            submitButton.setText(loading ? com.cashier.i18n.I18nManager.getInstance().get("runtime.sending") : com.cashier.i18n.I18nManager.getInstance().get("password_reset.submit"));
+            // H-18: 演示模式下提交按钮始终保持禁用
+            submitButton.setDisable(true);
+            submitButton.setText(com.cashier.i18n.I18nManager.getInstance().get("password_reset.demo_mode"));
         });
     }
 

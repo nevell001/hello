@@ -171,6 +171,16 @@ public class CurrencyUtil {
     }
 
     /**
+     * 格式化 BigDecimal 金额为货币字符串
+     * @param amount 金额
+     * @return 格式化后的货币字符串，如 "¥1,234.56"
+     */
+    public static String format(java.math.BigDecimal amount) {
+        if (amount == null) return format(0.0);
+        return format(amount.doubleValue());
+    }
+
+    /**
      * 格式化金额为货币字符串
      * @param amount 金额
      * @return 格式化后的货币字符串

@@ -3,6 +3,8 @@ package com.cashier.dao;
 import com.cashier.model.Member;
 import com.cashier.model.PageResult;
 import com.cashier.util.DatabaseManager;
+import com.cashier.util.LoggerFactoryUtil;
+import org.slf4j.Logger;
 
 import java.math.BigDecimal;
 import java.sql.*;
@@ -13,6 +15,7 @@ import java.util.*;
  * 负责会员相关的数据库操作
  */
 public class MemberDAO {
+    private static final Logger logger = LoggerFactoryUtil.getLogger(MemberDAO.class);
 
     /**
      * 根据ID查找会员
@@ -31,7 +34,7 @@ public class MemberDAO {
      * @throws SQLException 数据库操作异常
      */
     public static Member findByIdWithConnection(Connection conn, int id) throws SQLException {
-        String sql = "SELECT id, member_code, phone, name, points, level, discount, balance, birthday FROM members WHERE id = ?";
+        String sql = "SELECT id, member_code, phone, name, points, level, discount, balance, birthday, version FROM members WHERE id = ?";
 
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
@@ -62,7 +65,7 @@ public class MemberDAO {
      * @throws SQLException 数据库操作异常
      */
     public static Member findByPhoneWithConnection(Connection conn, String phone) throws SQLException {
-        String sql = "SELECT id, member_code, phone, name, points, level, discount, balance, birthday FROM members WHERE phone = ?";
+        String sql = "SELECT id, member_code, phone, name, points, level, discount, balance, birthday, version FROM members WHERE phone = ?";
 
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, phone);
@@ -80,7 +83,7 @@ public class MemberDAO {
      */
     public static List<Member> findAll() throws SQLException {
         List<Member> members = new ArrayList<>();
-        String sql = "SELECT id, member_code, phone, name, points, level, discount, balance, birthday FROM members ORDER BY name";
+        String sql = "SELECT id, member_code, phone, name, points, level, discount, balance, birthday, version FROM members ORDER BY name";
 
         try (Connection conn = DatabaseManager.getConnection();
              Statement stmt = conn.createStatement();
@@ -107,7 +110,7 @@ public class MemberDAO {
         List<Member> members = new ArrayList<>();
         long total = count();
         int offset = (pageNum - 1) * pageSize;
-        String sql = "SELECT id, member_code, phone, name, points, level, discount, balance, birthday " +
+        String sql = "SELECT id, member_code, phone, name, points, level, discount, balance, birthday, version " +
                      "FROM members ORDER BY name LIMIT ? OFFSET ?";
 
         try (Connection conn = DatabaseManager.getConnection();
@@ -204,7 +207,7 @@ public class MemberDAO {
 
         if (useProvidedId) {
             // 使用用户提供的ID
-            sql = "INSERT INTO members (id, member_code, phone, name, points, level, discount, balance, birthday) " +
+            sql = "INSERT INTO members (id, member_code, phone, name, points, level, discount, balance, birthday, version) " +
                   "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         } else {
             // 由数据库自动生成ID
@@ -274,11 +277,11 @@ public class MemberDAO {
     }
 
     /**
-     * 更新会员
+     * 更新会员（使用乐观锁）
      */
     public static boolean update(Member member) throws SQLException {
-        String sql = "UPDATE members SET member_code = ?, phone = ?, name = ?, points = ?, level = ?, discount = ?, balance = ?, birthday = ? " +
-                     "WHERE id = ?";
+        String sql = "UPDATE members SET member_code = ?, phone = ?, name = ?, points = ?, level = ?, discount = ?, balance = ?, birthday = ?, version = version + 1 " +
+                     "WHERE id = ? AND version = ?";
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -292,8 +295,15 @@ public class MemberDAO {
             pstmt.setBigDecimal(7, member.balance);
             pstmt.setString(8, member.birthday);
             pstmt.setInt(9, member.id);
+            pstmt.setInt(10, member.version);
 
-            return pstmt.executeUpdate() > 0;
+            int affected = pstmt.executeUpdate();
+            if (affected == 0) {
+                logger.warn("会员更新乐观锁冲突: id={}, 期望version={}", member.id, member.version);
+                throw new SQLException("会员数据已被其他操作修改，请重试 (id=" + member.id + ")");
+            }
+            member.version++;
+            return true;
         }
     }
 
@@ -305,8 +315,8 @@ public class MemberDAO {
      * @throws SQLException 数据库操作异常
      */
     public static boolean updateWithConnection(Connection conn, Member member) throws SQLException {
-        String sql = "UPDATE members SET member_code = ?, phone = ?, name = ?, points = ?, level = ?, discount = ?, balance = ?, birthday = ? " +
-                     "WHERE id = ?";
+        String sql = "UPDATE members SET member_code = ?, phone = ?, name = ?, points = ?, level = ?, discount = ?, balance = ?, birthday = ?, version = version + 1 " +
+                     "WHERE id = ? AND version = ?";
 
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, member.memberCode);
@@ -318,8 +328,17 @@ public class MemberDAO {
             pstmt.setBigDecimal(7, member.balance);
             pstmt.setString(8, member.birthday);
             pstmt.setInt(9, member.id);
+            pstmt.setInt(10, member.version);
 
-            return pstmt.executeUpdate() > 0;
+            int affected = pstmt.executeUpdate();
+            if (affected == 0) {
+                // 乐观锁冲突：版本号不匹配，说明有其他事务已修改该记录
+                logger.warn("会员更新乐观锁冲突: id={}, 期望version={}", member.id, member.version);
+                throw new SQLException("会员数据已被其他操作修改，请重试 (id=" + member.id + ")");
+            }
+            // 更新成功后递增内存中的版本号
+            member.version++;
+            return true;
         }
     }
 
@@ -429,7 +448,7 @@ public class MemberDAO {
      */
     public static List<Member> search(String keyword) throws SQLException {
         List<Member> members = new ArrayList<>();
-        String sql = "SELECT id, member_code, phone, name, points, level, discount, balance, birthday FROM members " +
+        String sql = "SELECT id, member_code, phone, name, points, level, discount, balance, birthday, version FROM members " +
                      "WHERE name LIKE ? OR phone LIKE ? ORDER BY name";
 
         try (Connection conn = DatabaseManager.getConnection();
@@ -462,7 +481,7 @@ public class MemberDAO {
         String pattern = "%" + keyword + "%";
         long total = countByKeyword(pattern);
         int offset = (pageNum - 1) * pageSize;
-        String sql = "SELECT id, member_code, phone, name, points, level, discount, balance, birthday FROM members " +
+        String sql = "SELECT id, member_code, phone, name, points, level, discount, balance, birthday, version FROM members " +
                      "WHERE name LIKE ? OR phone LIKE ? ORDER BY name LIMIT ? OFFSET ?";
 
         try (Connection conn = DatabaseManager.getConnection();
@@ -503,7 +522,7 @@ public class MemberDAO {
      */
     public static List<Member> findByLevel(String level) throws SQLException {
         List<Member> members = new ArrayList<>();
-        String sql = "SELECT id, member_code, phone, name, points, level, discount, balance, birthday FROM members " +
+        String sql = "SELECT id, member_code, phone, name, points, level, discount, balance, birthday, version FROM members " +
                      "WHERE level = ? ORDER BY points DESC";
 
         try (Connection conn = DatabaseManager.getConnection();
@@ -559,6 +578,12 @@ public class MemberDAO {
         member.discountRate = member.discount;
         member.balance = rs.getBigDecimal("balance");
         member.birthday = rs.getString("birthday");
+        try {
+            member.version = rs.getInt("version");
+        } catch (SQLException e) {
+            // H2 测试数据库可能没有 version 列
+            member.version = 0;
+        }
         return member;
     }
 }

@@ -68,6 +68,25 @@ public class TransactionService {
             List<CartItem> cartItems,
             Member member,
             String paymentMethod,
+            BigDecimal receivedAmount,
+            BigDecimal changeAmount,
+            Map<String, Product> inventory) {
+
+        String transactionId = generateOrderNumber();
+        Transaction transaction = createTransaction(transactionId, cartItems, member, paymentMethod,
+            receivedAmount.doubleValue(), changeAmount.doubleValue());
+        return executeTransaction(cartItems, member, transaction, inventory, null);
+    }
+
+    /**
+     * 执行交易（double 版本，向后兼容）
+     * @deprecated 请使用 {@link #executeTransaction(List, Member, String, BigDecimal, BigDecimal, Map)} 避免精度丢失
+     */
+    @Deprecated
+    public static TransactionResult executeTransaction(
+            List<CartItem> cartItems,
+            Member member,
+            String paymentMethod,
             double receivedAmount,
             double changeAmount,
             Map<String, Product> inventory) {
@@ -239,11 +258,11 @@ public class TransactionService {
 
         transaction.totalAmount = calculateTotalAmount(cartItems);
 
-        // 计算税费
+        // 计算税费 — 直接从 String 构造 BigDecimal，避免 double 中转精度丢失
         Map<String, String> settings = DataService.loadSettings();
-        double taxRate = Double.parseDouble(settings.getOrDefault("taxRate", "0.0"));
+        BigDecimal taxRate = new BigDecimal(settings.getOrDefault("taxRate", "0.0"));
         transaction.tax = transaction.getTotalAmount()
-                .multiply(BigDecimal.valueOf(taxRate))
+                .multiply(taxRate)
                 .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
 
         transaction.finalAmount = calculateFinalAmount(cartItems, member);
@@ -282,7 +301,8 @@ public class TransactionService {
             BigDecimal discountRate = member.getDiscount().divide(BigDecimal.TEN, 4, RoundingMode.HALF_UP);
             total = total.multiply(discountRate);
         }
-        return total;
+        // 规整到 2 位小数，避免下游比较/显示出错
+        return total.setScale(2, RoundingMode.HALF_UP);
     }
 
     /**

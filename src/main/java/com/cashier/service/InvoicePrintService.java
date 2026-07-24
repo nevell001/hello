@@ -229,37 +229,65 @@ public class InvoicePrintService {
      */
     private static String toChineseAmount(BigDecimal amount) {
         if (amount == null) return "零元整";
-        
+
         String[] digits = {"零", "壹", "贰", "叁", "肆", "伍", "陆", "柒", "捌", "玖"};
         String[] units = {"", "拾", "佰", "仟", "万", "拾", "佰", "仟", "亿"};
-        
-        long value = amount.setScale(0, RoundingMode.HALF_UP).longValue();
-        
-        if (value == 0) return "零元整";
-        
+
+        // 保留两位小数，分离整数和小数部分
+        amount = amount.setScale(2, RoundingMode.HALF_UP);
+        long integerValue = amount.setScale(0, RoundingMode.DOWN).longValue();
+        int fen = amount.remainder(BigDecimal.ONE)
+                        .multiply(BigDecimal.valueOf(100))
+                        .setScale(0, RoundingMode.HALF_UP)
+                        .intValue();
+        int jiao = fen / 10;
+        int fenDigit = fen % 10;
+
+        if (integerValue == 0 && jiao == 0 && fenDigit == 0) return "零元整";
+
         StringBuilder result = new StringBuilder();
-        int unitIndex = 0;
-        boolean lastZero = false;
-        
-        while (value > 0) {
-            int digit = (int)(value % 10);
-            
-            if (digit == 0) {
-                if (!lastZero && unitIndex > 0) {
-                    result.insert(0, digits[0]);
-                    lastZero = true;
+
+        // 整数部分
+        if (integerValue > 0) {
+            long value = integerValue;
+            int unitIndex = 0;
+            boolean lastZero = false;
+
+            while (value > 0) {
+                int digit = (int)(value % 10);
+
+                if (digit == 0) {
+                    if (!lastZero && unitIndex > 0) {
+                        result.insert(0, digits[0]);
+                        lastZero = true;
+                    }
+                } else {
+                    result.insert(0, digits[digit] + units[unitIndex]);
+                    lastZero = false;
                 }
-            } else {
-                result.insert(0, digits[digit] + units[unitIndex]);
-                lastZero = false;
+
+                value /= 10;
+                unitIndex++;
             }
-            
-            value /= 10;
-            unitIndex++;
+            result.append("元");
+        } else {
+            result.append("零元");
         }
-        
-        result.append("元整");
-        
+
+        // 角分部分
+        if (jiao == 0 && fenDigit == 0) {
+            result.append("整");
+        } else {
+            if (jiao > 0) {
+                result.append(digits[jiao]).append("角");
+            } else if (integerValue > 0) {
+                result.append("零");
+            }
+            if (fenDigit > 0) {
+                result.append(digits[fenDigit]).append("分");
+            }
+        }
+
         return result.toString();
     }
     

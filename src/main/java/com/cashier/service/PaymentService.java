@@ -3,6 +3,7 @@ package com.cashier.service;
 import com.cashier.api.sync.SyncEventType;
 import com.cashier.api.sync.SyncManager;
 import com.cashier.dao.PaymentDAO;
+import com.cashier.exception.DatabaseException;
 import com.cashier.model.PaymentOrder;
 import com.cashier.model.RefundRecord;
 import com.cashier.service.payment.AlipayPrecreatePaymentProvider;
@@ -10,6 +11,7 @@ import com.cashier.service.payment.MockPaymentChannelProvider;
 import com.cashier.service.payment.PaymentChannelProvider;
 import com.cashier.service.payment.UnavailablePaymentChannelProvider;
 import com.cashier.service.payment.WechatNativePaymentProvider;
+import com.cashier.util.DatabaseManager;
 import com.cashier.util.LoggerFactoryUtil;
 import org.slf4j.Logger;
 
@@ -45,6 +47,7 @@ public final class PaymentService {
             logger.info("支付服务初始化成功，模式: {}", config.mode);
         } catch (Exception e) {
             logger.error("支付服务初始化失败", e);
+            throw new DatabaseException("支付服务初始化失败", DatabaseException.DbErrorType.CONNECTION_FAILED, e);
         }
     }
 
@@ -202,9 +205,13 @@ public final class PaymentService {
                 merchantOrderNo, order.amount, paidAmount);
             return false;
         }
-        PaymentDAO.updateNotifyInfo(order.paymentId, notifyData.toString());
-        PaymentDAO.updatePaymentSuccess(order.paymentId, notifyData.get("transaction_id"),
-            notifyData.get("buyer_id"), paidAmount, BigDecimal.ZERO);
+        // 两次 DB 更新包裹在同一事务中，确保原子性
+        DatabaseManager.executeBooleanTransaction(conn -> {
+            PaymentDAO.updateNotifyInfoWithConnection(conn, order.paymentId, notifyData.toString());
+            PaymentDAO.updatePaymentSuccessWithConnection(conn, order.paymentId, notifyData.get("transaction_id"),
+                notifyData.get("buyer_id"), paidAmount, BigDecimal.ZERO);
+            return true;
+        });
         SyncManager.getInstance().broadcastSyncEvent(SyncEventType.PAYMENT_SUCCESS,
             Map.of("paymentId", order.paymentId, "transactionId", order.transactionId, "amount", paidAmount.toString()));
         return true;

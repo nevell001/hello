@@ -371,7 +371,10 @@
                         <TextField fx:id="alipayAppIdField" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="360"/>
 
                         <Label text="%settings.alipay_private_key_label" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.valignment="TOP"/>
-                        <TextArea fx:id="alipayPrivateKeyArea" GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="420" prefRowCount="4" wrapText="true"/>
+                        <VBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                            <PasswordField fx:id="alipayPrivateKeyField" prefWidth="420" promptText="%settings.alipay_private_key_label"/>
+                            <CheckBox fx:id="showAlipayPrivateKeyCheckBox" text="%settings.show_private_key" onAction="#handleTogglePrivateKeyVisibility"/>
+                        </VBox>
 
                         <Label text="%settings.alipay_public_key_label" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.valignment="TOP"/>
                         <TextArea fx:id="alipayPublicKeyArea" GridPane.columnIndex="1" GridPane.rowIndex="3" prefWidth="420" prefRowCount="4" wrapText="true"/>

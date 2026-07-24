@@ -314,7 +314,9 @@ public class ReturnReportController {
             completedOrdersLabel.setText(String.valueOf(stats.completedOrders));
             pendingOrdersLabel.setText(String.valueOf(stats.totalReturnOrders - stats.approvedOrders - stats.rejectedOrders - stats.completedOrders));
             avgReturnAmountLabel.setText(CurrencyUtil.format(
-                stats.totalReturnOrders > 0 ? stats.totalReturnAmount / stats.totalReturnOrders : 0));
+                stats.totalReturnOrders > 0
+                    ? stats.totalReturnAmount.divide(java.math.BigDecimal.valueOf(stats.totalReturnOrders), 2, java.math.RoundingMode.HALF_UP)
+                    : java.math.BigDecimal.ZERO));
 
             // 加载退货订单列表
             returnOrderList.clear();

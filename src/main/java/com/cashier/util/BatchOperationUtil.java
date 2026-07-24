@@ -1,6 +1,7 @@
 package com.cashier.util;
 
 import org.slf4j.Logger;
+import java.io.File;
 import java.sql.*;
 import java.util.*;
 
@@ -112,8 +113,14 @@ public class BatchOperationUtil {
             return 0;
         }
         
-        // 生成临时文件路径
-        String tempFilePath = "/tmp/batch_insert_" + System.currentTimeMillis() + ".csv";
+        // 安全校验：tableName 只允许字母、数字、下划线
+        if (tableName == null || !tableName.matches("^[a-zA-Z_][a-zA-Z0-9_]*$")) {
+            throw new SQLException("非法的表名: " + tableName);
+        }
+
+        // 使用跨平台临时目录
+        String tempDir = System.getProperty("java.io.tmpdir");
+        String tempFilePath = tempDir + File.separator + "batch_insert_" + System.currentTimeMillis() + ".csv";
         
         try {
             // 写入CSV文件

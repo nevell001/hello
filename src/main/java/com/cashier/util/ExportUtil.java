@@ -55,8 +55,22 @@ public class ExportUtil {
     public static String export(String title, List<String> headers, List<String[]> data,
                                 ExportFormat format, String subDir) {
         try {
+            // 安全校验：防止路径遍历攻击
+            if (subDir == null || subDir.isEmpty()) {
+                subDir = "default";
+            }
+            if (subDir.contains("..") || subDir.contains(File.separator) || subDir.contains("/")) {
+                throw new IllegalArgumentException("非法的子目录名称: " + subDir);
+            }
+            // 清理 title 中的危险字符，防止文件名注入
+            String safeTitle = title.replaceAll("[^A-Za-z0-9_\\-\\u4e00-\\u9fa5]", "_");
+
             // 确保导出目录存在
-            Path exportPath = Paths.get(EXPORT_DIR, subDir);
+            Path exportPath = Paths.get(EXPORT_DIR, subDir).normalize();
+            // 二次校验：确保路径仍在导出目录内
+            if (!exportPath.startsWith(EXPORT_DIR)) {
+                throw new SecurityException("路径遍历检测：目标路径超出导出目录");
+            }
             if (!Files.exists(exportPath)) {
                 Files.createDirectories(exportPath);
             }
@@ -64,7 +78,7 @@ public class ExportUtil {
             // 生成文件名
             String timestamp = LocalDateTime.now(ZoneId.systemDefault())
                 .format(com.cashier.util.DateTimeFormats.BACKUP_TIMESTAMP);
-            String fileName = title + "_" + timestamp;
+            String fileName = safeTitle + "_" + timestamp;
 
             String filePath;
             if (format == ExportFormat.EXCEL) {
@@ -317,8 +331,9 @@ public class ExportUtil {
             // 当前 Y 位置
             float yPosition = pageHeight - margin;
 
+            // H-25: 使用 try-finally 确保 PDPageContentStream 在异常路径下也被关闭
             PDPageContentStream contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true);
-
+            try {
             // 写入标题
             contentStream.setFont(font, titleFontSize);
             float titleWidth = font.getStringWidth(title) / 1000 * titleFontSize;
@@ -363,6 +378,7 @@ public class ExportUtil {
                     } catch (IOException e) {
                         logger.warn("关闭页面内容流失败: " + e.getMessage());
                     }
+                    contentStream = null;
                     
                     // 创建新页面 - 保持横版
                     PDRectangle newLandscape = new PDRectangle(PDRectangle.A4.getHeight(), PDRectangle.A4.getWidth());
@@ -424,14 +440,32 @@ public class ExportUtil {
                 yPosition -= actualRowHeight;
             }
 
-            // 关闭内容流
-            contentStream.close();
+            // H-25: 正常路径下先关闭 contentStream，再保存文档
+            // PDFBox 要求所有 contentStream 在 document.save() 前关闭
+            if (contentStream != null) {
+                try {
+                    contentStream.close();
+                } catch (IOException e) {
+                    logger.warn("关闭页面内容流失败", e);
+                }
+                contentStream = null;
+            }
 
             // 保存文件
             document.save(filePath);
 
             logger.info("PDF 导出成功: {}", filePath);
             return filePath;
+            } finally {
+                // H-25: 异常路径下确保 contentStream 也被关闭
+                if (contentStream != null) {
+                    try {
+                        contentStream.close();
+                    } catch (IOException e) {
+                        logger.warn("关闭页面内容流失败", e);
+                    }
+                }
+            }
         }
     }
 

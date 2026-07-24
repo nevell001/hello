@@ -42,13 +42,20 @@ public class DataService {
 
     /**
      * 保存库存数据
+     * 使用批量操作替代逐条循环，在同一事务内完成查询+插入+更新
+     * @throws SQLException 如果保存失败
      */
-    public static void saveInventory(Map<String, Product> inventory) {
+    public static void saveInventory(Map<String, Product> inventory) throws SQLException {
         if (inventory == null || inventory.isEmpty()) {
             return;
         }
-        try {
-            Map<String, Product> existingProducts = productDAO.findByNames(inventory.keySet());
+        DatabaseManager.executeBooleanTransaction(conn -> {
+            // 使用同一连接批量查询现有商品（事务内可见性）
+            Map<String, Product> existingProducts = productDAO.findByNamesWithConnection(conn, inventory.keySet());
+
+            List<Product> toInsert = new ArrayList<>();
+            List<Product> toUpdate = new ArrayList<>();
+
             for (Product product : inventory.values()) {
                 if (product == null || product.name == null || product.name.isBlank()) {
                     continue;
@@ -56,19 +63,27 @@ public class DataService {
 
                 Product existingProduct = existingProducts.get(product.name);
                 if (existingProduct == null) {
-                    productDAO.insert(product);
+                    toInsert.add(product);
                 } else {
                     product.id = existingProduct.id;
                     product.version = existingProduct.version;
                     if (product.productCode == null || product.productCode.isBlank()) {
                         product.productCode = existingProduct.productCode;
                     }
-                    productDAO.update(product);
+                    toUpdate.add(product);
                 }
             }
-        } catch (SQLException e) {
-            logger.error("保存商品数据失败", e);
-        }
+
+            // 批量插入新商品
+            if (!toInsert.isEmpty()) {
+                productDAO.batchInsertWithConnection(conn, toInsert);
+            }
+            // 批量更新已有商品
+            if (!toUpdate.isEmpty()) {
+                productDAO.batchUpdateWithConnection(conn, toUpdate);
+            }
+            return true;
+        });
     }
 
     /**
@@ -90,14 +105,11 @@ public class DataService {
 
     /**
      * 保存用户数据
+     * @throws SQLException 如果保存失败
      */
-    public static void saveUsers(Map<String, User> users) {
-        try {
-            List<User> userList = new ArrayList<>(users.values());
-            UserDAO.batchInsert(userList);
-        } catch (SQLException e) {
-            logger.error("保存用户数据失败", e);
-        }
+    public static void saveUsers(Map<String, User> users) throws SQLException {
+        List<User> userList = new ArrayList<>(users.values());
+        UserDAO.batchInsert(userList);
     }
 
     /**
@@ -119,14 +131,11 @@ public class DataService {
 
     /**
      * 保存会员数据
+     * @throws SQLException 如果保存失败
      */
-    public static void saveMembers(Map<String, Member> members) {
-        try {
-            List<Member> memberList = new ArrayList<>(members.values());
-            MemberDAO.batchInsert(memberList);
-        } catch (SQLException e) {
-            logger.error("保存会员数据失败", e);
-        }
+    public static void saveMembers(Map<String, Member> members) throws SQLException {
+        List<Member> memberList = new ArrayList<>(members.values());
+        MemberDAO.batchInsert(memberList);
     }
 
     /**
@@ -143,13 +152,10 @@ public class DataService {
 
     /**
      * 保存交易数据
+     * @throws SQLException 如果保存失败
      */
-    public static void saveTransactions(List<Transaction> transactions) {
-        try {
-            TransactionDAO.batchInsert(transactions);
-        } catch (SQLException e) {
-            logger.error("保存交易数据失败", e);
-        }
+    public static void saveTransactions(List<Transaction> transactions) throws SQLException {
+        TransactionDAO.batchInsert(transactions);
     }
 
     /**
@@ -166,20 +172,21 @@ public class DataService {
 
     /**
      * 保存促销数据
+     * 删除全部旧数据 + 插入新数据在同一事务中，保证原子性
+     * @throws SQLException 如果保存失败
      */
-    public static void savePromotions(List<Promotion> promotions) {
-        try {
-            // 批量删除所有促销
-            List<Promotion> existing = PromotionDAO.findAll();
-            for (Promotion p : existing) {
-                PromotionDAO.delete(p.id);
+    public static void savePromotions(List<Promotion> promotions) throws SQLException {
+        DatabaseManager.executeBooleanTransaction(conn -> {
+            // 批量删除所有促销（使用单条 SQL，不再逐条删除）
+            try (java.sql.PreparedStatement delStmt = conn.prepareStatement("DELETE FROM promotions")) {
+                delStmt.executeUpdate();
             }
-
             // 批量插入新促销
-            PromotionDAO.batchInsert(promotions);
-        } catch (SQLException e) {
-            logger.error("保存促销数据失败", e);
-        }
+            if (promotions != null && !promotions.isEmpty()) {
+                PromotionDAO.batchInsertWithConnection(conn, promotions);
+            }
+            return true;
+        });
     }
 
     /**
@@ -196,13 +203,10 @@ public class DataService {
 
     /**
      * 保存充值记录
+     * @throws SQLException 如果保存失败
      */
-    public static void saveRechargeRecords(List<RechargeRecord> records) {
-        try {
-            RechargeRecordDAO.batchInsert(records);
-        } catch (SQLException e) {
-            logger.error("保存充值记录失败", e);
-        }
+    public static void saveRechargeRecords(List<RechargeRecord> records) throws SQLException {
+        RechargeRecordDAO.batchInsert(records);
     }
 
     /**
@@ -225,20 +229,21 @@ public class DataService {
 
     /**
      * 保存分类数据
+     * 删除全部旧数据 + 插入新数据在同一事务中，保证原子性
+     * @throws SQLException 如果保存失败
      */
-    public static void saveCategories(List<Category> categories) {
-        try {
-            // 批量删除所有分类
-            List<Category> existing = CategoryDAO.findAll();
-            for (Category c : existing) {
-                CategoryDAO.delete(c.id);
+    public static void saveCategories(List<Category> categories) throws SQLException {
+        DatabaseManager.executeBooleanTransaction(conn -> {
+            // 批量删除所有分类（使用单条 SQL，不再逐条删除）
+            try (java.sql.PreparedStatement delStmt = conn.prepareStatement("DELETE FROM categories")) {
+                delStmt.executeUpdate();
             }
-
             // 批量插入新分类
-            CategoryDAO.batchInsert(categories);
-        } catch (SQLException e) {
-            logger.error("保存分类数据失败", e);
-        }
+            if (categories != null && !categories.isEmpty()) {
+                CategoryDAO.batchInsertWithConnection(conn, categories);
+            }
+            return true;
+        });
     }
 
     /**
@@ -255,13 +260,10 @@ public class DataService {
 
     /**
      * 保存操作日志
+     * @throws SQLException 如果保存失败
      */
-    public static void saveOperationLogs(List<OperationLog> logs) {
-        try {
-            OperationLogDAO.batchInsert(logs);
-        } catch (SQLException e) {
-            logger.error("保存操作日志失败", e);
-        }
+    public static void saveOperationLogs(List<OperationLog> logs) throws SQLException {
+        OperationLogDAO.batchInsert(logs);
     }
 
     /**
@@ -292,16 +294,13 @@ public class DataService {
 
     /**
      * 保存设置数据
+     * @throws SQLException 如果保存失败
      */
-    public static void saveSettings(Map<String, String> settings) {
-        try {
-            for (Map.Entry<String, String> entry : settings.entrySet()) {
-                SystemSettingsDAO.setSetting(entry.getKey(), entry.getValue());
-            }
-            logger.info("保存设置数据成功，共保存 {} 个设置项", settings.size());
-        } catch (SQLException e) {
-            logger.error("保存设置数据失败", e);
+    public static void saveSettings(Map<String, String> settings) throws SQLException {
+        for (Map.Entry<String, String> entry : settings.entrySet()) {
+            SystemSettingsDAO.setSetting(entry.getKey(), entry.getValue());
         }
+        logger.info("保存设置数据成功，共保存 {} 个设置项", settings.size());
     }
 
     /**

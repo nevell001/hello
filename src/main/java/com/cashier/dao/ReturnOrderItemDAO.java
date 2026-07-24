@@ -1,5 +1,6 @@
 package com.cashier.dao;
 
+import com.cashier.exception.DatabaseException;
 import com.cashier.model.ReturnOrderItem;
 import com.cashier.util.LoggerFactoryUtil;
 import org.slf4j.Logger;
@@ -22,7 +23,7 @@ public class ReturnOrderItemDAO {
             return insertWithConnection(conn, item);
         } catch (SQLException e) {
             logger.error("插入退货订单明细失败", e);
-            return false;
+            throw new DatabaseException("插入退货订单明细失败", DatabaseException.DbErrorType.INSERT_FAILED, e);
         }
     }
 
@@ -63,7 +64,7 @@ public class ReturnOrderItemDAO {
             return batchInsertWithConnection(conn, items);
         } catch (SQLException e) {
             logger.error("批量插入退货订单明细失败", e);
-            return false;
+            throw new DatabaseException("批量插入退货订单明细失败", DatabaseException.DbErrorType.INSERT_FAILED, e);
         }
     }
 
@@ -126,7 +127,7 @@ public class ReturnOrderItemDAO {
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             logger.error("更新退货订单明细失败", e);
-            return false;
+            throw new DatabaseException("更新退货订单明细失败", DatabaseException.DbErrorType.UPDATE_FAILED, e);
         }
     }
 
@@ -143,7 +144,7 @@ public class ReturnOrderItemDAO {
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             logger.error("删除退货订单明细失败", e);
-            return false;
+            throw new DatabaseException("删除退货订单明细失败", DatabaseException.DbErrorType.DELETE_FAILED, e);
         }
     }
 
@@ -157,13 +158,14 @@ public class ReturnOrderItemDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setInt(1, id);
-            ResultSet rs = stmt.executeQuery();
-            
-            if (rs.next()) {
-                return mapRowToReturnOrderItem(rs);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapRowToReturnOrderItem(rs);
+                }
             }
         } catch (SQLException e) {
             logger.error("查找退货订单明细失败", e);
+            throw new DatabaseException("查找退货订单明细失败", DatabaseException.DbErrorType.QUERY_FAILED, e);
         }
         
         return null;
@@ -177,9 +179,8 @@ public class ReturnOrderItemDAO {
             return findByReturnOrderIdWithConnection(conn, returnOrderId);
         } catch (SQLException e) {
             logger.error("根据退货单号查找明细失败", e);
+            throw new DatabaseException("根据退货单号查找明细失败", DatabaseException.DbErrorType.QUERY_FAILED, e);
         }
-
-        return new ArrayList<>();
     }
 
     /**
@@ -218,7 +219,7 @@ public class ReturnOrderItemDAO {
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             logger.error("删除退货单明细失败", e);
-            return false;
+            throw new DatabaseException("删除退货单明细失败", DatabaseException.DbErrorType.DELETE_FAILED, e);
         }
     }
 
@@ -232,13 +233,14 @@ public class ReturnOrderItemDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setString(1, returnOrderId);
-            ResultSet rs = stmt.executeQuery();
-            
-            if (rs.next()) {
-                return rs.getDouble("total");
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getDouble("total");
+                }
             }
         } catch (SQLException e) {
             logger.error("计算退货单总金额失败", e);
+            throw new DatabaseException("计算退货单总金额失败", DatabaseException.DbErrorType.QUERY_FAILED, e);
         }
         
         return 0.0;

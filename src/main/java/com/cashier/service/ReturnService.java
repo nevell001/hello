@@ -7,6 +7,7 @@ import com.cashier.util.DatabaseManager;
 import com.cashier.util.LoggerFactoryUtil;
 import org.slf4j.Logger;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
@@ -229,13 +230,13 @@ public class ReturnService {
         List<ReturnOrder> returnOrders = ReturnOrderDAO.findByDateRange(startDate, endDate);
         
         stats.totalReturnOrders = returnOrders.size();
-        stats.totalReturnAmount = 0;
+        stats.totalReturnAmount = BigDecimal.ZERO;
         stats.approvedOrders = 0;
         stats.rejectedOrders = 0;
         stats.completedOrders = 0;
         
         for (ReturnOrder order : returnOrders) {
-            stats.totalReturnAmount += order.getTotalAmount().doubleValue();
+            stats.totalReturnAmount = stats.totalReturnAmount.add(order.getTotalAmount());
             
             switch (order.status) {
                 case "APPROVED":
@@ -261,7 +262,7 @@ public class ReturnService {
      */
     public static class ReturnStatistics {
         public int totalReturnOrders;
-        public double totalReturnAmount;
+        public BigDecimal totalReturnAmount;
         public int approvedOrders;
         public int rejectedOrders;
         public int completedOrders;

@@ -58,7 +58,7 @@ class ElectronicPaymentSafetyPolicyTest {
         assertTrue(settingsView.contains("fx:id=\"wechatMerchantSerialNoField\""));
         assertTrue(settingsView.contains("fx:id=\"alipayEnabledCheckBox\""));
         assertTrue(settingsView.contains("fx:id=\"alipayAppIdField\""));
-        assertTrue(settingsView.contains("fx:id=\"alipayPrivateKeyArea\""));
+        assertTrue(settingsView.contains("fx:id=\"alipayPrivateKeyField\""));
         assertTrue(settingsView.contains("fx:id=\"alipayPublicKeyArea\""));
         assertTrue(settingsView.contains("fx:id=\"alipayGatewayField\""));
         assertTrue(settingsController.contains("PaymentService.saveConfig(paymentConfig)"));

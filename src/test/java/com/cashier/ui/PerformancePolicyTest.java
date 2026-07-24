@@ -938,7 +938,7 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/service/DataService.java"
         ));
 
-        assertTrue(dataService.contains("productDAO.findByNames(inventory.keySet())"));
+        assertTrue(dataService.contains("productDAO.findByNamesWithConnection(conn, inventory.keySet())"));
         assertFalse(dataService.contains("List<Product> existing = productDAO.findAll()"));
         assertFalse(dataService.contains("productDAO.delete(p.id)"));
         assertFalse(dataService.contains("productDAO.batchInsert(products)"));

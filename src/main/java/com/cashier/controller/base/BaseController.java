@@ -5,10 +5,12 @@ import com.cashier.i18n.I18nKeys;
 import com.cashier.i18n.I18nManager;
 import com.cashier.util.DialogBuilder;
 import com.cashier.util.FormValidator;
+import com.cashier.util.LoggerFactoryUtil;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import org.slf4j.Logger;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -23,6 +25,7 @@ import java.util.function.Supplier;
 public abstract class BaseController<T> {
 
     protected final I18nManager i18n = I18nManager.getInstance();
+    protected final Logger logger = LoggerFactoryUtil.getLogger(getClass());
 
     // ========== 抽象方法 - 子类必须实现 ==========
 
@@ -149,6 +152,19 @@ public abstract class BaseController<T> {
                 .title(i18n.get(I18nKeys.Label.ERROR))
                 .content(message)
                 .show();
+    }
+
+    /**
+     * 统一异常处理：向用户展示通用友好消息，详细异常仅写日志。
+     * <p>
+     * H-21: 避免 e.getMessage() 直接暴露给用户（可能泄露表名、列名、SQL 语句等）
+     *
+     * @param userMessage 展示给用户的通用消息
+     * @param e           被捕获的异常（仅记录日志，不展示给用户）
+     */
+    protected void handleError(String userMessage, Exception e) {
+        logger.error(userMessage, e);
+        showError(userMessage);
     }
 
     /**

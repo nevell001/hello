@@ -154,6 +154,7 @@ public abstract class DatabaseTestBase {
                 discount DECIMAL(4,2) DEFAULT 10.00,
                 join_date BIGINT,
                 birthday VARCHAR(10),
+                version INT DEFAULT 0,
                 address VARCHAR(200),
                 remark TEXT,
                 create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

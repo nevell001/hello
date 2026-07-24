@@ -176,6 +176,28 @@ public class CategoryDAO {
     }
 
     /**
+     * 使用指定连接批量插入分类
+     * @param conn 数据库连接
+     * @param categories 分类列表
+     * @throws SQLException 数据库操作异常
+     */
+    public static void batchInsertWithConnection(Connection conn, List<Category> categories) throws SQLException {
+        if (categories == null || categories.isEmpty()) {
+            return;
+        }
+        String sql = "INSERT INTO categories (name, description) VALUES (?, ?)";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            for (Category category : categories) {
+                pstmt.setString(1, category.name);
+                pstmt.setString(2, category.description);
+                pstmt.addBatch();
+            }
+            pstmt.executeBatch();
+        }
+    }
+
+    /**
      * 将 ResultSet 映射为 Category 对象
      */
     private static Category mapRowToCategory(ResultSet rs) throws SQLException {

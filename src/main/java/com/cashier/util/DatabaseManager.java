@@ -33,9 +33,9 @@ public class DatabaseManager {
         return SECURE_RANDOM;
     }
 
-    private static HikariDataSource dataSource;
-    private static boolean initialized = false;
-    private static HikariDataSource testDataSource = null; // 测试用数据源（连接池）
+    private static volatile HikariDataSource dataSource;
+    private static volatile boolean initialized = false;
+    private static volatile HikariDataSource testDataSource = null; // 测试用数据源（连接池）
 
     // 数据库配置
     private static final String CONFIG_FILE = "config/database.properties";
@@ -64,54 +64,9 @@ public class DatabaseManager {
 
         if (!isTestMode) {
             try {
-                // 加载配置
                 loadConfig();
-
-                // 配置 HikariCP 连接池
-                HikariConfig config = new HikariConfig();
-                config.setJdbcUrl(dbUrl);
-                config.setUsername(dbUsername);
-                config.setPassword(dbPassword);
-                config.setDriverClassName("com.mysql.cj.jdbc.Driver");
-
-                // 连接池配置
-                config.setMaximumPoolSize(poolSize);
-                config.setMinimumIdle(Math.max(2, poolSize / 4));
-                config.setConnectionTimeout(connectionTimeout);
-                config.setIdleTimeout(idleTimeout);
-                config.setMaxLifetime(maxLifetime);
-
-                // 连接泄漏检测
-                if (leakDetectionThreshold > 0) {
-                    config.setLeakDetectionThreshold(leakDetectionThreshold);
-                }
-
-                // 连接验证配置
-                config.setConnectionTestQuery(connectionTestQuery);
-                config.setValidationTimeout(validationTimeout);
-
-                // MySQL 特定配置
-                config.addDataSourceProperty("cachePrepStmts", "true");
-                config.addDataSourceProperty("prepStmtCacheSize", "250");
-                config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
-                config.addDataSourceProperty("useServerPrepStmts", "true");
-                config.addDataSourceProperty("useLocalSessionState", "true");
-                config.addDataSourceProperty("rewriteBatchedStatements", "true");
-                config.addDataSourceProperty("cacheResultSetMetadata", "true");
-                config.addDataSourceProperty("cacheServerConfiguration", "true");
-                config.addDataSourceProperty("elideSetAutoCommits", "true");
-                config.addDataSourceProperty("maintainTimeStats", "false");
-
-                // 时区设置（重要！）
-                config.addDataSourceProperty("serverTimezone", "Asia/Shanghai");
-                config.addDataSourceProperty("useUnicode", "true");
-                config.addDataSourceProperty("characterEncoding", "UTF-8");
-
-                dataSource = new HikariDataSource(config);
-
-                // 初始化数据库表结构
+                dataSource = new HikariDataSource(createHikariConfig());
                 initializeDatabase();
-
             } catch (Exception e) {
                 logger.error("数据库初始化失败，系统将终止启动", e);
                 throw new ExceptionInInitializerError("数据库初始化失败: " + e.getMessage());
@@ -119,6 +74,52 @@ public class DatabaseManager {
         } else {
             logger.info("检测到测试模式，跳过 MySQL 数据库初始化");
         }
+    }
+
+    /**
+     * 创建 HikariCP 配置（供静态初始化器和 reloadConfig 共用，确保配置一致）
+     */
+    private static HikariConfig createHikariConfig() {
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(dbUrl);
+        config.setUsername(dbUsername);
+        config.setPassword(dbPassword);
+        config.setDriverClassName("com.mysql.cj.jdbc.Driver");
+
+        // 连接池配置
+        config.setMaximumPoolSize(poolSize);
+        config.setMinimumIdle(Math.max(2, poolSize / 4));
+        config.setConnectionTimeout(connectionTimeout);
+        config.setIdleTimeout(idleTimeout);
+        config.setMaxLifetime(maxLifetime);
+
+        // 连接泄漏检测
+        if (leakDetectionThreshold > 0) {
+            config.setLeakDetectionThreshold(leakDetectionThreshold);
+        }
+
+        // 连接验证配置
+        config.setConnectionTestQuery(connectionTestQuery);
+        config.setValidationTimeout(validationTimeout);
+
+        // MySQL 特定配置
+        config.addDataSourceProperty("cachePrepStmts", "true");
+        config.addDataSourceProperty("prepStmtCacheSize", "250");
+        config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+        config.addDataSourceProperty("useServerPrepStmts", "true");
+        config.addDataSourceProperty("useLocalSessionState", "true");
+        config.addDataSourceProperty("rewriteBatchedStatements", "true");
+        config.addDataSourceProperty("cacheResultSetMetadata", "true");
+        config.addDataSourceProperty("cacheServerConfiguration", "true");
+        config.addDataSourceProperty("elideSetAutoCommits", "true");
+        config.addDataSourceProperty("maintainTimeStats", "false");
+
+        // 时区与编码设置
+        config.addDataSourceProperty("serverTimezone", "Asia/Shanghai");
+        config.addDataSourceProperty("useUnicode", "true");
+        config.addDataSourceProperty("characterEncoding", "UTF-8");
+
+        return config;
     }
 
     /**
@@ -266,7 +267,7 @@ public class DatabaseManager {
      * 设置测试数据源（仅用于单元测试）
      * @param dataSource 测试数据库数据源（连接池）
      */
-    public static void setTestConnection(HikariDataSource dataSource) {
+    public static synchronized void setTestConnection(HikariDataSource dataSource) {
         testDataSource = dataSource;
         logger.debug("测试数据源已设置，testDataSource={}", testDataSource);
     }
@@ -274,7 +275,7 @@ public class DatabaseManager {
     /**
      * 清除测试数据源（仅用于单元测试）
      */
-    public static void clearTestConnection() {
+    public static synchronized void clearTestConnection() {
         if (testDataSource != null && !testDataSource.isClosed()) {
             testDataSource.close();
         }
@@ -368,6 +369,7 @@ public class DatabaseManager {
                     discount DECIMAL(4,2) DEFAULT 10.00,
                     join_date BIGINT,
                     birthday VARCHAR(10),
+                    version INT DEFAULT 0 COMMENT '乐观锁版本号',
                     INDEX idx_member_code (member_code),
                     INDEX idx_name (name),
                     INDEX idx_level (level)
@@ -399,6 +401,16 @@ public class DatabaseManager {
                 }
             } catch (SQLException e) {
                 logger.warn("检查或添加 member_code 字段时出错（可能已存在）: " + e.getMessage());
+            }
+
+            // 为已存在的 members 表添加 version 字段（乐观锁，如果不存在）
+            try {
+                if (columnMissing(stmt, "members", "version")) {
+                    stmt.execute("ALTER TABLE members ADD COLUMN version INT DEFAULT 0 COMMENT '乐观锁版本号'");
+                    logger.info("已为 members 表添加 version 字段（乐观锁）");
+                }
+            } catch (SQLException e) {
+                logger.warn("检查或添加 version 字段时出错（可能已存在）: " + e.getMessage());
             }
 
             // 创建交易表
@@ -1075,10 +1087,9 @@ public class DatabaseManager {
      */
     public static boolean isDatabasePopulated() {
         try (Connection conn = getConnection();
-             Statement stmt = conn.createStatement()) {
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as count FROM users")) {
 
-            // 检查用户表是否有数据
-            ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as count FROM users");
             if (rs.next() && rs.getInt("count") > 0) {
                 return true;
             }
@@ -1256,10 +1267,11 @@ public class DatabaseManager {
      */
     private static boolean backupViaDocker(File backupFile) throws Exception {
         String containerPath = "/tmp/" + backupFile.getName();
-        
-        // 构建 docker exec 命令 - 使用环境变量传递密码
-        String[] command = {
-            "docker", "exec", "-e", "MYSQL_PWD=" + dbPassword,
+
+        // 使用 ProcessBuilder 替代 Runtime.exec，密码通过环境变量传递而非命令行参数
+        // docker exec -e MYSQL_PWD（不带=值）会从当前进程环境继承该变量
+        ProcessBuilder pb = new ProcessBuilder(
+            "docker", "exec", "-e", "MYSQL_PWD",  // 不带值，从环境继承
             dockerMysqlContainerName,
             "mysqldump",
             "-u" + dbUsername,
@@ -1268,10 +1280,12 @@ public class DatabaseManager {
             "--triggers",
             getDatabaseNameFromUrl(dbUrl),
             "-r", containerPath
-        };
+        );
+        // 密码通过环境变量传递，不会出现在 ps / /proc/<pid>/cmdline 中
+        pb.environment().put("MYSQL_PWD", dbPassword);
 
         logger.info("执行 Docker 备份命令...");
-        Process process = Runtime.getRuntime().exec(command);
+        Process process = pb.start();
         int exitCode = waitForProcess(process, "Docker 数据库备份", DATABASE_COMMAND_TIMEOUT_SECONDS);
 
         if (exitCode != 0) {
@@ -1577,22 +1591,12 @@ public class DatabaseManager {
      * 重新加载数据库配置
      */
     public static void reloadConfig() {
-        shutdown();
-        initialized = false;
-        loadConfig();
-
-        HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(dbUrl);
-        config.setUsername(dbUsername);
-        config.setPassword(dbPassword);
-        config.setDriverClassName("com.mysql.cj.jdbc.Driver");
-        config.setMaximumPoolSize(poolSize);
-        config.setMinimumIdle(2);
-        config.setConnectionTimeout(30000);
-        config.addDataSourceProperty("serverTimezone", "Asia/Shanghai");
-
-        dataSource = new HikariDataSource(config);
-
-        logger.info("数据库配置已重新加载");
+        synchronized (DatabaseManager.class) {
+            shutdown();
+            initialized = false;
+            loadConfig();
+            dataSource = new HikariDataSource(createHikariConfig());
+            logger.info("数据库配置已重新加载");
+        }
     }
 }

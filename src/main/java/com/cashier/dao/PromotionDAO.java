@@ -65,10 +65,28 @@ public class PromotionDAO {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, id);
-            ResultSet rs = pstmt.executeQuery();
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapRowToPromotion(rs);
+                }
+            }
+        }
+        return null;
+    }
 
-            if (rs.next()) {
-                return mapRowToPromotion(rs);
+    /**
+     * 使用指定连接根据ID查找促销（事务内使用）
+     */
+    public static Promotion findByIdWithConnection(Connection conn, int id) throws SQLException {
+        String sql = "SELECT id, promotion_code, name, type, threshold, discount, description, enabled, " +
+                     "start_date, end_date, usage_count, max_usage FROM promotions WHERE id = ?";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapRowToPromotion(rs);
+                }
             }
         }
         return null;
@@ -213,7 +231,8 @@ public class PromotionDAO {
      * @throws SQLException 数据库操作异常
      */
     public static boolean incrementUsageWithConnection(Connection conn, int id) throws SQLException {
-        String sql = "UPDATE promotions SET usage_count = usage_count + 1 WHERE id = ?";
+        // 加并发保护：max_usage <= 0（含 -1 和 0）表示不限次，否则要求 usage_count < max_usage
+        String sql = "UPDATE promotions SET usage_count = usage_count + 1 WHERE id = ? AND (max_usage <= 0 OR usage_count < max_usage)";
 
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
@@ -247,6 +266,39 @@ public class PromotionDAO {
                 pstmt.addBatch();
             }
 
+            pstmt.executeBatch();
+        }
+    }
+
+    /**
+     * 使用指定连接批量插入促销
+     * @param conn 数据库连接
+     * @param promotions 促销列表
+     * @throws SQLException 数据库操作异常
+     */
+    public static void batchInsertWithConnection(Connection conn, List<Promotion> promotions) throws SQLException {
+        if (promotions == null || promotions.isEmpty()) {
+            return;
+        }
+        String sql = "INSERT INTO promotions (promotion_code, name, type, threshold, discount, description, " +
+                     "enabled, start_date, end_date, usage_count, max_usage) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            for (Promotion promotion : promotions) {
+                pstmt.setString(1, promotion.promotionCode);
+                pstmt.setString(2, promotion.name);
+                pstmt.setString(3, promotion.type);
+                pstmt.setBigDecimal(4, promotion.threshold);
+                pstmt.setBigDecimal(5, promotion.discount);
+                pstmt.setString(6, promotion.description);
+                pstmt.setBoolean(7, promotion.enabled);
+                pstmt.setLong(8, promotion.startDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+                pstmt.setLong(9, promotion.endDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+                pstmt.setInt(10, promotion.usageCount);
+                pstmt.setInt(11, promotion.maxUsage);
+                pstmt.addBatch();
+            }
             pstmt.executeBatch();
         }
     }

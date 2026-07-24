@@ -200,6 +200,9 @@ public class UserController {
      */
     @FXML
     public void handleAddUser() {
+        if (!requireAdmin()) {
+            return;
+        }
         showUserDialog(null);
     }
 
@@ -208,6 +211,9 @@ public class UserController {
      */
     @FXML
     public void handleEditUser() {
+        if (!requireAdmin()) {
+            return;
+        }
         User selected = userTable.getSelectionModel().getSelectedItem();
         if (selected != null) {
             showUserDialog(selected);
@@ -467,6 +473,9 @@ public class UserController {
      */
     @FXML
     public void handleDeleteUser() {
+        if (!requireAdmin()) {
+            return;
+        }
         User selected = userTable.getSelectionModel().getSelectedItem();
         if (selected != null) {
             // 不允许删除admin用户
@@ -500,23 +509,67 @@ public class UserController {
 
     /**
      * 处理重置密码
+     * 使用 PasswordField 替代 TextInputDialog，防止密码明文显示
      */
     @FXML
     public void handleResetPassword() {
+        if (!requireAdmin()) {
+            return;
+        }
         User selected = userTable.getSelectionModel().getSelectedItem();
         if (selected != null) {
-            TextInputDialog dialog = new TextInputDialog();
+            // 自定义密码重置对话框，使用 PasswordField 防止明文显示
+            Dialog<String> dialog = new Dialog<>();
             dialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("password_reset.title"));
             dialog.setHeaderText(null);
-            dialog.setContentText(I18nManager.getInstance().get("runtime.enter_new_password"));
+            dialog.getDialogPane().setPrefWidth(400);
+
+            if (userTable.getScene() != null) {
+                dialog.initOwner(userTable.getScene().getWindow());
+                dialog.getDialogPane().getStylesheets().addAll(userTable.getScene().getStylesheets());
+            }
+
+            GridPane grid = new GridPane();
+            grid.setHgap(10);
+            grid.setVgap(10);
+            grid.setPadding(new javafx.geometry.Insets(20));
+
+            PasswordField newPasswordField = new PasswordField();
+            PasswordField confirmPasswordField = new PasswordField();
+            Label hintLabel = new Label(I18nManager.getInstance().get("runtime.password_hint_min6"));
+            hintLabel.getStyleClass().add("hint-label");
+
+            grid.add(new Label(I18nManager.getInstance().get("runtime.enter_new_password")), 0, 0);
+            grid.add(newPasswordField, 1, 0);
+            grid.add(new Label(I18nManager.getInstance().get("runtime.confirm_password")), 0, 1);
+            grid.add(confirmPasswordField, 1, 1);
+            grid.add(hintLabel, 0, 2, 2, 1);
+
+            dialog.getDialogPane().setContent(grid);
+            dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+            // OK 按钮在输入校验前禁用
+            dialog.getDialogPane().lookupButton(ButtonType.OK).setDisable(true);
+            newPasswordField.textProperty().addListener((obs, oldVal, newVal) ->
+                validatePasswordFields(newPasswordField, confirmPasswordField, dialog));
+            confirmPasswordField.textProperty().addListener((obs, oldVal, newVal) ->
+                validatePasswordFields(newPasswordField, confirmPasswordField, dialog));
+
+            dialog.setResultConverter(button -> {
+                if (button == ButtonType.OK) {
+                    return newPasswordField.getText().trim();
+                }
+                return null;
+            });
 
             dialog.showAndWait().ifPresent(newPassword -> {
-                if (newPassword.trim().isEmpty()) {
-                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.password_required"));
+                // 二次校验
+                if (newPassword.length() < 6) {
+                    showError(I18nManager.getInstance().get("runtime.password_too_short"));
                     return;
                 }
 
-                selected.password = PasswordUtil.hashPassword(newPassword.trim());
+                selected.password = PasswordUtil.hashPassword(newPassword);
                 try {
                     if (UserDAO.update(selected)) {
                         audit("USER_PASSWORD_RESET", selected.username);
@@ -527,10 +580,32 @@ public class UserController {
                     }
                 } catch (SQLException e) {
                     logger.error("重置密码失败", e);
-                    showError(I18nManager.getInstance().get("runtime.user_reset_failed", e.getMessage()));
+                    showError(I18nManager.getInstance().get("runtime.operation_failed"));
                 }
             });
         }
+    }
+
+    /**
+     * 校验密码输入字段
+     */
+    private void validatePasswordFields(PasswordField newPwd, PasswordField confirmPwd, Dialog<?> dialog) {
+        boolean valid = !newPwd.getText().trim().isEmpty()
+            && newPwd.getText().trim().length() >= 6
+            && newPwd.getText().equals(confirmPwd.getText());
+        dialog.getDialogPane().lookupButton(ButtonType.OK).setDisable(!valid);
+    }
+
+    /**
+     * 权限校验：要求当前用户为管理员
+     * @return 如果有权限返回 true，否则返回 false
+     */
+    private boolean requireAdmin() {
+        if (currentUser == null || !"admin".equals(currentUser.role)) {
+            showError(I18nManager.getInstance().get("runtime.permission_denied"));
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -538,6 +613,9 @@ public class UserController {
      */
     @FXML
     public void handleActivateUser() {
+        if (!requireAdmin()) {
+            return;
+        }
         User selected = userTable.getSelectionModel().getSelectedItem();
         if (selected != null) {
             selected.active = true;
@@ -561,6 +639,9 @@ public class UserController {
      */
     @FXML
     public void handleDeactivateUser() {
+        if (!requireAdmin()) {
+            return;
+        }
         User selected = userTable.getSelectionModel().getSelectedItem();
         if (selected != null) {
             // 不允许禁用admin用户

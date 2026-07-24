@@ -259,13 +259,17 @@ public abstract class BaseDAO {
 
     /**
      * 统计记录数
-     * @param tableName 表名
+     * @param tableName 表名（仅允许字母、数字、下划线，防SQL注入）
      * @param whereClause WHERE 条件（可选，不带 WHERE）
      * @param params WHERE 参数
      * @return 记录数
-     * @throws SQLException 如果查询失败
+     * @throws SQLException 如果查询失败或表名非法
      */
     protected long count(String tableName, String whereClause, Object... params) throws SQLException {
+        // 安全校验：tableName 只允许字母、数字、下划线
+        if (tableName == null || !tableName.matches("^[a-zA-Z_][a-zA-Z0-9_]*$")) {
+            throw new SQLException("非法的表名: " + tableName);
+        }
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM ").append(tableName);
         if (whereClause != null && !whereClause.isEmpty()) {
             sql.append(" WHERE ").append(whereClause);

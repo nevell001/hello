@@ -1,7 +1,7 @@
 package com.cashier.dao;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * DAO 工厂
@@ -9,7 +9,7 @@ import java.util.Map;
  */
 public class DAOFactory {
     private static final DAOFactory INSTANCE = new DAOFactory();
-    private final Map<Class<?>, Object> daoMap = new HashMap<>();
+    private final Map<Class<?>, Object> daoMap = new ConcurrentHashMap<>();
 
     private DAOFactory() {
         // 初始化默认 DAO 实例

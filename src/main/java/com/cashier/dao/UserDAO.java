@@ -356,36 +356,40 @@ public class UserDAO {
         user.role = rs.getString("role");
 
         // 兼容MySQL (BIGINT) 和H2 (TIMESTAMP) 的时间戳读取
-        try {
-            // 尝试作为BIGINT读取（MySQL）
-            long createTime = rs.getLong("create_time");
-            if (!rs.wasNull()) {
-                user.createTime = new java.util.Date(createTime);
-            }
-        } catch (SQLException e) {
-            // 如果失败，尝试作为TIMESTAMP读取（H2）
-            java.sql.Timestamp createTime = rs.getTimestamp("create_time");
-            if (createTime != null) {
-                user.createTime = new java.util.Date(createTime.getTime());
-            }
-        }
-
-        try {
-            // 尝试作为BIGINT读取（MySQL）
-            long lastLoginTime = rs.getLong("last_login_time");
-            if (!rs.wasNull()) {
-                user.lastLoginTime = new java.util.Date(lastLoginTime);
-            }
-        } catch (SQLException e) {
-            // 如果失败，尝试作为TIMESTAMP读取（H2）
-            java.sql.Timestamp lastLoginTime = rs.getTimestamp("last_login_time");
-            if (lastLoginTime != null) {
-                user.lastLoginTime = new java.util.Date(lastLoginTime.getTime());
-            }
-        }
+        // 使用 getObject + instanceof 替代 try-catch 异常控制流
+        user.createTime = readDateColumn(rs, "create_time");
+        user.lastLoginTime = readDateColumn(rs, "last_login_time");
 
         user.active = rs.getBoolean("active");
         user.forcePasswordChange = rs.getBoolean("force_password_change");
         return user;
+    }
+
+    /**
+     * 读取日期列，兼容 BIGINT (epoch millis) 和 TIMESTAMP 两种存储方式
+     */
+    private static java.util.Date readDateColumn(ResultSet rs, String columnName) throws SQLException {
+        Object value = rs.getObject(columnName);
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof java.sql.Timestamp ts) {
+            return new java.util.Date(ts.getTime());
+        }
+        if (value instanceof java.util.Date dt) {
+            return new java.util.Date(dt.getTime());
+        }
+        if (value instanceof Number num) {
+            return new java.util.Date(num.longValue());
+        }
+        // 兜底：尝试字符串解析
+        if (value instanceof String str && !str.isBlank()) {
+            try {
+                return new java.util.Date(Long.parseLong(str));
+            } catch (NumberFormatException e) {
+                return java.sql.Timestamp.valueOf(str);
+            }
+        }
+        return null;
     }
 }

@@ -182,25 +182,30 @@ public class ReceiptPrinter {
 
     /**
      * 打印文件（使用系统默认打印机和命令）
+     * H-27: 使用 ProcessBuilder 消费进程输出，设超时，避免挂起
      */
     private static void printFile(File file) {
         try {
             String os = System.getProperty(SystemPropertyKeys.OS_NAME).toLowerCase();
 
+            String[] command;
             if (os.contains("win")) {
                 // Windows: 使用 notepad /p 打印
-                Runtime.getRuntime().exec(new String[]{"notepad", "/p", file.getAbsolutePath()});
+                command = new String[]{"notepad", "/p", file.getAbsolutePath()};
             } else if (os.contains("mac")) {
                 // macOS: 使用 lpr 打印
-                Runtime.getRuntime().exec(new String[]{"lpr", file.getAbsolutePath()});
+                command = new String[]{"lpr", file.getAbsolutePath()};
             } else if (os.contains("nix") || os.contains("nux")) {
                 // Linux: 使用 lpr 打印
-                Runtime.getRuntime().exec(new String[]{"lpr", file.getAbsolutePath()});
+                command = new String[]{"lpr", file.getAbsolutePath()};
             } else {
                 // 未知系统，显示提示
                 logger.info("小票已生成: {}", file.getAbsolutePath());
                 logger.info("请使用系统打印机打开文件并打印。");
+                return;
             }
+
+            executeCommandWithTimeout(command, 10);
         } catch (IOException e) {
             logger.error("打印命令执行失败: {}", e.getMessage(), e);
             logger.info("小票文件: {}", file.getAbsolutePath());
@@ -248,6 +253,7 @@ public class ReceiptPrinter {
 
     /**
      * 打开小票文件（使用系统默认程序）
+     * H-27: 使用 ProcessBuilder 消费进程输出，设超时，避免挂起
      * @param filePath 文件路径
      */
     public static void openReceiptFile(String filePath) {
@@ -260,17 +266,22 @@ public class ReceiptPrinter {
 
             String os = System.getProperty(SystemPropertyKeys.OS_NAME).toLowerCase();
 
+            String[] command;
             if (os.contains("mac")) {
                 // macOS: 使用 open 命令
-                Runtime.getRuntime().exec(new String[]{"open", filePath});
+                command = new String[]{"open", filePath};
             } else if (os.contains("win")) {
                 // Windows: 使用 start 命令
-                Runtime.getRuntime().exec(new String[]{"cmd", "/c", "start", "", filePath});
+                command = new String[]{"cmd", "/c", "start", "", filePath};
             } else if (os.contains("nix") || os.contains("nux")) {
                 // Linux: 使用 xdg-open
-                Runtime.getRuntime().exec(new String[]{"xdg-open", filePath});
+                command = new String[]{"xdg-open", filePath};
+            } else {
+                logger.warn("不支持的操作系统，无法自动打开文件: {}", filePath);
+                return;
             }
 
+            executeCommandWithTimeout(command, 10);
         } catch (IOException e) {
             logger.error("打开文件失败: {}", e.getMessage(), e);
         }
@@ -566,5 +577,42 @@ public class ReceiptPrinter {
         public static final byte[] DOUBLE_HEIGHT_WIDTH_ON = {0x1B, 0x21, 0x30};
         public static final byte[] FONT_NORMAL = {0x1B, 0x21, 0x00};
         public static final byte[] LINE_FEED = {0x0A};
+    }
+
+    /**
+     * H-27: 安全执行外部命令
+     * 合并 stdout/stderr，消费输出流，设超时，防止进程挂起
+     *
+     * @param command 命令及参数
+     * @param timeoutSeconds 超时秒数
+     * @throws IOException 如果启动进程失败
+     */
+    private static void executeCommandWithTimeout(String[] command, int timeoutSeconds) throws IOException {
+        ProcessBuilder pb = new ProcessBuilder(command);
+        pb.redirectErrorStream(true);
+        Process process = pb.start();
+
+        // 消费合并后的输出流，防止缓冲区满导致进程挂起
+        try (java.io.InputStream is = process.getInputStream()) {
+            byte[] buffer = new byte[4096];
+            while (is.read(buffer) != -1) {
+                // 丢弃输出，仅消费以防止阻塞
+            }
+        } catch (IOException e) {
+            // 进程可能已结束，流关闭是正常的
+            logger.debug("进程输出流已关闭", e);
+        }
+
+        try {
+            boolean finished = process.waitFor(timeoutSeconds, java.util.concurrent.TimeUnit.SECONDS);
+            if (!finished) {
+                logger.warn("命令执行超时 ({}s)，强制销毁进程: {}", timeoutSeconds, String.join(" ", command));
+                process.destroyForcibly();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            process.destroyForcibly();
+            logger.warn("命令执行被中断，进程已销毁");
+        }
     }
 }

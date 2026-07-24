@@ -8,6 +8,7 @@ import com.cashier.service.PaymentService;
 import com.cashier.i18n.I18nManager;
 import com.cashier.util.FormValidator;
 import com.cashier.util.DatabaseManager;
+import java.sql.SQLException;
 import javafx.animation.PauseTransition;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -170,7 +171,10 @@ public class SettingsController {
     private TextField alipayAppIdField;
 
     @FXML
-    private TextArea alipayPrivateKeyArea;
+    private PasswordField alipayPrivateKeyField;
+
+    @FXML
+    private CheckBox showAlipayPrivateKeyCheckBox;
 
     @FXML
     private TextArea alipayPublicKeyArea;
@@ -510,7 +514,7 @@ public class SettingsController {
             logger.info("重启应用完成");
         } catch (Exception e) {
             logger.error("重启应用失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED));
         }
     }
 
@@ -779,7 +783,29 @@ public class SettingsController {
             showError(e.getMessage());
         } catch (Exception e) {
             logger.error("保存支付配置失败", e);
-            showError(I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
+            showError(I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED));
+        }
+    }
+
+    /**
+     * H-20: 切换支付宝私钥显示/隐藏（需二次确认）
+     */
+    @FXML
+    public void handleTogglePrivateKeyVisibility() {
+        if (showAlipayPrivateKeyCheckBox.isSelected()) {
+            String keyValue = alipayPrivateKeyField.getText();
+            if (keyValue == null || keyValue.trim().isEmpty()) {
+                showAlipayPrivateKeyCheckBox.setSelected(false);
+                return;
+            }
+            // 二次确认后显示明文
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle(I18nManager.getInstance().get(I18nKeys.Common.WARNING));
+            alert.setHeaderText(com.cashier.i18n.I18nManager.getInstance().get("runtime.private_key_visibility_warning"));
+            alert.setContentText(keyValue);
+            alert.showAndWait();
+            // 查看后自动取消勾选，恢复掩码状态
+            showAlipayPrivateKeyCheckBox.setSelected(false);
         }
     }
 
@@ -877,7 +903,7 @@ public class SettingsController {
 
         } catch (Exception e) {
             logger.error("复制 Logo 文件失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.SAVE_DATA) + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.SAVE_DATA));
         }
     }
 
@@ -946,7 +972,7 @@ public class SettingsController {
                 showSuccess(com.cashier.i18n.I18nManager.getInstance().get("runtime.backup_success"));
             }
         } catch (Exception e) {
-            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED));
         }
     }
 
@@ -1021,7 +1047,7 @@ public class SettingsController {
                         I18nManager.getInstance().get(I18nKeys.Status.CANCELLED));
                 }
             } catch (Exception e) {
-                showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
+                showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED));
             }
         });
     }
@@ -1102,7 +1128,7 @@ public class SettingsController {
 
         alipayEnabledCheckBox.setSelected(paymentConfig.alipayEnabled);
         alipayAppIdField.setText(defaultText(paymentConfig.alipayAppId, ""));
-        alipayPrivateKeyArea.setText(defaultText(paymentConfig.alipayPrivateKey, ""));
+        alipayPrivateKeyField.setText(defaultText(paymentConfig.alipayPrivateKey, ""));
         alipayPublicKeyArea.setText(defaultText(paymentConfig.alipayPublicKey, ""));
         alipayCertPathField.setText(defaultText(paymentConfig.alipayCertPath, ""));
         alipayGatewayField.setText(defaultText(paymentConfig.alipayGateway, ""));
@@ -1139,7 +1165,7 @@ public class SettingsController {
 
         paymentConfig.alipayEnabled = alipayEnabledCheckBox.isSelected();
         paymentConfig.alipayAppId = alipayAppIdField.getText().trim();
-        paymentConfig.alipayPrivateKey = alipayPrivateKeyArea.getText().trim();
+        paymentConfig.alipayPrivateKey = alipayPrivateKeyField.getText().trim();
         paymentConfig.alipayPublicKey = alipayPublicKeyArea.getText().trim();
         paymentConfig.alipayCertPath = alipayCertPathField.getText().trim();
         paymentConfig.alipayGateway = alipayGatewayField.getText().trim();
@@ -1191,7 +1217,13 @@ public class SettingsController {
         settings.put("passwordMaxAttempts", String.valueOf(passwordMaxAttemptsSpinner.getValue()));
 
         // 保存所有设置到数据库
-        DataService.saveSettings(settings);
+        try {
+            DataService.saveSettings(settings);
+        } catch (SQLException e) {
+            logger.error("保存设置数据失败", e);
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.save_failed"));
+            return;
+        }
 
         // 保存主题偏好（单独存储到主题偏好表）
         String themeName = settings.getOrDefault("theme", I18nManager.getInstance().get(I18nKeys.Menu.Theme.LISUAN));
@@ -1249,7 +1281,7 @@ public class SettingsController {
             java.awt.Desktop.getDesktop().browse(new java.net.URI("https://www.tanshuapi.com/market/detail-77"));
         } catch (Exception e) {
             logger.error("打开网页失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED));
         }
     }
 
@@ -1262,7 +1294,7 @@ public class SettingsController {
             java.awt.Desktop.getDesktop().browse(new java.net.URI("https://www.juhe.cn/docs/api/id/489"));
         } catch (Exception e) {
             logger.error("打开网页失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED));
         }
     }
 
@@ -1275,7 +1307,7 @@ public class SettingsController {
             java.awt.Desktop.getDesktop().browse(new java.net.URI("https://www.tianapi.com/apiview/138"));
         } catch (Exception e) {
             logger.error("打开网页失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED));
         }
     }
 
@@ -1349,7 +1381,7 @@ public class SettingsController {
                     } else {
                         importProgressBar.setProgress(1);
                         importStatusLabel.setText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.IMPORT_DATA));
-                        showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + result.get("error"));
+                        showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED));
                     }
                     
                     // 延迟隐藏进度条，避免阻塞 JavaFX UI 线程。
@@ -1362,7 +1394,7 @@ public class SettingsController {
                 javafx.application.Platform.runLater(() -> {
                     importProgressBar.setVisible(false);
                     importStatusLabel.setText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.IMPORT_DATA));
-                    showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
+                    showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED));
                 });
             }
         }).start();

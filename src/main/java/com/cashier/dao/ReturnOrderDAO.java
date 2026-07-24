@@ -1,5 +1,6 @@
 package com.cashier.dao;
 
+import com.cashier.exception.DatabaseException;
 import com.cashier.model.ReturnOrder;
 import com.cashier.util.LoggerFactoryUtil;
 import org.slf4j.Logger;
@@ -23,7 +24,7 @@ public class ReturnOrderDAO {
             return insertWithConnection(conn, returnOrder);
         } catch (SQLException e) {
             logger.error("插入退货订单失败", e);
-            return false;
+            throw new DatabaseException("插入退货订单失败", DatabaseException.DbErrorType.INSERT_FAILED, e);
         }
     }
 
@@ -75,7 +76,7 @@ public class ReturnOrderDAO {
             return updateWithConnection(conn, returnOrder);
         } catch (SQLException e) {
             logger.error("更新退货订单失败", e);
-            return false;
+            throw new DatabaseException("更新退货订单失败", DatabaseException.DbErrorType.UPDATE_FAILED, e);
         }
     }
 
@@ -131,7 +132,7 @@ public class ReturnOrderDAO {
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             logger.error("删除退货订单失败", e);
-            return false;
+            throw new DatabaseException("删除退货订单失败", DatabaseException.DbErrorType.DELETE_FAILED, e);
         }
     }
 
@@ -145,13 +146,14 @@ public class ReturnOrderDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setInt(1, id);
-            ResultSet rs = stmt.executeQuery();
-            
-            if (rs.next()) {
-                return mapRowToReturnOrder(rs);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapRowToReturnOrder(rs);
+                }
             }
         } catch (SQLException e) {
             logger.error("查找退货订单失败", e);
+            throw new DatabaseException("查找退货订单失败", DatabaseException.DbErrorType.QUERY_FAILED, e);
         }
         
         return null;
@@ -165,9 +167,8 @@ public class ReturnOrderDAO {
             return findByReturnOrderIdWithConnection(conn, returnOrderId);
         } catch (SQLException e) {
             logger.error("查找退货订单失败", e);
+            throw new DatabaseException("查找退货订单失败", DatabaseException.DbErrorType.QUERY_FAILED, e);
         }
-
-        return null;
     }
 
     /**
@@ -208,6 +209,7 @@ public class ReturnOrderDAO {
             }
         } catch (SQLException e) {
             logger.error("查找所有退货订单失败", e);
+            throw new DatabaseException("查找所有退货订单失败", DatabaseException.DbErrorType.QUERY_FAILED, e);
         }
         
         return returnOrders;
@@ -235,6 +237,7 @@ public class ReturnOrderDAO {
             }
         } catch (SQLException e) {
             logger.error("查找最近退货订单失败", e);
+            throw new DatabaseException("查找最近退货订单失败", DatabaseException.DbErrorType.QUERY_FAILED, e);
         }
 
         return returnOrders;
@@ -251,13 +254,14 @@ public class ReturnOrderDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setString(1, status);
-            ResultSet rs = stmt.executeQuery();
-            
-            while (rs.next()) {
-                returnOrders.add(mapRowToReturnOrder(rs));
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    returnOrders.add(mapRowToReturnOrder(rs));
+                }
             }
         } catch (SQLException e) {
             logger.error("根据状态查找退货订单失败", e);
+            throw new DatabaseException("根据状态查找退货订单失败", DatabaseException.DbErrorType.QUERY_FAILED, e);
         }
         
         return returnOrders;
@@ -274,13 +278,14 @@ public class ReturnOrderDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setInt(1, memberId);
-            ResultSet rs = stmt.executeQuery();
-            
-            while (rs.next()) {
-                returnOrders.add(mapRowToReturnOrder(rs));
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    returnOrders.add(mapRowToReturnOrder(rs));
+                }
             }
         } catch (SQLException e) {
             logger.error("根据会员ID查找退货订单失败", e);
+            throw new DatabaseException("根据会员ID查找退货订单失败", DatabaseException.DbErrorType.QUERY_FAILED, e);
         }
         
         return returnOrders;
@@ -298,13 +303,14 @@ public class ReturnOrderDAO {
 
             stmt.setTimestamp(1, new Timestamp(startDate.getTime()));
             stmt.setTimestamp(2, new Timestamp(endDate.getTime()));
-            ResultSet rs = stmt.executeQuery();
-
-            while (rs.next()) {
-                returnOrders.add(mapRowToReturnOrder(rs));
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    returnOrders.add(mapRowToReturnOrder(rs));
+                }
             }
         } catch (SQLException e) {
             logger.error("根据日期范围查找退货订单失败", e);
+            throw new DatabaseException("根据日期范围查找退货订单失败", DatabaseException.DbErrorType.QUERY_FAILED, e);
         }
 
         return returnOrders;
@@ -321,13 +327,14 @@ public class ReturnOrderDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, transactionId);
-            ResultSet rs = stmt.executeQuery();
-
-            while (rs.next()) {
-                returnOrders.add(mapRowToReturnOrder(rs));
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    returnOrders.add(mapRowToReturnOrder(rs));
+                }
             }
         } catch (SQLException e) {
             logger.error("根据原交易ID查找退货订单失败", e);
+            throw new DatabaseException("根据原交易ID查找退货订单失败", DatabaseException.DbErrorType.QUERY_FAILED, e);
         }
 
         return returnOrders;
@@ -341,10 +348,8 @@ public class ReturnOrderDAO {
             return generateNextReturnOrderId(conn);
         } catch (SQLException e) {
             logger.error("生成退货单号失败", e);
+            throw new DatabaseException("生成退货单号失败", DatabaseException.DbErrorType.QUERY_FAILED, e);
         }
-
-        String prefix = "R" + java.time.LocalDate.now(java.time.ZoneId.systemDefault()).format(com.cashier.util.DateTimeFormats.COMPACT_DATE);
-        return prefix + "0001";
     }
 
     /**
