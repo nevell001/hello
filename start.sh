@@ -17,7 +17,7 @@ APP_VERSION=$(awk '/<version>[^<]+<\/version>/ {gsub(/.*<version>|<\/version>.*/
 
 # Fallback if version not found
 if [ -z "$APP_VERSION" ]; then
-    APP_VERSION="2.5.9"
+    APP_VERSION="2.6.0"
 fi
 MAIN_CLASS="com.cashier.CashierSystemFXApplication"
 CONFIG_FILE="config/jvm.config"

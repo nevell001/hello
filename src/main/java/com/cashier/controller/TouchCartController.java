@@ -29,9 +29,11 @@ import javafx.scene.input.KeyEvent;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
@@ -53,6 +55,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Optional;
+import javafx.scene.control.Toggle;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -180,6 +184,12 @@ public class TouchCartController implements CartViewHost {
     }
 
     // ===== 按钮事件 =====
+
+    @FXML
+    private void handleLanguageSwitch() {
+        logger.info("语言切换按钮被点击");
+        showLanguageSelectionDialog();
+    }
 
     @FXML
     private void handleExit() {
@@ -1554,6 +1564,117 @@ public class TouchCartController implements CartViewHost {
         updateSummary();
         updateStatus();
         loadProducts(currentCategoryName); // 刷新库存显示(库存已扣减)
+    }
+
+    /**
+     * 显示语言选择对话框
+     */
+    private void showLanguageSelectionDialog() {
+        // 创建自定义对话框
+        Dialog<String> dialog = new Dialog<>();
+        dialog.setTitle(i18n.get("settings.language"));
+        dialog.setHeaderText(i18n.get("tpos.language.select"));
+
+        // 设置对话框样式
+        dialog.getDialogPane().setStyle("-fx-font-size: 16px;");
+
+        // 创建语言选项
+        ToggleGroup languageGroup = new ToggleGroup();
+
+        RadioButton chineseRadio = new RadioButton("简体中文");
+        chineseRadio.setUserData("zh-CN");
+        chineseRadio.setToggleGroup(languageGroup);
+        chineseRadio.setStyle("-fx-font-size: 18px; -fx-padding: 8px;");
+
+        RadioButton traditionalRadio = new RadioButton("繁體中文");
+        traditionalRadio.setUserData("zh-TW");
+        traditionalRadio.setToggleGroup(languageGroup);
+        traditionalRadio.setStyle("-fx-font-size: 18px; -fx-padding: 8px;");
+
+        RadioButton englishRadio = new RadioButton("English");
+        englishRadio.setUserData("en");
+        englishRadio.setToggleGroup(languageGroup);
+        englishRadio.setStyle("-fx-font-size: 18px; -fx-padding: 8px;");
+
+        // 选中当前语言
+        String currentLanguage = I18nManager.getInstance().getCurrentLanguageTag();
+        for (Toggle toggle : languageGroup.getToggles()) {
+            RadioButton radio = (RadioButton) toggle;
+            if (radio.getUserData().equals(currentLanguage)) {
+                radio.setSelected(true);
+                break;
+            }
+        }
+
+        // 垂直布局
+        VBox vbox = new VBox(12, chineseRadio, traditionalRadio, englishRadio);
+        vbox.setStyle("-fx-padding: 16px;");
+        vbox.setPadding(new Insets(20, 20, 20, 20));
+
+        dialog.getDialogPane().setContent(vbox);
+
+        // 设置按钮
+        ButtonType confirmBtn = new ButtonType(i18n.get("common.confirm"), ButtonBar.ButtonData.OK_DONE);
+        ButtonType cancelBtn = new ButtonType(i18n.get("common.cancel"), ButtonBar.ButtonData.CANCEL_CLOSE);
+        dialog.getDialogPane().getButtonTypes().setAll(confirmBtn, cancelBtn);
+
+        // 触屏化：放大按钮
+        dialog.setOnShown(e -> {
+            for (ButtonType bt : dialog.getDialogPane().getButtonTypes()) {
+                Button b = (Button) dialog.getDialogPane().lookupButton(bt);
+                if (b != null) {
+                    b.setPrefSize(140, 50);
+                    b.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+                }
+            }
+        });
+
+        // 显示对话框并处理结果
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == confirmBtn) {
+                RadioButton selected = (RadioButton) languageGroup.getSelectedToggle();
+                if (selected != null) {
+                    return (String) selected.getUserData();
+                }
+            }
+            return null;
+        });
+
+        java.util.Optional<String> result = dialog.showAndWait();
+        result.ifPresent(languageTag -> switchLanguage(languageTag));
+    }
+
+    /**
+     * 切换语言并刷新界面
+     */
+    private void switchLanguage(String languageTag) {
+        try {
+            // 保存语言偏好
+            String username = (currentUser != null) ? currentUser.username : "default";
+            com.cashier.service.DataService.saveLanguagePreference(username, languageTag);
+            com.cashier.service.DataService.saveLanguagePreference("default", languageTag);
+            logger.info("语言已切换: username={}, languageTag={}", username, languageTag);
+
+            // 更新 I18nManager
+            I18nManager.getInstance().setLocale(languageTag);
+
+            // 显示成功提示
+            showInfo(i18n.get("tpos.language.changed"));
+
+            // 延迟刷新界面，确保提示被看到
+            javafx.animation.PauseTransition pause = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(1));
+            pause.setOnFinished(e -> {
+                // 重新加载当前视图
+                if (application != null && currentUser != null) {
+                    application.switchToPosModeView(currentUser);
+                }
+            });
+            pause.play();
+
+        } catch (Exception e) {
+            logger.error("语言切换失败", e);
+            StatusBarManager.updateError(i18n.get("label.error") + ": " + e.getMessage());
+        }
     }
 
     // ===== 工具 =====

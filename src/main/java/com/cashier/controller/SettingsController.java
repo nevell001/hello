@@ -424,6 +424,15 @@ public class SettingsController {
             // 应用语言设置
             if (selectedLanguage != null) {
                 applyLanguageSetting(newLanguageTag);
+                // 保存语言偏好到 language_preferences 表
+                if (languageChanged) {
+                    String username = (currentUser != null) ? currentUser.username : "default";
+                    // 保存用户特定偏好
+                    com.cashier.service.DataService.saveLanguagePreference(username, newLanguageTag);
+                    // 同时更新全局默认（"default"用户），确保新用户使用系统默认语言
+                    com.cashier.service.DataService.saveLanguagePreference("default", newLanguageTag);
+                    logger.info("语言偏好已保存: username={}, languageTag={}, 全局默认已更新", username, newLanguageTag);
+                }
             }
 
             // 应用字号设置

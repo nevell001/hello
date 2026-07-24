@@ -1,17 +1,21 @@
 package com.cashier.dao;
 
 import com.cashier.util.DatabaseManager;
+import com.cashier.util.LoggerFactoryUtil;
 
 import java.sql.*;
+import org.slf4j.Logger;
 
 /**
  * 语言偏好数据访问对象
  * 负责语言偏好和货币偏好相关的数据库操作
  */
 public class LanguagePreferenceDAO {
+    private static final Logger logger = LoggerFactoryUtil.getLogger(LanguagePreferenceDAO.class);
 
     /**
      * 获取语言偏好
+     * 优先返回用户特定偏好，若不存在则返回全局默认（"default"用户），最后返回系统默认
      */
     public static String getLanguagePreference(String username) throws SQLException {
         String sql = "SELECT language_tag FROM language_preferences WHERE username = ?";
@@ -19,13 +23,28 @@ public class LanguagePreferenceDAO {
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
+            // 首先尝试获取用户特定偏好
             pstmt.setString(1, username);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
-                return rs.getString("language_tag");
+                String userLang = rs.getString("language_tag");
+                logger.debug("用户 {} 的语言偏好: {}", username, userLang);
+                return userLang;
+            }
+
+            // 如果用户没有特定偏好，尝试获取全局默认（"default"用户）
+            pstmt.setString(1, "default");
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                String globalDefault = rs.getString("language_tag");
+                if (globalDefault != null && !globalDefault.isEmpty()) {
+                    logger.debug("用户 {} 使用全局默认语言: {}", username, globalDefault);
+                    return globalDefault;
+                }
             }
         }
-        return "zh-CN"; // 默认简体中文
+        logger.debug("用户 {} 使用系统默认语言: zh-CN", username);
+        return "zh-CN"; // 系统默认简体中文
     }
 
     /**

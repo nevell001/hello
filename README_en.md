@@ -4,7 +4,7 @@
 
 LiSuan Cashier System is a desktop POS (Point of Sale) cashier system built with JavaFX 17. It is designed for daily retail operations, covering checkout, products, members, purchasing, inventory, returns, reports, user permissions, data backup, and hardware integration.
 
-**Current Version**: v2.5.9 | **Latest Update**: 2026-07-19 | **Test Coverage**: 380 test cases
+**Current Version**: v2.6.0 | **Latest Update**: 2026-07-24 | **Test Coverage**: 380 test cases
 
 ![Java](https://img.shields.io/badge/Java-17-orange)
 ![JavaFX](https://img.shields.io/badge/JavaFX-17.0.12-blue)
@@ -90,6 +90,7 @@ LiSuan Cashier System is a desktop POS (Point of Sale) cashier system built with
 - Themes: LiSuan, Light, Dark, compatible with legacy IntelliJ theme preferences.
 - Built-in Noto Sans CJK SC fonts for cross-platform Chinese rendering.
 - Left navigation icons streamlined semantically to avoid redundancy.
+- Touch screen POS supports one-tap language switching, settings apply globally.
 
 ---
 
@@ -349,6 +350,14 @@ src/main/resources/
 ---
 
 ## Recent Updates
+
+### v2.6.0 (2026-07-24)
+- Touch screen POS adds language switching: One-tap toggle between Simplified Chinese/English/Traditional Chinese from toolbar
+- Language preference optimization: Saves both user preference and global default, new users automatically use system language
+- Fixed language switching not working: Unified language preference storage logic, prioritizes user preference > global default > system default
+- I18nManager improvement: Uses language tag matching instead of Locale object comparison for better cross-platform compatibility
+- Code quality unified: LanguagePreferenceDAO logging migrated from java.util.logging to SLF4J
+- Touch screen POS now prompts for continued cash-only payment when partially paid in cash, preventing accounting errors
 
 ### v2.5.9 (2026-07-19)
 - Security hardening: Payment orders and refund records now use `SecureRandom` for random code generation

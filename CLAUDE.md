@@ -70,7 +70,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 This is a **POS (Point of Sale) cashier system** built with JavaFX 17. It's a desktop application for retail operations including cash register functionality, inventory management, member management, purchasing, returns, and reporting.
 
-**Current Version:** v2.5.9 | **Main Entry:** `com.cashier.CashierSystemFXApplication`
+**Current Version:** v2.6.0 | **Main Entry:** `com.cashier.CashierSystemFXApplication`
 
 **Tech Stack:**
 - JavaFX 17.0.12 for UI
@@ -98,7 +98,7 @@ mvn javafx:run
 
 # Package
 mvn clean package
-java -jar target/lisuan-fx-2.5.9-jar-with-dependencies.jar
+java -jar target/lisuan-fx-*-jar-with-dependencies.jar
 
 # Run tests
 mvn test
@@ -258,17 +258,33 @@ productDAO.update(product);
 ### User Roles & Views
 
 - **admin**: Full access → MainView (full interface)
-- **cashier**: POS operations → PosModeView (simplified interface)
+- **cashier**: POS operations → CartView (standard), TouchCartView (touch-optimized), or PosModeView (simplified)
 - **finance**: Reports and statistics → MainView
+
+**POS Interface Variants:**
+- `CartView` - Standard POS with keyboard shortcuts
+- `TouchCartView` - Touch-optimized POS with larger buttons, one-tap language switching
+- `PosModeView` - Simplified POS mode for cashiers
 
 ### i18n (Internationalization)
 
 **I18nManager** (`i18n/I18nManager.java`)
 - ResourceBundle-based localization
-- Supported languages: zh_CN (default), en, ja, ko
+- Supported languages: zh_CN (default), zh_TW, en
 - Language files: `src/main/resources/com/cashier/i18n/messages_*.properties`
 - Dynamic language switching via `I18nManager.setLocale()`
 - FXML bindings: Use `%resource_key` syntax
+
+**Language Preference Storage** (`dao/LanguagePreferenceDAO.java`)
+- Hierarchical preference resolution: user-specific → global default → system default (zh-CN)
+- User preferences stored in `language_preferences` table with `language_tag` field
+- Global default stored with `username = 'default'`
+- Language tags use BCP 47 format: `zh-CN`, `zh-TW`, `en`
+
+**Touch Screen Language Switching** (v2.6.0)
+- TouchCartController provides one-tap language switching via toolbar button
+- Saves both user preference and updates global default
+- Dialog with radio buttons for language selection
 
 ## Important Business Rules
 

@@ -39,7 +39,7 @@ echo "✓ 打包成功"
 echo "[4/4] 验证发布配置..."
 
 # 检查 JAR 文件
-if [ -f "target/lisuan-fx-2.5.9-jar-with-dependencies.jar" ]; then
+if [ -f "target/lisuan-fx-2.6.0-jar-with-dependencies.jar" ]; then
     echo "✓ 可执行 JAR 已生成"
 else
     echo "✗ 找不到可执行 JAR"
@@ -120,5 +120,5 @@ fi
 
 echo "===================================================="
 echo "      狸算(LiSuan) 发布验证全部通过！"
-echo "      发布版本: 2.5.9"
+echo "      发布版本: 2.6.0"
 echo "===================================================="

@@ -27,7 +27,7 @@
             <Label text="%wizard.subtitle" styleClass="wizard-subtitle"/>
         </VBox>
         <Region HBox.hgrow="ALWAYS"/>
-        <Label fx:id="versionLabel" text="Version 2.5.9" styleClass="wizard-version"/>
+        <Label fx:id="versionLabel" text="Version 2.6.0" styleClass="wizard-version"/>
     </HBox>
 
     <Separator/>
@@ -160,7 +160,7 @@
                     <Label fx:id="summaryAppName" text="LiSuan" GridPane.columnIndex="1" GridPane.rowIndex="0" styleClass="summary-value"/>
 
                     <Label text="%wizard.label.version" GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="help-text"/>
-                    <Label fx:id="summaryVersion" text="2.5.9" GridPane.columnIndex="1" GridPane.rowIndex="1" styleClass="summary-value"/>
+                    <Label fx:id="summaryVersion" text="2.6.0" GridPane.columnIndex="1" GridPane.rowIndex="1" styleClass="summary-value"/>
 
                     <Label text="%wizard.label.embed_jre" GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="help-text"/>
                     <Label fx:id="summaryEmbedJre" text="%wizard.yes" GridPane.columnIndex="1" GridPane.rowIndex="2" styleClass="summary-value"/>

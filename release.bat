@@ -32,7 +32,7 @@ if %ERRORLEVEL% NEQ 0 (
 
 REM 4. 验证
 echo [4/4] 验证发布配置...
-if not exist "target\lisuan-fx-2.5.9-jar-with-dependencies.jar" (
+if not exist "target\lisuan-fx-2.6.0-jar-with-dependencies.jar" (
     echo 找不到可执行 JAR！
     exit /b 1
 )

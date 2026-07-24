@@ -3203,6 +3203,8 @@
 .tpos-exit-btn:hover { -fx-background-color: rgba(255,255,255,0.25); -fx-border-color: rgba(255,255,255,0.6); }
 .tpos-shift-btn { -fx-background-color: rgba(255,255,255,0.15); -fx-text-fill: #FFFFFF; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 13; -fx-border-color: rgba(255,255,255,0.4); -fx-border-width: 1; -fx-border-radius: 8; }
 .tpos-shift-btn:hover { -fx-background-color: rgba(255,255,255,0.25); -fx-border-color: rgba(255,255,255,0.6); }
+.tpos-language-btn { -fx-background-color: rgba(255,255,255,0.15); -fx-text-fill: #FFFFFF; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14; -fx-border-color: rgba(255,255,255,0.4); -fx-border-width: 1; -fx-border-radius: 8; }
+.tpos-language-btn:hover { -fx-background-color: rgba(255,255,255,0.25); -fx-border-color: rgba(255,255,255,0.6); }
 
 /* —— 左侧分类导航 —— */
 .tpos-sidebar { -fx-background-color: -lisuan-primary-deep; -fx-padding: 8; -fx-spacing: 0; }

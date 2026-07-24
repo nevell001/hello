@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class Installer {
     private static final Logger LOGGER = Logger.getLogger(Installer.class.getName());
-    private static final String APP_VERSION = "2.5.9";
+    private static final String APP_VERSION = "2.6.0";
     private static final String DB_NAME = "lisuan_system";
     private static final int MYSQL_READY_TIMEOUT_SECONDS = 60;
     private static final int MYSQL_READY_CHECK_INTERVAL_SECONDS = 2;

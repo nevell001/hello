@@ -26,7 +26,7 @@ if [ -f ".env" ]; then
 fi
 
 # 默认值（如果 .env 中没有定义）
-APP_VERSION=${APP_VERSION:-"2.5.9"}
+APP_VERSION=${APP_VERSION:-"2.6.0"}
 DB_TYPE=${DB_TYPE:-"none"}
 DB_HOST=${DB_HOST:-"localhost"}
 DB_PORT=${DB_PORT:-"3306"}

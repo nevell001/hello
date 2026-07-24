@@ -507,7 +507,7 @@ public class CashierSystemFXApplication extends Application {
      * 加载POS模式界面（专为收银员设计的触屏版）
      * @param user 当前登录用户
      */
-    private void switchToPosModeView(User user) {
+    public void switchToPosModeView(User user) {
         try {
             // 加载用户特定的语言偏好并应用到 I18nManager
             // 必须在加载 FXML 之前设置，确保使用正确的 ResourceBundle

@@ -85,9 +85,25 @@ public class I18nManager {
      */
     public void setLocale(String languageTag) {
         Locale locale = Locale.forLanguageTag(languageTag);
-        if (!AVAILABLE_LOCALES.contains(locale)) {
-            locale = CHINESE_SIMPLIFIED; // 默认简体中文
+
+        // 通过语言标签直接匹配，避免 Locale 对象比较的问题
+        String normalizedTag = locale.toLanguageTag();
+        boolean supported = false;
+        for (Locale supportedLocale : AVAILABLE_LOCALES) {
+            if (supportedLocale.toLanguageTag().equals(normalizedTag)) {
+                locale = supportedLocale; // 使用预定义的 Locale 常量
+                supported = true;
+                break;
+            }
         }
+
+        if (!supported) {
+            logger.warn("语言标签 {} ({}) 不在可用列表中，使用默认简体中文", languageTag, normalizedTag);
+            locale = CHINESE_SIMPLIFIED;
+        }
+
+        logger.info("设置语言: {} -> Locale: {} (language={}, country={})",
+            languageTag, locale, locale.getLanguage(), locale.getCountry());
         setLocale(locale);
     }
     
