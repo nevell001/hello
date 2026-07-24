@@ -17,7 +17,6 @@
             <Insets top="12" right="16" bottom="12" left="16"/>
         </padding>
 
-        <Label text="📊" styleClass="shift-toolbar-icon"/>
         <Label text="%shift.title" styleClass="shift-toolbar-title"/>
 
         <Region HBox.hgrow="ALWAYS"/>
@@ -47,8 +46,6 @@
 
         <Label text="%shift.date_to" styleClass="shift-filter-label"/>
         <DatePicker fx:id="endDatePicker" prefWidth="150" styleClass="shift-datepicker"/>
-
-        <Separator orientation="VERTICAL" styleClass="shift-separator-vertical"/>
 
         <Label text="%shift.search_label" styleClass="shift-filter-label"/>
         <TextField fx:id="searchField" promptText="%shift.search_hint"
