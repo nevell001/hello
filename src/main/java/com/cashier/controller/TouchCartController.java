@@ -1101,18 +1101,9 @@ public class TouchCartController implements CartViewHost {
         Label statusLabel = new Label();
         statusLabel.setStyle("-fx-font-size: 16;");
 
-        // 快捷金额按钮（基于剩余金额动态生成）
+        // 快捷金额按钮（固定面值，对齐非触屏 CartController 的 100/50/20/10/5）
         HBox quickBtns = new HBox(8);
-        int[] amounts;
-        if (remainingAmount.compareTo(new BigDecimal("100")) > 0) {
-            amounts = new int[]{100, 50, 20, 10, 5};
-        } else if (remainingAmount.compareTo(new BigDecimal("50")) > 0) {
-            amounts = new int[]{50, 20, 10, 5, 1};
-        } else if (remainingAmount.compareTo(new BigDecimal("20")) > 0) {
-            amounts = new int[]{20, 10, 5, 1};
-        } else {
-            amounts = new int[]{10, 5, 1};
-        }
+        int[] amounts = {100, 50, 20, 10, 5};
         for (int amt : amounts) {
             Button b = new Button(symbol + amt);
             b.setPrefSize(70, 45);
