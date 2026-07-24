@@ -175,16 +175,39 @@ public class TouchCartController implements CartViewHost {
 
     @FXML
     private void handleExit() {
-        // 退出前总是确认（购物车非空提示将丢失，否则确认是否退出）
+        // 触屏版退出确认：大按钮 + 三选（先交班 / 取消 / 确认退出）
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle(i18n.get("common.confirm"));
         alert.setHeaderText(null);
         alert.setContentText(isCartEmpty()
             ? i18n.get("tpos.exit_confirm")
             : i18n.get("runtime.cart_exit_confirm"));
-        if (alert.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
+        alert.getDialogPane().setStyle("-fx-font-size: 18px;");
+
+        ButtonType shiftFirstType = new ButtonType(i18n.get("tpos.exit_shift_first"), javafx.scene.control.ButtonBar.ButtonData.OTHER);
+        alert.getButtonTypes().setAll(shiftFirstType, ButtonType.CANCEL, ButtonType.OK);
+
+        // 触屏化：放大按钮（150x56、字号18），适合点按
+        alert.setOnShown(e -> {
+            for (ButtonType bt : alert.getButtonTypes()) {
+                Button b = (Button) alert.getDialogPane().lookupButton(bt);
+                if (b != null) {
+                    b.setPrefSize(150, 56);
+                    b.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+                }
+            }
+        });
+
+        ButtonType clicked = alert.showAndWait().orElse(ButtonType.CANCEL);
+        if (clicked == ButtonType.CANCEL) {
             return;
         }
+        if (clicked == shiftFirstType) {
+            // 先交班：弹出交接班页面，不退出
+            handleShift();
+            return;
+        }
+        // 确认退出
         if (application != null) {
             application.logoutToLoginView();
         }
@@ -1103,7 +1126,7 @@ public class TouchCartController implements CartViewHost {
 
         // 快捷金额按钮（固定面值，对齐非触屏 CartController 的 100/50/20/10/5）
         HBox quickBtns = new HBox(8);
-        int[] amounts = {100, 50, 20, 10, 5};
+        int[] amounts = {100, 50, 20, 10, 5, 1};
         for (int amt : amounts) {
             Button b = new Button(symbol + amt);
             b.setPrefSize(70, 45);
