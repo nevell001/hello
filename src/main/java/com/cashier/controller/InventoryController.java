@@ -210,18 +210,14 @@ public class InventoryController extends BaseController<Product> {
                 setLoadedProducts(results.getData());
                 inventoryList.setAll(inventoryMap.values());
             } else {
-                // 同时按关键词和分类筛选
-                List<Product> allProducts = productDAO.findAll();
+                // 同时按关键词和分类筛选：按分类分页查询后在结果内过滤关键词（避免全量加载）
+                PageResult<Product> results = productDAO.findByCategory(selectedCategory, FIRST_PAGE, DESKTOP_PAGE_SIZE);
                 List<Product> filtered = new java.util.ArrayList<>();
-                String searchLower = searchText.toLowerCase();
 
-                for (Product p : allProducts) {
-                    boolean matchesCategory = selectedCategory.equals(p.category);
-                    boolean matchesSearch = containsIgnoreCase(p.name, searchText)
+                for (Product p : results.getData()) {
+                    if (containsIgnoreCase(p.name, searchText)
                         || containsIgnoreCase(p.barcode, searchText)
-                        || containsIgnoreCase(p.productCode, searchText);
-
-                    if (matchesCategory && matchesSearch) {
+                        || containsIgnoreCase(p.productCode, searchText)) {
                         filtered.add(p);
                     }
                 }
