@@ -1197,38 +1197,39 @@ public class TouchCartController implements CartViewHost {
         dialog.getDialogPane().getButtonTypes().clear();
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.CANCEL);
 
+        // 确认收款：仅解析金额→设结果→关闭对话框；支付/递归放到 showAndWait().ifPresent，
+        // 避免在对话框事件处理内嵌套 showAndWait（部分支付后第二次输入界面会卡死）。
         continueBtn.setOnAction(e -> {
             try {
                 BigDecimal thisPayment = new BigDecimal(receivedField.getText().trim());
                 if (thisPayment.compareTo(BigDecimal.ZERO) <= 0) {
                     return;
                 }
-                // 累加收款金额
-                cashReceivedAmount = cashReceivedAmount.add(thisPayment);
-
-                if (cashReceivedAmount.compareTo(finalAmount) >= 0) {
-                    // 已付清，计算找零并完成交易
-                    BigDecimal change = cashReceivedAmount.subtract(finalAmount);
-                    dialog.close();
-                    executePayment("现金", cashReceivedAmount, change);
-                    cashReceivedAmount = BigDecimal.ZERO; // 重置
-                } else {
-                    // 未付清，显示提示并允许继续支付
-                    BigDecimal stillNeed = finalAmount.subtract(cashReceivedAmount);
-                    Alert info = new Alert(Alert.AlertType.INFORMATION);
-                    info.setHeaderText(null);
-                    info.setContentText("收款成功！还需: " + CurrencyUtil.format(stillNeed.doubleValue()));
-                    info.showAndWait();
-                    dialog.close();
-                    // 重新打开支付对话框
-                    handleCashPayment();
-                }
+                dialog.setResult(thisPayment);
+                dialog.close();
             } catch (NumberFormatException ex) {
                 warn("请输入有效的金额");
             }
         });
 
-        dialog.showAndWait();
+        dialog.showAndWait().ifPresent(thisPayment -> {
+            // 此处已脱离对话框事件循环，不再嵌套 showAndWait
+            cashReceivedAmount = cashReceivedAmount.add(thisPayment);
+            if (cashReceivedAmount.compareTo(finalAmount) >= 0) {
+                // 已付清，计算找零并完成交易
+                BigDecimal change = cashReceivedAmount.subtract(finalAmount);
+                executePayment("现金", cashReceivedAmount, change);
+                cashReceivedAmount = BigDecimal.ZERO; // 重置
+            } else {
+                // 未付清：提示并重新打开（递归在前一个 showAndWait 返回后，不会卡死）
+                BigDecimal stillNeed = finalAmount.subtract(cashReceivedAmount);
+                Alert info = new Alert(Alert.AlertType.INFORMATION);
+                info.setHeaderText(null);
+                info.setContentText("收款成功！还需: " + CurrencyUtil.format(stillNeed.doubleValue()));
+                info.showAndWait();
+                handleCashPayment();
+            }
+        });
     }
 
     // ===== 银行卡支付 =====
