@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS products (
     min_stock INT DEFAULT 0,
     cost DECIMAL(10,2),
     version INT DEFAULT 0 COMMENT '版本号（用于乐观锁）',
+    is_hot TINYINT DEFAULT 0 COMMENT '是否热销',
     created_at BIGINT,
     updated_at BIGINT,
     INDEX idx_product_code (product_code),

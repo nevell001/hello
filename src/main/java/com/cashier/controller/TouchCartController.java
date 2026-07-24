@@ -175,15 +175,15 @@ public class TouchCartController implements CartViewHost {
 
     @FXML
     private void handleExit() {
-        if (!isCartEmpty()) {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle(i18n.get("runtime.confirm"));
-            alert.setHeaderText(i18n.get("runtime.cart_not_empty"));
-            String message = i18n.get("runtime.cart_exit_confirm");
-            alert.setContentText(message);
-            if (alert.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
-                return;
-            }
+        // 退出前总是确认（购物车非空提示将丢失，否则确认是否退出）
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle(i18n.get("runtime.confirm"));
+        alert.setHeaderText(null);
+        alert.setContentText(isCartEmpty()
+            ? i18n.get("tpos.exit_confirm")
+            : i18n.get("runtime.cart_exit_confirm"));
+        if (alert.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
+            return;
         }
         if (application != null) {
             application.logoutToLoginView();
@@ -243,112 +243,74 @@ public class TouchCartController implements CartViewHost {
     }
 
     /**
-     * 绑定快捷键。使用 addEventFilter(capture 阶段)优先于其他控制器
+     * 绑定快捷键。对齐非触屏版 CartController 约定（F8 现金、Ctrl+1/2/3 支付、Ctrl+F/L/M 等），
+     * 与 UI 按钮文案 "(F8)"、"(Ctrl+1)" 保持一致。addEventFilter(capture 阶段)优先处理。
+     *
+     * 快捷键表：F2 挂单 / F3 取单 / F6 交接班 / F8 现金 /
+     * Ctrl+F 搜索 / Ctrl+L 清空 / Ctrl+M 会员 / Ctrl+1 微信 / Ctrl+2 支付宝 / Ctrl+3 银行卡 /
+     * Delete 删末项 / Enter 搜索 / Esc 清搜索或退出
      */
     private void bindShortcuts(Scene scene) {
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             KeyCode code = event.getCode();
+            boolean ctrl = event.isControlDown();
 
-            // 调试日志
-            logger.debug("按键事件: code={}, text={}, ctrl={}, shift={}, alt={}",
-                code, event.getText(), event.isControlDown(), event.isShiftDown(), event.isAltDown());
-
-            // F1 - 搜索框
-            if (code == KeyCode.F1) {
+            // F2 - 挂单 / F3 - 取单
+            if (code == KeyCode.F2) {
+                event.consume();
+                handleHoldOrder();
+            } else if (code == KeyCode.F3) {
+                event.consume();
+                handleRecallOrder();
+            // F6 - 交接班
+            } else if (code == KeyCode.F6) {
+                event.consume();
+                handleShift();
+            // F8 - 现金支付（对齐 CartController 与 UI "现金支付 (F8)" 文案）
+            } else if (code == KeyCode.F8) {
+                event.consume();
+                handleCashPayment();
+            // Ctrl+F - 搜索 / Ctrl+L - 清空 / Ctrl+M - 会员手机号
+            } else if (ctrl && code == KeyCode.F) {
                 event.consume();
                 focusSearchField();
                 searchField.selectAll();
-            }
-            // F2 - 现金支付
-            else if (code == KeyCode.F2) {
+            } else if (ctrl && code == KeyCode.L) {
                 event.consume();
-                handleCashPayment();
-            }
-            // F3 - 会员手机号
-            else if (code == KeyCode.F3) {
+                handleClear();
+            } else if (ctrl && code == KeyCode.M) {
                 event.consume();
                 if (memberPhoneField != null) {
                     memberPhoneField.requestFocus();
                 }
-            }
-            // F4 - 清空购物车
-            else if (code == KeyCode.F4) {
-                event.consume();
-                handleClear();
-            }
-            // F5 - 刷新/重新加载当前分类
-            else if (code == KeyCode.F5) {
-                event.consume();
-                refreshCurrentCategory();
-            }
-            // F6 - 结算（完成交易）
-            else if (code == KeyCode.F6) {
-                event.consume();
-                handleSettlement();
-            }
-            // F7 - 删除购物车最后一项
-            else if (code == KeyCode.F7) {
-                event.consume();
-                if (!cartItems.isEmpty()) {
-                    removeItem(cartItems.get(cartItems.size() - 1));
-                }
-            }
-            // F8 - 挂单
-            else if (code == KeyCode.F8) {
-                event.consume();
-                handleHoldOrder();
-            }
-            // F9 - 取单
-            else if (code == KeyCode.F9) {
-                event.consume();
-                handleRecallOrder();
-            }
-            // F10 - 交接班
-            else if (code == KeyCode.F10) {
-                event.consume();
-                handleShift();
-            }
-            // F12 - 锁屏/返回登录
-            else if (code == KeyCode.F12) {
-                event.consume();
-                handleLockScreen();
-            }
-            // ESC - 取消当前操作/关闭对话框
-            else if (code == KeyCode.ESCAPE) {
-                event.consume();
-                handleEscape();
-            }
-            // Ctrl+1 - 微信支付
-            else if (event.isControlDown() && code == KeyCode.DIGIT1) {
+            // Ctrl+1/2/3 - 微信/支付宝/银行卡（对齐 UI 文案）
+            } else if (ctrl && code == KeyCode.DIGIT1) {
                 event.consume();
                 handleWechatPayment();
-            }
-            // Ctrl+2 - 支付宝支付
-            else if (event.isControlDown() && code == KeyCode.DIGIT2) {
+            } else if (ctrl && code == KeyCode.DIGIT2) {
                 event.consume();
                 handleAlipayPayment();
-            }
-            // Ctrl+3 - 银行卡支付
-            else if (event.isControlDown() && code == KeyCode.DIGIT3) {
+            } else if (ctrl && code == KeyCode.DIGIT3) {
                 event.consume();
                 handleCardPayment();
-            }
-            // Ctrl+L - 清空购物车
-            else if (event.isControlDown() && code == KeyCode.L) {
-                event.consume();
-                handleClear();
-            }
-            // DELETE - 删除购物车最后一项
-            else if (code == KeyCode.DELETE) {
+            // Delete - 删除购物车最后一项
+            } else if (code == KeyCode.DELETE) {
                 event.consume();
                 if (!cartItems.isEmpty()) {
                     removeItem(cartItems.get(cartItems.size() - 1));
                 }
-            }
-            // ENTER - 在搜索框时添加商品
-            else if (code == KeyCode.ENTER && event.getSource() == searchField) {
+            // Enter - 搜索框回车
+            } else if (code == KeyCode.ENTER && event.getSource() == searchField) {
                 event.consume();
                 handleSearchAction();
+            // F1 / Ctrl+/ - 快捷键帮助
+            } else if (code == KeyCode.F1 || (ctrl && code == KeyCode.SLASH)) {
+                event.consume();
+                showShortcutHelp();
+            // Esc - 清搜索或退出
+            } else if (code == KeyCode.ESCAPE) {
+                event.consume();
+                handleEscape();
             }
         });
     }
@@ -776,23 +738,6 @@ public class TouchCartController implements CartViewHost {
         }
     }
 
-    /** F6 - 结算完成交易 */
-    private void handleSettlement() {
-        if (cartItems.isEmpty()) {
-            warn(i18n.get("runtime.cart_empty"));
-            return;
-        }
-        // 显示支付方式选择
-        showPaymentMethodDialog();
-    }
-
-    /** F5 - 刷新当前分类 */
-    private void refreshCurrentCategory() {
-        if (currentCategoryName != null) {
-            loadProducts(currentCategoryName);
-        }
-    }
-
     /** F8 - 挂单：保存当前购物车到数据库，清空界面 */
     private void handleHoldOrder() {
         if (cartItems.isEmpty()) {
@@ -1008,16 +953,6 @@ public class TouchCartController implements CartViewHost {
         alert.showAndWait();
     }
 
-    /** F12 - 锁屏/返回登录 */
-    private void handleLockScreen() {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
-            "确定要退出收银界面吗？", ButtonType.YES, ButtonType.NO);
-        alert.setHeaderText(null);
-        if (alert.showAndWait().orElse(ButtonType.NO) == ButtonType.YES) {
-            handleExit();
-        }
-    }
-
     /** ESC - 取消当前操作 */
     private void handleEscape() {
         // 如果搜索框有焦点且有内容，清空搜索
@@ -1032,6 +967,39 @@ public class TouchCartController implements CartViewHost {
         }
     }
 
+    /** F1 / Ctrl+/ - 快捷键帮助说明 */
+    private void showShortcutHelp() {
+        String shortcuts =
+            "触屏版收银台快捷键:\n\n" +
+            "挂单/取单:\n" +
+            "F2 - 挂单\n" +
+            "F3 - 取单\n" +
+            "Delete - 删除最后一项\n" +
+            "Ctrl+L - 清空购物车\n\n" +
+            "支付:\n" +
+            "F8 - 现金支付\n" +
+            "Ctrl+1 - 微信支付\n" +
+            "Ctrl+2 - 支付宝\n" +
+            "Ctrl+3 - 银行卡\n\n" +
+            "搜索/会员:\n" +
+            "Ctrl+F - 搜索商品\n" +
+            "Ctrl+M - 会员手机号\n" +
+            "Enter - 搜索(在搜索框)\n\n" +
+            "其他:\n" +
+            "F6 - 交接班\n" +
+            "F1 / Ctrl+/ - 快捷键帮助\n" +
+            "Esc - 清空搜索/退出";
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(i18n.get("shortcut.help"));
+        alert.setHeaderText(null);
+        alert.setContentText(shortcuts);
+        alert.getDialogPane().setPrefWidth(420);
+        if (productGrid != null && productGrid.getScene() != null) {
+            alert.initOwner(productGrid.getScene().getWindow());
+        }
+        alert.showAndWait();
+    }
+
     /** ENTER - 搜索框回车处理 */
     private void handleSearchAction() {
         String keyword = searchField.getText();
@@ -1041,68 +1009,6 @@ public class TouchCartController implements CartViewHost {
                 loadProducts(currentCategoryName);
             }
         }
-    }
-
-    /** 显示支付方式选择对话框 */
-    private void showPaymentMethodDialog() {
-        // 创建支付方式选择对话框
-        Dialog<String> dialog = new Dialog<>();
-        dialog.setTitle(i18n.get("tpos.payment_method"));
-        dialog.setHeaderText(null);
-
-        // 支付方式按钮
-        VBox content = new VBox(10);
-        content.setPadding(new Insets(20));
-
-        HBox row1 = new HBox(10);
-        Button cashBtn = new Button(i18n.get("payment.cash"));
-        cashBtn.setPrefSize(120, 60);
-        cashBtn.getStyleClass().addAll("primary-button", "payment-button");
-
-        Button wechatBtn = new Button(i18n.get("payment.wechat"));
-        wechatBtn.setPrefSize(120, 60);
-        wechatBtn.getStyleClass().addAll("success-button", "payment-button");
-
-        Button alipayBtn = new Button(i18n.get("payment.alipay"));
-        alipayBtn.setPrefSize(120, 60);
-        alipayBtn.getStyleClass().addAll("success-button", "payment-button");
-
-        row1.getChildren().addAll(cashBtn, wechatBtn, alipayBtn);
-
-        HBox row2 = new HBox(10);
-        Button cardBtn = new Button(i18n.get("payment.card"));
-        cardBtn.setPrefSize(120, 60);
-        cardBtn.getStyleClass().addAll("info-button", "payment-button");
-
-        Button cancelBtn = new Button(i18n.get("common.cancel"));
-        cancelBtn.setPrefSize(120, 60);
-        cancelBtn.getStyleClass().addAll("secondary-button", "payment-button");
-
-        row2.getChildren().addAll(cardBtn, cancelBtn);
-
-        content.getChildren().addAll(row1, row2);
-
-        dialog.getDialogPane().setContent(content);
-        if (productGrid != null && productGrid.getScene() != null) {
-            dialog.initOwner(productGrid.getScene().getWindow());
-            dialog.getDialogPane().getStylesheets().addAll(productGrid.getScene().getStylesheets());
-        }
-
-        // 按钮事件
-        cashBtn.setOnAction(e -> { dialog.setResult("cash"); dialog.close(); });
-        wechatBtn.setOnAction(e -> { dialog.setResult("wechat"); dialog.close(); });
-        alipayBtn.setOnAction(e -> { dialog.setResult("alipay"); dialog.close(); });
-        cardBtn.setOnAction(e -> { dialog.setResult("card"); dialog.close(); });
-        cancelBtn.setOnAction(e -> { dialog.close(); });
-
-        dialog.showAndWait().ifPresent(method -> {
-            switch (method) {
-                case "cash": handleCashPayment(); break;
-                case "wechat": handleWechatPayment(); break;
-                case "alipay": handleAlipayPayment(); break;
-                case "card": handleCardPayment(); break;
-            }
-        });
     }
 
     @FXML

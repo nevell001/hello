@@ -14,6 +14,8 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.shape.Circle?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.text.Text?>
 
 <!--
@@ -39,10 +41,12 @@
         <!-- Logo + 品牌 + 店铺名称 -->
         <HBox spacing="12" alignment="CENTER_LEFT">
             <StackPane prefWidth="40" prefHeight="40" styleClass="tpos-brand-logo">
-                <Text text="🐱" styleClass="tpos-brand-icon"/>
+                <ImageView fitWidth="34" fitHeight="34" preserveRatio="true" styleClass="tpos-brand-icon">
+                    <Image url="@/images/logos/logo.png"/>
+                </ImageView>
             </StackPane>
             <VBox spacing="2">
-                <Label text="狸算收银" styleClass="tpos-brand-name"/>
+                <Label text="%app.name" styleClass="tpos-brand-name"/>
                 <Label fx:id="storeNameLabel" text="便利店" styleClass="tpos-store-name"/>
             </VBox>
         </HBox>
