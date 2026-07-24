@@ -143,7 +143,7 @@ if not "%EXISTING_JAR%"=="" (
 )
 
 echo Compiling...
-call mvn clean package -DskipTests -Dinnosetup.skip=true
+call mvn clean package -DskipTests
 
 if errorlevel 1 (
     echo [ERROR] Build failed
