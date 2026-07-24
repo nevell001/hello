@@ -92,24 +92,25 @@ public class TransactionDAO {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, transactionId);
-            ResultSet rs = pstmt.executeQuery();
+            try (ResultSet rs = pstmt.executeQuery()) {
 
-            if (rs.next()) {
-                Transaction transaction = new Transaction();
-                transaction.transactionId = rs.getString("transaction_id");
-                transaction.timestamp = rs.getString("timestamp");
-                transaction.totalAmount = rs.getBigDecimal("total_amount");
-                transaction.tax = rs.getBigDecimal("tax");
-                transaction.finalAmount = rs.getBigDecimal("final_amount");
-                transaction.paymentMethod = rs.getString("payment_method");
-                transaction.memberPhone = rs.getString("member_phone");
-                transaction.operatorUsername = rs.getString("operator_username");
-                transaction.operatorName = rs.getString("operator_name");
+                if (rs.next()) {
+                    Transaction transaction = new Transaction();
+                    transaction.transactionId = rs.getString("transaction_id");
+                    transaction.timestamp = rs.getString("timestamp");
+                    transaction.totalAmount = rs.getBigDecimal("total_amount");
+                    transaction.tax = rs.getBigDecimal("tax");
+                    transaction.finalAmount = rs.getBigDecimal("final_amount");
+                    transaction.paymentMethod = rs.getString("payment_method");
+                    transaction.memberPhone = rs.getString("member_phone");
+                    transaction.operatorUsername = rs.getString("operator_username");
+                    transaction.operatorName = rs.getString("operator_name");
 
-                // 加载交易明细
-                transaction.items = loadItems(transactionId);
+                    // 加载交易明细
+                    transaction.items = loadItems(transactionId);
 
-                return transaction;
+                    return transaction;
+                }
             }
         }
         return null;
@@ -129,18 +130,19 @@ public class TransactionDAO {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, transactionId);
-            ResultSet rs = pstmt.executeQuery();
+            try (ResultSet rs = pstmt.executeQuery()) {
 
-            while (rs.next()) {
-                Product product = new Product();
-                product.id = rs.getInt("product_id");
-                product.productCode = rs.getString("product_code");
-                product.barcode = rs.getString("barcode");
-                product.name = rs.getString("product_name");
-                product.price = rs.getBigDecimal("price");
-                product.quantity = rs.getInt("quantity");
-                product.category = rs.getString("category"); // 获取分类信息
-                items.add(product);
+                while (rs.next()) {
+                    Product product = new Product();
+                    product.id = rs.getInt("product_id");
+                    product.productCode = rs.getString("product_code");
+                    product.barcode = rs.getString("barcode");
+                    product.name = rs.getString("product_name");
+                    product.price = rs.getBigDecimal("price");
+                    product.quantity = rs.getInt("quantity");
+                    product.category = rs.getString("category"); // 获取分类信息
+                    items.add(product);
+                }
             }
         }
         return items;
@@ -201,10 +203,11 @@ public class TransactionDAO {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, limit);
-            ResultSet rs = pstmt.executeQuery();
+            try (ResultSet rs = pstmt.executeQuery()) {
 
-            while (rs.next()) {
-                addJoinedTransactionRow(transactionMap, rs);
+                while (rs.next()) {
+                    addJoinedTransactionRow(transactionMap, rs);
+                }
             }
         }
         return new ArrayList<>(transactionMap.values());
@@ -235,52 +238,47 @@ public class TransactionDAO {
 
             pstmt.setString(1, startDate);
             pstmt.setString(2, endDate);
-            ResultSet rs = pstmt.executeQuery();
+            try (ResultSet rs = pstmt.executeQuery()) {
 
-            while (rs.next()) {
-                addJoinedTransactionRow(transactionMap, rs);
+                while (rs.next()) {
+                    addJoinedTransactionRow(transactionMap, rs);
+                }
             }
         }
         return new ArrayList<>(transactionMap.values());
     }
 
     /**
-     * 按支付方式查询交易
+     * 按支付方式查询交易（使用 JOIN 避免 N+1 查询）
      */
     public static List<Transaction> findByPaymentMethod(String paymentMethod) throws SQLException {
-        List<Transaction> transactions = new ArrayList<>();
+        Map<String, Transaction> transactionMap = new LinkedHashMap<>();
         // LEFT JOIN users 表兜底：当 operator_name 为 NULL 时从 users 表获取收银员姓名
+        // LEFT JOIN transaction_items 和 products 获取交易明细和商品分类
         String sql = "SELECT t.transaction_id, t.timestamp, t.total_amount, t.tax, t.final_amount, t.payment_method, " +
                      "t.member_phone, t.operator_username, " +
-                     "COALESCE(t.operator_name, u.name, t.operator_username) AS operator_name " +
+                     "COALESCE(t.operator_name, u.name, t.operator_username) AS operator_name, " +
+                     "ti.id as item_id, ti.product_id, ti.product_code, ti.barcode, ti.product_name, ti.price, ti.quantity, ti.subtotal, " +
+                     "p.category AS category " +
                      "FROM transactions t " +
                      "LEFT JOIN users u ON t.operator_username = u.username " +
-                     "WHERE t.payment_method = ? ORDER BY t.timestamp DESC";
+                     "LEFT JOIN transaction_items ti ON t.transaction_id = ti.transaction_id " +
+                     "LEFT JOIN products p ON ti.product_id = p.id " +
+                     "WHERE t.payment_method = ? " +
+                     "ORDER BY t.timestamp DESC";
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, paymentMethod);
-            ResultSet rs = pstmt.executeQuery();
+            try (ResultSet rs = pstmt.executeQuery()) {
 
-            while (rs.next()) {
-                Transaction transaction = new Transaction();
-                transaction.transactionId = rs.getString("transaction_id");
-                transaction.timestamp = rs.getString("timestamp");
-                transaction.totalAmount = rs.getBigDecimal("total_amount");
-                transaction.tax = rs.getBigDecimal("tax");
-                transaction.finalAmount = rs.getBigDecimal("final_amount");
-                transaction.paymentMethod = rs.getString("payment_method");
-                transaction.memberPhone = rs.getString("member_phone");
-                transaction.operatorUsername = rs.getString("operator_username");
-                transaction.operatorName = rs.getString("operator_name");
-
-                transaction.items = loadItems(transaction.transactionId);
-
-                transactions.add(transaction);
+                while (rs.next()) {
+                    addJoinedTransactionRow(transactionMap, rs);
+                }
             }
         }
-        return transactions;
+        return new ArrayList<>(transactionMap.values());
     }
 
     /**

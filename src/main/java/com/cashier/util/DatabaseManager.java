@@ -42,11 +42,11 @@ public class DatabaseManager {
     private static String dbUrl;
     private static String dbUsername;
     private static String dbPassword;
-    private static int poolSize = 10;
-    private static long connectionTimeout = 15000;
+    private static int poolSize = 25;  // 增加连接池大小以支持并发操作
+    private static long connectionTimeout = 5000;  // 减少超时时间避免 UI 冻结
     private static long idleTimeout = 600000;
     private static long maxLifetime = 1800000;
-    private static long leakDetectionThreshold = 0;  // 0 表示禁用
+    private static long leakDetectionThreshold = 30000;  // 30秒泄漏检测
     private static String connectionTestQuery = "SELECT 1";
     private static long validationTimeout = 3000;
     private static String dockerMysqlContainerName = "lisuan-mysql";

@@ -758,7 +758,7 @@ public class TouchCartController implements CartViewHost {
         totalAmountLabel.setText(CurrencyUtil.format(total.doubleValue()));
         discountLabel.setText(discount.compareTo(BigDecimal.ZERO) > 0
             ? "-" + CurrencyUtil.format(discount.doubleValue())
-            : CurrencyUtil.format(BigDecimal.ZERO));
+            : CurrencyUtil.format(BigDecimal.ZERO.doubleValue()));
         finalAmountLabel.setText(CurrencyUtil.format(finalAmt.doubleValue()));
     }
 
@@ -1013,42 +1013,57 @@ public class TouchCartController implements CartViewHost {
 
     /** ESC - 取消当前操作 */
     private void handleEscape() {
-        // 如果搜索框有焦点且有内容，清空搜索
-        if (searchField != null && searchField.isFocused() && !searchField.getText().isEmpty()) {
-            searchField.clear();
-            if (currentCategoryName != null) {
-                loadProducts(currentCategoryName);
+        // 如果搜索框有焦点，清空搜索或失去焦点
+        if (searchField != null && searchField.isFocused()) {
+            if (!searchField.getText().isEmpty()) {
+                searchField.clear();
+                if (currentCategoryName != null) {
+                    loadProducts(currentCategoryName);
+                }
+            } else {
+                // 搜索框为空时，失去焦点
+                searchField.getParent().requestFocus();
             }
+        } else if (memberPhoneField != null && memberPhoneField.isFocused()) {
+            // 会员手机号框有焦点，清空内容
+            memberPhoneField.clear();
+            currentMember = null;
+            if (memberInfoLabel != null) {
+                memberInfoLabel.setText("");
+            }
+            updateSummary();
         } else {
-            // 其余情况：退出登录（购物车非空时 handleExit 会弹确认）
-            handleExit();
+            // 其他情况：仅当购物车为空时才退出
+            if (cartItems.isEmpty()) {
+                handleExit();
+            }
         }
     }
 
     /** F1 / Ctrl+/ - 快捷键帮助说明 */
     private void showShortcutHelp() {
         String shortcuts =
-            "触屏版收银台快捷键:\n\n" +
-            "挂单/取单:\n" +
-            "F2 - 挂单\n" +
-            "F3 - 取单\n" +
-            "Delete - 删除最后一项\n" +
-            "Ctrl+L - 清空购物车\n\n" +
-            "支付:\n" +
-            "F8 - 现金支付\n" +
-            "Ctrl+1 - 微信支付\n" +
-            "Ctrl+2 - 支付宝\n" +
-            "Ctrl+3 - 银行卡\n\n" +
-            "搜索/会员:\n" +
-            "Ctrl+F - 搜索商品\n" +
-            "Ctrl+M - 会员手机号\n" +
-            "Enter - 搜索(在搜索框)\n\n" +
-            "其他:\n" +
-            "F6 - 交接班\n" +
-            "F1 / Ctrl+/ - 快捷键帮助\n" +
-            "Esc - 清空搜索/退出";
+            i18n.get("shortcut.help.tpos_title") + ":\n\n" +
+            i18n.get("shortcut.help.category_hold") + ":\n" +
+            i18n.get("shortcut.help.f2_hold") + "\n" +
+            i18n.get("shortcut.help.f3_resume") + "\n" +
+            i18n.get("shortcut.help.delete_last") + "\n" +
+            i18n.get("shortcut.help.ctrl_l_clear") + "\n\n" +
+            i18n.get("shortcut.help.category_payment") + ":\n" +
+            i18n.get("shortcut.help.f8_cash") + "\n" +
+            i18n.get("shortcut.help.ctrl1_wechat") + "\n" +
+            i18n.get("shortcut.help.ctrl2_alipay") + "\n" +
+            i18n.get("shortcut.help.ctrl3_card") + "\n\n" +
+            i18n.get("shortcut.help.category_search") + ":\n" +
+            i18n.get("shortcut.help.ctrl_f_search") + "\n" +
+            i18n.get("shortcut.help.ctrl_m_member") + "\n" +
+            i18n.get("shortcut.help.enter_search") + "\n\n" +
+            i18n.get("shortcut.help.category_other") + ":\n" +
+            i18n.get("shortcut.help.ctrl6_shift") + "\n" +
+            i18n.get("shortcut.help.f1_help") + "\n" +
+            i18n.get("shortcut.help.esc_clear_exit");
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(i18n.get("shortcut.help"));
+        alert.setTitle(i18n.get("shortcut.help.title"));
         alert.setHeaderText(null);
         alert.setContentText(shortcuts);
         alert.getDialogPane().setPrefWidth(420);

@@ -958,7 +958,7 @@ public class CartController implements CartViewHost {
             }
         });
 
-        dialog.showAndWait().ifPresent(receivedAmount -> {
+        dialog.showAndWait().ifPresentOrElse(receivedAmount -> {
             BigDecimal totalPaid = alreadyPaidAmount.add(receivedAmount);
             BigDecimal remaining = finalAmount.subtract(totalPaid);
 
@@ -970,6 +970,12 @@ public class CartController implements CartViewHost {
                 showInfo(I18nManager.getInstance().get("runtime.partial_payment",
                         CurrencyUtil.format(totalPaid.doubleValue()), CurrencyUtil.format(remaining.doubleValue())));
                 handleCashPayment();
+            }
+        }, () -> {
+            // 用户点击取消或关闭对话框
+            // 如果有部分支付未完成，重置已支付金额
+            if (alreadyPaidAmount.compareTo(BigDecimal.ZERO) > 0) {
+                alreadyPaidAmount = BigDecimal.ZERO;
             }
         });
     }
@@ -1053,6 +1059,29 @@ public class CartController implements CartViewHost {
             showError(i18n.get("payment.channel.unavailable") + ": "
                 + PaymentService.getChannelUnavailableReason(channel));
             return;
+        }
+
+        // 检查是否有部分现金支付未完成
+        if (alreadyPaidAmount.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal finalAmount = getFinalAmount();
+            BigDecimal remaining = finalAmount.subtract(alreadyPaidAmount);
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle(i18n.get(I18nKeys.Common.WARNING));
+            alert.setHeaderText(i18n.get("payment.mixed_payment_warning"));
+            alert.setContentText(i18n.get("payment.mixed_payment_detail",
+                CurrencyUtil.format(alreadyPaidAmount.doubleValue()),
+                CurrencyUtil.format(remaining.doubleValue()),
+                CurrencyUtil.format(finalAmount.doubleValue())));
+            ButtonType continueButtonType = new ButtonType(i18n.get("payment.continue_anyway"), ButtonBar.ButtonData.OK_DONE);
+            ButtonType cancelButtonType = new ButtonType(i18n.get(I18nKeys.Common.CANCEL), ButtonBar.ButtonData.CANCEL_CLOSE);
+            alert.getButtonTypes().setAll(continueButtonType, cancelButtonType);
+
+            alert.showAndWait().ifPresent(buttonType -> {
+                if (buttonType == cancelButtonType) {
+                    // 用户取消，重置部分支付
+                    alreadyPaidAmount = BigDecimal.ZERO;
+                }
+            });
         }
 
         try {
@@ -1348,8 +1377,8 @@ public class CartController implements CartViewHost {
             discountLabel.setText(I18nManager.getInstance().get("runtime.promotion_discount",
                     CurrencyUtil.format(discountAmount.doubleValue()), CurrencyUtil.format(promotionDiscount.doubleValue())));
         } else {
-            discountLabel.setText(CurrencyUtil.format(discountAmount.doubleValue()));
-            discountLabel.setText("-" + discountLabel.getText());
+            discountLabel.setText(I18nManager.getInstance().get("runtime.discount_display",
+                    CurrencyUtil.format(discountAmount.doubleValue())));
         }
     }
 
@@ -1376,35 +1405,35 @@ public class CartController implements CartViewHost {
     @FXML
     private void showShortcutHelp() {
         String shortcuts =
-            "POS/结账页面快捷键:\n\n" +
-            "商品操作:\n" +
-            "F1 - 添加商品\n" +
-            "Delete - 移除选中商品\n" +
-            "Ctrl+L - 清空购物车\n" +
-            "双击商品 - 快速添加到购物车\n\n" +
-            "数量快捷键（选中商品时）:\n" +
-            "数字键 1-9 - 快速设置数量\n" +
-            "数字键 0 - 移除商品\n" +
-            "+ / = - 增加数量（+1）\n" +
-            "- / _ - 减少数量（-1）\n" +
-            "PageUp - 增加数量（+5）\n" +
-            "PageDown - 减少数量（-5）\n\n" +
-            "搜索和查询:\n" +
-            "Ctrl+F - 聚焦到搜索框\n" +
-            "Enter - 执行搜索（在搜索框中）\n" +
-            "Escape - 清空搜索（在搜索框中）\n\n" +
-            "会员操作:\n" +
-            "Ctrl+M - 聚焦到会员手机号框\n" +
-            "Enter - 查询会员（在会员手机号框中）\n" +
-            "Escape - 清空会员信息（在会员手机号框中）\n\n" +
-            "支付方式:\n" +
-            "F8 - 现金支付\n" +
-            "Ctrl+1 - 微信支付\n" +
-            "Ctrl+2 - 支付宝支付\n" +
-            "Ctrl+3 - 银行卡支付";
+            i18n.get("shortcut.help.pos_title") + ":\n\n" +
+            i18n.get("shortcut.help.category_product") + ":\n" +
+            i18n.get("shortcut.help.f1_add") + "\n" +
+            i18n.get("shortcut.help.delete_remove") + "\n" +
+            i18n.get("shortcut.help.ctrl_l_clear") + "\n" +
+            i18n.get("shortcut.help.double_click_add") + "\n\n" +
+            i18n.get("shortcut.help.category_quantity") + ":\n" +
+            i18n.get("shortcut.help.num_1_9") + "\n" +
+            i18n.get("shortcut.help.num_0_remove") + "\n" +
+            i18n.get("shortcut.help.plus_inc") + "\n" +
+            i18n.get("shortcut.help.minus_desc") + "\n" +
+            i18n.get("shortcut.help.pageup_inc") + "\n" +
+            i18n.get("shortcut.help.pagedown_desc") + "\n\n" +
+            i18n.get("shortcut.help.category_search") + ":\n" +
+            i18n.get("shortcut.help.ctrl_f_search") + "\n" +
+            i18n.get("shortcut.help.enter_search") + "\n" +
+            i18n.get("shortcut.help.esc_clear_search") + "\n\n" +
+            i18n.get("shortcut.help.category_member") + ":\n" +
+            i18n.get("shortcut.help.ctrl_m_member") + "\n" +
+            i18n.get("shortcut.help.enter_member") + "\n" +
+            i18n.get("shortcut.help.esc_clear_member") + "\n\n" +
+            i18n.get("shortcut.help.category_payment") + ":\n" +
+            i18n.get("shortcut.help.f8_cash") + "\n" +
+            i18n.get("shortcut.help.ctrl1_wechat") + "\n" +
+            i18n.get("shortcut.help.ctrl2_alipay") + "\n" +
+            i18n.get("shortcut.help.ctrl3_card");
 
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get("shortcut.help"));
+        alert.setTitle(i18n.get("shortcut.help.title"));
         alert.setHeaderText(null);
         alert.setContentText(shortcuts);
         alert.getDialogPane().setPrefWidth(500);

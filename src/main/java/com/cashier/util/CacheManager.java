@@ -48,20 +48,22 @@ public class CacheManager {
     };
 
     // 库存数据缓存（商品名称 -> 商品）
-    private static final Map<String, Product> productNameCache = Collections.synchronizedMap(new LinkedHashMap<>(128, 0.75f, true) {
+    // 注意：所有访问都通过 ReadWriteLock 保护，不需要额外的同步
+    private static final Map<String, Product> productNameCache = new LinkedHashMap<>(128, 0.75f, true) {
         @Override
         protected boolean removeEldestEntry(Map.Entry<String, Product> eldest) {
             return size() > MAX_CACHE_SIZE;
         }
-    });
+    };
 
     // 库存数据缓存（商品条形码 -> 商品）
-    private static final Map<String, Product> productBarcodeCache = Collections.synchronizedMap(new LinkedHashMap<>(128, 0.75f, true) {
+    // 注意：所有访问都通过 ReadWriteLock 保护，不需要额外的同步
+    private static final Map<String, Product> productBarcodeCache = new LinkedHashMap<>(128, 0.75f, true) {
         @Override
         protected boolean removeEldestEntry(Map.Entry<String, Product> eldest) {
             return size() > MAX_CACHE_SIZE;
         }
-    });
+    };
 
     // 缓存创建时间
     private static volatile long cacheCreatedTime = 0;
@@ -100,7 +102,12 @@ public class CacheManager {
         if (!isCacheValid()) {
             return null;
         }
-        return productNameCache.get(productName);
+        lock.readLock().lock();
+        try {
+            return productNameCache.get(productName);
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     /**
@@ -112,7 +119,12 @@ public class CacheManager {
         if (!isCacheValid()) {
             return null;
         }
-        return productBarcodeCache.get(barcode);
+        lock.readLock().lock();
+        try {
+            return productBarcodeCache.get(barcode);
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     /**

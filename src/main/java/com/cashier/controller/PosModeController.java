@@ -295,10 +295,12 @@ public class PosModeController {
                 // 让事件继续传递到CartController
                 event.consume();
             }
-            // ESC - 退出确认
+            // ESC - 仅在购物车为空时退出确认
             else if (event.getCode() == KeyCode.ESCAPE) {
-                handleExit();
-                event.consume();
+                if (cartController != null && cartController.isCartEmpty()) {
+                    handleExit();
+                    event.consume();
+                }
             }
         });
     }
