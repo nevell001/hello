@@ -1332,37 +1332,54 @@
 
 /* ========== 触屏现金结算对话框 ========== */
 
+.cash-section-title {
+    -fx-font-size: 15;
+    -fx-text-fill: -lisuan-text-secondary;
+    -fx-padding: 0 0 2 0;
+}
+
 .cash-due-highlight {
-    -fx-font-size: 22;
+    -fx-font-size: 30;
     -fx-font-weight: bold;
     -fx-text-fill: -lisuan-danger;
 }
 
 .cash-due-label {
-    -fx-font-size: 17;
+    -fx-font-size: 28;
     -fx-font-weight: bold;
     -fx-text-fill: -lisuan-text;
 }
 
 .cash-paid-label {
-    -fx-font-size: 17;
+    -fx-font-size: 15;
     -fx-text-fill: -lisuan-text-tertiary;
 }
 
 .cash-remain-label {
-    -fx-font-size: 17;
+    -fx-font-size: 15;
     -fx-font-weight: bold;
     -fx-text-fill: -lisuan-danger;
 }
 
 .cash-separator {
     -fx-text-fill: -lisuan-text-disabled;
+    -fx-font-size: 14;
 }
 
 .cash-input-field {
-    -fx-font-size: 22;
+    -fx-font-size: 24;
     -fx-font-weight: bold;
     -fx-alignment: center;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: -lisuan-border;
+    -fx-border-width: 2;
+    -fx-padding: 8 16;
+}
+
+.cash-input-field:focused {
+    -fx-border-color: -lisuan-primary;
+    -fx-border-width: 2;
 }
 
 .cash-exact-btn {
@@ -1371,6 +1388,11 @@
     -fx-background-color: -lisuan-success;
     -fx-text-fill: -lisuan-surface;
     -fx-background-radius: 8;
+    -fx-cursor: hand;
+}
+
+.cash-exact-btn:hover {
+    -fx-effect: dropshadow(three-pass-box, rgba(76,175,80,0.35), 4, 0, 0, 2);
 }
 
 .cash-denom-btn {
@@ -1379,31 +1401,50 @@
     -fx-background-color: -lisuan-info;
     -fx-text-fill: -lisuan-surface;
     -fx-background-radius: 8;
+    -fx-cursor: hand;
+}
+
+.cash-denom-btn:hover {
+    -fx-effect: dropshadow(three-pass-box, rgba(17,26,68,0.3), 4, 0, 0, 2);
 }
 
 .cash-clear-btn {
-    -fx-font-size: 18;
+    -fx-font-size: 17;
     -fx-font-weight: bold;
     -fx-background-color: -lisuan-danger;
     -fx-text-fill: -lisuan-surface;
     -fx-background-radius: 8;
+    -fx-cursor: hand;
+}
+
+.cash-clear-btn:hover {
+    -fx-effect: dropshadow(three-pass-box, rgba(244,67,54,0.3), 4, 0, 0, 2);
 }
 
 .cash-status-default {
-    -fx-font-size: 18;
+    -fx-font-size: 17;
     -fx-text-fill: -lisuan-text-disabled;
+    -fx-background-color: -lisuan-surface-muted;
+    -fx-background-radius: 8;
+    -fx-padding: 8 16;
 }
 
 .cash-status-warn {
-    -fx-font-size: 20;
+    -fx-font-size: 18;
     -fx-font-weight: bold;
     -fx-text-fill: -lisuan-warning;
+    -fx-background-color: rgba(255,152,0,0.1);
+    -fx-background-radius: 8;
+    -fx-padding: 8 16;
 }
 
 .cash-status-change {
-    -fx-font-size: 22;
+    -fx-font-size: 20;
     -fx-font-weight: bold;
     -fx-text-fill: -lisuan-success;
+    -fx-background-color: rgba(76,175,80,0.1);
+    -fx-background-radius: 8;
+    -fx-padding: 8 16;
 }
 
 .cash-confirm-btn {
@@ -1412,4 +1453,14 @@
     -fx-background-color: -lisuan-primary;
     -fx-text-fill: -lisuan-surface;
     -fx-background-radius: 8;
+    -fx-cursor: hand;
+}
+
+.cash-confirm-btn:hover {
+    -fx-background-color: -lisuan-primary-hover;
+    -fx-effect: dropshadow(three-pass-box, rgba(184,92,27,0.35), 6, 0, 0, 3);
+}
+
+.cash-confirm-btn:pressed {
+    -fx-background-color: -lisuan-primary-active;
 }

@@ -171,15 +171,15 @@
                         <Label fx:id="totalQtyLabel" text="0" styleClass="tpos-summary-val-compact"/>
                         <Label text="│" styleClass="tpos-summary-separator"/>
                         <Label text="%cart.total_amount" styleClass="tpos-summary-label-compact"/>
-                        <Label fx:id="totalAmountLabel" text="¥0.00" styleClass="tpos-summary-val-compact"/>
+                        <Label fx:id="totalAmountLabel" text="0.00" styleClass="tpos-summary-val-compact"/>
                         <Label text="│" styleClass="tpos-summary-separator"/>
                         <Label text="%cart.member_discount" styleClass="tpos-summary-label-compact"/>
-                        <Label fx:id="discountLabel" text="-¥0.00" styleClass="tpos-summary-val-discount-compact"/>
+                        <Label fx:id="discountLabel" text="-0.00" styleClass="tpos-summary-val-discount-compact"/>
                     </HBox>
                     <!-- 第二行：应付金额（突出显示） -->
                     <HBox alignment="CENTER_RIGHT" spacing="4">
                         <Label text="%cart.final_amount" styleClass="tpos-final-label-compact"/>
-                        <Label fx:id="finalAmountLabel" text="¥0.00" styleClass="tpos-final-val-compact"/>
+                        <Label fx:id="finalAmountLabel" text="0.00" styleClass="tpos-final-val-compact"/>
                     </HBox>
                 </VBox>
 
