@@ -172,7 +172,7 @@ cp config/database.properties.example config/database.properties
 **config/database.properties**:
 ```properties
 # 修改为实际的主机地址
-db.url=jdbc:mysql://192.168.1.100:3306/lisuan_system?useSSL=false&serverTimezone=Asia/Shanghai
+db.url=jdbc:mysql://192.168.1.100:3306/lisuan_system?sslMode=PREFERRED&serverTimezone=Asia/Shanghai
 
 # 修改为实际的用户名和密码
 db.username=cashier

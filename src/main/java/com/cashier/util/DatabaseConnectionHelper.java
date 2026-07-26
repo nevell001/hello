@@ -134,7 +134,7 @@ public class DatabaseConnectionHelper {
             return DiagnosticResult.failure(
                 "数据库 URL 未配置",
                 "请在 config/database.properties 中设置 db.url 参数\n" +
-                "示例：jdbc:mysql://localhost:3306/lisuan_system?useSSL=false&serverTimezone=Asia/Shanghai"
+                "示例：jdbc:mysql://localhost:3306/lisuan_system?sslMode=PREFERRED&serverTimezone=Asia/Shanghai"
             );
         }
         if (config.username() == null || config.username().isEmpty()) {

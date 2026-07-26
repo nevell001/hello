@@ -56,7 +56,7 @@ exports/
 # 备份文件
 backup_*/
 data_backup_*/
-backup/sql/
+backups/sql/
 docker/mysql-backup/
 
 # JAR 文件（如果使用包管理器则忽略）

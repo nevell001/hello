@@ -350,7 +350,7 @@ fi
 if [ "$DB_TYPE" != "skip_config" ]; then
 cat > config/database.properties << EOF
 # Database Configuration
-db.url=jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=utf8mb4
+db.url=jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?sslMode=PREFERRED&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=utf8mb4
 db.username=${DB_USERNAME}
 db.password=${DB_PASSWORD}
 db.pool.size=10

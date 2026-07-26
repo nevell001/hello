@@ -64,7 +64,7 @@ class SettingsBackupRestoreFeedbackPolicyTest {
             "src/main/java/com/cashier/service/DataService.java"
         ));
 
-        assertTrue(dataService.contains("DEFAULT_SQL_BACKUP_PATH = \"backup/sql\""));
+        assertTrue(dataService.contains("DEFAULT_SQL_BACKUP_PATH = \"backups/sql\""));
         assertTrue(dataService.contains("resolveSqlBackupPath(String backupPath)"));
         assertTrue(settingsController.contains("DataService.resolveSqlBackupPath(settings.get(\"backupPath\"))"));
         assertTrue(settingsController.contains("String backupBasePath = DataService.resolveSqlBackupPath(backupPathField.getText())"));

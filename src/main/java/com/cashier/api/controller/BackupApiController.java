@@ -28,7 +28,7 @@ public class BackupApiController {
     private static final String CONTENT_TYPE_FIELD = "contentType";
     private static final int DEFAULT_BACKUP_LIST_LIMIT = 20;
     private static final int MAX_BACKUP_LIST_LIMIT = 200;
-    private static final String DEFAULT_BACKUP_DIR = "backup";
+    private static final String DEFAULT_BACKUP_DIR = "backups";
     
     /**
      * 执行备份

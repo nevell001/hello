@@ -59,7 +59,7 @@ private static void initializeDatabase() {
 
 ```properties
 # MySQL 数据库连接 URL
-db.url=jdbc:mysql://localhost:3306/lisuan_system?useSSL=false&serverTimezone=Asia/Shanghai
+db.url=jdbc:mysql://localhost:3306/lisuan_system?sslMode=PREFERRED&serverTimezone=Asia/Shanghai
 
 # MySQL 用户名
 db.username=cashier
@@ -407,7 +407,7 @@ docker-compose restart mysql
 **解决**: 确保 JDBC URL 包含 `serverTimezone=Asia/Shanghai`
 
 ```properties
-db.url=jdbc:mysql://localhost:3306/lisuan_system?useSSL=false&serverTimezone=Asia/Shanghai
+db.url=jdbc:mysql://localhost:3306/lisuan_system?sslMode=PREFERRED&serverTimezone=Asia/Shanghai
 ```
 
 ### 3. 字符编码问题

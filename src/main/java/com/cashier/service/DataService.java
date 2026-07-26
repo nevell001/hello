@@ -18,7 +18,7 @@ import java.util.*;
  */
 public class DataService {
     private static final Logger logger = LoggerFactoryUtil.getLogger(DataService.class);
-    public static final String DEFAULT_SQL_BACKUP_PATH = "backup/sql";
+    public static final String DEFAULT_SQL_BACKUP_PATH = "backups/sql";
     private static final int FIRST_PAGE = 1;
     private static final int LEGACY_LOAD_LIMIT = 5000;
     private static final com.cashier.dao.ProductDAORefactored productDAO = com.cashier.dao.DAOFactory.getInstance().getProductDAO();

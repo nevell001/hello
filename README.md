@@ -126,7 +126,7 @@ mvn javafx:run
 
 ```bash
 mvn clean package
-java -jar target/lisuan-fx-2.5.9-jar-with-dependencies.jar
+java -jar target/lisuan-fx-2.6.0-jar-with-dependencies.jar
 ```
 
 也可以使用通配符启动：

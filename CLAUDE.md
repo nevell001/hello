@@ -96,8 +96,8 @@ This is a **POS (Point of Sale) cashier system** built with JavaFX 17. It's a de
 mvn clean compile
 mvn javafx:run
 
-# Package
-mvn clean package
+# Package (skip tests)
+mvn clean package -DskipTests
 java -jar target/lisuan-fx-*-jar-with-dependencies.jar
 
 # Run tests
@@ -105,9 +105,16 @@ mvn test
 mvn test -Dtest=ProductDAOTest
 mvn test -Dtest=PasswordUtilTest#testHashPassword
 
+# Static analysis (SpotBugs high-risk gate)
+mvn -q -DskipTests spotbugs:check
+
+# Production release verification
+./release.sh           # Linux/macOS
+release.bat            # Windows
+
 # Database (Docker Compose - recommended)
-docker-compose up -d mysql
-docker-compose logs -f mysql
+docker compose up -d mysql
+docker compose logs -f mysql
 
 # Quick install
 ./install.sh           # Linux/macOS
@@ -158,7 +165,7 @@ ApiController (15 classes) → Service Layer → DAO Layer
 - `BackupService` - Scheduled automatic database backup (auto-starts on login)
 
 **Theme System**
-- Three themes: light, dark, intellij
+- Three themes: LiSuan (default), light, dark
 - Theme preferences persisted per user
 - Apply via: `getApp().applyTheme(getScene(), themeName)`
 - CSS files in `src/main/resources/css/`
@@ -195,7 +202,7 @@ ApiController (15 classes) → Service Layer → DAO Layer
 
 **Authentication Middleware** (`api/middleware/AuthMiddleware.java`):
 - Validates Bearer tokens on protected endpoints
-- Public endpoints: `/api/v1/health`, `/api/v1/auth/login`
+- Public endpoints: `/api/health`, `/api/auth/login`
 - Token storage: In-memory ConcurrentHashMap
 
 ### Data Access Patterns (v2.5+ DAO Refactoring)
@@ -587,7 +594,7 @@ try {
 ### REST API Pattern (v2.5.0)
 ```java
 // In ApiServer.registerRoutes()
-app.get("/api/v1/resources", ctx -> {
+app.get("/api/resources", ctx -> {
     try {
         List<Resource> resources = ResourceDAO.findAll();
         ctx.json(resources);
@@ -598,7 +605,7 @@ app.get("/api/v1/resources", ctx -> {
 });
 
 // Protected endpoint (requires auth)
-app.post("/api/v1/resources", AuthMiddleware.authenticate, ctx -> {
+app.post("/api/resources", AuthMiddleware.authenticate, ctx -> {
     // Resource creation logic
 });
 ```

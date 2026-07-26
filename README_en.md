@@ -130,7 +130,7 @@ mvn javafx:run
 
 ```bash
 mvn clean package
-java -jar target/lisuan-fx-2.5.9-jar-with-dependencies.jar
+java -jar target/lisuan-fx-2.6.0-jar-with-dependencies.jar
 ```
 
 Alternatively, launch using wildcards:
