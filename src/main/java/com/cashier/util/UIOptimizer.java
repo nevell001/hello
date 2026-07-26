@@ -7,6 +7,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
 import org.slf4j.Logger;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -34,35 +35,28 @@ public class UIOptimizer {
             return t;
         });
     
-    // 简单的对象缓存
-    private static final java.util.Map<String, Object> cache =
-        java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>());
+    // 统一缓存条目（值 + 时间戳），消除双 Map 竞态
+    private static class CacheEntry {
+        final Object value;
+        final long timestamp;
+        CacheEntry(Object value, long timestamp) {
+            this.value = value;
+            this.timestamp = timestamp;
+        }
+    }
+    private static final ConcurrentHashMap<String, CacheEntry> cache = new ConcurrentHashMap<>();
     private static final long CACHE_EXPIRE_TIME = 5 * 60 * 1000; // 5分钟
-    // 使用 LinkedHashMap 实现 LRU，避免内存泄漏
-    private static final java.util.Map<String, Long> cacheTime =
-        java.util.Collections.synchronizedMap(new java.util.LinkedHashMap<String, Long>(16, 0.75f, true) {
-            @Override
-            protected boolean removeEldestEntry(java.util.Map.Entry<String, Long> eldest) {
-                // 当缓存时间戳超过 1000 个时，移除最旧的条目
-                return size() > 1000;
-            }
-        });
+    private static final int MAX_CACHE_SIZE = 1000;
 
     static {
-        // 定期清理过期缓存时间戳（每分钟）
+        // 定期清理过期缓存（每分钟）
         cleanupExecutor.scheduleAtFixedRate(() -> {
             try {
                 long now = System.currentTimeMillis();
-                synchronized (cacheTime) {
-                    cacheTime.entrySet().removeIf(entry -> {
-                        long age = now - entry.getValue();
-                        if (age > CACHE_EXPIRE_TIME) {
-                            cache.remove(entry.getKey());
-                            return true;
-                        }
-                        return false;
-                    });
-                }
+                cache.entrySet().removeIf(entry -> {
+                    long age = now - entry.getValue().timestamp;
+                    return age > CACHE_EXPIRE_TIME;
+                });
             } catch (Exception e) {
                 logger.error("缓存清理失败", e);
             }
@@ -152,36 +146,39 @@ public class UIOptimizer {
      */
     @SuppressWarnings("unchecked")
     public static <T> T getFromCache(String key) {
-        Long time = cacheTime.get(key);
-        if (time == null) {
+        CacheEntry entry = cache.get(key);
+        if (entry == null) {
             return null;
         }
-        
+
         // 检查缓存是否过期
-        if (System.currentTimeMillis() - time > CACHE_EXPIRE_TIME) {
+        if (System.currentTimeMillis() - entry.timestamp > CACHE_EXPIRE_TIME) {
             cache.remove(key);
-            cacheTime.remove(key);
             return null;
         }
-        
-        return (T) cache.get(key);
+
+        return (T) entry.value;
     }
-    
+
     /**
      * 保存数据到缓存
      */
     public static <T> void saveToCache(String key, T value) {
-        cache.put(key, value);
-        cacheTime.put(key, System.currentTimeMillis());
+        if (cache.size() >= MAX_CACHE_SIZE) {
+            // 超过上限时移除最早的条目
+            cache.entrySet().stream()
+                .min(java.util.Comparator.comparingLong(e -> e.getValue().timestamp))
+                .ifPresent(e -> cache.remove(e.getKey()));
+        }
+        cache.put(key, new CacheEntry(value, System.currentTimeMillis()));
         logger.debug("已保存数据到缓存: {}", key);
     }
-    
+
     /**
      * 清除缓存
      */
     public static void clearCache() {
         cache.clear();
-        cacheTime.clear();
         logger.info("已清除所有缓存");
     }
     
@@ -190,7 +187,6 @@ public class UIOptimizer {
      */
     public static void clearCache(String key) {
         cache.remove(key);
-        cacheTime.remove(key);
         logger.debug("已清除缓存: {}", key);
     }
     

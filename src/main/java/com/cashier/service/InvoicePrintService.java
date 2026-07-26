@@ -26,7 +26,7 @@ public class InvoicePrintService {
     private static final String DIV_END = "</div>\n";
     
     // 输出目录
-    private static String outputDir = "invoices";
+    private static volatile String outputDir = "invoices";
     
     /**
      * 初始化输出目录

@@ -20,6 +20,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 发票服务层
@@ -30,12 +31,15 @@ public class InvoiceService {
     private static final int DEFAULT_INVOICE_LIST_LIMIT = 5000;
     
     // 默认销售方信息（可配置）
-    private static String defaultSellerName = "某某商贸有限公司";
-    private static String defaultSellerTaxId = "91110108MA01234567";
-    private static String defaultSellerAddress = "北京市海淀区某某路123号";
-    private static String defaultSellerPhone = "010-12345678";
-    private static String defaultSellerBank = "中国工商银行北京支行 1234567890";
-    private static BigDecimal defaultTaxRate = new BigDecimal("0.13");
+    private static volatile String defaultSellerName = "某某商贸有限公司";
+    private static volatile String defaultSellerTaxId = "91110108MA01234567";
+    private static volatile String defaultSellerAddress = "北京市海淀区某某路123号";
+    private static volatile String defaultSellerPhone = "010-12345678";
+    private static volatile String defaultSellerBank = "中国工商银行北京支行 1234567890";
+    private static volatile BigDecimal defaultTaxRate = new BigDecimal("0.13");
+
+    // 发票号码序列号，防止同毫秒生成重复号码
+    private static final AtomicLong invoiceSeq = new AtomicLong(0);
     
     /**
      * 创建发票表
@@ -224,10 +228,12 @@ public class InvoiceService {
     }
     
     /**
-     * 生成发票号码
+     * 生成发票号码（时间戳 + 序列号，防止同毫秒重复）
      */
     private static String generateInvoiceNumber() {
-        return String.format("%08d", System.currentTimeMillis() % 100000000);
+        long timestamp = System.currentTimeMillis() % 100000000;
+        long seq = invoiceSeq.getAndIncrement() % 10000;
+        return String.format("%08d%04d", timestamp, seq);
     }
     
     /**

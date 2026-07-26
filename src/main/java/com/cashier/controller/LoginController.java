@@ -4,6 +4,7 @@ import com.cashier.i18n.I18nKeys;
 
 import com.cashier.CashierSystemFXApplication;
 import com.cashier.constant.AppConstants;
+import com.cashier.dao.LoginAttemptDAO;
 import com.cashier.dao.UserDAO;
 import com.cashier.i18n.I18nManager;
 import com.cashier.model.User;
@@ -21,7 +22,6 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
-import java.time.Instant;
 import java.util.Map;
 
 /**
@@ -52,8 +52,6 @@ public class LoginController {
     private CashierSystemFXApplication application;
     private static final int MAX_LOGIN_ATTEMPTS = 5;
     private static final long LOCKOUT_DURATION_MINUTES = 5; // 锁定5分钟
-    private int loginAttempts = 0;
-    private Instant lockoutEndTime = null; // 锁定结束时间
 
     /**
      * 初始化方法
@@ -98,9 +96,9 @@ public class LoginController {
             return;
         }
 
-        // 检查是否处于锁定状态
-        if (isLockedOut()) {
-            long remainingSeconds = getRemainingLockoutSeconds();
+        // 检查是否处于锁定状态（从数据库读取，支持跨重启持久化）
+        if (LoginAttemptDAO.isLocked(username)) {
+            long remainingSeconds = LoginAttemptDAO.getRemainingLockoutSeconds(username);
             showError(I18nManager.getInstance().get("runtime.login_rate_limited", remainingSeconds));
             return;
         }
@@ -115,10 +113,9 @@ public class LoginController {
                 User user = UserDAO.findByUsername(username);
                 if (user == null) {
                     AuditService.failure(null, "AUTH", "LOGIN", "用户名不存在: " + username);
-                    loginAttempts++;
-                    checkAndLockAccount(username);
+                    int attempts = LoginAttemptDAO.recordFailedAttempt(username, MAX_LOGIN_ATTEMPTS, LOCKOUT_DURATION_MINUTES * 60 * 1000);
                     Platform.runLater(() -> {
-                        showError(I18nManager.getInstance().get("runtime.login_user_missing", MAX_LOGIN_ATTEMPTS - loginAttempts));
+                        showError(I18nManager.getInstance().get("runtime.login_user_missing", MAX_LOGIN_ATTEMPTS - attempts));
                         shakeTextField(usernameField);
                         setLoginState(false);
                     });
@@ -127,10 +124,9 @@ public class LoginController {
 
                 if (!PasswordUtil.verifyPassword(password, user.password, username)) {
                     AuditService.failure(username, "AUTH", "LOGIN", "密码验证失败");
-                    loginAttempts++;
-                    checkAndLockAccount(username);
+                    int attempts = LoginAttemptDAO.recordFailedAttempt(username, MAX_LOGIN_ATTEMPTS, LOCKOUT_DURATION_MINUTES * 60 * 1000);
                     Platform.runLater(() -> {
-                        showError(I18nManager.getInstance().get("runtime.login_wrong_password", MAX_LOGIN_ATTEMPTS - loginAttempts));
+                        showError(I18nManager.getInstance().get("runtime.login_wrong_password", MAX_LOGIN_ATTEMPTS - attempts));
                         shakeTextField(passwordField);
                         setLoginState(false);
                     });
@@ -150,8 +146,8 @@ public class LoginController {
                 UserDAO.updateLastLoginTimeByUsername(username);
                 AuditService.success(username, "AUTH", "LOGIN", "登录成功", 1);
 
-                // 重置登录尝试次数
-                loginAttempts = 0;
+                // 重置登录尝试次数（持久化到数据库）
+                LoginAttemptDAO.resetAttempts(username);
 
                 // 登录成功，切换到主界面
                 javafx.application.Platform.runLater(() -> {
@@ -312,50 +308,6 @@ public class LoginController {
                 + "\n\n© 2026 " + AppConstants.DEVELOPER);
         alert.initOwner(usernameField.getScene().getWindow());
         alert.showAndWait();
-    }
-
-    /**
-     * 检查是否需要锁定账户
-     * @param username 用户名
-     */
-    private void checkAndLockAccount(String username) {
-        if (loginAttempts >= MAX_LOGIN_ATTEMPTS) {
-            lockoutEndTime = Instant.now().plusSeconds(LOCKOUT_DURATION_MINUTES * 60);
-            logger.warn("用户 {} 登录失败次数过多，账户已锁定 {} 分钟", username, LOCKOUT_DURATION_MINUTES);
-        }
-    }
-
-    /**
-     * 检查是否处于锁定状态
-     * @return 是否被锁定
-     */
-    private boolean isLockedOut() {
-        if (lockoutEndTime == null) {
-            return false;
-        }
-        if (Instant.now().isAfter(lockoutEndTime)) {
-            // 锁定时间已过，重置
-            lockoutEndTime = null;
-            loginAttempts = 0;
-            Platform.runLater(() -> {
-                usernameField.setDisable(false);
-                passwordField.setDisable(false);
-            });
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * 获取剩余锁定时间（秒）
-     * @return 剩余秒数
-     */
-    private long getRemainingLockoutSeconds() {
-        if (lockoutEndTime == null) {
-            return 0;
-        }
-        long seconds = java.time.Duration.between(Instant.now(), lockoutEndTime).getSeconds();
-        return Math.max(0, seconds);
     }
 
     /**

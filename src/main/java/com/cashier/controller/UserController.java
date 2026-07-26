@@ -15,6 +15,7 @@ import java.sql.SQLException;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -155,25 +156,35 @@ public class UserController {
     }
 
     /**
-     * 加载用户数据
+     * 加载用户数据（后台线程执行 DB 查询，Platform.runLater 更新 UI）
      */
     private void loadUsers() {
         logger.info("UserController: 开始加载用户数据...");
-        try {
-            List<User> userListData = UserDAO.findAll(FIRST_PAGE, USER_LIST_PAGE_SIZE).getData();
-            users = new java.util.HashMap<>();
-            for (User user : userListData) {
-                users.put(user.username, user);
+        new Thread(() -> {
+            try {
+                List<User> userListData = UserDAO.findAll(FIRST_PAGE, USER_LIST_PAGE_SIZE).getData();
+                java.util.HashMap<String, User> userMap = new java.util.HashMap<>();
+                for (User user : userListData) {
+                    userMap.put(user.username, user);
+                }
+                Platform.runLater(() -> {
+                    users = userMap;
+                    userList = FXCollections.observableArrayList(users.values());
+                    userTable.setItems(userList);
+                    updateCountLabel();
+                    logger.info("UserController: 加载了 {} 个用户", users.size());
+                });
+            } catch (SQLException e) {
+                logger.error("加载用户数据失败", e);
+                Platform.runLater(() -> {
+                    showError(I18nManager.getInstance().get("runtime.user_load_failed", e.getMessage()));
+                    users = new java.util.HashMap<>();
+                    userList = FXCollections.observableArrayList(users.values());
+                    userTable.setItems(userList);
+                    updateCountLabel();
+                });
             }
-        } catch (SQLException e) {
-            logger.error("加载用户数据失败", e);
-            showError(I18nManager.getInstance().get("runtime.user_load_failed", e.getMessage()));
-            users = new java.util.HashMap<>();
-        }
-        userList = FXCollections.observableArrayList(users.values());
-        userTable.setItems(userList);
-        updateCountLabel();
-        logger.info("UserController: 加载了 {} 个用户", users.size());
+        }).start();
     }
 
     /**

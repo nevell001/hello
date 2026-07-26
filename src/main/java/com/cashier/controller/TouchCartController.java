@@ -996,8 +996,8 @@ public class TouchCartController implements CartViewHost {
                         } else if ("quantity".equals(key)) {
                             quantity = Integer.parseInt(value);
                         }
-                    } catch (NumberFormatException ignored) {
-                        // 解析失败跳过该字段
+                    } catch (NumberFormatException e) {
+                        logger.debug("解析挂单项字段失败", e);
                     }
                 }
             }
@@ -1463,8 +1463,8 @@ public class TouchCartController implements CartViewHost {
         double taxRate = 0.0;
         try {
             taxRate = Double.parseDouble(settings.getOrDefault("taxRate", "0.0"));
-        } catch (NumberFormatException ignored) {
-            // 税率解析失败按 0 处理
+        } catch (NumberFormatException e) {
+            logger.debug("解析税率失败", e);
         }
         tx.tax = tx.totalAmount.multiply(BigDecimal.valueOf(taxRate))
             .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);

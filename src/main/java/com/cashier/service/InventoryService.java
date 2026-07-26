@@ -105,7 +105,8 @@ public class InventoryService {
     /**
      * 批量更新库存（优化版 - 使用批量SQL）
      * @param productUpdates 商品更新列表（商品ID -> 更新数量）
-     * @return 成功更新的商品数量，失败返回0
+     * @return 成功更新的商品数量（无更新项时返回0）
+     * @throws RuntimeException 更新失败时抛出，调用方可区分"无更新项"与"更新失败"
      */
     public static int batchUpdateInventory(Map<Integer, Integer> productUpdates) {
         if (productUpdates == null || productUpdates.isEmpty()) {
@@ -140,7 +141,7 @@ public class InventoryService {
             if (success) {
                 com.cashier.util.CacheManager.clearCache();
                 logger.info("批量更新库存成功，共更新 {} 个商品", productUpdates.size());
-                
+
                 // 广播库存变化事件
                 com.cashier.api.sync.SyncManager.getInstance().broadcastSyncEvent(
                     com.cashier.api.sync.SyncEventType.INVENTORY_CHANGED,
@@ -149,13 +150,13 @@ public class InventoryService {
                         "timestamp", System.currentTimeMillis()
                     )
                 );
-                
+
                 return productUpdates.size();
             }
             return 0;
         } catch (SQLException e) {
             logger.error("批量更新库存失败: {}", e.getMessage(), e);
-            return 0;
+            throw new RuntimeException("批量更新库存失败: " + e.getMessage(), e);
         }
     }
 

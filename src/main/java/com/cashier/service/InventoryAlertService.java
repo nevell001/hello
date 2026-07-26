@@ -25,7 +25,7 @@ public class InventoryAlertService {
     private volatile boolean isRunning = false;
     
     // 默认检查间隔：5分钟
-    private long checkInterval = 5 * 60 * 1000;
+    private volatile long checkInterval = 5 * 60 * 1000;
     
     // 上次检查的时间戳
     private volatile long lastCheckTime = 0;
@@ -34,7 +34,7 @@ public class InventoryAlertService {
     private final ConcurrentHashMap<Integer, Long> lastAlertMap = new ConcurrentHashMap<>();
     
     // 预警冷却时间：1小时（同一商品1小时内不重复预警）
-    private long alertCooldown = 60 * 60 * 1000;
+    private volatile long alertCooldown = 60 * 60 * 1000;
     
     private InventoryAlertService() {
         scheduler = createScheduler();

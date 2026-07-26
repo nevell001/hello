@@ -8,7 +8,9 @@ import org.slf4j.Logger;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 退货订单数据访问对象
@@ -314,6 +316,51 @@ public class ReturnOrderDAO {
         }
 
         return returnOrders;
+    }
+
+    /**
+     * 通过单条 SQL 聚合查询获取退货统计信息，避免加载全部退货订单到内存。
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @return 包含 total_return_orders、total_return_amount、approved_orders、rejected_orders、completed_orders 的 Map
+     */
+    public static Map<String, Object> getStatistics(Date startDate, Date endDate) {
+        String sql = "SELECT " +
+                     "COUNT(*) AS total_return_orders, " +
+                     "COALESCE(SUM(total_amount), 0) AS total_return_amount, " +
+                     "SUM(CASE WHEN status = 'APPROVED' THEN 1 ELSE 0 END) AS approved_orders, " +
+                     "SUM(CASE WHEN status = 'REJECTED' THEN 1 ELSE 0 END) AS rejected_orders, " +
+                     "SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END) AS completed_orders " +
+                     "FROM return_orders WHERE return_date BETWEEN ? AND ?";
+
+        try (Connection conn = com.cashier.util.DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setTimestamp(1, new Timestamp(startDate.getTime()));
+            stmt.setTimestamp(2, new Timestamp(endDate.getTime()));
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Map<String, Object> stats = new HashMap<>();
+                    stats.put("total_return_orders", rs.getInt("total_return_orders"));
+                    stats.put("total_return_amount", rs.getBigDecimal("total_return_amount"));
+                    stats.put("approved_orders", rs.getInt("approved_orders"));
+                    stats.put("rejected_orders", rs.getInt("rejected_orders"));
+                    stats.put("completed_orders", rs.getInt("completed_orders"));
+                    return stats;
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("获取退货统计失败", e);
+            throw new DatabaseException("获取退货统计失败", DatabaseException.DbErrorType.QUERY_FAILED, e);
+        }
+
+        Map<String, Object> empty = new HashMap<>();
+        empty.put("total_return_orders", 0);
+        empty.put("total_return_amount", java.math.BigDecimal.ZERO);
+        empty.put("approved_orders", 0);
+        empty.put("rejected_orders", 0);
+        empty.put("completed_orders", 0);
+        return empty;
     }
 
     /**

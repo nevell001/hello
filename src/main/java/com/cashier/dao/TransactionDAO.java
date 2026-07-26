@@ -1,6 +1,7 @@
 package com.cashier.dao;
 
 import com.cashier.model.Transaction;
+import com.cashier.model.TransactionStatistics;
 import com.cashier.model.Product;
 import com.cashier.util.DatabaseManager;
 import org.slf4j.Logger;
@@ -339,6 +340,38 @@ public class TransactionDAO {
             }
         }
         return methods;
+    }
+
+    /**
+     * 通过单条 SQL 聚合查询获取交易统计信息，避免加载全部交易到内存。
+     * @param startDate 开始日期（字符串，与 {@link #findByDateRange} 一致）
+     * @param endDate 结束日期
+     * @return 聚合后的交易统计；totalItems 无法从 transactions 表单独计算，固定为 0
+     */
+    public static TransactionStatistics getStatistics(String startDate, String endDate) throws SQLException {
+        String sql = "SELECT " +
+                     "COUNT(*) AS total_transactions, " +
+                     "COALESCE(SUM(final_amount), 0) AS total_amount, " +
+                     "SUM(CASE WHEN payment_method = 'CASH' THEN 1 ELSE 0 END) AS cash_count, " +
+                     "SUM(CASE WHEN member_phone IS NOT NULL THEN 1 ELSE 0 END) AS member_count " +
+                     "FROM transactions WHERE timestamp BETWEEN ? AND ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, startDate);
+            pstmt.setString(2, endDate);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    int totalTransactions = rs.getInt("total_transactions");
+                    BigDecimal totalAmount = rs.getBigDecimal("total_amount");
+                    int cashCount = rs.getInt("cash_count");
+                    int memberCount = rs.getInt("member_count");
+                    return new TransactionStatistics(totalTransactions, totalAmount, 0, cashCount, memberCount);
+                }
+            }
+        }
+        return new TransactionStatistics(0, BigDecimal.ZERO, 0, 0, 0);
     }
 
     private static void addJoinedTransactionRow(Map<String, Transaction> transactionMap, ResultSet rs)

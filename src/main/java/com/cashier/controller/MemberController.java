@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
 
 import java.sql.SQLException;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -125,23 +126,37 @@ public class MemberController extends BaseController<Member> {
     }
 
     /**
-     * 加载表格数据（实现BaseController抽象方法）
+     * 加载表格数据（后台线程执行 DB 查询，Platform.runLater 更新 UI）
      */
     @Override
     protected void loadTableData() {
-        try {
-            PageResult<Member> memberData = MemberDAO.findAll(FIRST_PAGE, DESKTOP_PAGE_SIZE);
-            totalMembers = memberData.getTotal();
-            setLoadedMembers(memberData.getData());
-        } catch (SQLException e) {
-            logger.error("加载会员数据失败", e);
-            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
-            members = new java.util.HashMap<>();
-            totalMembers = 0;
-        }
-        memberList = FXCollections.observableArrayList(members.values());
-        memberTable.setItems(memberList);
-        updateCountLabel();
+        new Thread(() -> {
+            try {
+                PageResult<Member> memberData = MemberDAO.findAll(FIRST_PAGE, DESKTOP_PAGE_SIZE);
+                long total = memberData.getTotal();
+                java.util.HashMap<String, Member> memberMap = new java.util.HashMap<>();
+                for (Member m : memberData.getData()) {
+                    memberMap.put(m.phone, m);
+                }
+                Platform.runLater(() -> {
+                    members = memberMap;
+                    totalMembers = total;
+                    memberList = FXCollections.observableArrayList(members.values());
+                    memberTable.setItems(memberList);
+                    updateCountLabel();
+                });
+            } catch (SQLException e) {
+                logger.error("加载会员数据失败", e);
+                Platform.runLater(() -> {
+                    showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
+                    members = new java.util.HashMap<>();
+                    totalMembers = 0;
+                    memberList = FXCollections.observableArrayList(members.values());
+                    memberTable.setItems(memberList);
+                    updateCountLabel();
+                });
+            }
+        }).start();
     }
 
     private void setLoadedMembers(java.util.Collection<Member> loadedMembers) {
@@ -337,6 +352,11 @@ public class MemberController extends BaseController<Member> {
                 dialogStage.setScene(scene);
                 controller.setDialogStage(dialogStage);
                 controller.setMember(selected);
+                // 传入实际操作员用户名，用于审计记录
+                com.cashier.model.User currentUser = com.cashier.CashierSystemFXApplication.getInstance().getCurrentUser();
+                if (currentUser != null) {
+                    controller.setOperatorName(currentUser.username);
+                }
 
                 dialogStage.showAndWait();
 

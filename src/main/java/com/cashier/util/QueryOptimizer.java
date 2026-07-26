@@ -45,12 +45,18 @@ public class QueryOptimizer {
     }
     
     /**
-     * 分析查询性能
+     * 分析查询性能（仅接受 SELECT 语句）
      */
     public static QueryPerformance analyzeQuery(Connection conn, String sql) {
         long startTime = System.currentTimeMillis();
         QueryPerformance performance = new QueryPerformance();
-        
+
+        // 安全检查：仅允许 SELECT 语句，防止 SQL 注入
+        String trimmedSql = sql == null ? "" : sql.trim();
+        if (!trimmedSql.toUpperCase().startsWith("SELECT")) {
+            throw new IllegalArgumentException("analyzeQuery 仅接受 SELECT 语句");
+        }
+
         try {
             // 执行EXPLAIN分析
             try (Statement stmt = conn.createStatement();

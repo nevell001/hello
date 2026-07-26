@@ -42,7 +42,7 @@ public class DatabaseManager {
     private static String dbUrl;
     private static String dbUsername;
     private static String dbPassword;
-    private static int poolSize = 25;  // 增加连接池大小以支持并发操作
+    private static int poolSize = 10;  // 桌面应用默认连接池大小
     private static long connectionTimeout = 5000;  // 减少超时时间避免 UI 冻结
     private static long idleTimeout = 600000;
     private static long maxLifetime = 1800000;
@@ -489,8 +489,8 @@ public class DatabaseManager {
                     threshold DECIMAL(10,2) DEFAULT 0,
                     discount DECIMAL(10,2) NOT NULL,
                     description TEXT,
-                    start_date BIGINT,
-                    end_date BIGINT,
+                    start_date TIMESTAMP NULL,
+                    end_date TIMESTAMP NULL,
                     enabled TINYINT(1) DEFAULT 1,
                     usage_count INT DEFAULT 0,
                     max_usage INT,
@@ -977,6 +977,9 @@ public class DatabaseManager {
         }
         stmt.execute("UPDATE promotions SET promotion_code = CONCAT('P', LPAD(id, 6, '0')) WHERE promotion_code IS NULL OR promotion_code = ''");
 
+        // 迁移 promotions 表日期列：BIGINT → TIMESTAMP（M-24）
+        migratePromotionDateColumns(stmt);
+
         // 为 users 表添加 force_password_change 字段（如果不存在）
         if (columnMissing(stmt, "users", "force_password_change")) {
             logger.info("正在为 users 表添加 force_password_change 字段...");
@@ -989,26 +992,43 @@ public class DatabaseManager {
         ensureColumn(stmt, OPERATION_LOGS_TABLE, "operation_result", "VARCHAR(20) NOT NULL DEFAULT 'SUCCESS'");
         ensureColumn(stmt, OPERATION_LOGS_TABLE, "affected_records", "INT NOT NULL DEFAULT 0");
 
+        // 创建登录尝试表（用于持久化登录锁定状态）
+        if (tableMissing(stmt, "login_attempts")) {
+            logger.info("正在创建 login_attempts 表...");
+            stmt.execute("""
+                CREATE TABLE IF NOT EXISTS login_attempts (
+                    username VARCHAR(50) PRIMARY KEY,
+                    attempt_count INT DEFAULT 0,
+                    lockout_until BIGINT DEFAULT NULL,
+                    last_attempt_time BIGINT DEFAULT NULL,
+                    INDEX idx_username (username)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            """);
+        }
+
         logger.info("表结构检查完成");
     }
 
     private static boolean columnMissing(Statement stmt, String table, String column) throws SQLException {
-        String query = String.format("""
-            SELECT COUNT(*) AS count FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '%s' AND COLUMN_NAME = '%s'
-            """, table, column);
-        try (ResultSet rs = stmt.executeQuery(query)) {
-            return rs.next() && rs.getInt("count") == 0;
+        String sql = "SELECT COUNT(*) AS count FROM INFORMATION_SCHEMA.COLUMNS " +
+                     "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?";
+        try (PreparedStatement pstmt = stmt.getConnection().prepareStatement(sql)) {
+            pstmt.setString(1, table);
+            pstmt.setString(2, column);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next() && rs.getInt("count") == 0;
+            }
         }
     }
 
     private static boolean tableMissing(Statement stmt, String table) throws SQLException {
-        String query = String.format("""
-            SELECT COUNT(*) AS count FROM INFORMATION_SCHEMA.TABLES
-            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '%s'
-            """, table);
-        try (ResultSet rs = stmt.executeQuery(query)) {
-            return rs.next() && rs.getInt("count") == 0;
+        String sql = "SELECT COUNT(*) AS count FROM INFORMATION_SCHEMA.TABLES " +
+                     "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?";
+        try (PreparedStatement pstmt = stmt.getConnection().prepareStatement(sql)) {
+            pstmt.setString(1, table);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next() && rs.getInt("count") == 0;
+            }
         }
     }
 
@@ -1017,6 +1037,52 @@ public class DatabaseManager {
             logger.info("为 {} 表添加 {} 字段", table, column);
             stmt.execute("ALTER TABLE `" + table + "` ADD COLUMN `" + column + "` " + definition);
         }
+    }
+
+    /**
+     * 检查指定列的数据类型是否为 bigint
+     */
+    private static boolean columnTypeIsBigint(Statement stmt, String table, String column) throws SQLException {
+        String sql = "SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS " +
+                     "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?";
+        try (PreparedStatement pstmt = stmt.getConnection().prepareStatement(sql)) {
+            pstmt.setString(1, table);
+            pstmt.setString(2, column);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    String dataType = rs.getString("DATA_TYPE");
+                    return "bigint".equalsIgnoreCase(dataType);
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 迁移 promotions 表日期列从 BIGINT(epoch millis) 到 TIMESTAMP（M-24）
+     * 仅在检测到列类型为 bigint 时执行，保证新库不受影响
+     */
+    private static void migratePromotionDateColumns(Statement stmt) throws SQLException {
+        if (!columnTypeIsBigint(stmt, "promotions", "start_date")) {
+            return; // 已经是 TIMESTAMP 类型，无需迁移
+        }
+        logger.info("检测到 promotions.start_date 为 BIGINT，开始迁移到 TIMESTAMP...");
+
+        for (String col : new String[]{"start_date", "end_date"}) {
+            String tmpCol = col + "_ts";
+            // 1. 添加临时 TIMESTAMP 列
+            stmt.execute("ALTER TABLE promotions ADD COLUMN " + tmpCol + " TIMESTAMP NULL");
+            // 2. 转换数据：epoch millis → datetime
+            stmt.execute("UPDATE promotions SET " + tmpCol + " = " +
+                    "CASE WHEN " + col + " IS NOT NULL AND " + col + " > 0 " +
+                    "THEN DATE_ADD('1970-01-01 00:00:00', INTERVAL " + col + " MICROSECOND) " +
+                    "ELSE NULL END");
+            // 3. 删除旧列
+            stmt.execute("ALTER TABLE promotions DROP COLUMN " + col);
+            // 4. 重命名临时列
+            stmt.execute("ALTER TABLE promotions CHANGE COLUMN " + tmpCol + " " + col + " TIMESTAMP NULL");
+        }
+        logger.info("promotions 日期列迁移完成");
     }
 
     /**

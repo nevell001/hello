@@ -325,32 +325,7 @@ public class TransactionService {
      */
     public static TransactionStatistics getTransactionStatistics(String startDate, String endDate) {
         try {
-            List<Transaction> transactions = TransactionDAO.findByDateRange(startDate, endDate);
-
-            BigDecimal totalAmount = BigDecimal.ZERO;
-            int totalTransactions = transactions.size();
-            int totalItems = 0;
-            int cashCount = 0;
-            int memberCount = 0;
-
-            for (Transaction t : transactions) {
-                totalAmount = totalAmount.add(t.getFinalAmount());
-
-                if (t.items != null) {
-                    totalItems += t.items.size();
-                }
-
-                if ("CASH".equals(t.paymentMethod)) {
-                    cashCount++;
-                }
-
-                if (t.memberId > 0) {
-                    memberCount++;
-                }
-            }
-
-            return new TransactionStatistics(totalTransactions, totalAmount, totalItems, cashCount, memberCount);
-
+            return TransactionDAO.getStatistics(startDate, endDate);
         } catch (SQLException e) {
             logger.error("获取交易统计失败", e);
             return new TransactionStatistics(0, BigDecimal.ZERO, 0, 0, 0);

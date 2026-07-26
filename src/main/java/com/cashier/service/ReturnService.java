@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 退货管理服务类
@@ -226,34 +227,15 @@ public class ReturnService {
      */
     public static ReturnStatistics calculateReturnStatistics(Date startDate, Date endDate) {
         ReturnStatistics stats = new ReturnStatistics();
-        
-        List<ReturnOrder> returnOrders = ReturnOrderDAO.findByDateRange(startDate, endDate);
-        
-        stats.totalReturnOrders = returnOrders.size();
-        stats.totalReturnAmount = BigDecimal.ZERO;
-        stats.approvedOrders = 0;
-        stats.rejectedOrders = 0;
-        stats.completedOrders = 0;
-        
-        for (ReturnOrder order : returnOrders) {
-            stats.totalReturnAmount = stats.totalReturnAmount.add(order.getTotalAmount());
-            
-            switch (order.status) {
-                case "APPROVED":
-                    stats.approvedOrders++;
-                    break;
-                case "REJECTED":
-                    stats.rejectedOrders++;
-                    break;
-                case "COMPLETED":
-                    stats.completedOrders++;
-                    break;
-                default:
-                    logger.debug("跳过未知退货订单状态统计: {}", order.status);
-                    break;
-            }
-        }
-        
+
+        Map<String, Object> data = ReturnOrderDAO.getStatistics(startDate, endDate);
+
+        stats.totalReturnOrders = (int) data.get("total_return_orders");
+        stats.totalReturnAmount = (BigDecimal) data.get("total_return_amount");
+        stats.approvedOrders = (int) data.get("approved_orders");
+        stats.rejectedOrders = (int) data.get("rejected_orders");
+        stats.completedOrders = (int) data.get("completed_orders");
+
         return stats;
     }
 

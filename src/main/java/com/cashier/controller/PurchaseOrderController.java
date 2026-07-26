@@ -965,11 +965,13 @@ public class PurchaseOrderController {
                         if (seq > maxSeq) {
                             maxSeq = seq;
                         }
-                    } catch (NumberFormatException ignored) {
+                    } catch (NumberFormatException e) {
+                        logger.debug("解析订单序号失败: {}", seqStr, e);
                     }
                 }
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            logger.warn("生成新订单号失败", e);
         }
 
         return prefix + String.format("%04d", maxSeq + 1);

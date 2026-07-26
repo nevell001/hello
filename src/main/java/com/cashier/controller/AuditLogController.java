@@ -4,6 +4,7 @@ import com.cashier.dao.OperationLogDAO;
 import com.cashier.i18n.I18nManager;
 import com.cashier.model.OperationLog;
 import com.cashier.util.LoggerFactoryUtil;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -119,14 +120,20 @@ public class AuditLogController {
 
     @FXML
     private void handleRefresh() {
-        try {
-            List<OperationLog> logs = OperationLogDAO.findRecent(AUDIT_LOG_LIMIT);
-            allLogs.setAll(logs);
-            handleSearch();
-        } catch (Exception e) {
-            logger.error("Failed to load audit logs", e);
-            countLabel.setText(I18nManager.getInstance().get("audit.load_failed"));
-        }
+        new Thread(() -> {
+            try {
+                List<OperationLog> logs = OperationLogDAO.findRecent(AUDIT_LOG_LIMIT);
+                Platform.runLater(() -> {
+                    allLogs.setAll(logs);
+                    handleSearch();
+                });
+            } catch (Exception e) {
+                logger.error("Failed to load audit logs", e);
+                Platform.runLater(() -> {
+                    countLabel.setText(I18nManager.getInstance().get("audit.load_failed"));
+                });
+            }
+        }).start();
     }
 
     @FXML

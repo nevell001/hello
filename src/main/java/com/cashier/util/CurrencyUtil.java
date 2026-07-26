@@ -46,9 +46,27 @@ public class CurrencyUtil {
         SUPPORTED_CURRENCIES.put("EUR", new CurrencyInfo("€", "EUR", "欧元"));
     }
 
-    private static String cachedSymbol = "¥";
-    private static String cachedCode = "CNY";
-    private static DecimalFormat currencyFormat;
+    private static volatile String cachedSymbol = "¥";
+    private static volatile String cachedCode = "CNY";
+
+    // ThreadLocal DecimalFormat（DecimalFormat 非线程安全）
+    private static volatile int formatVersion = 0;
+    private static final ThreadLocal<DecimalFormat> TL_FORMAT = new ThreadLocal<>();
+    private static final ThreadLocal<Integer> TL_VERSION = new ThreadLocal<>();
+
+    /**
+     * 获取当前线程的 DecimalFormat（版本不匹配时自动重建）
+     */
+    private static DecimalFormat getThreadLocalFormat() {
+        Integer version = TL_VERSION.get();
+        if (version == null || version != formatVersion) {
+            DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.SIMPLIFIED_CHINESE);
+            symbols.setCurrencySymbol(cachedSymbol);
+            TL_FORMAT.set(new DecimalFormat("#,##0.00", symbols));
+            TL_VERSION.set(formatVersion);
+        }
+        return TL_FORMAT.get();
+    }
 
     static {
         // 初始化默认格式
@@ -59,9 +77,7 @@ public class CurrencyUtil {
      * 初始化默认格式
      */
     private static void initDefaults() {
-        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.SIMPLIFIED_CHINESE);
-        symbols.setCurrencySymbol("¥");
-        currencyFormat = new DecimalFormat("#,##0.00", symbols);
+        // formatVersion 初始为 0，ThreadLocal 首次访问时自动创建
     }
 
     /**
@@ -82,9 +98,8 @@ public class CurrencyUtil {
             cachedSymbol = currencyInfo.symbol;
             cachedCode = currencyInfo.code;
 
-            DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.SIMPLIFIED_CHINESE);
-            symbols.setCurrencySymbol(currencyInfo.symbol);
-            currencyFormat = new DecimalFormat("#,##0.00", symbols);
+            // 递增版本号，使各线程的 ThreadLocal DecimalFormat 在下次访问时自动重建
+            formatVersion++;
 
             logger.debug("货币格式已更新: {} ({})", currencyInfo.symbol, currencyInfo.code);
         } catch (Exception e) {
@@ -163,7 +178,7 @@ public class CurrencyUtil {
      */
     public static String format(double amount) {
         try {
-            return cachedSymbol + currencyFormat.format(amount);
+            return cachedSymbol + getThreadLocalFormat().format(amount);
         } catch (Exception e) {
             logger.error("货币格式化失败: {}", amount, e);
             return cachedSymbol + String.format("%.2f", amount);
@@ -227,7 +242,7 @@ public class CurrencyUtil {
      * @return 格式化后的数字字符串，如 "1,234.56"
      */
     public static String formatNumberOnly(double amount) {
-        return currencyFormat.format(amount);
+        return getThreadLocalFormat().format(amount);
     }
 
     /**

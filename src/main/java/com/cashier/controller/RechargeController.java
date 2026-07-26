@@ -8,6 +8,7 @@ import com.cashier.model.Member;
 import com.cashier.model.RechargeRecord;
 import com.cashier.util.CurrencyUtil;
 import com.cashier.util.FormValidator;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -74,6 +75,7 @@ public class RechargeController {
 
     private Stage dialogStage;
     private Member member;
+    private String operatorName = "系统"; // 默认值，可由外部设置实际操作员
     private boolean okClicked = false;
     private double rechargeAmount = 0.0;
 
@@ -133,18 +135,32 @@ public class RechargeController {
     }
 
     /**
-     * 加载充值历史记录
+     * 设置操作员用户名（用于审计记录）
+     * @param operatorName 实际操作员用户名
+     */
+    public void setOperatorName(String operatorName) {
+        if (operatorName != null && !operatorName.isBlank()) {
+            this.operatorName = operatorName;
+        }
+    }
+
+    /**
+     * 加载充值历史记录（后台线程执行 DB 查询，Platform.runLater 更新 UI）
      */
     private void loadRechargeHistory() {
-        try {
-            List<RechargeRecord> memberRecords = RechargeRecordDAO.findRecentByMemberPhone(
-                member.phone,
-                RECHARGE_HISTORY_LIMIT
-            );
-            historyTable.getItems().setAll(memberRecords);
-        } catch (Exception e) {
-            logger.error("加载充值历史记录失败", e);
-        }
+        new Thread(() -> {
+            try {
+                List<RechargeRecord> memberRecords = RechargeRecordDAO.findRecentByMemberPhone(
+                    member.phone,
+                    RECHARGE_HISTORY_LIMIT
+                );
+                Platform.runLater(() -> {
+                    historyTable.getItems().setAll(memberRecords);
+                });
+            } catch (Exception e) {
+                logger.error("加载充值历史记录失败", e);
+            }
+        }).start();
     }
 
     /**
@@ -194,7 +210,7 @@ public class RechargeController {
             rechargeAmount = FormValidator.parseDouble(amountField.getText().trim());
             String paymentMethod = paymentMethodComboBox.getSelectionModel().getSelectedItem();
 
-            boolean success = com.cashier.service.MemberService.recharge(member, rechargeAmount, paymentMethod, "系统");
+            boolean success = com.cashier.service.MemberService.recharge(member, rechargeAmount, paymentMethod, operatorName);
             if (!success) {
                 showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.recharge_failed"));
                 return;

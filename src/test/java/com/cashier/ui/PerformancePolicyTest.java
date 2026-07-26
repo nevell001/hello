@@ -470,8 +470,8 @@ class PerformancePolicyTest {
         assertTrue(uiOptimizer.contains("shutdownExecutor(asyncExecutor, \"UI优化线程池\")"));
         assertTrue(uiOptimizer.contains("shutdownExecutor(cleanupExecutor, \"UI缓存清理线程池\")"));
         assertTrue(uiOptimizer.contains("executor.awaitTermination(5, TimeUnit.SECONDS)"));
-        assertTrue(uiOptimizer.contains("java.util.Collections.synchronizedMap"));
-        assertTrue(uiOptimizer.contains("synchronized (cacheTime)"));
+        assertTrue(uiOptimizer.contains("ConcurrentHashMap<String, CacheEntry> cache"));
+        assertTrue(uiOptimizer.contains("class CacheEntry"));
         assertFalse(uiOptimizer.contains("java.util.concurrent.ScheduledExecutorService cleanupExecutor"));
     }
 

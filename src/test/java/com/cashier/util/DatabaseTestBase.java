@@ -355,8 +355,8 @@ public abstract class DatabaseTestBase {
                 discount DECIMAL(10,2) NOT NULL,
                 description TEXT,
                 enabled TINYINT(1) DEFAULT 1,
-                start_date BIGINT,
-                end_date BIGINT,
+                start_date TIMESTAMP NULL,
+                end_date TIMESTAMP NULL,
                 usage_count INT DEFAULT 0,
                 max_usage INT,
                 created_at BIGINT
@@ -368,6 +368,16 @@ public abstract class DatabaseTestBase {
             CREATE TABLE IF NOT EXISTS settings (
                 `key` VARCHAR(100) PRIMARY KEY,
                 `value` VARCHAR(1000)
+            )
+            """);
+
+        // 创建 login_attempts 表（登录尝试跟踪）
+        stmt.execute("""
+            CREATE TABLE IF NOT EXISTS login_attempts (
+                username VARCHAR(50) PRIMARY KEY,
+                attempt_count INT DEFAULT 0,
+                lockout_until BIGINT DEFAULT NULL,
+                last_attempt_time BIGINT DEFAULT NULL
             )
             """);
 
@@ -552,6 +562,7 @@ public abstract class DatabaseTestBase {
             stmt.execute("DELETE FROM operation_logs");
             stmt.execute("DELETE FROM recharge_records");
             stmt.execute("DELETE FROM settings");
+            stmt.execute("DELETE FROM login_attempts");
             // 清空应用级缓存，防止测试之间的缓存污染
             try {
                 com.cashier.util.CacheManager.clearCache();

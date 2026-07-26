@@ -138,16 +138,22 @@ public class BackupService {
                 case FULL:
                     // 备份数据库和文件
                     addDatabaseBackup(zos);
-                    addFilesBackup(zos, "data/");
+                    List<String> failedFull = addFilesBackup(zos, "data/");
+                    if (!failedFull.isEmpty()) {
+                        logger.warn("完整备份中有 {} 个文件备份失败", failedFull.size());
+                    }
                     addConfigBackup(zos);
                     break;
-                    
+
                 case DATABASE:
                     addDatabaseBackup(zos);
                     break;
-                    
+
                 case FILES:
-                    addFilesBackup(zos, "data/");
+                    List<String> failedFiles = addFilesBackup(zos, "data/");
+                    if (!failedFiles.isEmpty()) {
+                        logger.warn("文件备份中有 {} 个文件备份失败，备份可能不完整", failedFiles.size());
+                    }
                     break;
                     
                 case CONFIG:
@@ -197,12 +203,14 @@ public class BackupService {
     }
     
     /**
-     * 添加文件备份
+     * 添加文件备份，返回备份失败的文件路径列表
      */
-    private static void addFilesBackup(ZipOutputStream zos, String prefix) throws IOException {
+    private static List<String> addFilesBackup(ZipOutputStream zos, String prefix) throws IOException {
+        List<String> failedFiles = new ArrayList<>();
+
         // 备份数据目录下的文件
         Path dataDir = Paths.get("data");
-        
+
         if (Files.exists(dataDir)) {
             Files.walk(dataDir)
                 .filter(path -> !Files.isDirectory(path))
@@ -212,10 +220,11 @@ public class BackupService {
                         addToZip(zos, entryName, path.toFile());
                     } catch (IOException e) {
                         logger.warn("备份文件失败: {}", path, e);
+                        failedFiles.add(path.toString());
                     }
                 });
         }
-        
+
         // 备份发票文件
         Path invoiceDir = Paths.get("invoices");
         if (Files.exists(invoiceDir)) {
@@ -226,9 +235,15 @@ public class BackupService {
                         addToZip(zos, "invoices/" + invoiceDir.relativize(path).toString(), path.toFile());
                     } catch (IOException e) {
                         logger.warn("备份发票文件失败: {}", path, e);
+                        failedFiles.add(path.toString());
                     }
                 });
         }
+
+        if (!failedFiles.isEmpty()) {
+            logger.warn("文件备份完成，但有 {} 个文件备份失败: {}", failedFiles.size(), failedFiles);
+        }
+        return failedFiles;
     }
     
     /**

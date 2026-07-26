@@ -304,21 +304,25 @@ public class FormValidator {
         }
 
         // 焦点丢失时验证
-        control.focusedProperty().addListener((obs, oldVal, newVal) -> {
+        javafx.beans.value.ChangeListener<Boolean> focusListener = (obs, oldVal, newVal) -> {
             if (!newVal) {
                 validate(control, errorLabel, rules);
             }
-        });
+        };
+        control.focusedProperty().addListener(focusListener);
 
         // 文本变化时验证（仅在已有错误时）
-        control.textProperty().addListener((obs, oldVal, newVal) -> {
+        javafx.beans.value.ChangeListener<String> textListener = (obs, oldVal, newVal) -> {
             if (control.getStyleClass().contains(VALIDATION_ERROR_STYLE)) {
                 validate(control, errorLabel, rules);
             }
-        });
+        };
+        control.textProperty().addListener(textListener);
 
-        // 返回清理函数
+        // 返回清理函数（移除监听器，防止控件复用时监听器累积）
         return () -> {
+            control.focusedProperty().removeListener(focusListener);
+            control.textProperty().removeListener(textListener);
             control.getStyleClass().remove(VALIDATION_ERROR_STYLE);
             if (errorLabel != null) {
                 errorLabel.setVisible(false);
@@ -334,19 +338,23 @@ public class FormValidator {
             return () -> {};
         }
 
-        control.focusedProperty().addListener((obs, oldVal, newVal) -> {
+        javafx.beans.value.ChangeListener<Boolean> focusListener = (obs, oldVal, newVal) -> {
             if (!newVal) {
                 validate(control, errorLabel, rules);
             }
-        });
+        };
+        control.focusedProperty().addListener(focusListener);
 
-        control.textProperty().addListener((obs, oldVal, newVal) -> {
+        javafx.beans.value.ChangeListener<String> textListener = (obs, oldVal, newVal) -> {
             if (control.getStyleClass().contains(VALIDATION_ERROR_STYLE)) {
                 validate(control, errorLabel, rules);
             }
-        });
+        };
+        control.textProperty().addListener(textListener);
 
         return () -> {
+            control.focusedProperty().removeListener(focusListener);
+            control.textProperty().removeListener(textListener);
             control.getStyleClass().remove(VALIDATION_ERROR_STYLE);
             if (errorLabel != null) {
                 errorLabel.setVisible(false);
@@ -362,19 +370,24 @@ public class FormValidator {
             return () -> {};
         }
 
-        control.focusedProperty().addListener((obs, oldVal, newVal) -> {
+        javafx.beans.value.ChangeListener<Boolean> focusListener = (obs, oldVal, newVal) -> {
             if (!newVal) {
                 validate(control, errorLabel, rules);
             }
-        });
+        };
+        control.focusedProperty().addListener(focusListener);
 
-        control.valueProperty().addListener((obs, oldVal, newVal) -> {
+        @SuppressWarnings("rawtypes")
+        javafx.beans.value.ChangeListener valueListener = (obs, oldVal, newVal) -> {
             if (control.getStyleClass().contains(VALIDATION_ERROR_STYLE)) {
                 validate(control, errorLabel, rules);
             }
-        });
+        };
+        control.valueProperty().addListener(valueListener);
 
         return () -> {
+            control.focusedProperty().removeListener(focusListener);
+            control.valueProperty().removeListener(valueListener);
             control.getStyleClass().remove(VALIDATION_ERROR_STYLE);
             if (errorLabel != null) {
                 errorLabel.setVisible(false);

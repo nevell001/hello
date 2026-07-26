@@ -20,9 +20,10 @@ public class FontSizePreferenceDAO {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, username);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return rs.getString("font_size");
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("font_size");
+                }
             }
         }
         return "medium"; // 默认中等字号

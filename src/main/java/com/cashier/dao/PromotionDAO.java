@@ -5,7 +5,6 @@ import com.cashier.util.DatabaseManager;
 
 import java.sql.*;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.*;
 
 /**
@@ -117,7 +116,7 @@ public class PromotionDAO {
      */
     public static List<Promotion> findActive() throws SQLException {
         List<Promotion> promotions = new ArrayList<>();
-        long now = System.currentTimeMillis();
+        Timestamp now = Timestamp.valueOf(LocalDateTime.now());
         String sql = "SELECT id, promotion_code, name, type, threshold, discount, description, enabled, " +
                      "start_date, end_date, usage_count, max_usage FROM promotions " +
                      "WHERE enabled = true AND start_date <= ? AND end_date >= ? " +
@@ -126,12 +125,12 @@ public class PromotionDAO {
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setLong(1, now);
-            pstmt.setLong(2, now);
-            ResultSet rs = pstmt.executeQuery();
-
-            while (rs.next()) {
-                promotions.add(mapRowToPromotion(rs));
+            pstmt.setTimestamp(1, now);
+            pstmt.setTimestamp(2, now);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    promotions.add(mapRowToPromotion(rs));
+                }
             }
         }
         return promotions;
@@ -155,8 +154,8 @@ public class PromotionDAO {
             pstmt.setBigDecimal(5, promotion.discount);
             pstmt.setString(6, promotion.description);
             pstmt.setBoolean(7, promotion.enabled);
-            pstmt.setLong(8, promotion.startDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
-            pstmt.setLong(9, promotion.endDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+            pstmt.setTimestamp(8, promotion.startDate != null ? Timestamp.valueOf(promotion.startDate) : null);
+            pstmt.setTimestamp(9, promotion.endDate != null ? Timestamp.valueOf(promotion.endDate) : null);
             pstmt.setInt(10, promotion.usageCount);
             pstmt.setInt(11, promotion.maxUsage);
 
@@ -190,8 +189,8 @@ public class PromotionDAO {
             pstmt.setBigDecimal(5, promotion.discount);
             pstmt.setString(6, promotion.description);
             pstmt.setBoolean(7, promotion.enabled);
-            pstmt.setLong(8, promotion.startDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
-            pstmt.setLong(9, promotion.endDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+            pstmt.setTimestamp(8, promotion.startDate != null ? Timestamp.valueOf(promotion.startDate) : null);
+            pstmt.setTimestamp(9, promotion.endDate != null ? Timestamp.valueOf(promotion.endDate) : null);
             pstmt.setInt(10, promotion.usageCount);
             pstmt.setInt(11, promotion.maxUsage);
             pstmt.setInt(12, promotion.id);
@@ -259,8 +258,8 @@ public class PromotionDAO {
                 pstmt.setBigDecimal(5, promotion.discount);
                 pstmt.setString(6, promotion.description);
                 pstmt.setBoolean(7, promotion.enabled);
-                pstmt.setLong(8, promotion.startDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
-                pstmt.setLong(9, promotion.endDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+                pstmt.setTimestamp(8, promotion.startDate != null ? Timestamp.valueOf(promotion.startDate) : null);
+                pstmt.setTimestamp(9, promotion.endDate != null ? Timestamp.valueOf(promotion.endDate) : null);
                 pstmt.setInt(10, promotion.usageCount);
                 pstmt.setInt(11, promotion.maxUsage);
                 pstmt.addBatch();
@@ -293,8 +292,8 @@ public class PromotionDAO {
                 pstmt.setBigDecimal(5, promotion.discount);
                 pstmt.setString(6, promotion.description);
                 pstmt.setBoolean(7, promotion.enabled);
-                pstmt.setLong(8, promotion.startDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
-                pstmt.setLong(9, promotion.endDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+                pstmt.setTimestamp(8, promotion.startDate != null ? Timestamp.valueOf(promotion.startDate) : null);
+                pstmt.setTimestamp(9, promotion.endDate != null ? Timestamp.valueOf(promotion.endDate) : null);
                 pstmt.setInt(10, promotion.usageCount);
                 pstmt.setInt(11, promotion.maxUsage);
                 pstmt.addBatch();
@@ -307,6 +306,8 @@ public class PromotionDAO {
      * 将 ResultSet 映射为 Promotion 对象
      */
     private static Promotion mapRowToPromotion(ResultSet rs) throws SQLException {
+        Timestamp startDateTs = rs.getTimestamp("start_date");
+        Timestamp endDateTs = rs.getTimestamp("end_date");
         return new Promotion(
             rs.getInt("id"),
             rs.getString("promotion_code"),
@@ -316,8 +317,8 @@ public class PromotionDAO {
             rs.getBigDecimal("discount"),
             rs.getString("description"),
             rs.getBoolean("enabled"),
-            LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(rs.getLong("start_date")), ZoneId.systemDefault()),
-            LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(rs.getLong("end_date")), ZoneId.systemDefault()),
+            startDateTs != null ? startDateTs.toLocalDateTime() : null,
+            endDateTs != null ? endDateTs.toLocalDateTime() : null,
             rs.getInt("usage_count"),
             rs.getInt("max_usage")
         );

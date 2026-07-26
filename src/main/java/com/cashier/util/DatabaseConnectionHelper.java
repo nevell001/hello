@@ -186,13 +186,13 @@ public class DatabaseConnectionHelper {
             return DiagnosticResult.failure(
                 "数据库认证失败：用户名或密码错误",
                 "请检查以下项目：\n"
-                + "1. 用户名是否正确：当前配置为 " + dbUsername + "\n"
+                + "1. 用户名是否正确（请检查 config/database.properties 中的配置）\n"
                 + "2. 密码是否正确\n"
                 + "3. 用户是否有访问 lisuan_system 数据库的权限\n\n"
                 + "如果忘记密码，可以重置：\n"
                 + "mysql -u root -p\n"
-                + "ALTER USER '" + dbUsername + "'@'%' IDENTIFIED BY '新密码';\n"
-                + "GRANT ALL PRIVILEGES ON lisuan_system.* TO '" + dbUsername + "'@'%';\n"
+                + "ALTER USER '你的用户名'@'%' IDENTIFIED BY '新密码';\n"
+                + "GRANT ALL PRIVILEGES ON lisuan_system.* TO '你的用户名'@'%';\n"
                 + "FLUSH PRIVILEGES;"
             );
         }
@@ -204,7 +204,7 @@ public class DatabaseConnectionHelper {
                 "请创建数据库：\n"
                 + "mysql -u root -p\n"
                 + "CREATE DATABASE lisuan_system CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\n"
-                + "GRANT ALL PRIVILEGES ON lisuan_system.* TO '" + dbUsername + "'@'localhost';\n"
+                + "GRANT ALL PRIVILEGES ON lisuan_system.* TO '你的用户名'@'localhost';\n"
                 + "FLUSH PRIVILEGES;"
             );
         }

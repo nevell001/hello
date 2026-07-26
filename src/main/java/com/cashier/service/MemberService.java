@@ -47,13 +47,14 @@ public class MemberService {
      * 根据手机号查找会员
      * @param phone 手机号
      * @return 会员对象，如果不存在返回null
+     * @throws RuntimeException 数据库异常时抛出，调用方可区分"不存在"与"查询失败"
      */
     public static Member findMemberByPhone(String phone) {
         try {
             return MemberDAO.findByPhone(phone);
         } catch (SQLException e) {
             logger.error("查找会员失败: phone={}", phone, e);
-            return null;
+            throw new RuntimeException("查找会员失败", e);
         }
     }
 
@@ -145,27 +146,32 @@ public class MemberService {
     }
 
     /**
-     * 更新会员等级和折扣
+     * 更新会员等级和折扣（事务内读-改-写，避免并发覆盖）
      * @param member 会员
      * @return 是否成功
      */
     public static boolean updateMemberLevel(Member member) {
         try {
-            Member latestMember = MemberDAO.findById(member.id);
-            if (latestMember == null) {
-                return false;
-            }
+            return DatabaseManager.executeBooleanTransaction(conn -> {
+                Member latestMember = MemberDAO.findByIdWithConnection(conn, member.id);
+                if (latestMember == null) {
+                    return false;
+                }
 
-            // 计算新等级
-            String newLevel = calculateLevel(latestMember.points);
-            if (!newLevel.equals(latestMember.level)) {
-                latestMember.level = newLevel;
-                latestMember.discount = LEVEL_DISCOUNTS.get(newLevel);
-                MemberDAO.update(latestMember);
-                logger.info("会员等级已更新: phone={}, level={}", latestMember.phone, newLevel);
-            }
+                // 计算新等级
+                String newLevel = calculateLevel(latestMember.points);
+                if (!newLevel.equals(latestMember.level)) {
+                    latestMember.level = newLevel;
+                    latestMember.discount = LEVEL_DISCOUNTS.get(newLevel);
+                    MemberDAO.updateWithConnection(conn, latestMember);
+                    // 同步传入的 member 对象
+                    member.level = newLevel;
+                    member.discount = latestMember.discount;
+                    logger.info("会员等级已更新: phone={}, level={}", latestMember.phone, newLevel);
+                }
 
-            return true;
+                return true;
+            });
         } catch (SQLException e) {
             logger.error("更新会员等级失败", e);
             return false;
