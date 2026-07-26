@@ -1478,13 +1478,15 @@ public class DatabaseManager {
      * 使用 Docker 容器执行恢复
      */
     private static boolean restoreViaDocker(File backupFile) throws Exception {
+        // 密码通过环境变量传递，不会出现在 ps / /proc/<pid>/cmdline 中
         ProcessBuilder pb = new ProcessBuilder(
-            "docker", "exec", "-i", "-e", "MYSQL_PWD=" + dbPassword,
+            "docker", "exec", "-i", "-e", "MYSQL_PWD",  // 不带值，从环境继承
             dockerMysqlContainerName,
             "mysql",
             "-u" + dbUsername,
             getDatabaseNameFromUrl(dbUrl)
         );
+        pb.environment().put("MYSQL_PWD", dbPassword);
         pb.redirectInput(ProcessBuilder.Redirect.from(backupFile));
         pb.redirectErrorStream(true);
 
