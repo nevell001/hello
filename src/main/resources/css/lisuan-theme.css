@@ -1329,3 +1329,87 @@
 .shortcut-help-view .icon-button:hover {
     -fx-background-color: rgba(255, 247, 239, 0.28);
 }
+
+/* ========== 触屏现金结算对话框 ========== */
+
+.cash-due-highlight {
+    -fx-font-size: 22;
+    -fx-font-weight: bold;
+    -fx-text-fill: -lisuan-danger;
+}
+
+.cash-due-label {
+    -fx-font-size: 17;
+    -fx-font-weight: bold;
+    -fx-text-fill: -lisuan-text;
+}
+
+.cash-paid-label {
+    -fx-font-size: 17;
+    -fx-text-fill: -lisuan-text-tertiary;
+}
+
+.cash-remain-label {
+    -fx-font-size: 17;
+    -fx-font-weight: bold;
+    -fx-text-fill: -lisuan-danger;
+}
+
+.cash-separator {
+    -fx-text-fill: -lisuan-text-disabled;
+}
+
+.cash-input-field {
+    -fx-font-size: 22;
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+}
+
+.cash-exact-btn {
+    -fx-font-size: 16;
+    -fx-font-weight: bold;
+    -fx-background-color: -lisuan-success;
+    -fx-text-fill: -lisuan-surface;
+    -fx-background-radius: 8;
+}
+
+.cash-denom-btn {
+    -fx-font-size: 20;
+    -fx-font-weight: bold;
+    -fx-background-color: -lisuan-info;
+    -fx-text-fill: -lisuan-surface;
+    -fx-background-radius: 8;
+}
+
+.cash-clear-btn {
+    -fx-font-size: 18;
+    -fx-font-weight: bold;
+    -fx-background-color: -lisuan-danger;
+    -fx-text-fill: -lisuan-surface;
+    -fx-background-radius: 8;
+}
+
+.cash-status-default {
+    -fx-font-size: 18;
+    -fx-text-fill: -lisuan-text-disabled;
+}
+
+.cash-status-warn {
+    -fx-font-size: 20;
+    -fx-font-weight: bold;
+    -fx-text-fill: -lisuan-warning;
+}
+
+.cash-status-change {
+    -fx-font-size: 22;
+    -fx-font-weight: bold;
+    -fx-text-fill: -lisuan-success;
+}
+
+.cash-confirm-btn {
+    -fx-font-size: 20;
+    -fx-font-weight: bold;
+    -fx-background-color: -lisuan-primary;
+    -fx-text-fill: -lisuan-surface;
+    -fx-background-radius: 8;
+}

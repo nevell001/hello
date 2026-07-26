@@ -1153,44 +1153,100 @@ public class TouchCartController implements CartViewHost {
         dialog.setTitle(i18n.get("cart.cash_payment"));
         dialog.setHeaderText(null);
 
-        VBox content = new VBox(12);
-        content.setPadding(new Insets(20));
-
-        // 显示应付金额和已付金额
-        String symbol = CurrencyUtil.getSymbol();
-        Label dueLabel = new Label();
-        if (cashReceivedAmount.compareTo(BigDecimal.ZERO) > 0) {
-            dueLabel.setText(String.format("应付: %s | 已付: %s | 剩余: %s",
-                CurrencyUtil.format(finalAmount.doubleValue()),
-                CurrencyUtil.format(cashReceivedAmount.doubleValue()),
-                CurrencyUtil.format(remainingAmount.doubleValue())));
-        } else {
-            dueLabel.setText(i18n.get("runtime.amount_due", CurrencyUtil.format(finalAmount.doubleValue())));
+        // 同步主界面样式
+        if (productGrid.getScene() != null) {
+            dialog.initOwner(productGrid.getScene().getWindow());
+            dialog.getDialogPane().getStylesheets().addAll(productGrid.getScene().getStylesheets());
         }
-        dueLabel.setStyle("-fx-font-size: 18; -fx-font-weight: bold;");
 
+        VBox content = new VBox(14);
+        content.setPadding(new Insets(20, 24, 20, 24));
+        content.setPrefWidth(560);
+
+        // ===== 1. 应付 / 已付 / 剩余 信息区 =====
+        String symbol = CurrencyUtil.getSymbol();
+        HBox infoRow = new HBox(16);
+        infoRow.setAlignment(javafx.geometry.Pos.CENTER);
+
+        Label dueLabel = new Label();
+        Label paidLabel = new Label();
+        Label remainLabel = new Label();
+        dueLabel.getStyleClass().add("cash-due-label");
+        paidLabel.getStyleClass().add("cash-paid-label");
+        remainLabel.getStyleClass().add("cash-remain-label");
+
+        if (cashReceivedAmount.compareTo(BigDecimal.ZERO) > 0) {
+            dueLabel.setText("应付 " + symbol + CurrencyUtil.format(finalAmount.doubleValue()));
+            paidLabel.setText("已付 " + symbol + CurrencyUtil.format(cashReceivedAmount.doubleValue()));
+            remainLabel.setText("剩余 " + symbol + CurrencyUtil.format(remainingAmount.doubleValue()));
+            Label sep1 = new Label("|"); sep1.getStyleClass().add("cash-separator");
+            Label sep2 = new Label("|"); sep2.getStyleClass().add("cash-separator");
+            infoRow.getChildren().addAll(dueLabel, sep1, paidLabel, sep2, remainLabel);
+        } else {
+            dueLabel.setText("应付 " + symbol + CurrencyUtil.format(finalAmount.doubleValue()));
+            dueLabel.getStyleClass().setAll("cash-due-highlight");
+            infoRow.getChildren().add(dueLabel);
+        }
+
+        // ===== 2. 收款输入框 =====
         TextField receivedField = new TextField();
-        receivedField.setPromptText("本次收款金额");
-        receivedField.setPrefHeight(42);
-        receivedField.setStyle("-fx-font-size: 18;");
+        receivedField.setPromptText("请输入收款金额");
+        receivedField.setPrefHeight(54);
+        receivedField.setMaxWidth(Double.MAX_VALUE);
+        receivedField.getStyleClass().add("cash-input-field");
 
-        // 状态标签（显示找零或剩余）
-        Label statusLabel = new Label();
-        statusLabel.setStyle("-fx-font-size: 16;");
+        // ===== 3. 快捷面额按钮网格 =====
+        // 精确金额按钮
+        Button exactBtn = new Button("精确金额\n" + symbol + CurrencyUtil.format(finalAmount.doubleValue()));
+        exactBtn.setPrefSize(170, 65);
+        exactBtn.getStyleClass().add("cash-exact-btn");
+        exactBtn.setStyle("-fx-font-size: 16; -fx-font-weight: bold; -fx-alignment: center;");
+        exactBtn.setOnAction(e -> {
+            receivedField.setText(finalAmount.toPlainString());
+            receivedField.requestFocus();
+        });
 
-        // 快捷金额按钮（固定面值，对齐非触屏 CartController 的 100/50/20/10/5）
-        HBox quickBtns = new HBox(8);
+        // 面额按钮
         int[] amounts = {100, 50, 20, 10, 5, 1};
+        java.util.List<Button> denomBtns = new java.util.ArrayList<>();
         for (int amt : amounts) {
             Button b = new Button(symbol + amt);
-            b.setPrefSize(70, 45);
-            b.setStyle("-fx-font-size: 16; -fx-font-weight: bold;");
+            b.setPrefSize(115, 65);
+            b.getStyleClass().add("cash-denom-btn");
+            b.setStyle("-fx-font-size: 20; -fx-font-weight: bold;");
             b.setOnAction(e -> {
                 receivedField.setText(String.valueOf(amt));
                 receivedField.requestFocus();
             });
-            quickBtns.getChildren().add(b);
+            denomBtns.add(b);
         }
+
+        // 清除按钮
+        Button clearBtn = new Button("清除");
+        clearBtn.setPrefSize(115, 65);
+        clearBtn.getStyleClass().add("cash-clear-btn");
+        clearBtn.setStyle("-fx-font-size: 18; -fx-font-weight: bold;");
+        clearBtn.setOnAction(e -> {
+            receivedField.clear();
+            receivedField.requestFocus();
+        });
+
+        // 面额按钮排版：第一行精确金额 + 清除，第二三行面额
+        HBox denomRow1 = new HBox(10, exactBtn, clearBtn);
+        denomRow1.setAlignment(javafx.geometry.Pos.CENTER);
+
+        HBox denomRow2 = new HBox(10, denomBtns.get(0), denomBtns.get(1), denomBtns.get(2), denomBtns.get(3));
+        denomRow2.setAlignment(javafx.geometry.Pos.CENTER);
+
+        HBox denomRow3 = new HBox(10, denomBtns.get(4), denomBtns.get(5));
+        denomRow3.setAlignment(javafx.geometry.Pos.CENTER);
+
+        // ===== 4. 状态标签（找零 / 还需）=====
+        Label statusLabel = new Label("请输入收款金额");
+        statusLabel.getStyleClass().add("cash-status-default");
+        statusLabel.setAlignment(javafx.geometry.Pos.CENTER);
+        statusLabel.setMaxWidth(Double.MAX_VALUE);
+        statusLabel.setPrefHeight(36);
 
         // 当用户输入金额时更新状态
         receivedField.textProperty().addListener((o, ov, nv) -> {
@@ -1201,31 +1257,35 @@ public class TouchCartController implements CartViewHost {
 
                 if (thisPayment.compareTo(BigDecimal.ZERO) <= 0) {
                     statusLabel.setText("请输入收款金额");
-                    statusLabel.getStyleClass().setAll("tpos-muted"); statusLabel.setStyle("-fx-font-size: 16;");
+                    statusLabel.getStyleClass().setAll("cash-status-default");
                 } else if (totalAfterThis.compareTo(finalAmount) < 0) {
-                    // 仍需支付更多
                     BigDecimal stillNeed = finalAmount.subtract(totalAfterThis);
-                    statusLabel.setText("还需: " + CurrencyUtil.format(stillNeed.doubleValue()));
-                    statusLabel.getStyleClass().setAll("tpos-status-warn"); statusLabel.setStyle("-fx-font-size: 16; -fx-font-weight: bold;");
+                    statusLabel.setText("还需支付 " + symbol + CurrencyUtil.format(stillNeed.doubleValue()));
+                    statusLabel.getStyleClass().setAll("cash-status-warn");
                 } else {
-                    // 需要找零
-                    statusLabel.setText("找零: " + CurrencyUtil.format(diff.doubleValue()));
-                    statusLabel.getStyleClass().setAll("tpos-change-ok"); statusLabel.setStyle("-fx-font-size: 18; -fx-font-weight: bold;");
+                    statusLabel.setText("找零 " + symbol + CurrencyUtil.format(diff.doubleValue()));
+                    statusLabel.getStyleClass().setAll("cash-status-change");
                 }
             } catch (NumberFormatException e) {
                 statusLabel.setText("请输入收款金额");
-                statusLabel.getStyleClass().setAll("tpos-muted"); statusLabel.setStyle("-fx-font-size: 16;");
+                statusLabel.getStyleClass().setAll("cash-status-default");
             }
         });
 
+        // ===== 5. 确认收款按钮 =====
         Button continueBtn = new Button("确认收款");
         continueBtn.setDefaultButton(true);
-        continueBtn.setStyle("-fx-font-size: 16; -fx-font-weight: bold; -fx-pref-height: 45;");
+        continueBtn.setPrefHeight(54);
+        continueBtn.setMaxWidth(Double.MAX_VALUE);
+        continueBtn.getStyleClass().add("cash-confirm-btn");
 
-        content.getChildren().addAll(dueLabel, receivedField, quickBtns, statusLabel, continueBtn);
+        content.getChildren().addAll(infoRow, receivedField, denomRow1, denomRow2, denomRow3, statusLabel, continueBtn);
         dialog.getDialogPane().setContent(content);
         dialog.getDialogPane().getButtonTypes().clear();
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.CANCEL);
+
+        // 默认聚焦到金额输入框
+        dialog.setOnShown(e -> Platform.runLater(() -> receivedField.requestFocus()));
 
         // 确认收款：仅解析金额→设结果→关闭对话框；支付/递归放到 showAndWait().ifPresent，
         // 避免在对话框事件处理内嵌套 showAndWait（部分支付后第二次输入界面会卡死）。
