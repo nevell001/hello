@@ -159,9 +159,9 @@ public class TransactionService {
                             latestMember.getBalance(), payableAmount));
                     }
 
-                    BigDecimal updatedPoints = latestMember.getPoints().add(
-                        payableAmount.multiply(BigDecimal.TEN).setScale(0, RoundingMode.DOWN)
-                    );
+                    // L-1: 使用 FLOOR 而非 DOWN，保证负数（退货场景）也向下取整，业务行为一致
+                    BigDecimal earnedPoints = payableAmount.multiply(BigDecimal.TEN).setScale(0, RoundingMode.FLOOR);
+                    BigDecimal updatedPoints = latestMember.getPoints().add(earnedPoints);
                     String updatedLevel = MemberService.calculateLevel(updatedPoints);
                     BigDecimal updatedDiscount = MemberService.getDiscountByLevelDecimal(updatedLevel);
 

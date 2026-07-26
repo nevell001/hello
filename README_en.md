@@ -116,7 +116,7 @@ docker compose up -d mysql
 The database initialization script is located at `docker/mysql-init/00-init-complete.sql`. The default configuration file is `config/database.properties`. For production environments, it is recommended to pass the password via environment variables:
 
 ```bash
-export CASHER_DB_PASSWORD=your_password
+export CASHIER_DB_PASSWORD=your_password
 ```
 
 ### Development Run
@@ -436,7 +436,7 @@ src/main/resources/
 
 **Database Connection Error**
 - Double-check host, port, database name, username, and password.
-- If using environment variables, ensure `CASHER_DB_PASSWORD` is properly exported.
+- If using environment variables, ensure `CASHIER_DB_PASSWORD` is properly exported.
 - For Docker, verify container state with `docker compose up -d mysql`.
 
 **API Service Fails to Run**

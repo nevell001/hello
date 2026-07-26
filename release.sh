@@ -62,12 +62,12 @@ if echo "$DB_URL" | grep -E 'useSSL=false|sslMode=DISABLED' > /dev/null 2>&1; th
 fi
 
 if [ -n "$DB_PASSWORD" ]; then
-    echo "✗ config/database.properties 不应保存数据库密码，请改用 CASHER_DB_PASSWORD 环境变量"
+    echo "✗ config/database.properties 不应保存数据库密码，请改用 CASHIER_DB_PASSWORD 环境变量"
     exit 1
 fi
 
-if [ -z "${CASHER_DB_PASSWORD:-}" ]; then
-    echo "✗ 未设置 CASHER_DB_PASSWORD，生产发布必须通过环境变量提供数据库密码"
+if [ -z "${CASHIER_DB_PASSWORD:-}" ] && [ -z "${CASHER_DB_PASSWORD:-}" ]; then
+    echo "✗ 未设置 CASHIER_DB_PASSWORD，生产发布必须通过环境变量提供数据库密码"
     exit 1
 fi
 echo "✓ 数据库密码与 SSL 配置通过"

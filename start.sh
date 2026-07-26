@@ -71,8 +71,8 @@ if [ ! -f "config/database.properties" ]; then
     echo "[Tip] Please run ./install.sh for full installation"
 fi
 
-if [ -n "${CASHER_DB_PASSWORD:-}" ]; then
-    echo "[Info] CASHER_DB_PASSWORD is set and will override db.password in config/database.properties"
+if [ -n "${CASHIER_DB_PASSWORD:-}" ] || [ -n "${CASHER_DB_PASSWORD:-}" ]; then
+    echo "[Info] CASHIER_DB_PASSWORD is set and will override db.password in config/database.properties"
 fi
 
 if [ ! -f "config/jvm.config" ]; then

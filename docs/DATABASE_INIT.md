@@ -65,7 +65,7 @@ db.url=jdbc:mysql://localhost:3306/lisuan_system?useSSL=false&serverTimezone=Asi
 db.username=cashier
 
 # MySQL 密码
-# 推荐留空，并通过 CASHER_DB_PASSWORD 环境变量提供
+# 推荐留空，并通过 CASHIER_DB_PASSWORD 环境变量提供
 db.password=
 
 # 数据库连接池大小

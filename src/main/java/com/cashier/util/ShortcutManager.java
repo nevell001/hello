@@ -316,8 +316,16 @@ public class ShortcutManager {
         }
 
         String parsed = parseShortcutInput(keyCombination);
-        return !parsed.isEmpty() && parsed.contains("+") ||
-               KeyCode.valueOf(parsed) != null;
+        if (!parsed.isEmpty() && parsed.contains("+")) {
+            return true;
+        }
+        // L-4: KeyCode.valueOf 抛 IllegalArgumentException，需 try-catch
+        try {
+            KeyCode.valueOf(parsed);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 
     /**

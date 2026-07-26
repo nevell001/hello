@@ -50,13 +50,15 @@ if %ERRORLEVEL% EQU 0 (
 
 for /F "tokens=1,* delims==" %%A in ('findstr /B "db.password=" "config\database.properties"') do set "DB_PASSWORD_VALUE=%%B"
 if defined DB_PASSWORD_VALUE (
-    echo config\database.properties 不应保存数据库密码，请改用 CASHER_DB_PASSWORD 环境变量
+    echo config\database.properties 不应保存数据库密码，请改用 CASHIER_DB_PASSWORD 环境变量
     exit /b 1
 )
 
-if "%CASHER_DB_PASSWORD%"=="" (
-    echo 未设置 CASHER_DB_PASSWORD，生产发布必须通过环境变量提供数据库密码
+if "%CASHIER_DB_PASSWORD%"=="" (
+    if "%CASHER_DB_PASSWORD%"=="" (
+    echo 未设置 CASHIER_DB_PASSWORD，生产发布必须通过环境变量提供数据库密码
     exit /b 1
+    )
 )
 echo 数据库密码与 SSL 配置通过
 

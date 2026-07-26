@@ -141,7 +141,7 @@ public class DatabaseManager {
                 "请配置以下参数：\n" +
                 "- db.url (数据库连接URL)\n" +
                 "- db.username (数据库用户名)\n" +
-                "- db.password (数据库密码，或设置环境变量 CASHER_DB_PASSWORD)",
+                "- db.password (数据库密码，或设置环境变量 CASHIER_DB_PASSWORD)",
                 DatabaseException.DbErrorType.CONNECTION_FAILED
             );
         }
@@ -187,14 +187,21 @@ public class DatabaseManager {
             "请先配置数据库连接信息：\n" +
             "1. 编辑 config/database.properties 文件\n" +
             "2. 设置正确的数据库 URL、用户名和密码\n" +
-            "3. 或者设置环境变量 CASHER_DB_PASSWORD 来避免明文存储密码\n" +
+            "3. 或者设置环境变量 CASHIER_DB_PASSWORD 来避免明文存储密码\n" +
             "4. 然后重新启动应用",
             DatabaseException.DbErrorType.CONNECTION_FAILED
         );
     }
 
     private static String resolveDatabasePassword(Properties props) {
-        String envPassword = System.getenv("CASHER_DB_PASSWORD");
+        String envPassword = System.getenv("CASHIER_DB_PASSWORD");
+        if (envPassword == null || envPassword.isEmpty()) {
+            // L-2: 向后兼容旧拼写 CASHER_DB_PASSWORD
+            envPassword = System.getenv("CASHER_DB_PASSWORD");
+            if (envPassword != null && !envPassword.isEmpty()) {
+                logger.warn("检测到旧环境变量 CASHER_DB_PASSWORD，建议迁移到 CASHIER_DB_PASSWORD");
+            }
+        }
         if (envPassword != null && !envPassword.isEmpty()) {
             logger.info("已从环境变量读取数据库密码");
             return envPassword;
@@ -229,16 +236,16 @@ public class DatabaseManager {
             Properties props = new Properties();
             props.setProperty(DatabaseConfigKeys.URL, "jdbc:mysql://localhost:3306/lisuan_system?sslMode=PREFERRED&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8");
             props.setProperty(DatabaseConfigKeys.USERNAME, "lisuan");
-            // 安全提示：建议使用环境变量 CASHER_DB_PASSWORD 存储密码，避免明文存储
-            // Windows: set CASHER_DB_PASSWORD=YourPassword
-            // Linux/Mac: export CASHER_DB_PASSWORD=YourPassword
+            // 安全提示：建议使用环境变量 CASHIER_DB_PASSWORD 存储密码，避免明文存储
+            // Windows: set CASHIER_DB_PASSWORD=YourPassword
+            // Linux/Mac: export CASHIER_DB_PASSWORD=YourPassword
             props.setProperty(DatabaseConfigKeys.PASSWORD, "");
             props.setProperty(DatabaseConfigKeys.POOL_SIZE, "10");
             props.setProperty("backup.mysql.container", "lisuan-mysql");
 
             try (FileOutputStream fos = new FileOutputStream(configFile)) {
                 props.store(fos, "收银系统数据库配置文件模板\n" +
-                    "安全提示：建议设置环境变量 CASHER_DB_PASSWORD 来存储数据库密码，避免明文存储");
+                    "安全提示：建议设置环境变量 CASHIER_DB_PASSWORD 来存储数据库密码，避免明文存储");
                 logger.info("已创建默认配置文件模板: {}", CONFIG_FILE);
             }
         } catch (IOException e) {
@@ -1139,12 +1146,28 @@ public class DatabaseManager {
      * @return 随机生成的密码
      */
     private static String generateRandomPassword() {
-        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 10; i++) {
-            sb.append(chars.charAt(SECURE_RANDOM.nextInt(chars.length())));
+        // L-7: 增强密码复杂度——长度16位，包含大小写字母、数字、特殊字符
+        String upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        String lower = "abcdefghijklmnopqrstuvwxyz";
+        String digits = "0123456789";
+        String special = "!@#$%^&*()-_=+";
+        String all = upper + lower + digits + special;
+        StringBuilder sb = new StringBuilder(16);
+        // 确保每类字符至少出现一次
+        sb.append(upper.charAt(SECURE_RANDOM.nextInt(upper.length())));
+        sb.append(lower.charAt(SECURE_RANDOM.nextInt(lower.length())));
+        sb.append(digits.charAt(SECURE_RANDOM.nextInt(digits.length())));
+        sb.append(special.charAt(SECURE_RANDOM.nextInt(special.length())));
+        for (int i = 4; i < 16; i++) {
+            sb.append(all.charAt(SECURE_RANDOM.nextInt(all.length())));
         }
-        return sb.toString();
+        // 打乱顺序
+        char[] arr = sb.toString().toCharArray();
+        for (int i = arr.length - 1; i > 0; i--) {
+            int j = SECURE_RANDOM.nextInt(i + 1);
+            char tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+        }
+        return new String(arr);
     }
 
     /**

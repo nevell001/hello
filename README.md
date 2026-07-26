@@ -112,7 +112,7 @@ docker compose up -d mysql
 数据库初始化脚本位于 `docker/mysql-init/00-init-complete.sql`。默认配置文件为 `config/database.properties`，生产环境建议通过环境变量保存密码：
 
 ```bash
-export CASHER_DB_PASSWORD=your_password
+export CASHIER_DB_PASSWORD=your_password
 ```
 
 ### 开发运行
@@ -412,7 +412,7 @@ src/main/resources/
 
 **数据库连接失败**
 - 确认数据库地址、端口、库名、用户名和密码
-- 如果使用环境变量密码，确认 `CASHER_DB_PASSWORD` 已设置
+- 如果使用环境变量密码，确认 `CASHIER_DB_PASSWORD` 已设置
 - Docker 环境可先执行 `docker compose up -d mysql`
 
 **API 服务无法启动**

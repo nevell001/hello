@@ -202,9 +202,6 @@ public class FXConstants {
 
     // ========== 其他常量 ==========
 
-    /** 应用标题 */
-    public static final String APP_TITLE = "狸算(LiSuan)收银系统";
-
     /** 应用版本 */
     public static final String APP_VERSION = AppConstants.APP_VERSION;
 

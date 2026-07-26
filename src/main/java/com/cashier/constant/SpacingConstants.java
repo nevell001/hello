@@ -146,36 +146,36 @@ public class SpacingConstants {
      * @param left 左边距
      * @param bottom 下边距
      * @param right 右边距
-     * @return EmptyBorder 对象
+     * @return Insets 对象
      */
-    public static javax.swing.border.EmptyBorder getPadding(int top, int left, int bottom, int right) {
-        return new javax.swing.border.EmptyBorder(top, left, bottom, right);
+    public static javafx.geometry.Insets getPadding(int top, int left, int bottom, int right) {
+        return new javafx.geometry.Insets(top, right, bottom, left);
     }
 
     /**
      * 获取统一的外边距对象
      * @param margin 边距值
-     * @return EmptyBorder 对象
+     * @return Insets 对象
      */
-    public static javax.swing.border.EmptyBorder getMargin(int margin) {
-        return new javax.swing.border.EmptyBorder(margin, margin, margin, margin);
+    public static javafx.geometry.Insets getMargin(int margin) {
+        return new javafx.geometry.Insets(margin);
     }
 
     /**
      * 获取水平间距对象
      * @param gap 间距值
-     * @return EmptyBorder 对象（上下 0，左右 gap）
+     * @return Insets 对象（上下 0，左右 gap）
      */
-    public static javax.swing.border.EmptyBorder getHorizontalGap(int gap) {
-        return new javax.swing.border.EmptyBorder(0, gap, 0, gap);
+    public static javafx.geometry.Insets getHorizontalGap(int gap) {
+        return new javafx.geometry.Insets(0, gap, 0, gap);
     }
 
     /**
      * 获取垂直间距对象
      * @param gap 间距值
-     * @return EmptyBorder 对象（上下 gap，左右 0）
+     * @return Insets 对象（上下 gap，左右 0）
      */
-    public static javax.swing.border.EmptyBorder getVerticalGap(int gap) {
-        return new javax.swing.border.EmptyBorder(gap, 0, gap, 0);
+    public static javafx.geometry.Insets getVerticalGap(int gap) {
+        return new javafx.geometry.Insets(gap, 0, gap, 0);
     }
 }

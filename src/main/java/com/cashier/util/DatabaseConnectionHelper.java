@@ -118,7 +118,11 @@ public class DatabaseConnectionHelper {
             props.load(isr);
         }
 
-        String envPassword = System.getenv("CASHER_DB_PASSWORD");
+        // L-2: 优先使用 CASHIER_DB_PASSWORD，向后兼容旧拼写 CASHER_DB_PASSWORD
+        String envPassword = System.getenv("CASHIER_DB_PASSWORD");
+        if (envPassword == null || envPassword.isEmpty()) {
+            envPassword = System.getenv("CASHER_DB_PASSWORD");
+        }
         String password = envPassword != null && !envPassword.isEmpty()
             ? envPassword
             : props.getProperty(DatabaseConfigKeys.PASSWORD);
@@ -144,9 +148,9 @@ public class DatabaseConnectionHelper {
             return DiagnosticResult.failure(
                 "数据库密码未配置",
                 "请在 config/database.properties 中设置 db.password 参数\n" +
-                "或者设置环境变量 CASHER_DB_PASSWORD 来存储密码（更安全）\n" +
-                "Windows: set CASHER_DB_PASSWORD=YourPassword\n" +
-                "Linux/Mac: export CASHER_DB_PASSWORD=YourPassword"
+                "或者设置环境变量 CASHIER_DB_PASSWORD 来存储密码（更安全）\n" +
+                "Windows: set CASHIER_DB_PASSWORD=YourPassword\n" +
+                "Linux/Mac: export CASHIER_DB_PASSWORD=YourPassword"
             );
         }
         return DiagnosticResult.ok();

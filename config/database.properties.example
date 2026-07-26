@@ -10,5 +10,5 @@ db.username=lisuan
 
 # 数据库密码
 # 安全提示：建议通过环境变量设置密码，以防泄露
-# export CASHER_DB_PASSWORD=your_password
+# export CASHIER_DB_PASSWORD=your_password
 db.password=

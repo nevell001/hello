@@ -9,8 +9,8 @@ db.username=lisuan
 
 # 数据库密码
 # 安全提示：为了生产环境安全，强烈建议通过环境变量设置密码
-# Windows: set CASHER_DB_PASSWORD=your_password
-# Linux/Mac: export CASHER_DB_PASSWORD=your_password
+# Windows: set CASHIER_DB_PASSWORD=your_password
+# Linux/Mac: export CASHIER_DB_PASSWORD=your_password
 # 如果不使用环境变量，请在此处填写密码（不推荐用于生产）
 db.password=YOUR_DATABASE_PASSWORD_HERE
 

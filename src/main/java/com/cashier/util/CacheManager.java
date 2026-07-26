@@ -298,18 +298,37 @@ public class CacheManager {
 
     /**
      * 预热缓存（在应用启动时调用）
+     * L-3: 分批加载全部商品，而非仅前 MAX_CACHE_SIZE 个
      */
     public static void warmupCache() {
         try {
             long startTime = System.currentTimeMillis();
-            List<Product> products = com.cashier.dao.DAOFactory.getInstance()
-                .getProductDAO()
-                .findAll(1, MAX_CACHE_SIZE)
-                .getData();
-            batchAddToCache(products);
+            int pageSize = MAX_CACHE_SIZE;
+            int page = 1;
+            int totalLoaded = 0;
+            List<Product> allProducts = new java.util.ArrayList<>();
+
+            // 分页加载所有商品
+            while (true) {
+                List<Product> batch = com.cashier.dao.DAOFactory.getInstance()
+                    .getProductDAO()
+                    .findAll(page, pageSize)
+                    .getData();
+                if (batch == null || batch.isEmpty()) {
+                    break;
+                }
+                allProducts.addAll(batch);
+                totalLoaded += batch.size();
+                if (batch.size() < pageSize) {
+                    break; // 最后一页
+                }
+                page++;
+            }
+
+            batchAddToCache(allProducts);
             long elapsed = System.currentTimeMillis() - startTime;
-            logger.info("缓存预热完成，最多预热 {} 个商品，实际加载 {} 个，耗时: {}ms",
-                MAX_CACHE_SIZE, products.size(), elapsed);
+            logger.info("缓存预热完成，分页加载 {} 个商品（每页 {}），实际缓存 {} 个，耗时: {}ms",
+                totalLoaded, pageSize, allProducts.size(), elapsed);
         } catch (Exception e) {
             logger.error("缓存预热失败", e);
         }

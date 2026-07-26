@@ -40,10 +40,18 @@ public final class DateTimeFormats {
 
     // Utility helpers using java.time for safer usage
     public static String formatStandard(LocalDateTime dt) {
+        // L-6: null 安全检查
+        if (dt == null) {
+            return "";
+        }
         return dt.format(STANDARD_DATE_TIME);
     }
 
     public static String formatDate(LocalDate date) {
+        // L-6: null 安全检查
+        if (date == null) {
+            return "";
+        }
         return date.format(DATE);
     }
 

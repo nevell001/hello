@@ -362,7 +362,9 @@ class PerformancePolicyTest {
 
         assertTrue(app.contains("CacheManager.warmupCache()"));
         assertTrue(cacheManager.contains("MAX_CACHE_SIZE = 5000"));
-        assertTrue(cacheManager.contains("findAll(1, MAX_CACHE_SIZE)"));
+        // L-3: 分页加载全部商品，每页 MAX_CACHE_SIZE
+        assertTrue(cacheManager.contains("findAll(page, pageSize)"));
+        assertTrue(cacheManager.contains("pageSize = MAX_CACHE_SIZE"));
         assertFalse(cacheManager.contains("getProductDAO().findAll()"));
     }
 
@@ -547,12 +549,12 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/installer/DatabaseConfigDialog.java"
         ));
 
-        assertTrue(installer.contains("Production deployments should provide the password through CASHER_DB_PASSWORD."));
+        assertTrue(installer.contains("Production deployments should provide the password through CASHIER_DB_PASSWORD."));
         assertTrue(installer.contains("passwordValueForConfig()"));
         assertTrue(installer.contains("isProductionEnvironment() ? \"\" : dbPassword"));
         assertTrue(installer.contains("\"production\".equalsIgnoreCase(System.getenv(\"ENVIRONMENT\"))"));
 
-        assertTrue(databaseDialog.contains("Production deployments should provide the password through CASHER_DB_PASSWORD."));
+        assertTrue(databaseDialog.contains("Production deployments should provide the password through CASHIER_DB_PASSWORD."));
         assertTrue(databaseDialog.contains("passwordValueForConfig(input.pass())"));
         assertTrue(databaseDialog.contains("isProductionEnvironment() ? \"\" : password"));
         assertTrue(databaseDialog.contains("\"production\".equalsIgnoreCase(System.getenv(\"ENVIRONMENT\"))"));

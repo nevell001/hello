@@ -116,7 +116,7 @@ docker compose up -d mysql
 資料庫初始化指令碼位於 `docker/mysql-init/00-init-complete.sql`。預設設定檔為 `config/database.properties`，生產環境建議透過環境變數儲存密碼：
 
 ```bash
-export CASHER_DB_PASSWORD=your_password
+export CASHIER_DB_PASSWORD=your_password
 ```
 
 ### 開發執行
@@ -436,7 +436,7 @@ src/main/resources/
 
 **資料庫連線失敗**
 - 確認資料庫位址、連接埠、庫名、用戶名和密碼。
-- 如果使用環境變數密碼，確認 `CASHER_DB_PASSWORD` 已設定。
+- 如果使用環境變數密碼，確認 `CASHIER_DB_PASSWORD` 已設定。
 - Docker 環境可先執行 `docker compose up -d mysql`。
 
 **API 服務無法啟動**

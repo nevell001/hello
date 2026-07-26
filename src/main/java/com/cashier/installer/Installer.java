@@ -470,7 +470,7 @@ public class Installer {
         
         String dbConfig = String.format(
             "# Database Configuration\n" +
-            "# Production deployments should provide the password through CASHER_DB_PASSWORD.\n" +
+            "# Production deployments should provide the password through CASHIER_DB_PASSWORD.\n" +
             "db.url=%s\n" +
             "db.username=%s\n" +
             "db.password=%s\n" +
@@ -484,7 +484,7 @@ public class Installer {
         
         log("  已创建 config/database.properties");
         if (isProductionEnvironment()) {
-            log("  生产环境未写入数据库密码，请通过 CASHER_DB_PASSWORD 环境变量提供");
+            log("  生产环境未写入数据库密码，请通过 CASHIER_DB_PASSWORD 环境变量提供");
         }
     }
 

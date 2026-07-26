@@ -176,7 +176,7 @@ db.url=jdbc:mysql://192.168.1.100:3306/lisuan_system?useSSL=false&serverTimezone
 
 # 修改为实际的用户名和密码
 db.username=cashier
-# 推荐留空，并通过 CASHER_DB_PASSWORD 环境变量提供
+# 推荐留空，并通过 CASHIER_DB_PASSWORD 环境变量提供
 db.password=
 
 # 根据收银机数量调整连接池
