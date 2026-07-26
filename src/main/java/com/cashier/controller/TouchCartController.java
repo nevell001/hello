@@ -221,8 +221,19 @@ public class TouchCartController implements CartViewHost {
             return;
         }
         if (clicked == shiftFirstType) {
-            // 先交班：弹出交接班页面，不退出
-            handleShift();
+            // 先交班：弹出交接班页面，交班完成后直接退出
+            com.cashier.controller.ShiftController shiftController = openShiftDialog();
+            if (shiftController != null && shiftController.isShiftEnded()) {
+                // 交班已成功完成，直接退出到登录界面
+                StatusBarManager.updateSuccess("交接班完成，正在退出…");
+                if (application != null) {
+                    application.logoutToLoginView();
+                }
+            } else {
+                // 用户未完成交班（取消/仅开班/仅查看），留在收银台
+                StatusBarManager.updateSuccess("交接班操作完成");
+                updateStatus();
+            }
             return;
         }
         // 确认退出
@@ -231,8 +242,12 @@ public class TouchCartController implements CartViewHost {
         }
     }
 
-    @FXML
-    private void handleShift() {
+    /**
+     * 打开交接班弹窗（模态），返回 ShiftController 供调用方判断交班状态。
+     *
+     * @return ShiftController 实例，加载失败时返回 null
+     */
+    private com.cashier.controller.ShiftController openShiftDialog() {
         logger.info("交接班按钮被点击");
         try {
             javafx.fxml.FXMLLoader loader = com.cashier.util.FXMLUtils.loadFXMLLoader("/com/cashier/view/ShiftView.fxml");
@@ -255,12 +270,21 @@ public class TouchCartController implements CartViewHost {
             stage.setScene(scene);
             stage.showAndWait();
 
-            StatusBarManager.updateSuccess("交接班操作完成");
-            updateStatus();
+            return controller;
 
         } catch (java.io.IOException e) {
             logger.error("加载交接班界面失败", e);
             StatusBarManager.updateError(i18n.get("label.error") + ": " + e.getMessage());
+            return null;
+        }
+    }
+
+    @FXML
+    private void handleShift() {
+        com.cashier.controller.ShiftController controller = openShiftDialog();
+        if (controller != null) {
+            StatusBarManager.updateSuccess("交接班操作完成");
+            updateStatus();
         }
     }
 

@@ -35,6 +35,17 @@ public class ShiftController {
     private static final String BEGINNING_OF_TIME = "0000-01-01 00:00:00";
     private static final int SHIFT_HISTORY_LIMIT = 500;
 
+    /** 交班是否已成功完成（供调用方判断弹窗关闭后是否需要后续动作，如自动退出） */
+    private boolean shiftEnded = false;
+
+    /**
+     * 交班是否已成功完成
+     * @return true 表示用户在此弹窗内完成了交班操作
+     */
+    public boolean isShiftEnded() {
+        return shiftEnded;
+    }
+
     @FXML
     private TableView<Shift> shiftTable;
 
@@ -734,6 +745,9 @@ public class ShiftController {
                 showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.SAVE_DATA) + ": " + e.getMessage());
                 return;
             }
+
+            // 标记交班已完成，供调用方（如触屏版退出流程）判断是否需要自动退出
+            shiftEnded = true;
 
             // 刷新列表
             loadShifts();
