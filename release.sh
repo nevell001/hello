@@ -21,6 +21,19 @@ if [ "$VERSION_POM" != "$VERSION_JAVA" ]; then
 fi
 echo "✓ 版本号一致 ($VERSION_POM)"
 
+# 从 .env 定向读取数据库密码，与 start.sh 保持一致（仅限密码变量）
+if [ -f ".env" ]; then
+    load_db_password_from_env() {
+        local key="$1" value
+        value=$(grep -E "^${key}=" .env | head -1 | cut -d= -f2- | sed 's/^[[:space:]]*"//;s/"[[:space:]]*$//')
+        if [ -z "${!key:-}" ] && [ -n "$value" ]; then
+            export "$key=$value"
+        fi
+    }
+    load_db_password_from_env CASHIER_DB_PASSWORD
+    load_db_password_from_env CASHER_DB_PASSWORD
+fi
+
 # 1. 完整验证门禁：单元测试 + SpotBugs + JaCoCo 覆盖率 + 打包
 echo "[1/3] 正在运行完整验证门禁 (mvn clean verify)..."
 mvn clean verify -DskipTests=false

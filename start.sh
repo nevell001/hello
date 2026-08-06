@@ -71,6 +71,20 @@ if [ ! -f "config/database.properties" ]; then
     echo "[Tip] Please run ./install.sh for full installation"
 fi
 
+# 从 .env 定向读取数据库密码（仅限密码变量，不覆盖已设置的环境变量，
+# 也不把 .env 中未就绪的 TOKEN_SECRET/CORS 等占位配置带入运行环境）
+if [ -f ".env" ]; then
+    load_db_password_from_env() {
+        local key="$1" value
+        value=$(grep -E "^${key}=" .env | head -1 | cut -d= -f2- | sed 's/^[[:space:]]*"//;s/"[[:space:]]*$//')
+        if [ -z "${!key:-}" ] && [ -n "$value" ]; then
+            export "$key=$value"
+        fi
+    }
+    load_db_password_from_env CASHIER_DB_PASSWORD
+    load_db_password_from_env CASHER_DB_PASSWORD
+fi
+
 if [ -n "${CASHIER_DB_PASSWORD:-}" ] || [ -n "${CASHER_DB_PASSWORD:-}" ]; then
     echo "[Info] CASHIER_DB_PASSWORD is set and will override db.password in config/database.properties"
 fi
