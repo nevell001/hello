@@ -64,14 +64,24 @@ public final class ThemeUtils {
         Window.getWindows().addListener((ListChangeListener<Window>) change -> {
             while (change.next()) {
                 for (Window added : change.getAddedSubList()) {
-                    added.addEventHandler(WindowEvent.WINDOW_SHOWING, event -> {
-                        CashierSystemFXApplication app = CashierSystemFXApplication.getInstance();
-                        Scene source = app != null ? app.getPrimaryScene() : null;
-                        copyThemeToScene(added.getScene(), source);
-                    });
+                    themeWindowWhenReady(added);
                 }
             }
         });
+    }
+
+    private static void themeWindowWhenReady(Window window) {
+        Runnable apply = () -> {
+            CashierSystemFXApplication app = CashierSystemFXApplication.getInstance();
+            Scene source = app != null ? app.getPrimaryScene() : null;
+            copyThemeToScene(window.getScene(), source);
+        };
+        // 覆盖窗口加入列表后 scene 尚未就绪、以及就绪后的多个时机
+        window.addEventHandler(WindowEvent.WINDOW_SHOWING, event -> apply.run());
+        window.addEventHandler(WindowEvent.WINDOW_SHOWN, event -> apply.run());
+        if (window.getScene() != null) {
+            apply.run();
+        }
     }
 
     public static void applyCurrentTheme(Scene scene, Class<?> resourceClass) {

@@ -1627,10 +1627,12 @@
 /* ========== 日期选择器（DatePicker）深色覆盖 ========== */
 .date-picker {
     -fx-background-color: #242424;
+    -fx-control-inner-background: #2C2C2C;
 }
 
 .date-picker .text-field {
     -fx-background-color: #2C2C2C;
+    -fx-control-inner-background: #2C2C2C;
     -fx-text-fill: #E0E0E0;
     -fx-prompt-text-fill: #9E9E9E;
 }
@@ -1678,7 +1680,7 @@
 }
 
 .date-picker-popup .day-cell {
-    -fx-background-color: transparent;
+    -fx-background-color: #2C2C2C;
     -fx-text-fill: #E0E0E0;
 }
 
@@ -1699,12 +1701,21 @@
     -fx-text-fill: #BDBDBD;
 }
 
+.dialog-pane .content {
+    -fx-background-color: transparent;
+}
+
+.dialog-pane .button-bar {
+    -fx-background-color: #2C2C2C;
+}
+
 /* ========== 促销管理对话框深色覆盖 ==========
  * styles.css 中 .promotion-dialog 的日期选择器/下拉框硬编码浅色，
  * 特异性高于通用 .date-picker，必须按同特异性在此覆盖。
  */
 .promotion-dialog .promotion-date-picker {
     -fx-background-color: #242424;
+    -fx-control-inner-background: #2C2C2C;
     -fx-border-color: #383838;
 }
 
@@ -1713,7 +1724,10 @@
 }
 
 .promotion-dialog .promotion-date-picker > .text-field {
+    -fx-background-color: #2C2C2C;
+    -fx-control-inner-background: #2C2C2C;
     -fx-text-fill: #E0E0E0;
+    -fx-prompt-text-fill: #9E9E9E;
 }
 
 .promotion-dialog .promotion-date-picker > .arrow-button {
