@@ -20,6 +20,43 @@
                      "DejaVu Sans", "Liberation Sans", "Ubuntu", "Arial", sans-serif;
 }
 
+/* ========== LiSuan 语义令牌（浅色值） ==========
+ * styles.css 中大量组件使用 -lisuan-* 令牌；浅色主题必须显式定义，
+ * 否则这些属性会回退到默认值，导致部分组件样式缺失。
+ */
+.root {
+    -lisuan-surface: #FFFFFF;
+    -lisuan-surface-muted: #F8F9FA;
+    -lisuan-surface-selected: #E3F2FD;
+    -lisuan-surface-soft: #FAFAFA;
+    -lisuan-surface-warm: #FFF3E0;
+    -lisuan-border: #E0E0E0;
+    -lisuan-border-strong: #BDBDBD;
+    -lisuan-border-subtle: #F0F0F0;
+    -lisuan-scrollbar: #C0C0C0;
+    -lisuan-scrollbar-hover: #A0A0A0;
+    -lisuan-primary: #B85C1B;
+    -lisuan-primary-hover: #C96A24;
+    -lisuan-primary-active: #8F4314;
+    -lisuan-primary-border: #8F4512;
+    -lisuan-primary-muted: #A94F16;
+    -lisuan-primary-deep: #6F320C;
+    -lisuan-primary-darker: #7F390E;
+    -lisuan-info: #111A44;
+    -lisuan-info-hover: #1B2760;
+    -lisuan-info-active: #0A102B;
+    -lisuan-text: #1F2430;
+    -lisuan-text-secondary: #4B4F5C;
+    -lisuan-text-tertiary: #6B6F7A;
+    -lisuan-text-muted: #6D6258;
+    -lisuan-text-disabled: #9E9E9E;
+    -lisuan-text-disabled-strong: #A0A0A0;
+    -lisuan-success: #4CAF50;
+    -lisuan-warning: #FF9800;
+    -lisuan-danger: #F44336;
+    -lisuan-avatar-admin: #FFC107;
+}
+
 /* ========== 场景背景 ========== */
 .scene {
     -fx-background-color: #F8F9FA;

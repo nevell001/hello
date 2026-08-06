@@ -4,10 +4,10 @@
 
 狸算(LiSuan)收银系统是一个基于 JavaFX 17 的桌面 POS 收银系统，面向零售门店的收银、商品、会员、采购、库存、退货、报表、用户权限、数据备份和硬件接入等日常经营场景。
 
-**当前版本**: v2.6.0 | **最新更新**: 2026-07-24 | **测试覆盖**: 449 个测试用例
+**当前版本**: v2.6.0 | **最新更新**: 2026-07-24 | **测试覆盖**: 458 个测试用例
 
-> 测试口径：默认构建运行 432 个用例；`LoginControllerUITest`（17 个用例）需要真实显示环境，
-> 在桌面环境用 `mvn -Pui-tests -Dtest=LoginControllerUITest test` 显式运行，全量共 449 个。
+> 测试口径：默认构建运行 441 个用例；`LoginControllerUITest`（17 个用例）需要真实显示环境，
+> 在桌面环境用 `mvn -Pui-tests -Dtest=LoginControllerUITest test` 显式运行，全量共 458 个。
 
 ![Java](https://img.shields.io/badge/Java-17-orange)
 ![JavaFX](https://img.shields.io/badge/JavaFX-17.0.12-blue)

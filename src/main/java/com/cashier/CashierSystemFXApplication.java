@@ -91,6 +91,9 @@ public class CashierSystemFXApplication extends Application {
         this.primaryStage = primaryStage;
         instance = this;
 
+        // 尽早注册全局弹窗主题化钩子；主场景就绪后，所有新弹窗自动继承主题
+        com.cashier.util.ThemeUtils.installGlobalDialogTheming();
+
         notifyPreloader(new javafx.application.Preloader.ProgressNotification(0.3));
 
         // 检查数据库配置
@@ -119,9 +122,6 @@ public class CashierSystemFXApplication extends Application {
 
         // 立即显示窗口 - 不等待后台初始化
         primaryStage.show();
-
-        // 全局弹窗主题化：所有 Dialog/Alert/Stage 自动继承主场景主题
-        com.cashier.util.ThemeUtils.installGlobalDialogTheming();
 
         notifyPreloader(new javafx.application.Preloader.ProgressNotification(0.9));
 

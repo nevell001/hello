@@ -1709,6 +1709,161 @@
     -fx-background-color: #2C2C2C;
 }
 
+/* ========== 登录页深色覆盖 ========== */
+.login-logo {
+    -fx-background-color: #2C2C2C;
+    -fx-border-color: #424242;
+}
+
+.login-logo-text,
+.login-title {
+    -fx-text-fill: #E0E0E0;
+}
+
+.login-subtitle {
+    -fx-text-fill: #BDBDBD;
+}
+
+.login-card {
+    -fx-background-color: #242424;
+    -fx-border-color: #383838;
+}
+
+.login-card-title {
+    -fx-text-fill: #E0E0E0;
+}
+
+.login-input {
+    -fx-background-color: #2C2C2C;
+    -fx-border-color: #616161;
+    -fx-text-fill: #E0E0E0;
+}
+
+.login-input:focused {
+    -fx-background-color: #333333;
+    -fx-border-color: #E67E4A;
+}
+
+.login-input:disabled {
+    -fx-background-color: #2A2A2A;
+    -fx-text-fill: #9E9E9E;
+}
+
+/* ========== 密码重置/通用对话框深色覆盖 ========== */
+.password-reset-dialog {
+    -fx-background-color: #242424;
+}
+
+.dialog-title {
+    -fx-text-fill: #E0E0E0;
+}
+
+.dialog-description {
+    -fx-text-fill: #BDBDBD;
+}
+
+.dialog-input {
+    -fx-background-color: #2C2C2C;
+    -fx-border-color: #616161;
+    -fx-text-fill: #E0E0E0;
+}
+
+.dialog-input:focused {
+    -fx-background-color: #333333;
+    -fx-border-color: #7986CB;
+}
+
+/* ========== 通用浅色工具类深色覆盖 ========== */
+.bg-light {
+    -fx-background-color: #2A2A2A;
+}
+
+/* ========== 简化收银模式（PosMode/TouchCart）深色覆盖 ========== */
+.pos-mode-view,
+.pos-content {
+    -fx-background-color: #1E1E1E;
+}
+
+/* ========== 快捷键帮助深色覆盖 ========== */
+.shortcut-help-view {
+    -fx-background-color: #242424;
+}
+
+.shortcut-help-view .search-bar {
+    -fx-background-color: #2C2C2C;
+    -fx-border-color: #424242;
+}
+
+.shortcut-help-view .search-field {
+    -fx-background-color: #333333;
+    -fx-border-color: #616161;
+    -fx-text-fill: #E0E0E0;
+}
+
+.shortcut-help-view .search-field:focused {
+    -fx-border-color: #7986CB;
+}
+
+.shortcut-help-view .content-area {
+    -fx-background-color: #1E1E1E;
+}
+
+.shortcut-help-view .shortcut-group {
+    -fx-background-color: #242424;
+    -fx-border-color: #383838;
+}
+
+.shortcut-help-view .group-title {
+    -fx-text-fill: #9FA8DA;
+}
+
+.shortcut-help-view .shortcut-key {
+    -fx-background-color: linear-gradient(to bottom, #383838, #2C2C2C);
+    -fx-border-color: #616161;
+    -fx-text-fill: #E0E0E0;
+}
+
+.shortcut-help-view .shortcut-desc {
+    -fx-text-fill: #BDBDBD;
+}
+
+/* ========== 全局搜索深色覆盖 ========== */
+.search-view .search-input {
+    -fx-background-color: rgba(50, 50, 50, 0.9);
+    -fx-text-fill: #E0E0E0;
+}
+
+.search-view .search-input:focused {
+    -fx-background-color: #333333;
+}
+
+.search-view .search-results {
+    -fx-background-color: #242424;
+}
+
+.search-view .search-result-item {
+    -fx-background-color: #2C2C2C;
+    -fx-border-color: #424242;
+}
+
+.search-view .search-result-item:hover {
+    -fx-background-color: #383838;
+}
+
+.search-view .search-result-item .result-type {
+    -fx-background-color: #333A5A;
+    -fx-text-fill: #9FA8DA;
+}
+
+.search-view .search-result-item .result-title {
+    -fx-text-fill: #E0E0E0;
+}
+
+.search-view .search-result-item .result-shortcut {
+    -fx-background-color: #383838;
+    -fx-text-fill: #BDBDBD;
+}
+
 /* ========== 促销管理对话框深色覆盖 ==========
  * styles.css 中 .promotion-dialog 的日期选择器/下拉框硬编码浅色，
  * 特异性高于通用 .date-picker，必须按同特异性在此覆盖。
