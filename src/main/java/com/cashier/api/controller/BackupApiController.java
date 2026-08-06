@@ -38,6 +38,13 @@ public class BackupApiController {
     public static void executeBackup(Context ctx) {
         try {
             Map<?, ?> body = ctx.bodyAsClass(Map.class);
+            if (body == null) {
+                ctx.status(400).json(Map.of(
+                    "success", false,
+                    "error", "请求体不能为空"
+                ));
+                return;
+            }
             
             String contentTypeStr = getString(body, CONTENT_TYPE_FIELD, "FULL");
             String targetStr = getString(body, "target", "LOCAL");
@@ -280,6 +287,13 @@ public class BackupApiController {
     public static void updateConfig(Context ctx) {
         try {
             Map<?, ?> body = ctx.bodyAsClass(Map.class);
+            if (body == null) {
+                ctx.status(400).json(Map.of(
+                    "success", false,
+                    "error", "请求体不能为空"
+                ));
+                return;
+            }
             BackupConfig config = BackupService.getConfig();
             applyBasicBackupConfig(body, config);
             applyAliyunConfig(body, config);

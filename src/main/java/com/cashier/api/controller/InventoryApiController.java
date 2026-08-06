@@ -62,6 +62,11 @@ public class InventoryApiController {
         try {
             int id = ctx.pathParamAsClass("id", Integer.class).get();
             StockRequest request = ctx.bodyAsClass(StockRequest.class);
+            if (request == null) {
+                ctx.status(HttpStatus.BAD_REQUEST)
+                   .json(Map.of("success", false, "message", "请求体不能为空"));
+                return;
+            }
             
             Product product = productDAO.findById(id);
             if (product == null) {

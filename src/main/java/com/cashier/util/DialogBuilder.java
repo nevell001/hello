@@ -245,6 +245,7 @@ public class DialogBuilder {
 
         updateStatusBarForAlert();
         Alert alert = createAlert();
+        ThemeUtils.applyDialogTheme(alert.getDialogPane());
         Optional<ButtonType> result = alert.showAndWait();
         result.ifPresent(this::runButtonAction);
         return result.orElse(ButtonType.CANCEL);

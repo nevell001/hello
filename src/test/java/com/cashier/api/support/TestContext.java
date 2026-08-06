@@ -3,15 +3,23 @@ package com.cashier.api.support;
 import io.javalin.http.Context;
 import io.javalin.http.HandlerType;
 import io.javalin.http.HttpStatus;
+import io.javalin.validation.Validator;
 
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 /** Lightweight Context proxy for controller and middleware unit tests. */
 public final class TestContext {
     private final Map<String, Object> attributes = new HashMap<>();
     private final Map<String, String> headers = new HashMap<>();
+    private final Map<String, String> queryParams = new HashMap<>();
+    private final Map<String, String> pathParams = new HashMap<>();
+    private Object body;
     private HandlerType method = HandlerType.GET;
     private String path = "/";
 
@@ -36,6 +44,21 @@ public final class TestContext {
                 if (name.equals("header") && args.length == 1) {
                     return headers.get(args[0]);
                 }
+                if (name.equals("queryParam") && args.length == 1) {
+                    return queryParams.get(args[0]);
+                }
+                if (name.equals("queryParamAsClass") && args.length == 2) {
+                    return validatorFor((String) args[0], (Class<?>) args[1], queryParams);
+                }
+                if (name.equals("pathParam") && args.length == 1) {
+                    return pathParams.get(args[0]);
+                }
+                if (name.equals("pathParamAsClass") && args.length == 2) {
+                    return validatorFor((String) args[0], (Class<?>) args[1], pathParams);
+                }
+                if (name.equals("bodyAsClass") && args.length == 1) {
+                    return body;
+                }
                 if (name.equals("method") || name.equals("handlerType")) {
                     return method;
                 }
@@ -49,6 +72,9 @@ public final class TestContext {
                     return proxy;
                 }
                 if (name.equals("json")) {
+                    if (status == null) {
+                        status = HttpStatus.OK;
+                    }
                     json = args[0];
                     return proxy;
                 }
@@ -80,10 +106,41 @@ public final class TestContext {
         return this;
     }
 
+    public TestContext withQueryParam(String name, String value) {
+        queryParams.put(name, value);
+        return this;
+    }
+
+    public TestContext withPathParam(String name, String value) {
+        pathParams.put(name, value);
+        return this;
+    }
+
+    public TestContext withBody(Object value) {
+        this.body = value;
+        return this;
+    }
+
     public TestContext withRequest(HandlerType method, String path) {
         this.method = method;
         this.path = path;
         return this;
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static Validator<?> validatorFor(String name, Class<?> clazz, Map<String, String> source) {
+        String raw = source.get(name);
+        Validator validator = mock(Validator.class);
+        when(validator.get()).thenAnswer(inv -> raw == null ? null : convert(raw, clazz));
+        when(validator.getOrDefault(any())).thenAnswer(inv -> raw == null ? inv.getArgument(0) : convert(raw, clazz));
+        return validator;
+    }
+
+    private static Object convert(String raw, Class<?> clazz) {
+        if (clazz == Integer.class) return Integer.valueOf(raw);
+        if (clazz == Long.class) return Long.valueOf(raw);
+        if (clazz == String.class) return raw;
+        throw new IllegalArgumentException("Unsupported param type: " + clazz);
     }
 
     private static Object defaultValue(Class<?> type) {

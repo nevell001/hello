@@ -17,6 +17,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AuthControllerTest {
 
     @Test
+    @DisplayName("空请求体登录返回 400")
+    void loginWithNullBodyReturns400() {
+        TestContext ctx = new TestContext();
+
+        AuthController.login(ctx.context);
+
+        assertEquals(HttpStatus.BAD_REQUEST, ctx.status);
+    }
+
+    @Test
     @DisplayName("未认证用户不能读取当前用户")
     void currentUserRequiresAuthentication() {
         TestContext ctx = new TestContext();

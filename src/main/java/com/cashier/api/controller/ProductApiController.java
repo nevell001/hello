@@ -77,6 +77,11 @@ public class ProductApiController {
     public static void create(Context ctx) {
         try {
             ProductRequest request = ctx.bodyAsClass(ProductRequest.class);
+            if (request == null) {
+                ctx.status(HttpStatus.BAD_REQUEST)
+                   .json(Map.of("success", false, "message", "请求体不能为空"));
+                return;
+            }
             
             Product product = new Product();
             product.productCode = request.productCode != null ? request.productCode : "";
@@ -113,6 +118,11 @@ public class ProductApiController {
         try {
             int id = ctx.pathParamAsClass("id", Integer.class).get();
             ProductRequest request = ctx.bodyAsClass(ProductRequest.class);
+            if (request == null) {
+                ctx.status(HttpStatus.BAD_REQUEST)
+                   .json(Map.of("success", false, "message", "请求体不能为空"));
+                return;
+            }
             
             Product product = productDAO.findById(id);
             if (product == null) {

@@ -68,6 +68,7 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import com.cashier.service.PaymentService;
 import com.cashier.util.QrCodeImageUtil;
+import com.cashier.util.ThemeUtils;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.scene.image.ImageView;
@@ -201,7 +202,7 @@ public class TouchCartController implements CartViewHost {
         alert.setContentText(isCartEmpty()
             ? i18n.get("tpos.exit_confirm")
             : i18n.get("runtime.cart_exit_confirm"));
-        alert.getDialogPane().setStyle("-fx-font-size: 18px;");
+        alert.getDialogPane().getStyleClass().add("fs-18");
 
         ButtonType shiftFirstType = new ButtonType(i18n.get("tpos.exit_shift_first"), javafx.scene.control.ButtonBar.ButtonData.OTHER);
         alert.getButtonTypes().setAll(shiftFirstType, ButtonType.CANCEL, ButtonType.OK);
@@ -212,11 +213,12 @@ public class TouchCartController implements CartViewHost {
                 Button b = (Button) alert.getDialogPane().lookupButton(bt);
                 if (b != null) {
                     b.setPrefSize(150, 56);
-                    b.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+                    b.getStyleClass().add("title-md");
                 }
             }
         });
 
+        ThemeUtils.applyDialogTheme(alert.getDialogPane());
         ButtonType clicked = alert.showAndWait().orElse(ButtonType.CANCEL);
         if (clicked == ButtonType.CANCEL) {
             return;
@@ -1458,7 +1460,7 @@ public class TouchCartController implements CartViewHost {
         }
         Label status = new Label(i18n.get("payment.waiting"));
         Label orderLabel = new Label(paymentOrder.merchantOrderNo);
-        orderLabel.getStyleClass().add("tpos-muted"); orderLabel.setStyle("-fx-font-size: 12;");
+        orderLabel.getStyleClass().addAll("tpos-muted", "text-sm");
         VBox content = new VBox(12, qrView, status, orderLabel);
         content.setAlignment(Pos.CENTER);
         content.setPadding(new Insets(16));
@@ -1682,7 +1684,7 @@ public class TouchCartController implements CartViewHost {
         dialog.setHeaderText(i18n.get("tpos.language.select"));
 
         // 设置对话框样式
-        dialog.getDialogPane().setStyle("-fx-font-size: 16px;");
+        dialog.getDialogPane().getStyleClass().add("fs-16");
 
         // 创建语言选项
         ToggleGroup languageGroup = new ToggleGroup();
@@ -1690,17 +1692,17 @@ public class TouchCartController implements CartViewHost {
         RadioButton chineseRadio = new RadioButton("简体中文");
         chineseRadio.setUserData("zh-CN");
         chineseRadio.setToggleGroup(languageGroup);
-        chineseRadio.setStyle("-fx-font-size: 18px; -fx-padding: 8px;");
+        chineseRadio.getStyleClass().addAll("fs-18", "p-8");
 
         RadioButton traditionalRadio = new RadioButton("繁體中文");
         traditionalRadio.setUserData("zh-TW");
         traditionalRadio.setToggleGroup(languageGroup);
-        traditionalRadio.setStyle("-fx-font-size: 18px; -fx-padding: 8px;");
+        traditionalRadio.getStyleClass().addAll("fs-18", "p-8");
 
         RadioButton englishRadio = new RadioButton("English");
         englishRadio.setUserData("en");
         englishRadio.setToggleGroup(languageGroup);
-        englishRadio.setStyle("-fx-font-size: 18px; -fx-padding: 8px;");
+        englishRadio.getStyleClass().addAll("fs-18", "p-8");
 
         // 选中当前语言
         String currentLanguage = I18nManager.getInstance().getCurrentLanguageTag();
@@ -1714,7 +1716,7 @@ public class TouchCartController implements CartViewHost {
 
         // 垂直布局
         VBox vbox = new VBox(12, chineseRadio, traditionalRadio, englishRadio);
-        vbox.setStyle("-fx-padding: 16px;");
+        vbox.getStyleClass().add("p-16");
         vbox.setPadding(new Insets(20, 20, 20, 20));
 
         dialog.getDialogPane().setContent(vbox);
@@ -1730,11 +1732,12 @@ public class TouchCartController implements CartViewHost {
                 Button b = (Button) dialog.getDialogPane().lookupButton(bt);
                 if (b != null) {
                     b.setPrefSize(140, 50);
-                    b.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+                    b.getStyleClass().add("title-sm");
                 }
             }
         });
 
+        ThemeUtils.applyDialogTheme(dialog.getDialogPane());
         // 显示对话框并处理结果
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == confirmBtn) {

@@ -99,6 +99,11 @@ public class UserApiController {
         if (!checkAdmin(ctx)) return;
         
         UserRequest request = ctx.bodyAsClass(UserRequest.class);
+        if (request == null) {
+            ctx.status(HttpStatus.BAD_REQUEST)
+               .json(Map.of(KEY_SUCCESS, false, KEY_MESSAGE, "请求体不能为空"));
+            return;
+        }
         
         try {
             // 检查用户名是否已存在
@@ -138,6 +143,11 @@ public class UserApiController {
         
         int id = ctx.pathParamAsClass("id", Integer.class).get();
         UserRequest request = ctx.bodyAsClass(UserRequest.class);
+        if (request == null) {
+            ctx.status(HttpStatus.BAD_REQUEST)
+               .json(Map.of(KEY_SUCCESS, false, KEY_MESSAGE, "请求体不能为空"));
+            return;
+        }
         
         try {
             User user = UserDAO.findById(id);

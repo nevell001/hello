@@ -37,6 +37,7 @@ public class FXUtils {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
+        ThemeUtils.applyDialogTheme(alert.getDialogPane());
         alert.showAndWait();
     }
 
@@ -51,6 +52,7 @@ public class FXUtils {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
+        ThemeUtils.applyDialogTheme(alert.getDialogPane());
         alert.showAndWait();
     }
 
@@ -65,6 +67,7 @@ public class FXUtils {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
+        ThemeUtils.applyDialogTheme(alert.getDialogPane());
         alert.showAndWait();
     }
 
@@ -80,6 +83,7 @@ public class FXUtils {
         alert.setHeaderText(null);
         alert.setContentText(message);
 
+        ThemeUtils.applyDialogTheme(alert.getDialogPane());
         Optional<ButtonType> result = alert.showAndWait();
         return result.isPresent() && result.get() == ButtonType.OK;
     }

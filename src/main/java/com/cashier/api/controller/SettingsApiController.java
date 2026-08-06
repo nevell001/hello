@@ -96,6 +96,11 @@ public class SettingsApiController {
         try {
             String key = ctx.pathParam("key");
             Map<?, ?> body = ctx.bodyAsClass(Map.class);
+            if (body == null) {
+                ctx.status(HttpStatus.BAD_REQUEST)
+                   .json(Map.of("success", false, "message", "请求体不能为空"));
+                return;
+            }
             Object rawValue = body.get("value");
             String value = rawValue != null ? rawValue.toString() : null;
             

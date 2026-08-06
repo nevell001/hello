@@ -9,7 +9,7 @@ echo "      狸算(LiSuan) 生产发布候选验证开始"
 echo "===================================================="
 
 # 0. 版本一致性门禁
-echo "[0/4] 正在校验版本一致性..."
+echo "[0/3] 正在校验版本一致性..."
 VERSION_POM=$(grep -m 1 "<version>" pom.xml | sed 's/.*<version>\(.*\)<\/version>.*/\1/')
 VERSION_JAVA=$(grep "APP_VERSION =" src/main/java/com/cashier/constant/AppConstants.java | sed 's/.*"\(.*\)".*/\1/')
 
@@ -21,25 +21,16 @@ if [ "$VERSION_POM" != "$VERSION_JAVA" ]; then
 fi
 echo "✓ 版本号一致 ($VERSION_POM)"
 
-# 1. 单元测试与覆盖率
-mvn clean test -DskipTests=false
-echo "✓ 单元测试通过"
+# 1. 完整验证门禁：单元测试 + SpotBugs + JaCoCo 覆盖率 + 打包
+echo "[1/3] 正在运行完整验证门禁 (mvn clean verify)..."
+mvn clean verify -DskipTests=false
+echo "✓ 完整验证通过（测试/SpotBugs/覆盖率/打包）"
 
-# 2. 静态代码分析
-echo "[2/4] 正在运行 SpotBugs 静态安全扫描..."
-mvn spotbugs:check
-echo "✓ 静态扫描通过"
-
-# 3. 构建可执行包
-echo "[3/4] 正在构建生产环境安装包..."
-mvn package -DskipTests=true
-echo "✓ 打包成功"
-
-# 4. 环境与配置验证
-echo "[4/4] 验证发布配置..."
+# 2. 环境与配置验证
+echo "[2/3] 验证发布配置..."
 
 # 检查 JAR 文件
-if [ -f "target/lisuan-fx-2.6.0-jar-with-dependencies.jar" ]; then
+if [ -f "target/lisuan-fx-${VERSION_POM}-jar-with-dependencies.jar" ]; then
     echo "✓ 可执行 JAR 已生成"
 else
     echo "✗ 找不到可执行 JAR"
@@ -94,9 +85,20 @@ else
     echo "✓ API 未开启，跳过 API 密钥与 CORS 发布门禁"
 fi
 
-# 支付配置提示：关闭电子支付不阻断现金收银发布，但真实线上收款必须另行配置。
+# 支付配置门禁：生产发布禁止 mock 模式；production 模式必须已配置真实凭据（无占位符）。
 if [ -f "config/payment.properties" ]; then
-    PAYMENT_MODE=$(grep '^payment.mode=' config/payment.properties | cut -d= -f2-)
+    PAYMENT_MODE=$(grep '^payment.mode=' config/payment.properties | cut -d= -f2- | tr '[:upper:]' '[:lower:]' | tr -d ' ')
+    if [ "$PAYMENT_MODE" = "mock" ]; then
+        echo "✗ 生产发布禁止使用 mock 支付模式！请配置真实支付通道或保持 disabled"
+        exit 1
+    fi
+    if [ "$PAYMENT_MODE" = "production" ]; then
+        if grep -E 'YOUR_|REPLACE_WITH|CHANGE_ME|change_me|your-' config/payment.properties > /dev/null 2>&1; then
+            echo "✗ production 支付模式仍包含占位凭据（YOUR_/REPLACE_WITH/CHANGE_ME），请填写真实商户配置"
+            exit 1
+        fi
+        echo "✓ 支付配置使用 production 模式且未发现占位凭据（真实通道回调需另行验证）"
+    fi
     if [ "$PAYMENT_MODE" = "disabled" ]; then
         echo "⚠ 电子支付当前为 disabled；如生产需要微信/支付宝收款，请先配置真实支付通道"
     fi
@@ -120,5 +122,5 @@ fi
 
 echo "===================================================="
 echo "      狸算(LiSuan) 发布验证全部通过！"
-echo "      发布版本: 2.6.0"
+echo "      发布版本: ${VERSION_POM}"
 echo "===================================================="

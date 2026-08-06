@@ -369,6 +369,8 @@ productDAO.update(product);
 - Keep UI tests simple - avoid complex FXML loading in headless environments
 - Test component visibility, IDs, and basic interactions
 - Example: `LoginControllerUITest.java` demonstrates simplified UI testing pattern
+- 默认构建（`mvn verify`）会排除 `LoginControllerUITest`，因为它需要真实显示环境；
+  在具备桌面显示环境时显式运行：`mvn -Pui-tests -Dtest=LoginControllerUITest test`
 
 ```java
 @ExtendWith(ApplicationExtension.class)
@@ -657,7 +659,7 @@ The codebase is migrating from static `ProductDAO` to instance-based `ProductDAO
 - ✅ Completed: API Controllers (`ProductApiController`, `InventoryApiController`, `TransactionApiController`)
 - ✅ Completed: `CacheManager`, `ProductDataImporter`
 - ✅ Completed: `DataService`, `TransactionService`, `ReturnService`
-- ⏳ Pending: `SyncBroadcastService` (has unused import)
+- ✅ Completed: `SyncBroadcastService`
 
 **Migration Pattern:**
 ```java

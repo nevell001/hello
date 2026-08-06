@@ -6,33 +6,23 @@ echo ====================================================
 echo       狸算(LiSuan) 生产发布候选验证开始
 echo ====================================================
 
-REM 1. 单元测试
-echo [1/4] 正在运行单元测试...
-call mvn clean test -DskipTests=false
+REM 1. 完整验证门禁：单元测试 + SpotBugs + JaCoCo 覆盖率 + 打包
+echo [1/3] 正在运行完整验证门禁 (mvn clean verify)...
+call mvn clean verify -DskipTests=false
 if %ERRORLEVEL% NEQ 0 (
-    echo 单元测试失败！
+    echo 完整验证失败（测试/SpotBugs/覆盖率/打包）！
     exit /b %ERRORLEVEL%
 )
+echo 完整验证通过（测试/SpotBugs/覆盖率/打包）
 
-REM 2. 静态分析
-echo [2/4] 正在运行 SpotBugs 扫描...
-call mvn spotbugs:check
-if %ERRORLEVEL% NEQ 0 (
-    echo 静态扫描发现高风险缺陷！
-    exit /b %ERRORLEVEL%
+REM 2. 验证
+echo [2/3] 验证发布配置...
+for /f "tokens=2 delims=<>" %%V in ('findstr /B /C:"<version>" pom.xml') do (
+    set "VERSION_POM=%%V"
+    goto :version_found
 )
-
-REM 3. 打包
-echo [3/4] 正在构建生产环境安装包...
-call mvn package -DskipTests=true
-if %ERRORLEVEL% NEQ 0 (
-    echo 打包失败！
-    exit /b %ERRORLEVEL%
-)
-
-REM 4. 验证
-echo [4/4] 验证发布配置...
-if not exist "target\lisuan-fx-2.6.0-jar-with-dependencies.jar" (
+:version_found
+if not exist "target\lisuan-fx-%VERSION_POM%-jar-with-dependencies.jar" (
     echo 找不到可执行 JAR！
     exit /b 1
 )
@@ -90,6 +80,24 @@ findstr /R /C:"db.password=..*" "config\database.properties" >nul
 if %ERRORLEVEL% EQU 0 (
     echo 发现疑似数据库密码泄露
     exit /b 1
+)
+
+REM 支付配置门禁：生产发布禁止 mock 模式；production 模式必须无占位凭据
+if exist "config\payment.properties" (
+    findstr /I /B /C:"payment.mode=mock" "config\payment.properties" >nul
+    if !ERRORLEVEL! EQU 0 (
+        echo 生产发布禁止使用 mock 支付模式！请配置真实支付通道或保持 disabled
+        exit /b 1
+    )
+    findstr /I /B /C:"payment.mode=production" "config\payment.properties" >nul
+    if !ERRORLEVEL! EQU 0 (
+        findstr /I /C:"YOUR_" /C:"REPLACE_WITH" /C:"CHANGE_ME" "config\payment.properties" >nul
+        if !ERRORLEVEL! EQU 0 (
+            echo production 支付模式仍包含占位凭据，请填写真实商户配置
+            exit /b 1
+        )
+        echo 支付配置使用 production 模式且未发现占位凭据
+    )
 )
 
 echo ====================================================

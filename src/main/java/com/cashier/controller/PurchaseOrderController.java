@@ -46,7 +46,6 @@ public class PurchaseOrderController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(PurchaseOrderController.class);
     private static final String TEXT_MUTED_STYLE = "text-muted";
     private static final String TEXT_DEFAULT_STYLE = "text-default";
-    private static final String FONT_WEIGHT_BOLD_STYLE = "-fx-font-weight: bold;";
     private static final int PURCHASE_ORDER_LIMIT = 500;
     private static final int PRODUCT_SELECTION_PAGE_SIZE = 500;
     private static final int PURCHASE_SUPPLIER_LIMIT = 500;
@@ -327,7 +326,7 @@ public class PurchaseOrderController {
             HBox supplierBox = new HBox(10);
             supplierBox.getChildren().add(supplierCombo);
             Button newSupplierButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("runtime.supplier_new"));
-            newSupplierButton.setStyle("-fx-font-size: 11px; -fx-padding: 3 8;");
+            newSupplierButton.getStyleClass().addAll("text-xs", "p-3-8");
             newSupplierButton.setOnAction(e -> showSupplierManagementDialog(dialogStage, supplierCombo));
             supplierBox.getChildren().add(newSupplierButton);
             gridPane.add(supplierBox, 3, 0);
@@ -335,10 +334,10 @@ public class PurchaseOrderController {
             // 供应商详细信息显示区域
             Label supplierInfoLabel = new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.supplier_info"));
             supplierInfoLabel.getStyleClass().add(TEXT_MUTED_STYLE);
-            supplierInfoLabel.setStyle(FONT_WEIGHT_BOLD_STYLE);
+            supplierInfoLabel.getStyleClass().add("font-bold");
             Label supplierDetailLabel = new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.SUPPLIER_SELECT));
             supplierDetailLabel.getStyleClass().add(TEXT_MUTED_STYLE);
-            supplierDetailLabel.setStyle("-fx-font-size: 12px;");
+            supplierDetailLabel.getStyleClass().add("text-sm");
             supplierDetailLabel.setWrapText(true);
 
             // 监听供应商选择变化
@@ -395,18 +394,18 @@ public class PurchaseOrderController {
             // 添加商品按钮
             Button addProductButton = new Button(I18nManager.getInstance().get("runtime.add_product"));
             addProductButton.getStyleClass().add("primary-button");
-            addProductButton.setStyle("-fx-font-weight: bold; -fx-font-size: 13px;");
+            addProductButton.getStyleClass().addAll("font-bold", "text-md");
             addProductButton.setOnAction(e -> showProductSelector(itemTable));
 
             // 总金额标签
             Label totalLabel = new Label(I18nManager.getInstance().get("runtime.total_amount_value", CurrencyUtil.format(0)));
             totalLabel.getStyleClass().add(TEXT_DEFAULT_STYLE);
-            totalLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+            totalLabel.getStyleClass().add("title-sm");
 
             // 商品明细标签
             Label itemLabel = new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.PRODUCT_DETAILS));
             itemLabel.getStyleClass().add(TEXT_DEFAULT_STYLE);
-            itemLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
+            itemLabel.getStyleClass().add("title-xs");
 
             // 按钮
             Button saveButton = new Button(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Shortcut.SAVE));
@@ -500,7 +499,7 @@ public class PurchaseOrderController {
     private TableView<PurchaseOrderItem> createOrderItemTable() {
         TableView<PurchaseOrderItem> itemTable = new TableView<>();
         itemTable.setEditable(true);
-        itemTable.setStyle("-fx-font-size: 13px;");
+        itemTable.getStyleClass().add("text-md");
         itemTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         itemTable.setPlaceholder(new Label(I18nManager.getInstance().get(I18nKeys.Message.DATA_EMPTY)));
 
@@ -518,7 +517,7 @@ public class PurchaseOrderController {
         TableColumn<PurchaseOrderItem, String> column = new TableColumn<>(
             com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnApproval.PRODUCT_NAME));
         column.setPrefWidth(200);
-        column.setStyle(FONT_WEIGHT_BOLD_STYLE);
+        column.getStyleClass().add("font-bold");
         column.setCellValueFactory(new PropertyValueFactory<>("productName"));
         return column;
     }
@@ -558,7 +557,7 @@ public class PurchaseOrderController {
     private TableColumn<PurchaseOrderItem, String> createTotalPriceColumn() {
         TableColumn<PurchaseOrderItem, String> column = new TableColumn<>(I18nManager.getInstance().get(I18nKeys.Runtime.SUBTOTAL));
         column.setPrefWidth(100);
-        column.setStyle(FONT_WEIGHT_BOLD_STYLE);
+        column.getStyleClass().add("font-bold");
         column.setCellValueFactory(cellData ->
             new SimpleStringProperty(String.format("%.2f", cellData.getValue().totalPrice)));
         return column;
@@ -573,7 +572,7 @@ public class PurchaseOrderController {
 
             {
                 deleteButton.getStyleClass().add("danger-button");
-                deleteButton.setStyle(FONT_WEIGHT_BOLD_STYLE);
+                deleteButton.getStyleClass().add("font-bold");
                 deleteButton.setOnAction(event -> {
                     PurchaseOrderItem item = getTableView().getItems().get(getIndex());
                     itemTable.getItems().remove(item);
@@ -709,7 +708,7 @@ public class PurchaseOrderController {
             
             Label searchLabel = new Label(com.cashier.i18n.I18nManager.getInstance().get("purchase_inbound.search_label"));
             searchLabel.getStyleClass().add(TEXT_DEFAULT_STYLE);
-            searchLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 13px;");
+            searchLabel.getStyleClass().addAll("font-bold", "text-md");
             
             // 分类筛选
             ComboBox<String> categoryCombo = new ComboBox<>();
@@ -719,7 +718,7 @@ public class PurchaseOrderController {
             
             Label categoryLabel = new Label(com.cashier.i18n.I18nManager.getInstance().get("product.edit.category"));
             categoryLabel.getStyleClass().add(TEXT_DEFAULT_STYLE);
-            categoryLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 13px;");
+            categoryLabel.getStyleClass().addAll("font-bold", "text-md");
             
             HBox searchBox = new HBox(10, searchLabel, searchField, categoryLabel, categoryCombo);
             searchBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
@@ -734,7 +733,7 @@ public class PurchaseOrderController {
 
             // 商品表格
             TableView<Product> productTable = new TableView<>();
-            productTable.setStyle("-fx-font-size: 13px;");
+            productTable.getStyleClass().add("text-md");
             productTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
             productTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
             productTable.setPlaceholder(new Label(I18nManager.getInstance().get(I18nKeys.Message.DATA_EMPTY)));
@@ -778,7 +777,7 @@ public class PurchaseOrderController {
             
             TableColumn<Product, String> nameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnApproval.PRODUCT_NAME));
             nameCol.setPrefWidth(200);
-            nameCol.setStyle(FONT_WEIGHT_BOLD_STYLE);
+            nameCol.getStyleClass().add("font-bold");
             nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
             
             TableColumn<Product, String> barcodeCol = new TableColumn<>(I18nManager.getInstance().get("runtime.barcode"));
@@ -827,7 +826,7 @@ public class PurchaseOrderController {
             // 添加按钮
             Button addButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("runtime.add_selected_products"));
             addButton.getStyleClass().add("primary-button");
-            addButton.setStyle(FONT_WEIGHT_BOLD_STYLE);
+            addButton.getStyleClass().add("font-bold");
             addButton.setOnAction(e -> {
                 ObservableList<Product> selectedProducts = productTable.getSelectionModel().getSelectedItems();
                 if (selectedProducts == null || selectedProducts.isEmpty()) {
@@ -867,7 +866,7 @@ public class PurchaseOrderController {
 
             Button cancelButton = new Button(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnOrder.CANCEL));
             cancelButton.getStyleClass().add("secondary-button");
-            cancelButton.setStyle(FONT_WEIGHT_BOLD_STYLE);
+            cancelButton.getStyleClass().add("font-bold");
             cancelButton.setOnAction(e -> selectorStage.close());
 
             HBox buttonBox = new HBox(10, addButton, cancelButton);
@@ -1308,7 +1307,7 @@ public class PurchaseOrderController {
     private Label createLabel(String text) {
         Label label = new Label(text);
         label.getStyleClass().add(TEXT_DEFAULT_STYLE);
-        label.setStyle("-fx-font-weight: bold; -fx-font-size: 13px;");
+        label.getStyleClass().addAll("font-bold", "text-md");
         return label;
     }
 

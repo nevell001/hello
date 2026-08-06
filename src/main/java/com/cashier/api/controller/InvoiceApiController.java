@@ -104,6 +104,11 @@ public class InvoiceApiController {
     public static void createFromTransaction(Context ctx) {
         try {
             InvoiceService.InvoiceRequest request = ctx.bodyAsClass(InvoiceService.InvoiceRequest.class);
+            if (request == null) {
+                ctx.status(HttpStatus.BAD_REQUEST)
+                   .json(Map.of("success", false, "message", "请求体不能为空"));
+                return;
+            }
             
             if (request.transactionId == null || request.transactionId.isEmpty()) {
                 ctx.status(HttpStatus.BAD_REQUEST)
@@ -130,6 +135,11 @@ public class InvoiceApiController {
     public static void createManual(Context ctx) {
         try {
             InvoiceService.InvoiceRequest request = ctx.bodyAsClass(InvoiceService.InvoiceRequest.class);
+            if (request == null) {
+                ctx.status(HttpStatus.BAD_REQUEST)
+                   .json(Map.of("success", false, "message", "请求体不能为空"));
+                return;
+            }
             
             if (request.items == null || request.items.isEmpty()) {
                 ctx.status(HttpStatus.BAD_REQUEST)
@@ -157,6 +167,11 @@ public class InvoiceApiController {
         try {
             String invoiceId = ctx.pathParam("id");
             VoidRequest request = ctx.bodyAsClass(VoidRequest.class);
+            if (request == null) {
+                ctx.status(HttpStatus.BAD_REQUEST)
+                   .json(Map.of("success", false, "message", "请求体不能为空"));
+                return;
+            }
             
             if (request.reason == null || request.reason.isEmpty()) {
                 ctx.status(HttpStatus.BAD_REQUEST)
@@ -183,6 +198,11 @@ public class InvoiceApiController {
         try {
             String invoiceId = ctx.pathParam("id");
             PrintRequest request = ctx.bodyAsClass(PrintRequest.class);
+            if (request == null) {
+                ctx.status(HttpStatus.BAD_REQUEST)
+                   .json(Map.of("success", false, "message", "请求体不能为空"));
+                return;
+            }
             
             InvoiceDAO.updatePrintInfo(invoiceId, request.pdfPath, request.imagePath);
             
@@ -217,6 +237,11 @@ public class InvoiceApiController {
     public static void setSellerInfo(Context ctx) {
         try {
             Map<?, ?> info = ctx.bodyAsClass(Map.class);
+            if (info == null) {
+                ctx.status(HttpStatus.BAD_REQUEST)
+                   .json(Map.of("success", false, "message", "请求体不能为空"));
+                return;
+            }
             
             InvoiceService.setDefaultSellerInfo(
                 getString(info, "name"),

@@ -1428,7 +1428,7 @@ public class SettingsController {
     private void clearImportMessages() {
         importMessagesArea.getChildren().clear();
         Label logLabel = new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.import_log"));
-        logLabel.setStyle("-fx-font-weight: bold;");
+        logLabel.getStyleClass().add("font-bold");
         importMessagesArea.getChildren().add(logLabel);
     }
 

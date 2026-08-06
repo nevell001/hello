@@ -35,7 +35,7 @@ public class PrintPreviewDialog {
         
         // 标题
         Label titleLabel = new Label(title);
-        titleLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        titleLabel.getStyleClass().add("title-sm");
         
         // 预览区域
         Label previewLabel = new Label("打印预览:");
@@ -51,7 +51,7 @@ public class PrintPreviewDialog {
         buttonBox.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
         
         Button printButton = new Button("打印");
-        printButton.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
+        printButton.getStyleClass().add("title-xs");
         printButton.setPrefWidth(100);
         printButton.setOnAction(e -> {
             confirmed = true;
@@ -59,7 +59,7 @@ public class PrintPreviewDialog {
         });
         
         Button cancelButton = new Button("取消");
-        cancelButton.setStyle("-fx-font-size: 14px;");
+        cancelButton.getStyleClass().add("text-lg");
         cancelButton.setPrefWidth(100);
         cancelButton.setOnAction(e -> {
             confirmed = false;
@@ -71,6 +71,9 @@ public class PrintPreviewDialog {
         root.getChildren().addAll(titleLabel, previewLabel, previewArea, buttonBox);
         
         Scene scene = new Scene(root);
+        if (owner != null && owner.getScene() != null) {
+            scene.getStylesheets().addAll(owner.getScene().getStylesheets());
+        }
         dialogStage.setScene(scene);
         
         dialogStage.showAndWait();

@@ -36,6 +36,13 @@ public class PaymentApiController {
     public static void createPayment(Context ctx) {
         try {
             Map<?, ?> body = ctx.bodyAsClass(Map.class);
+            if (body == null) {
+                ctx.status(400).json(Map.of(
+                    "success", false,
+                    "error", "请求体不能为空"
+                ));
+                return;
+            }
             
             String transactionId = getString(body, "transactionId", null);
             BigDecimal amount = getBigDecimal(body, "amount");
@@ -223,6 +230,13 @@ public class PaymentApiController {
         
         try {
             Map<?, ?> body = ctx.bodyAsClass(Map.class);
+            if (body == null) {
+                ctx.status(400).json(Map.of(
+                    "success", false,
+                    "error", "请求体不能为空"
+                ));
+                return;
+            }
             
             BigDecimal refundAmount = getBigDecimal(body, "amount");
             String reason = getString(body, "reason", "用户申请退款");
@@ -371,6 +385,13 @@ public class PaymentApiController {
     public static void setConfig(Context ctx) {
         try {
             Map<?, ?> body = ctx.bodyAsClass(Map.class);
+            if (body == null) {
+                ctx.status(400).json(Map.of(
+                    "success", false,
+                    "error", "请求体不能为空"
+                ));
+                return;
+            }
             
             PaymentService.PaymentConfig config = PaymentService.getConfig();
             

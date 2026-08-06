@@ -283,8 +283,7 @@ public class PurchaseInboundController {
 
             // 操作提示
             Label hintLabel = new Label(I18nManager.getInstance().get("runtime.inbound_edit_hint"));
-            hintLabel.getStyleClass().add("text-muted");
-            hintLabel.setStyle("-fx-font-size: 12px;");
+            hintLabel.getStyleClass().addAll("text-muted", "text-sm");
 
             // 备注字段
             TextArea remarkArea = new TextArea();

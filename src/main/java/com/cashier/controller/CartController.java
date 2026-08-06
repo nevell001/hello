@@ -20,6 +20,7 @@ import com.cashier.scanner.FocusTarget;
 import com.cashier.scanner.ScannerManager;
 import com.cashier.service.PaymentService;
 import com.cashier.util.CurrencyUtil;
+import com.cashier.util.ThemeUtils;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -61,7 +62,7 @@ public class CartController implements CartViewHost {
     private static final String SCAN_NOT_FOUND_SOUND = "/sounds/scan_not_found.wav";
     private static final String TEXT_SUCCESS_STYLE = "text-success";
     private static final String TEXT_DANGER_STYLE = "text-danger";
-    private static final String QUICK_AMOUNT_BUTTON_STYLE = "-fx-font-size: 18px; -fx-font-weight: bold;";
+    private static final String QUICK_AMOUNT_BUTTON_CLASS = "title-md";
     private static final long DUPLICATE_SCAN_SUPPRESSION_MILLIS = 300;
     private enum ScanMessageLevel {
         SUCCESS,
@@ -823,28 +824,28 @@ public class CartController implements CartViewHost {
 
         Label amountLabel = new Label(I18nManager.getInstance().get("runtime.amount_due", CurrencyUtil.format(finalAmount.doubleValue())));
         amountLabel.getStyleClass().add(TEXT_DANGER_STYLE);
-        amountLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
+        amountLabel.getStyleClass().add("title-2xl");
 
         Label paidLabel = new Label(I18nManager.getInstance().get("runtime.amount_paid", CurrencyUtil.format(alreadyPaidAmount.doubleValue())));
         paidLabel.getStyleClass().add(TEXT_SUCCESS_STYLE);
-        paidLabel.setStyle("-fx-font-size: 18px;");
+        paidLabel.getStyleClass().add("fs-18");
 
         BigDecimal initialRemaining = finalAmount.subtract(alreadyPaidAmount);
         Label remainingLabel = new Label(I18nManager.getInstance().get("runtime.amount_remaining", CurrencyUtil.format(initialRemaining.doubleValue())));
         remainingLabel.getStyleClass().add(TEXT_DANGER_STYLE);
-        remainingLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+        remainingLabel.getStyleClass().add("title-lg");
 
         TextField receivedField = new TextField();
         receivedField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.payment_amount_hint"));
         receivedField.setPrefHeight(45);
-        receivedField.setStyle("-fx-font-size: 18px;");
+        receivedField.getStyleClass().add("fs-18");
 
         Label receivedLabel = new Label(I18nManager.getInstance().get("runtime.payment_this_time"));
-        receivedLabel.setStyle("-fx-font-size: 18px;");
+        receivedLabel.getStyleClass().add("fs-18");
 
         Label changeLabel = new Label(I18nManager.getInstance().get(I18nKeys.Runtime.CHANGE_AMOUNT, CurrencyUtil.format(0)));
         changeLabel.getStyleClass().add(TEXT_SUCCESS_STYLE);
-        changeLabel.setStyle(QUICK_AMOUNT_BUTTON_STYLE);
+        changeLabel.getStyleClass().add(QUICK_AMOUNT_BUTTON_CLASS);
 
         grid.add(amountLabel, 0, 0, 2, 1);
         grid.add(paidLabel, 0, 1, 2, 1);
@@ -856,7 +857,7 @@ public class CartController implements CartViewHost {
         String symbol = CurrencyUtil.getSymbol();
         Button btn100 = new Button(symbol + "100");
         btn100.setPrefSize(100, 60);
-        btn100.setStyle(QUICK_AMOUNT_BUTTON_STYLE);
+        btn100.getStyleClass().add(QUICK_AMOUNT_BUTTON_CLASS);
         btn100.setOnAction(e -> {
             receivedField.setText("100");
             receivedField.requestFocus();
@@ -864,7 +865,7 @@ public class CartController implements CartViewHost {
 
         Button btn50 = new Button(symbol + "50");
         btn50.setPrefSize(100, 60);
-        btn50.setStyle(QUICK_AMOUNT_BUTTON_STYLE);
+        btn50.getStyleClass().add(QUICK_AMOUNT_BUTTON_CLASS);
         btn50.setOnAction(e -> {
             receivedField.setText("50");
             receivedField.requestFocus();
@@ -872,7 +873,7 @@ public class CartController implements CartViewHost {
 
         Button btn20 = new Button(symbol + "20");
         btn20.setPrefSize(100, 60);
-        btn20.setStyle(QUICK_AMOUNT_BUTTON_STYLE);
+        btn20.getStyleClass().add(QUICK_AMOUNT_BUTTON_CLASS);
         btn20.setOnAction(e -> {
             receivedField.setText("20");
             receivedField.requestFocus();
@@ -880,7 +881,7 @@ public class CartController implements CartViewHost {
 
         Button btn10 = new Button(symbol + "10");
         btn10.setPrefSize(100, 60);
-        btn10.setStyle(QUICK_AMOUNT_BUTTON_STYLE);
+        btn10.getStyleClass().add(QUICK_AMOUNT_BUTTON_CLASS);
         btn10.setOnAction(e -> {
             receivedField.setText("10");
             receivedField.requestFocus();
@@ -888,7 +889,7 @@ public class CartController implements CartViewHost {
 
         Button btn5 = new Button(symbol + "5");
         btn5.setPrefSize(100, 60);
-        btn5.setStyle(QUICK_AMOUNT_BUTTON_STYLE);
+        btn5.getStyleClass().add(QUICK_AMOUNT_BUTTON_CLASS);
         btn5.setOnAction(e -> {
             receivedField.setText("5");
             receivedField.requestFocus();
@@ -898,6 +899,7 @@ public class CartController implements CartViewHost {
         grid.add(quickButtons, 0, 5, 2, 1);
 
         dialog.getDialogPane().setContent(grid);
+        ThemeUtils.applyDialogTheme(dialog.getDialogPane());
 
         ButtonType okButtonType = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Dialog.CONFIRM), ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(okButtonType, ButtonType.CANCEL);
@@ -949,12 +951,12 @@ public class CartController implements CartViewHost {
             Button okButton = (Button) dialog.getDialogPane().lookupButton(okButtonType);
             if (okButton != null) {
                 okButton.setPrefSize(120, 50);
-                okButton.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+                okButton.getStyleClass().add("title-sm");
             }
             Button cancelButton = (Button) dialog.getDialogPane().lookupButton(ButtonType.CANCEL);
             if (cancelButton != null) {
                 cancelButton.setPrefSize(120, 50);
-                cancelButton.setStyle("-fx-font-size: 16px;");
+                cancelButton.getStyleClass().add("fs-16");
             }
         });
 

@@ -101,6 +101,11 @@ public class TransactionApiController {
     public static void create(Context ctx) {
         try {
             TransactionRequest request = ctx.bodyAsClass(TransactionRequest.class);
+            if (request == null) {
+                ctx.status(HttpStatus.BAD_REQUEST)
+                   .json(Map.of("success", false, "message", "请求体不能为空"));
+                return;
+            }
             
             // 生成交易ID
             String transactionId = "T" + LocalDateTime.now().format(ID_FORMATTER);

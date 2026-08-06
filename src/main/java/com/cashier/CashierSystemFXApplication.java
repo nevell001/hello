@@ -189,6 +189,13 @@ public class CashierSystemFXApplication extends Application {
     }
 
     /**
+     * 获取主窗口当前场景（用于给对话框复制主题样式）。
+     */
+    public Scene getPrimaryScene() {
+        return primaryStage != null ? primaryStage.getScene() : null;
+    }
+
+    /**
      * 获取当前登录用户
      * @return 当前登录用户，未登录时返回 null
      */

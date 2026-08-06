@@ -45,6 +45,13 @@ public class I18nApiController {
     public static void setLocale(Context ctx) {
         try {
             Map<?, ?> body = ctx.bodyAsClass(Map.class);
+            if (body == null) {
+                ctx.status(400).json(Map.of(
+                    "success", false,
+                    "error", "请求体不能为空"
+                ));
+                return;
+            }
             String localeStr = getString(body, "locale");
             
             if (localeStr == null || localeStr.isEmpty()) {

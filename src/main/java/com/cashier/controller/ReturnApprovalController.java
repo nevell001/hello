@@ -129,7 +129,7 @@ public class ReturnApprovalController {
                     try {
                         double amount = FormValidator.parseDouble(item);
                         setText(CurrencyUtil.format(amount));
-                        setStyle("-fx-font-weight: bold;");
+                        getStyleClass().add("font-bold");
                         applySemanticTextStyle(this, "text-danger");
                     } catch (Exception e) {
                         setText(item);
@@ -172,7 +172,7 @@ public class ReturnApprovalController {
                     clearSemanticTextStyles(this);
                 } else {
                     setText(CurrencyUtil.format(item));
-                    setStyle("-fx-font-weight: bold;");
+                    getStyleClass().add("font-bold");
                     clearSemanticTextStyles(this);
                 }
             }

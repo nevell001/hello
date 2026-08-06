@@ -1458,11 +1458,11 @@ private Button shiftBtn;
 
             Label titleLabel = new Label(title);
             titleLabel.getStyleClass().add("text-primary");
-            titleLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
+            titleLabel.getStyleClass().add("title-2xl");
 
             Label messageLabel = new Label(message);
             messageLabel.getStyleClass().add("text-muted");
-            messageLabel.setStyle("-fx-font-size: 14px;");
+            messageLabel.getStyleClass().add("text-lg");
 
             placeholder.getChildren().addAll(iconLabel, titleLabel, messageLabel);
 

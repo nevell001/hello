@@ -168,6 +168,13 @@ public class PrintApiController {
     public static void addPrinter(Context ctx) {
         try {
             Map<?, ?> body = ctx.bodyAsClass(Map.class);
+            if (body == null) {
+                ctx.status(400).json(Map.of(
+                    "success", false,
+                    "error", "请求体不能为空"
+                ));
+                return;
+            }
             
             String name = getString(body, "name", null);
             String host = getString(body, "host", null);
@@ -465,6 +472,13 @@ public class PrintApiController {
         
         try {
             Map<?, ?> body = ctx.bodyAsClass(Map.class);
+            if (body == null) {
+                ctx.status(400).json(Map.of(
+                    "success", false,
+                    "error", "请求体不能为空"
+                ));
+                return;
+            }
             String content = getString(body, "content", null);
             boolean printLogo = getBoolean(body, "printLogo", false);
             boolean openCashDrawer = getBoolean(body, "openCashDrawer", false);

@@ -86,6 +86,11 @@ public class MemberApiController {
     public static void create(Context ctx) {
         try {
             MemberRequest request = ctx.bodyAsClass(MemberRequest.class);
+            if (request == null) {
+                ctx.status(HttpStatus.BAD_REQUEST)
+                   .json(Map.of("success", false, "message", "请求体不能为空"));
+                return;
+            }
             
             if (request.phone == null || request.phone.isEmpty()) {
                 ctx.status(HttpStatus.BAD_REQUEST)
@@ -141,6 +146,11 @@ public class MemberApiController {
         try {
             int id = ctx.pathParamAsClass("id", Integer.class).get();
             MemberRequest request = ctx.bodyAsClass(MemberRequest.class);
+            if (request == null) {
+                ctx.status(HttpStatus.BAD_REQUEST)
+                   .json(Map.of("success", false, "message", "请求体不能为空"));
+                return;
+            }
             
             Member member = MemberDAO.findById(id);
             if (member == null) {
@@ -185,6 +195,11 @@ public class MemberApiController {
         try {
             int id = ctx.pathParamAsClass("id", Integer.class).get();
             RechargeRequest request = ctx.bodyAsClass(RechargeRequest.class);
+            if (request == null) {
+                ctx.status(HttpStatus.BAD_REQUEST)
+                   .json(Map.of("success", false, "message", "请求体不能为空"));
+                return;
+            }
             
             Member member = MemberDAO.findById(id);
             if (member == null) {
