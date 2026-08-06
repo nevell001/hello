@@ -20,6 +20,43 @@
                      "DejaVu Sans", "Liberation Sans", "Ubuntu", "Arial", sans-serif;
 }
 
+/* ========== LiSuan 语义令牌（深色值） ==========
+ * styles.css 中大量组件使用 -lisuan-* 令牌；深色主题必须重新定义，
+ * 否则这些属性会回退到默认值（白色背景/深色文字），导致深色覆盖不全。
+ */
+.root {
+    -lisuan-surface: #242424;
+    -lisuan-surface-muted: #2A2A2A;
+    -lisuan-surface-selected: #33291F;
+    -lisuan-surface-soft: #262626;
+    -lisuan-surface-warm: #2B2825;
+    -lisuan-border: #3D3D3D;
+    -lisuan-border-strong: #4A4A4A;
+    -lisuan-border-subtle: #333333;
+    -lisuan-scrollbar: #555555;
+    -lisuan-scrollbar-hover: #6A6A6A;
+    -lisuan-primary: #C96A24;
+    -lisuan-primary-hover: #EB8F50;
+    -lisuan-primary-active: #FFB36B;
+    -lisuan-primary-border: #A3571E;
+    -lisuan-primary-muted: #B85C1B;
+    -lisuan-primary-deep: #4A2508;
+    -lisuan-primary-darker: #5A2D0C;
+    -lisuan-info: #9FA8DA;
+    -lisuan-info-hover: #B3BCF2;
+    -lisuan-info-active: #7986CB;
+    -lisuan-text: #E0E0E0;
+    -lisuan-text-secondary: #BDBDBD;
+    -lisuan-text-tertiary: #9E9E9E;
+    -lisuan-text-muted: #A89F95;
+    -lisuan-text-disabled: #757575;
+    -lisuan-text-disabled-strong: #8A8A8A;
+    -lisuan-success: #81C784;
+    -lisuan-warning: #FFB74D;
+    -lisuan-danger: #E57373;
+    -lisuan-avatar-admin: #FFD54F;
+}
+
 /* ========== 场景背景 ========== */
 .scene {
     -fx-background-color: #121212;
@@ -1547,4 +1584,111 @@
 .search-view .search-footer {
     -fx-background-color: #242424;
     -fx-border-color: #383838;
+}
+
+/* ========== 交班管理（ShiftView）深色覆盖 ==========
+ * styles.css 中这些类硬编码了白色背景，必须在此显式覆盖，
+ * 否则交班页在深色主题下会残留白色区域。
+ */
+.shift-filter-bar {
+    -fx-background-color: #242424;
+    -fx-border-color: #383838;
+}
+
+.shift-stat-card,
+.shift-chart-card {
+    -fx-background-color: #242424;
+    -fx-border-color: #383838;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 3, 0, 0, 1);
+}
+
+.table-view.shift-table {
+    -fx-background-color: #242424;
+    -fx-border-color: #383838;
+}
+
+.table-view.shift-table .column-header {
+    -fx-background-color: #2C2C2C;
+    -fx-text-fill: #E0E0E0;
+}
+
+.table-view.shift-table .table-row-cell {
+    -fx-background-color: #242424;
+}
+
+.table-view.shift-table .table-row-cell:odd {
+    -fx-background-color: #2A2A2A;
+}
+
+.table-view.shift-table .placeholder .label {
+    -fx-text-fill: #BDBDBD;
+}
+
+/* ========== 日期选择器（DatePicker）深色覆盖 ========== */
+.date-picker {
+    -fx-background-color: #242424;
+}
+
+.date-picker .text-field {
+    -fx-background-color: #2C2C2C;
+    -fx-text-fill: #E0E0E0;
+}
+
+.date-picker .arrow-button {
+    -fx-background-color: #383838;
+}
+
+.date-picker-popup {
+    -fx-background-color: #2C2C2C;
+    -fx-border-color: #424242;
+}
+
+.date-picker-popup .month-year-pane {
+    -fx-background-color: #383838;
+}
+
+.date-picker-popup .spinner .button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #E0E0E0;
+}
+
+.date-picker-popup .day-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #E0E0E0;
+}
+
+.date-picker-popup .day-cell:hover {
+    -fx-background-color: #424242;
+}
+
+.date-picker-popup .day-cell:selected {
+    -fx-background-color: #5C6BC0;
+    -fx-text-fill: white;
+}
+
+.date-picker-popup .week-number-cell {
+    -fx-text-fill: #9E9E9E;
+}
+
+.date-picker-popup .day-name-cell {
+    -fx-text-fill: #BDBDBD;
+}
+
+/* ========== 分隔线（Separator）深色覆盖 ========== */
+.separator .line {
+    -fx-border-color: #3D3D3D;
+}
+
+/* ========== 分割面板（SplitPane）深色覆盖 ========== */
+.split-pane {
+    -fx-background-color: #212121;
+}
+
+.split-pane .split-pane-divider {
+    -fx-background-color: #383838;
+}
+
+.split-pane > .split-pane-divider > .horizontal-grabber,
+.split-pane > .split-pane-divider > .vertical-grabber {
+    -fx-background-color: #4A4A4A;
 }
