@@ -1674,6 +1674,31 @@
     -fx-text-fill: #BDBDBD;
 }
 
+/* ========== 促销管理对话框深色覆盖 ==========
+ * styles.css 中 .promotion-dialog 的日期选择器/下拉框硬编码浅色，
+ * 特异性高于通用 .date-picker，必须按同特异性在此覆盖。
+ */
+.promotion-dialog .promotion-date-picker {
+    -fx-background-color: #242424;
+    -fx-border-color: #383838;
+}
+
+.promotion-dialog .promotion-date-picker:focused {
+    -fx-border-color: #5C6BC0;
+}
+
+.promotion-dialog .promotion-date-picker > .text-field {
+    -fx-text-fill: #E0E0E0;
+}
+
+.promotion-dialog .promotion-date-picker > .arrow-button {
+    -fx-background-color: #383838;
+}
+
+.promotion-dialog .form-combo > .list-cell {
+    -fx-text-fill: #E0E0E0;
+}
+
 /* ========== 分隔线（Separator）深色覆盖 ========== */
 .separator .line {
     -fx-border-color: #3D3D3D;
