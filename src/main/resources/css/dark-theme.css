@@ -1632,10 +1632,35 @@
 .date-picker .text-field {
     -fx-background-color: #2C2C2C;
     -fx-text-fill: #E0E0E0;
+    -fx-prompt-text-fill: #9E9E9E;
 }
 
 .date-picker .arrow-button {
     -fx-background-color: #383838;
+}
+
+.date-picker .arrow-button .arrow {
+    -fx-background-color: #BDBDBD;
+}
+
+.spinner {
+    -fx-background-color: #242424;
+}
+
+.spinner .text-field {
+    -fx-background-color: #2C2C2C;
+    -fx-text-fill: #E0E0E0;
+    -fx-prompt-text-fill: #9E9E9E;
+}
+
+.spinner .increment-arrow-button,
+.spinner .decrement-arrow-button {
+    -fx-background-color: #383838;
+}
+
+.spinner .increment-arrow-button .increment-arrow,
+.spinner .decrement-arrow-button .decrement-arrow {
+    -fx-background-color: #BDBDBD;
 }
 
 .date-picker-popup {

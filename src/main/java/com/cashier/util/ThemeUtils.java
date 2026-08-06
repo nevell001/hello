@@ -3,8 +3,11 @@ package com.cashier.util;
 import com.cashier.CashierSystemFXApplication;
 import com.cashier.model.User;
 import com.cashier.service.DataService;
+import javafx.collections.ListChangeListener;
 import javafx.scene.Scene;
 import javafx.scene.control.DialogPane;
+import javafx.stage.Window;
+import javafx.stage.WindowEvent;
 
 import java.net.URL;
 
@@ -35,6 +38,40 @@ public final class ThemeUtils {
         source.getRoot().getStyleClass().stream()
             .filter(cssClass -> cssClass.startsWith("font-size-"))
             .forEach(dialogPane.getStyleClass()::add);
+    }
+
+    /**
+     * 将源场景的主题样式（含字号偏好）复制到目标场景。
+     */
+    public static void copyThemeToScene(Scene target, Scene source) {
+        if (target == null || source == null) {
+            return;
+        }
+        target.getStylesheets().addAll(source.getStylesheets());
+        if (source.getRoot() != null && target.getRoot() != null) {
+            source.getRoot().getStyleClass().stream()
+                .filter(cssClass -> cssClass.startsWith("font-size-"))
+                .forEach(target.getRoot().getStyleClass()::add);
+        }
+    }
+
+    /**
+     * 全局弹窗主题化：监听所有新窗口（Dialog/Alert/Stage），
+     * 在显示前自动复制主场景主题样式，避免弹窗残留默认浅色。
+     * 必须在 JavaFX 应用线程调用（start() 中调用一次即可）。
+     */
+    public static void installGlobalDialogTheming() {
+        Window.getWindows().addListener((ListChangeListener<Window>) change -> {
+            while (change.next()) {
+                for (Window added : change.getAddedSubList()) {
+                    added.addEventHandler(WindowEvent.WINDOW_SHOWING, event -> {
+                        CashierSystemFXApplication app = CashierSystemFXApplication.getInstance();
+                        Scene source = app != null ? app.getPrimaryScene() : null;
+                        copyThemeToScene(added.getScene(), source);
+                    });
+                }
+            }
+        });
     }
 
     public static void applyCurrentTheme(Scene scene, Class<?> resourceClass) {
