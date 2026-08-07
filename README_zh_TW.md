@@ -119,6 +119,37 @@ docker compose up -d mysql
 export CASHIER_DB_PASSWORD=your_password
 ```
 
+### 環境變數設定（.env）
+
+專案支援用根目錄的 `.env` 檔案集中管理安裝與啟動設定，避免把密碼、金鑰寫進設定檔或指令碼。
+
+```bash
+cp .env.example .env
+```
+
+`.env.example` 是隨倉庫維護的範本，`.env` 是本地實際設定（已被 `.gitignore` 忽略，請勿提交真實金鑰）。主要變數：
+
+| 變數 | 說明 |
+|------|------|
+| `APP_VERSION` / `APP_NAME` | 應用版本號與品牌名（`install.sh` 打包用） |
+| `ENVIRONMENT` | `development`（以 root 連庫）或 `production`（以專用用戶 lisuan 連庫） |
+| `DB_TYPE` | 資料庫類型：`docker` / `local` / `none`，用於 `install.sh` 引導 |
+| `MYSQL_CONTAINER_NAME` / `MYSQL_IMAGE` | Docker MySQL 容器與映像檔 |
+| `MYSQL_ROOT_PASSWORD` / `MYSQL_PASSWORD` / `MYSQL_USER` / `MYSQL_DATABASE` | Docker 資料庫初始化帳號 |
+| `DB_HOST` / `DB_PORT` | 資料庫連線位址與連接埠 |
+| `TZ` | 時區（預設 `Asia/Shanghai`） |
+| `JVM_OPTS` | JVM 啟動參數（`config/jvm.config` 優先） |
+| `TOKEN_SECRET` | API Token 金鑰，至少 32 位強隨機字串 |
+| `CORS_ALLOWED_ORIGINS` | API 允許的跨域來源，生產禁止 `*` |
+| `CASHIER_DB_PASSWORD` / `CASHER_DB_PASSWORD` | 覆蓋 `config/database.properties` 中的資料庫密碼（`start.sh` 定向讀取） |
+
+使用說明：
+
+- `install.sh` / `install.bat` 會整體載入 `.env` 用於資料庫初始化、設定生成和打包；未定義的變數會走互動式引導。
+- `start.sh` 只定向讀取 `CASHIER_DB_PASSWORD` / `CASHER_DB_PASSWORD` 兩個密碼變數覆蓋資料庫密碼，不把 `TOKEN_SECRET`、`CORS_ALLOWED_ORIGINS` 等佔位設定帶入執行環境（API 側仍透過系統環境變數傳遞）。
+- `DataConfig.bat` 同樣讀取 `.env` 產生資料庫設定。
+- **安全提示**：首次使用務必替換 `MYSQL_ROOT_PASSWORD`、`MYSQL_PASSWORD`、`TOKEN_SECRET` 為各自獨立的強隨機值，並限制 `CORS_ALLOWED_ORIGINS`。資料庫密碼也可以不改 `.env`，而是透過啟動時注入 `CASHIER_DB_PASSWORD` 環境變數提供。
+
 ### 開發執行
 
 ```bash
@@ -437,6 +468,7 @@ src/main/resources/
 **資料庫連線失敗**
 - 確認資料庫位址、連接埠、庫名、用戶名和密碼。
 - 如果使用環境變數密碼，確認 `CASHIER_DB_PASSWORD` 已設定。
+- 若用 `.env` 管理設定，確認已執行 `cp .env.example .env` 且 `DB_HOST`/`DB_PORT`/`MYSQL_*` 與本地一致。
 - Docker 環境可先執行 `docker compose up -d mysql`。
 
 **API 服務無法啟動**

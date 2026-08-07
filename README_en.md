@@ -119,6 +119,37 @@ The database initialization script is located at `docker/mysql-init/00-init-comp
 export CASHIER_DB_PASSWORD=your_password
 ```
 
+### Environment Config (.env)
+
+The project supports managing installation and startup configuration centrally via a root-level `.env` file, avoiding hard-coded passwords and secrets in config files or scripts.
+
+```bash
+cp .env.example .env
+```
+
+`.env.example` is the template maintained in the repository; `.env` holds your local actual configuration (and is ignored by `.gitignore`, so never commit real secrets). Key variables:
+
+| Variable | Description |
+|----------|-------------|
+| `APP_VERSION` / `APP_NAME` | Application version and branding (used to package via `install.sh`) |
+| `ENVIRONMENT` | `development` (connects as root) or `production` (dedicated user `lisuan`) |
+| `DB_TYPE` | Database type: `docker` / `local` / `none`, used to guide `install.sh` |
+| `MYSQL_CONTAINER_NAME` / `MYSQL_IMAGE` | Docker MySQL container and image |
+| `MYSQL_ROOT_PASSWORD` / `MYSQL_PASSWORD` / `MYSQL_USER` / `MYSQL_DATABASE` | Docker database initialization credentials |
+| `DB_HOST` / `DB_PORT` | Database host and port |
+| `TZ` | Time zone (default `Asia/Shanghai`) |
+| `JVM_OPTS` | JVM launch options (`config/jvm.config` takes precedence) |
+| `TOKEN_SECRET` | API token secret, at least 32 random characters |
+| `CORS_ALLOWED_ORIGINS` | Allowed CORS origins for the API; do not use `*` in production |
+| `CASHIER_DB_PASSWORD` / `CASHER_DB_PASSWORD` | Overrides the DB password in `config/database.properties` (selectively read by `start.sh`) |
+
+Usage notes:
+
+- `install.sh` / `install.bat` load the whole `.env` for database initialization, config generation, and packaging; undefined variables fall back to interactive prompts.
+- `start.sh` only selectively reads the two password variables `CASHIER_DB_PASSWORD` / `CASHER_DB_PASSWORD` to override the DB password; it does not bring placeholder configs such as `TOKEN_SECRET`, `CORS_ALLOWED_ORIGINS` into the runtime environment (those are still passed to the API via system environment variables).
+- `DataConfig.bat` also reads `.env` to generate the database config.
+- **Security note**: On first use, replace `MYSQL_ROOT_PASSWORD`, `MYSQL_PASSWORD`, and `TOKEN_SECRET` with independent strong random values, and restrict `CORS_ALLOWED_ORIGINS`. As an alternative to editing `.env`, you can supply the DB password at startup via the `CASHIER_DB_PASSWORD` environment variable.
+
 ### Development Run
 
 ```bash
@@ -437,6 +468,7 @@ src/main/resources/
 **Database Connection Error**
 - Double-check host, port, database name, username, and password.
 - If using environment variables, ensure `CASHIER_DB_PASSWORD` is properly exported.
+- If managing configuration via `.env`, ensure `cp .env.example .env` was run and that `DB_HOST`/`DB_PORT`/`MYSQL_*` match your local setup.
 - For Docker, verify container state with `docker compose up -d mysql`.
 
 **API Service Fails to Run**

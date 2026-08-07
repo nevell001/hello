@@ -195,54 +195,72 @@ public class TouchCartController implements CartViewHost {
 
     @FXML
     private void handleExit() {
-        // 触屏版退出确认：大按钮 + 三选（先交班 / 取消 / 确认退出）
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle(i18n.get("common.confirm"));
-        alert.setHeaderText(null);
-        alert.setContentText(isCartEmpty()
+        // 触屏版退出确认：大按钮 + 三选（先交班 / 取消 / 确认退出）。
+        // 三个按钮放在显式 HBox 中统一排版，确保无论字号/间距都完整显示。
+        Dialog<String> dialog = new Dialog<>();
+        dialog.setTitle(i18n.get("common.confirm"));
+        dialog.setHeaderText(null);
+        dialog.getDialogPane().getStyleClass().add("fs-18");
+
+        String message = isCartEmpty()
             ? i18n.get("tpos.exit_confirm")
-            : i18n.get("runtime.cart_exit_confirm"));
-        alert.getDialogPane().getStyleClass().add("fs-18");
+            : i18n.get("runtime.cart_exit_confirm");
 
-        ButtonType shiftFirstType = new ButtonType(i18n.get("tpos.exit_shift_first"), javafx.scene.control.ButtonBar.ButtonData.OTHER);
-        alert.getButtonTypes().setAll(shiftFirstType, ButtonType.CANCEL, ButtonType.OK);
-
-        // 触屏化：放大按钮（150x56、字号18），适合点按
-        alert.setOnShown(e -> {
-            for (ButtonType bt : alert.getButtonTypes()) {
-                Button b = (Button) alert.getDialogPane().lookupButton(bt);
-                if (b != null) {
-                    b.setPrefSize(150, 56);
-                    b.getStyleClass().add("title-md");
-                }
-            }
-        });
-
-        ThemeUtils.applyDialogTheme(alert.getDialogPane());
-        ButtonType clicked = alert.showAndWait().orElse(ButtonType.CANCEL);
-        if (clicked == ButtonType.CANCEL) {
-            return;
+        Button shiftFirstBtn = new Button(i18n.get("tpos.exit_shift_first"));
+        Button cancelBtn = new Button(i18n.get("common.cancel"));
+        Button confirmBtn = new Button(i18n.get("common.confirm"));
+        for (Button b : new Button[]{shiftFirstBtn, cancelBtn, confirmBtn}) {
+            b.setPrefSize(180, 56);
+            b.getStyleClass().add("title-md");
         }
-        if (clicked == shiftFirstType) {
+        shiftFirstBtn.setCancelButton(false);
+        cancelBtn.setOnAction(e -> dialog.setResult("cancel"));
+        confirmBtn.setOnAction(e -> dialog.setResult("exit"));
+        shiftFirstBtn.setOnAction(e -> {
             // 先交班：弹出交接班页面，交班完成后直接退出
             com.cashier.controller.ShiftController shiftController = openShiftDialog();
             if (shiftController != null && shiftController.isShiftEnded()) {
-                // 交班已成功完成，直接退出到登录界面
                 StatusBarManager.updateSuccess("交接班完成，正在退出…");
                 if (application != null) {
                     application.logoutToLoginView();
                 }
             } else {
-                // 用户未完成交班（取消/仅开班/仅查看），留在收银台
                 StatusBarManager.updateSuccess("交接班操作完成");
                 updateStatus();
             }
-            return;
+            dialog.close();
+        });
+
+        HBox buttons = new HBox(16, shiftFirstBtn, cancelBtn, confirmBtn);
+        buttons.setAlignment(javafx.geometry.Pos.CENTER);
+        buttons.setPrefWidth(3 * 180 + 2 * 16);
+        buttons.setMinWidth(3 * 180 + 2 * 16);
+        buttons.setMaxWidth(3 * 180 + 2 * 16);
+
+        VBox content = new VBox(20, message(message), buttons);
+        content.setAlignment(javafx.geometry.Pos.CENTER);
+        content.setPadding(new Insets(20, 30, 20, 30));
+
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().clear();
+        dialog.getDialogPane().setPrefWidth(3 * 180 + 2 * 16 + 100);
+
+        ThemeUtils.applyDialogTheme(dialog.getDialogPane());
+        if (productGrid.getScene() != null) {
+            dialog.initOwner(productGrid.getScene().getWindow());
         }
-        // 确认退出
-        if (application != null) {
+
+        String result = dialog.showAndWait().orElse("cancel");
+        if ("exit".equals(result) && application != null) {
             application.logoutToLoginView();
         }
+    }
+
+    private Label message(String text) {
+        Label label = new Label(text);
+        label.setWrapText(true);
+        label.getStyleClass().add("fs-18");
+        return label;
     }
 
     /**

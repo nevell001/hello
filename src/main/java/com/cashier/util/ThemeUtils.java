@@ -47,6 +47,9 @@ public final class ThemeUtils {
         if (target == null || source == null) {
             return;
         }
+        if (target == source) {
+            return;
+        }
         target.getStylesheets().addAll(source.getStylesheets());
         if (source.getRoot() != null && target.getRoot() != null) {
             source.getRoot().getStyleClass().stream()
