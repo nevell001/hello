@@ -8,6 +8,8 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.fontbox.ttf.TrueTypeCollection;
+import org.apache.fontbox.ttf.TrueTypeFont;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.slf4j.Logger;
@@ -244,8 +246,7 @@ public class ExportUtil {
             File fontFile = new File(fontPath);
             if (fontFile.exists()) {
                 try {
-                    // TTC 文件必须使用 File 对象加载
-                    PDFont font = PDType0Font.load(document, fontFile);
+                    PDFont font = loadFont(document, fontFile);
                     logger.info("成功加载系统字体: {}", fontPath);
                     return font;
                 } catch (IOException e) {
@@ -264,7 +265,7 @@ public class ExportUtil {
             File fontFile = new File(fsPath);
             if (fontFile.exists() && fontFile.length() > 1000) {
                 try {
-                    PDFont font = PDType0Font.load(document, fontFile);
+                    PDFont font = loadFont(document, fontFile);
                     logger.info("成功从文件系统加载字体: {}", fsPath);
                     return font;
                 } catch (IOException e) {
@@ -273,10 +274,12 @@ public class ExportUtil {
             }
         }
 
-        // 3. 尝试从项目资源加载（仅支持 TTF/OTF，不支持 TTC）
+        // 3. 尝试从项目资源加载（同时支持 TTF/OTF 与 TTC）
         String[] resourcePaths = {
+            "/fonts/NotoSansSC-Regular.ttc",
             "/fonts/NotoSansSC-Regular.ttf",
             "/fonts/NotoSansSC-Regular.otf",
+            "/com/cashier/fonts/NotoSansSC-Regular.ttc",
             "/com/cashier/fonts/NotoSansSC-Regular.ttf",
             "/com/cashier/fonts/NotoSansSC-Regular.otf"
         };
@@ -284,7 +287,7 @@ public class ExportUtil {
         for (String fontPath : resourcePaths) {
             try (InputStream is = ExportUtil.class.getResourceAsStream(fontPath)) {
                 if (is != null && is.available() > 1000) {
-                    PDFont font = PDType0Font.load(document, is);
+                    PDFont font = loadFont(document, is, fontPath.endsWith(".ttc"));
                     logger.info("成功加载项目字体: {}", fontPath);
                     return font;
                 }
@@ -295,6 +298,70 @@ public class ExportUtil {
 
         logger.error("未能加载任何中文字体，PDF 导出将无法正确显示中文");
         throw new IOException("无法加载中文字体，请安装中文字体或检查字体文件");
+    }
+
+    /**
+     * 加载字体文件（支持 .ttf/.otf 与 .ttc）
+     * .ttc 为字体集合，需通过 TrueTypeCollection 解包后选择简体中文子字体嵌入
+     */
+    private static PDFont loadFont(PDDocument document, File fontFile) throws IOException {
+        String name = fontFile.getName().toLowerCase();
+        if (!name.endsWith(".ttc")) {
+            return PDType0Font.load(document, fontFile);
+        }
+        try (TrueTypeCollection collection = new TrueTypeCollection(fontFile)) {
+            return loadFromCollection(document, collection);
+        }
+    }
+
+    /**
+     * 从资源流加载字体（TTC 需解包）
+     */
+    private static PDFont loadFont(PDDocument document, InputStream is, boolean isTtc) throws IOException {
+        if (!isTtc) {
+            return PDType0Font.load(document, is);
+        }
+        try (TrueTypeCollection collection = new TrueTypeCollection(is)) {
+            return loadFromCollection(document, collection);
+        }
+    }
+
+    /**
+     * 从 TrueTypeCollection 中选择简体中文子字体并嵌入
+     */
+    private static PDFont loadFromCollection(PDDocument document, TrueTypeCollection collection)
+            throws IOException {
+        // 优先按简体中文字体名查找
+        String[][] candidates = {
+            {"NotoSansCJKsc-Regular", "Noto Sans CJK SC", "NotoSansSC-Regular", "Noto Sans SC"},
+            {"MicrosoftYaHei", "Microsoft YaHei", "微软雅黑"},
+            {"SimSun", "宋体"}
+        };
+        for (String[] names : candidates) {
+            for (String name : names) {
+                try {
+                    TrueTypeFont ttf = collection.getFontByName(name);
+                    if (ttf != null) {
+                        return PDType0Font.load(document, ttf, false);
+                    }
+                } catch (IOException e) {
+                    logger.debug("TTC 子字体 {} 加载失败: {}", name, e.getMessage());
+                }
+            }
+        }
+        // 兜底：嵌入第一个可用子字体
+        final PDFont[] result = new PDFont[1];
+        collection.processAllFonts(ttf -> {
+            try {
+                result[0] = PDType0Font.load(document, ttf, false);
+            } catch (IOException e) {
+                logger.debug("TTC 兜底字体加载失败 {}: {}", ttf.getName(), e.getMessage());
+            }
+        });
+        if (result[0] != null) {
+            return result[0];
+        }
+        throw new IOException("TTC 字体集合中无可嵌入的子字体");
     }
 
     /**
