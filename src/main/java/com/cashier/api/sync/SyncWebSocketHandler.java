@@ -39,8 +39,9 @@ public class SyncWebSocketHandler {
             
             if (user == null) {
                 logger.warn("WebSocket 连接认证失败");
-                // 发送错误消息后关闭
+                // 发送错误消息后关闭连接，避免未认证连接被保留
                 ctx.send("{\"type\":\"ERROR\",\"data\":{\"message\":\"认证失败\"}}");
+                ctx.session.close(4001, "认证失败");
                 return;
             }
             

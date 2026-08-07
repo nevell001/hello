@@ -20,7 +20,7 @@ class UserApiControllerTest extends DatabaseTestBase {
         User user = new User();
         user.id = 1;
         user.username = "admin";
-        user.role = "管理员";
+        user.role = "admin";
         return user;
     }
 
@@ -28,7 +28,7 @@ class UserApiControllerTest extends DatabaseTestBase {
         User user = new User();
         user.id = 2;
         user.username = "cashier";
-        user.role = "收银员";
+        user.role = "cashier";
         return user;
     }
 

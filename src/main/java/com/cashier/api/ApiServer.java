@@ -438,6 +438,7 @@ public class ApiServer {
             if (currentCount > RATE_LIMIT_PER_MINUTE) {
                 ctx.status(HttpStatus.TOO_MANY_REQUESTS)
                    .json(Map.of("success", false, "message", "请求过于频繁，请稍后再试"));
+                ctx.skipRemainingHandlers();
                 return;
             }
 

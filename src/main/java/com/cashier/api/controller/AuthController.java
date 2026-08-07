@@ -1,6 +1,7 @@
 package com.cashier.api.controller;
 
 import com.cashier.api.ApiServer;
+import com.cashier.dao.LoginAttemptDAO;
 import com.cashier.dao.UserDAO;
 import com.cashier.model.User;
 import com.cashier.util.PasswordUtil;
@@ -16,7 +17,9 @@ import java.util.Map;
  */
 public class AuthController {
     private static final Logger logger = LoggerFactoryUtil.getLogger(AuthController.class);
-    
+    private static final int MAX_LOGIN_ATTEMPTS = 5;
+    private static final long LOCKOUT_DURATION_MINUTES = 5;
+
     /**
      * 登录
      * POST /api/auth/login
@@ -35,20 +38,33 @@ public class AuthController {
                    .json(Map.of("success", false, "message", "用户名和密码不能为空"));
                 return;
             }
+
+            // 检查账户锁定（与桌面端登录保持一致策略，持久化到数据库）
+            request.username = request.username.trim();
+            if (LoginAttemptDAO.isLocked(request.username)) {
+                long remainingSeconds = LoginAttemptDAO.getRemainingLockoutSeconds(request.username);
+                ctx.status(HttpStatus.TOO_MANY_REQUESTS)
+                   .json(Map.of("success", false, "message", "账户已锁定，请 " + remainingSeconds + " 秒后重试"));
+                return;
+            }
             
             User user = UserDAO.findByUsername(request.username);
 
             if (user == null || !PasswordUtil.verifyPassword(request.password, user.password)) {
+                int attempts = LoginAttemptDAO.recordFailedAttempt(request.username, MAX_LOGIN_ATTEMPTS, LOCKOUT_DURATION_MINUTES * 60 * 1000);
                 ctx.status(HttpStatus.UNAUTHORIZED)
-                   .json(Map.of("success", false, "message", "用户名或密码错误"));
+                   .json(Map.of("success", false, "message", "用户名或密码错误，剩余尝试次数: " + (MAX_LOGIN_ATTEMPTS - attempts)));
                 return;
             }
-            
+
             if (!user.active) {
                 ctx.status(HttpStatus.UNAUTHORIZED)
                    .json(Map.of("success", false, "message", "用户已被禁用"));
                 return;
             }
+
+            // 登录成功，重置失败次数
+            LoginAttemptDAO.resetAttempts(request.username);
             
             // 生成 Token
             String token = ApiServer.getInstance().generateToken(user);
@@ -94,6 +110,9 @@ public class AuthController {
                 return;
             }
             
+            // 吊销旧 Token，避免刷新后旧 token 仍有效（泄露的旧 token 失效）
+            ApiServer.getInstance().invalidateToken(token);
+
             String newToken = ApiServer.getInstance().generateToken(user);
             ctx.json(Map.of("success", true, "token", newToken));
         } catch (Exception e) {

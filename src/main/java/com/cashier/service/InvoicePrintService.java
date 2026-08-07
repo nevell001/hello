@@ -57,7 +57,7 @@ public class InvoicePrintService {
         html.append("<html lang=\"zh-CN\">\n");
         html.append("<head>\n");
         html.append("<meta charset=\"UTF-8\">\n");
-        html.append("<title>电子发票 - ").append(invoice.invoiceId).append("</title>\n");
+        html.append("<title>电子发票 - ").append(esc(invoice.invoiceId)).append("</title>\n");
         html.append("<style>\n");
         html.append("body { font-family: 'Noto Sans CJK SC', 'PingFang SC', 'Microsoft YaHei UI', 'Microsoft YaHei', sans-serif; margin: 20px; }\n");
         html.append(".invoice-container { max-width: 800px; margin: auto; border: 2px solid #000; padding: 20px; }\n");
@@ -80,8 +80,8 @@ public class InvoicePrintService {
         
         // 发票基本信息
         html.append(INFO_ROW_START);
-        html.append("<span>发票代码:</span>").append(invoice.invoiceCode).append("\n");
-        html.append("<span>发票号码:</span>").append(invoice.invoiceNumber).append("\n");
+        html.append("<span>发票代码:</span>").append(esc(invoice.invoiceCode)).append("\n");
+        html.append("<span>发票号码:</span>").append(esc(invoice.invoiceNumber)).append("\n");
         html.append(DIV_END);
         
         html.append(INFO_ROW_START);
@@ -92,21 +92,21 @@ public class InvoicePrintService {
         // 购买方信息
         html.append("<div class=\"section-title\" style=\"font-weight: bold; margin: 15px 0;\">购买方信息</div>\n");
         html.append(INFO_ROW_START);
-        html.append("<span>名称:</span>").append(invoice.buyerName).append("\n");
+        html.append("<span>名称:</span>").append(esc(invoice.buyerName)).append("\n");
         html.append(DIV_END);
         if (invoice.buyerTaxId != null && !invoice.buyerTaxId.isEmpty()) {
             html.append(INFO_ROW_START);
-            html.append("<span>纳税人识别号:</span>").append(invoice.buyerTaxId).append("\n");
+            html.append("<span>纳税人识别号:</span>").append(esc(invoice.buyerTaxId)).append("\n");
             html.append(DIV_END);
         }
         if (invoice.buyerAddress != null && !invoice.buyerAddress.isEmpty()) {
             html.append(INFO_ROW_START);
-            html.append("<span>地址电话:</span>").append(invoice.buyerAddress).append(" ").append(invoice.buyerPhone).append("\n");
+            html.append("<span>地址电话:</span>").append(esc(invoice.buyerAddress)).append(" ").append(esc(invoice.buyerPhone)).append("\n");
             html.append(DIV_END);
         }
         if (invoice.buyerBank != null && !invoice.buyerBank.isEmpty()) {
             html.append(INFO_ROW_START);
-            html.append("<span>开户行及账号:</span>").append(invoice.buyerBank).append("\n");
+            html.append("<span>开户行及账号:</span>").append(esc(invoice.buyerBank)).append("\n");
             html.append(DIV_END);
         }
         
@@ -117,9 +117,9 @@ public class InvoicePrintService {
         if (invoice.items != null) {
             for (InvoiceItem item : invoice.items) {
                 html.append("<tr>\n");
-                html.append("<td>").append(item.productName).append("</td>\n");
-                html.append("<td>").append(item.specification).append("</td>\n");
-                html.append("<td>").append(item.unit).append("</td>\n");
+                html.append("<td>").append(esc(item.productName)).append("</td>\n");
+                html.append("<td>").append(esc(item.specification)).append("</td>\n");
+                html.append("<td>").append(esc(item.unit)).append("</td>\n");
                 html.append("<td>").append(item.quantity).append("</td>\n");
                 html.append("<td>").append(formatAmount(item.unitPrice)).append("</td>\n");
                 html.append("<td>").append(formatAmount(item.amount)).append("</td>\n");
@@ -151,22 +151,22 @@ public class InvoicePrintService {
         // 销售方信息
         html.append("<div class=\"section-title\" style=\"font-weight: bold; margin: 15px 0;\">销售方信息</div>\n");
         html.append(INFO_ROW_START);
-        html.append("<span>名称:</span>").append(invoice.sellerName).append("\n");
+        html.append("<span>名称:</span>").append(esc(invoice.sellerName)).append("\n");
         html.append(DIV_END);
         html.append(INFO_ROW_START);
-        html.append("<span>纳税人识别号:</span>").append(invoice.sellerTaxId).append("\n");
+        html.append("<span>纳税人识别号:</span>").append(esc(invoice.sellerTaxId)).append("\n");
         html.append(DIV_END);
         html.append(INFO_ROW_START);
-        html.append("<span>地址电话:</span>").append(invoice.sellerAddress).append(" ").append(invoice.sellerPhone).append("\n");
+        html.append("<span>地址电话:</span>").append(esc(invoice.sellerAddress)).append(" ").append(esc(invoice.sellerPhone)).append("\n");
         html.append(DIV_END);
         html.append(INFO_ROW_START);
-        html.append("<span>开户行及账号:</span>").append(invoice.sellerBank).append("\n");
+        html.append("<span>开户行及账号:</span>").append(esc(invoice.sellerBank)).append("\n");
         html.append(DIV_END);
         
         // 备注
         if (invoice.remark != null && !invoice.remark.isEmpty()) {
             html.append("<div class=\"info-row\" style=\"margin-top: 20px;\">\n");
-            html.append("<span>备注:</span>").append(invoice.remark).append("\n");
+            html.append("<span>备注:</span>").append(esc(invoice.remark)).append("\n");
             html.append(DIV_END);
         }
         
@@ -174,9 +174,9 @@ public class InvoicePrintService {
         html.append("<div class=\"footer\">\n");
         html.append("<div class=\"stamp\">发票专用章</div>\n");
         html.append("<div style=\"margin-top: 20px;\">\n");
-        html.append("收款人: ").append(invoice.payee != null ? invoice.payee : "").append("\n");
-        html.append("复核人: ").append(invoice.checker != null ? invoice.checker : "").append("\n");
-        html.append("开票人: ").append(invoice.createBy != null ? invoice.createBy : "").append("\n");
+        html.append("收款人: ").append(esc(invoice.payee != null ? invoice.payee : "")).append("\n");
+        html.append("复核人: ").append(esc(invoice.checker != null ? invoice.checker : "")).append("\n");
+        html.append("开票人: ").append(esc(invoice.createBy != null ? invoice.createBy : "")).append("\n");
         html.append(DIV_END);
         html.append(DIV_END);
         
@@ -222,6 +222,19 @@ public class InvoicePrintService {
         return java.time.Instant.ofEpochMilli(date.getTime())
             .atZone(java.time.ZoneId.systemDefault())
             .format(com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME);
+    }
+
+    /**
+     * HTML 转义，防止发票字段注入脚本/HTML（存储型 XSS）
+     */
+    private static String esc(Object value) {
+        if (value == null) return "";
+        return value.toString()
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;")
+            .replace("'", "&#39;");
     }
     
     /**

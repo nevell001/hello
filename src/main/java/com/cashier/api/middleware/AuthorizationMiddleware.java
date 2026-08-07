@@ -13,8 +13,8 @@ import java.util.Map;
  * 避免各控制器自行检查时出现遗漏。
  */
 public final class AuthorizationMiddleware {
-    private static final String ADMIN = "管理员";
-    private static final String FINANCE = "财务";
+    private static final String ADMIN = "admin";
+    private static final String FINANCE = "finance";
 
     private AuthorizationMiddleware() {
     }
@@ -60,6 +60,8 @@ public final class AuthorizationMiddleware {
             || path.matches("/api/payment/[^/]+/refund")
             || path.matches("/api/invoices/[^/]+/void")
             || path.equals("/api/invoices/manual")
+            || path.matches("/api/members/[^/]+/recharge")
+            || (path.matches("/api/members/[^/]+") && isMutating(method))
             || (path.startsWith("/api/reports/") && "GET".equals(method));
     }
 

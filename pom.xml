@@ -218,11 +218,11 @@
             <version>${slf4j.version}</version>
         </dependency>
 
-        <!-- Logback - 日志实现 (升级至 1.5.15 修复 CVE-2023-6481, CVE-2024-12798) -->
+        <!-- Logback - 日志实现 (升级至 1.5.18 修复 CVE-2023-6481, CVE-2024-12798, CVE-2025-27150) -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.5.15</version>
+            <version>1.5.18</version>
         </dependency>
 
         <!-- Log4j2 到 SLF4J 桥接 - 统一 Apache POI 等依赖的日志输出 -->

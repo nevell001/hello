@@ -35,7 +35,7 @@ public class UserApiController {
                     .json(Map.of(KEY_SUCCESS, false, KEY_MESSAGE, "未登录"));
             return false;
         }
-        if (!"管理员".equals(user.role)) {
+        if (!"admin".equals(user.role)) {
                 ctx.status(HttpStatus.FORBIDDEN)
                     .json(Map.of(KEY_SUCCESS, false, KEY_MESSAGE, "权限不足"));
             return false;
@@ -117,7 +117,7 @@ public class UserApiController {
             user.username = request.username;
             user.password = PasswordUtil.hashPassword(request.password);
             user.name = request.name != null ? request.name : request.username;
-            user.role = request.role != null ? request.role : "收银员";
+            user.role = request.role != null ? request.role : "cashier";
             user.email = request.email != null ? request.email : "";
             user.active = Objects.requireNonNullElse(request.active, true);
             
