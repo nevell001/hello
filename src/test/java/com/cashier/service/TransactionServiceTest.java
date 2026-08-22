@@ -2,7 +2,7 @@ package com.cashier.service;
 
 import com.cashier.dao.MemberDAO;
 import com.cashier.dao.DAOFactory;
-import com.cashier.dao.PromotionDAO;
+import com.cashier.dao.PromotionDAORefactored;
 import com.cashier.dao.TransactionDAO;
 import com.cashier.util.DatabaseTestBase;
 import com.cashier.model.CartItem;
@@ -26,6 +26,8 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class TransactionServiceTest extends DatabaseTestBase {
+
+    private final PromotionDAORefactored promotionDAO = DAOFactory.getInstance().getPromotionDAO();
 
     private Member testMember;
     private List<Product> testProducts;
@@ -260,7 +262,7 @@ class TransactionServiceTest extends DatabaseTestBase {
         promotion.discount = BigDecimal.valueOf(5.0);
         promotion.description = "测试促销";
         promotion.enabled = true;
-        PromotionDAO.insert(promotion);
+        promotionDAO.insert(promotion);
 
         Transaction transaction = createPreparedTransaction("T-PROMO-001", "现金", BigDecimal.valueOf(35.0), null);
 
@@ -277,7 +279,7 @@ class TransactionServiceTest extends DatabaseTestBase {
         assertEquals("T-PROMO-001", result.getTransaction().transactionId);
         assertAmountEquals(35.0, result.getTransaction().finalAmount);
 
-        Promotion updatedPromotion = PromotionDAO.findById(promotion.id);
+        Promotion updatedPromotion = promotionDAO.findById(promotion.id);
         assertNotNull(updatedPromotion);
         assertEquals(1, updatedPromotion.usageCount);
         assertEquals(1, TransactionDAO.findAll().size());

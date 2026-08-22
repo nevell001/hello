@@ -163,7 +163,7 @@ public class DataService {
      */
     public static List<Promotion> loadPromotions() {
         try {
-            return PromotionDAO.findRecent(LEGACY_LOAD_LIMIT);
+            return DAOFactory.getInstance().getPromotionDAO().findRecent(LEGACY_LOAD_LIMIT);
         } catch (SQLException e) {
             logger.error("加载促销数据失败", e);
             return new ArrayList<>();
@@ -183,7 +183,7 @@ public class DataService {
             }
             // 批量插入新促销
             if (promotions != null && !promotions.isEmpty()) {
-                PromotionDAO.batchInsertWithConnection(conn, promotions);
+                DAOFactory.getInstance().getPromotionDAO().batchInsertWithConnection(conn, promotions);
             }
             return true;
         });

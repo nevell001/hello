@@ -898,7 +898,7 @@ class PerformancePolicyTest {
         assertTrue(dataService.contains("UserDAO.findAll(FIRST_PAGE, LEGACY_LOAD_LIMIT).getData()"));
         assertTrue(dataService.contains("MemberDAO.findAll(FIRST_PAGE, LEGACY_LOAD_LIMIT).getData()"));
         assertTrue(dataService.contains("TransactionDAO.findRecent(LEGACY_LOAD_LIMIT)"));
-        assertTrue(dataService.contains("PromotionDAO.findRecent(LEGACY_LOAD_LIMIT)"));
+        assertTrue(dataService.contains("getPromotionDAO().findRecent(LEGACY_LOAD_LIMIT)"));
         assertTrue(dataService.contains("getRechargeRecordDAO().findRecent(LEGACY_LOAD_LIMIT)"));
         assertTrue(dataService.contains("OperationLogDAO.findRecent(LEGACY_LOAD_LIMIT)"));
 

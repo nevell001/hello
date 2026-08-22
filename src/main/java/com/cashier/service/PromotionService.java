@@ -1,6 +1,6 @@
 package com.cashier.service;
 
-import com.cashier.dao.PromotionDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.model.Promotion;
 import com.cashier.util.DatabaseManager;
 import com.cashier.util.LoggerFactoryUtil;
@@ -24,7 +24,7 @@ public class PromotionService {
      */
     public static List<Promotion> getActivePromotions() {
         try {
-            return PromotionDAO.findActive();
+            return DAOFactory.getInstance().getPromotionDAO().findActive();
         } catch (SQLException e) {
             logger.error("获取有效促销失败", e);
             return new ArrayList<>();
@@ -36,7 +36,7 @@ public class PromotionService {
      */
     public static List<Promotion> getEnabledPromotions() {
         try {
-            return PromotionDAO.findEnabled();
+            return DAOFactory.getInstance().getPromotionDAO().findEnabled();
         } catch (SQLException e) {
             logger.error("获取已启用促销失败", e);
             return new ArrayList<>();
@@ -72,7 +72,7 @@ public class PromotionService {
         try {
             BigDecimal result = DatabaseManager.executeInTransaction(conn -> {
                 // 使用事务连接读取，确保 check-then-act 在同一事务内
-                Promotion promo = PromotionDAO.findByIdWithConnection(conn, promotionId);
+                Promotion promo = DAOFactory.getInstance().getPromotionDAO().findByIdWithConnection(conn, promotionId);
                 if (promo == null || !promo.enabled || !promo.isValid()) {
                     return null;
                 }
@@ -84,7 +84,7 @@ public class PromotionService {
                 BigDecimal discount = promo.calculateDiscount(amount);
                 if (discount.compareTo(BigDecimal.ZERO) > 0) {
                     // incrementUsageWithConnection 已加并发保护（WHERE usage_count < max_usage）
-                    boolean incremented = PromotionDAO.incrementUsageWithConnection(conn, promotionId);
+                    boolean incremented = DAOFactory.getInstance().getPromotionDAO().incrementUsageWithConnection(conn, promotionId);
                     if (!incremented) {
                         logger.warn("促销 {} 使用次数已达上限，跳过", promo.name);
                         return null;
@@ -107,7 +107,7 @@ public class PromotionService {
      */
     public static boolean createPromotion(Promotion promotion) {
         try {
-            boolean result = PromotionDAO.insert(promotion);
+            boolean result = DAOFactory.getInstance().getPromotionDAO().insert(promotion);
             if (result) {
                 logger.info("促销创建成功: {}", promotion.name);
             }
@@ -123,7 +123,7 @@ public class PromotionService {
      */
     public static boolean updatePromotion(Promotion promotion) {
         try {
-            boolean result = PromotionDAO.update(promotion);
+            boolean result = DAOFactory.getInstance().getPromotionDAO().update(promotion);
             if (result) {
                 logger.info("促销更新成功: {}", promotion.name);
             }
@@ -139,7 +139,7 @@ public class PromotionService {
      */
     public static boolean deletePromotion(int id) {
         try {
-            boolean result = PromotionDAO.delete(id);
+            boolean result = DAOFactory.getInstance().getPromotionDAO().delete(id);
             if (result) {
                 logger.info("促销删除成功: id={}", id);
             }

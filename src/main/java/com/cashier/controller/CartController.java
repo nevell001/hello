@@ -6,7 +6,6 @@ import com.cashier.i18n.I18nManager;
 import com.cashier.dao.MemberDAO;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
-import com.cashier.dao.PromotionDAO;
 import com.cashier.model.CartItem;
 import com.cashier.model.Promotion;
 import com.cashier.service.DataService;
@@ -817,6 +816,99 @@ public class CartController implements CartViewHost {
         dialog.setTitle(com.cashier.i18n.I18nManager.getInstance().get("statistics.cash_payment"));
         dialog.setHeaderText(null);
 
+        CashPaymentForm form = createCashPaymentForm(finalAmount, alreadyPaidAmount);
+
+        String symbol = CurrencyUtil.getSymbol();
+        Button btn100 = createQuickAmountButton(symbol, "100", form.receivedField);
+        Button btn50 = createQuickAmountButton(symbol, "50", form.receivedField);
+        Button btn20 = createQuickAmountButton(symbol, "20", form.receivedField);
+        Button btn10 = createQuickAmountButton(symbol, "10", form.receivedField);
+        Button btn5 = createQuickAmountButton(symbol, "5", form.receivedField);
+
+        HBox quickButtons = new HBox(10, btn100, btn50, btn20, btn10, btn5);
+        form.grid.add(quickButtons, 0, 5, 2, 1);
+
+        dialog.getDialogPane().setContent(form.grid);
+        ThemeUtils.applyDialogTheme(dialog.getDialogPane());
+
+        ButtonType okButtonType = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Dialog.CONFIRM), ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(okButtonType, ButtonType.CANCEL);
+
+        form.receivedField.textProperty().addListener((obs, oldVal, newVal) -> {
+            try {
+                BigDecimal received = new BigDecimal(newVal.trim());
+                BigDecimal totalPaid = alreadyPaidAmount.add(received);
+                BigDecimal remaining = finalAmount.subtract(totalPaid);
+                if (remaining.compareTo(BigDecimal.ZERO) <= 0) {
+                    form.changeLabel.setText(I18nManager.getInstance().get(I18nKeys.Runtime.CHANGE_AMOUNT, CurrencyUtil.format(remaining.abs().doubleValue())));
+                    form.changeLabel.getStyleClass().removeAll(TEXT_SUCCESS_STYLE, TEXT_DANGER_STYLE);
+                    form.changeLabel.getStyleClass().add(TEXT_SUCCESS_STYLE);
+                } else {
+                    form.changeLabel.setText(I18nManager.getInstance().get("runtime.remaining_amount", CurrencyUtil.format(remaining.doubleValue())));
+                    form.changeLabel.getStyleClass().removeAll(TEXT_SUCCESS_STYLE, TEXT_DANGER_STYLE);
+                    form.changeLabel.getStyleClass().add(TEXT_DANGER_STYLE);
+                }
+            } catch (NumberFormatException e) {
+                BigDecimal remaining = finalAmount.subtract(alreadyPaidAmount);
+                if (remaining.compareTo(BigDecimal.ZERO) <= 0) {
+                    form.changeLabel.setText(I18nManager.getInstance().get(I18nKeys.Runtime.CHANGE_AMOUNT, CurrencyUtil.format(0)));
+                } else {
+                    form.changeLabel.setText(I18nManager.getInstance().get("runtime.remaining_amount", CurrencyUtil.format(remaining.doubleValue())));
+                }
+            }
+        });
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == okButtonType) {
+                try {
+                    BigDecimal received = new BigDecimal(form.receivedField.getText().trim());
+                    if (received.compareTo(BigDecimal.ZERO) <= 0) {
+                        showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.invalid_amount"));
+                        return null;
+                    }
+                    return received;
+                } catch (NumberFormatException e) {
+                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.invalid_amount"));
+                    return null;
+                }
+            }
+            return null;
+        });
+
+        dialog.setOnShown(event -> {
+            javafx.application.Platform.runLater(form.receivedField::requestFocus);
+
+            Button okButton = (Button) dialog.getDialogPane().lookupButton(okButtonType);
+            if (okButton != null) {
+                okButton.setPrefSize(120, 50);
+                okButton.getStyleClass().add("title-sm");
+            }
+            Button cancelButton = (Button) dialog.getDialogPane().lookupButton(ButtonType.CANCEL);
+            if (cancelButton != null) {
+                cancelButton.setPrefSize(120, 50);
+                cancelButton.getStyleClass().add("fs-16");
+            }
+        });
+
+        dialog.showAndWait().ifPresentOrElse(
+            receivedAmount -> handleCashPaymentResult(receivedAmount, finalAmount),
+            this::handleCashPaymentCancelled);
+    }
+
+    /** 现金支付表单控件集合 */
+    private static class CashPaymentForm {
+        final GridPane grid;
+        final TextField receivedField;
+        final Label changeLabel;
+
+        CashPaymentForm(GridPane grid, TextField receivedField, Label changeLabel) {
+            this.grid = grid;
+            this.receivedField = receivedField;
+            this.changeLabel = changeLabel;
+        }
+    }
+
+    private CashPaymentForm createCashPaymentForm(BigDecimal finalAmount, BigDecimal alreadyPaidAmount) {
         GridPane grid = new GridPane();
         grid.setHgap(15);
         grid.setVgap(15);
@@ -853,133 +945,40 @@ public class CartController implements CartViewHost {
         grid.add(receivedLabel, 0, 3);
         grid.add(receivedField, 1, 3);
         grid.add(changeLabel, 0, 4, 2, 1);
+        return new CashPaymentForm(grid, receivedField, changeLabel);
+    }
 
-        String symbol = CurrencyUtil.getSymbol();
-        Button btn100 = new Button(symbol + "100");
-        btn100.setPrefSize(100, 60);
-        btn100.getStyleClass().add(QUICK_AMOUNT_BUTTON_CLASS);
-        btn100.setOnAction(e -> {
-            receivedField.setText("100");
+    private Button createQuickAmountButton(String symbol, String amount, TextField receivedField) {
+        Button button = new Button(symbol + amount);
+        button.setPrefSize(100, 60);
+        button.getStyleClass().add(QUICK_AMOUNT_BUTTON_CLASS);
+        button.setOnAction(e -> {
+            receivedField.setText(amount);
             receivedField.requestFocus();
         });
+        return button;
+    }
 
-        Button btn50 = new Button(symbol + "50");
-        btn50.setPrefSize(100, 60);
-        btn50.getStyleClass().add(QUICK_AMOUNT_BUTTON_CLASS);
-        btn50.setOnAction(e -> {
-            receivedField.setText("50");
-            receivedField.requestFocus();
-        });
+    private void handleCashPaymentResult(BigDecimal receivedAmount, BigDecimal finalAmount) {
+        BigDecimal totalPaid = alreadyPaidAmount.add(receivedAmount);
+        BigDecimal remaining = finalAmount.subtract(totalPaid);
 
-        Button btn20 = new Button(symbol + "20");
-        btn20.setPrefSize(100, 60);
-        btn20.getStyleClass().add(QUICK_AMOUNT_BUTTON_CLASS);
-        btn20.setOnAction(e -> {
-            receivedField.setText("20");
-            receivedField.requestFocus();
-        });
+        if (remaining.compareTo(BigDecimal.ZERO) <= 0) {
+            executePayment("现金", totalPaid, remaining.abs());
+            alreadyPaidAmount = BigDecimal.ZERO;
+        } else {
+            alreadyPaidAmount = totalPaid;
+            showInfo(I18nManager.getInstance().get("runtime.partial_payment",
+                CurrencyUtil.format(totalPaid.doubleValue()), CurrencyUtil.format(remaining.doubleValue())));
+            handleCashPayment();
+        }
+    }
 
-        Button btn10 = new Button(symbol + "10");
-        btn10.setPrefSize(100, 60);
-        btn10.getStyleClass().add(QUICK_AMOUNT_BUTTON_CLASS);
-        btn10.setOnAction(e -> {
-            receivedField.setText("10");
-            receivedField.requestFocus();
-        });
-
-        Button btn5 = new Button(symbol + "5");
-        btn5.setPrefSize(100, 60);
-        btn5.getStyleClass().add(QUICK_AMOUNT_BUTTON_CLASS);
-        btn5.setOnAction(e -> {
-            receivedField.setText("5");
-            receivedField.requestFocus();
-        });
-
-        HBox quickButtons = new HBox(10, btn100, btn50, btn20, btn10, btn5);
-        grid.add(quickButtons, 0, 5, 2, 1);
-
-        dialog.getDialogPane().setContent(grid);
-        ThemeUtils.applyDialogTheme(dialog.getDialogPane());
-
-        ButtonType okButtonType = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Dialog.CONFIRM), ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(okButtonType, ButtonType.CANCEL);
-
-        receivedField.textProperty().addListener((obs, oldVal, newVal) -> {
-            try {
-                BigDecimal received = new BigDecimal(newVal.trim());
-                BigDecimal totalPaid = alreadyPaidAmount.add(received);
-                BigDecimal remaining = finalAmount.subtract(totalPaid);
-                if (remaining.compareTo(BigDecimal.ZERO) <= 0) {
-                    changeLabel.setText(I18nManager.getInstance().get(I18nKeys.Runtime.CHANGE_AMOUNT, CurrencyUtil.format(remaining.abs().doubleValue())));
-                    changeLabel.getStyleClass().removeAll(TEXT_SUCCESS_STYLE, TEXT_DANGER_STYLE);
-                    changeLabel.getStyleClass().add(TEXT_SUCCESS_STYLE);
-                } else {
-                    changeLabel.setText(I18nManager.getInstance().get("runtime.remaining_amount", CurrencyUtil.format(remaining.doubleValue())));
-                    changeLabel.getStyleClass().removeAll(TEXT_SUCCESS_STYLE, TEXT_DANGER_STYLE);
-                    changeLabel.getStyleClass().add(TEXT_DANGER_STYLE);
-                }
-            } catch (NumberFormatException e) {
-                BigDecimal remaining = finalAmount.subtract(alreadyPaidAmount);
-                if (remaining.compareTo(BigDecimal.ZERO) <= 0) {
-                    changeLabel.setText(I18nManager.getInstance().get(I18nKeys.Runtime.CHANGE_AMOUNT, CurrencyUtil.format(0)));
-                } else {
-                    changeLabel.setText(I18nManager.getInstance().get("runtime.remaining_amount", CurrencyUtil.format(remaining.doubleValue())));
-                }
-            }
-        });
-
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == okButtonType) {
-                try {
-                    BigDecimal received = new BigDecimal(receivedField.getText().trim());
-                    if (received.compareTo(BigDecimal.ZERO) <= 0) {
-                        showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.invalid_amount"));
-                        return null;
-                    }
-                    return received;
-                } catch (NumberFormatException e) {
-                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.invalid_amount"));
-                    return null;
-                }
-            }
-            return null;
-        });
-
-        dialog.setOnShown(event -> {
-            javafx.application.Platform.runLater(receivedField::requestFocus);
-
-            Button okButton = (Button) dialog.getDialogPane().lookupButton(okButtonType);
-            if (okButton != null) {
-                okButton.setPrefSize(120, 50);
-                okButton.getStyleClass().add("title-sm");
-            }
-            Button cancelButton = (Button) dialog.getDialogPane().lookupButton(ButtonType.CANCEL);
-            if (cancelButton != null) {
-                cancelButton.setPrefSize(120, 50);
-                cancelButton.getStyleClass().add("fs-16");
-            }
-        });
-
-        dialog.showAndWait().ifPresentOrElse(receivedAmount -> {
-            BigDecimal totalPaid = alreadyPaidAmount.add(receivedAmount);
-            BigDecimal remaining = finalAmount.subtract(totalPaid);
-
-            if (remaining.compareTo(BigDecimal.ZERO) <= 0) {
-                executePayment("现金", totalPaid, remaining.abs());
-                alreadyPaidAmount = BigDecimal.ZERO;
-            } else {
-                alreadyPaidAmount = totalPaid;
-                showInfo(I18nManager.getInstance().get("runtime.partial_payment",
-                        CurrencyUtil.format(totalPaid.doubleValue()), CurrencyUtil.format(remaining.doubleValue())));
-                handleCashPayment();
-            }
-        }, () -> {
-            // 用户点击取消或关闭对话框
-            // 如果有部分支付未完成，重置已支付金额
-            if (alreadyPaidAmount.compareTo(BigDecimal.ZERO) > 0) {
-                alreadyPaidAmount = BigDecimal.ZERO;
-            }
-        });
+    private void handleCashPaymentCancelled() {
+        // 用户点击取消或关闭对话框，若有部分支付未完成则重置
+        if (alreadyPaidAmount.compareTo(BigDecimal.ZERO) > 0) {
+            alreadyPaidAmount = BigDecimal.ZERO;
+        }
     }
 
     /**
@@ -1327,7 +1326,7 @@ public class CartController implements CartViewHost {
         Promotion bestPromotion = null;
         BigDecimal promotionDiscount = BigDecimal.ZERO;
         try {
-            List<Promotion> promotions = PromotionDAO.findActive();
+            List<Promotion> promotions = DAOFactory.getInstance().getPromotionDAO().findActive();
             logger.info("购物车加载到 {} 个活跃促销", promotions.size());
 
             for (Promotion promotion : promotions) {
@@ -1487,7 +1486,7 @@ public class CartController implements CartViewHost {
         
         BigDecimal promotionDiscount = BigDecimal.ZERO;
         try {
-            List<Promotion> promotions = PromotionDAO.findActive();
+            List<Promotion> promotions = DAOFactory.getInstance().getPromotionDAO().findActive();
             for (Promotion promotion : promotions) {
                 BigDecimal discount = promotion.calculateDiscount(totalAmount);
                 if (discount.compareTo(promotionDiscount) > 0) {

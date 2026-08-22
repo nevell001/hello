@@ -1,6 +1,6 @@
 package com.cashier.service;
 
-import com.cashier.dao.PromotionDAO;
+import com.cashier.dao.PromotionDAORefactored;
 import com.cashier.dao.DAOFactory;
 import com.cashier.util.DatabaseTestBase;
 import com.cashier.model.CartItem;
@@ -19,6 +19,8 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class PromotionServiceTest extends DatabaseTestBase {
+
+    private final PromotionDAORefactored promotionDAO = DAOFactory.getInstance().getPromotionDAO();
 
     private Promotion testPromotion1;
     private Promotion testPromotion2;
@@ -57,12 +59,12 @@ class PromotionServiceTest extends DatabaseTestBase {
         promotion.description = "满200元减20元";
         promotion.enabled = true;
 
-        boolean success = PromotionDAO.insert(promotion);
+        boolean success = promotionDAO.insert(promotion);
 
         assertTrue(success);
 
         // 验证促销已创建
-        Promotion createdPromotion = PromotionDAO.findById(promotion.id);
+        Promotion createdPromotion = promotionDAO.findById(promotion.id);
         assertNotNull(createdPromotion);
         assertEquals("满200减20", createdPromotion.name);
         assertEquals("FULL_REDUCTION", createdPromotion.type);
@@ -82,12 +84,12 @@ class PromotionServiceTest extends DatabaseTestBase {
         promotion.description = "全场商品享受8折优惠";
         promotion.enabled = true;
 
-        boolean success = PromotionDAO.insert(promotion);
+        boolean success = promotionDAO.insert(promotion);
 
         assertTrue(success);
 
         // 验证促销已创建
-        Promotion createdPromotion = PromotionDAO.findById(promotion.id);
+        Promotion createdPromotion = promotionDAO.findById(promotion.id);
         assertNotNull(createdPromotion);
         assertEquals("全场8折", createdPromotion.name);
         assertEquals("PERCENTAGE_DISCOUNT", createdPromotion.type);
@@ -99,7 +101,7 @@ class PromotionServiceTest extends DatabaseTestBase {
     @Order(3)
     @DisplayName("测试查询所有促销")
     void testFindAllPromotions() throws Exception {
-        List<Promotion> promotions = PromotionDAO.findAll();
+        List<Promotion> promotions = promotionDAO.findAll();
 
         assertNotNull(promotions);
         assertEquals(2, promotions.size());
@@ -115,10 +117,10 @@ class PromotionServiceTest extends DatabaseTestBase {
         // 创建一个禁用的促销
         Promotion disabledPromotion = createPromotion("禁用促销", "FULL_REDUCTION", 50.0, 5.0);
         disabledPromotion.enabled = false;
-        PromotionDAO.update(disabledPromotion);
+        promotionDAO.update(disabledPromotion);
 
         // 查询启用的促销
-        List<Promotion> enabledPromotions = PromotionDAO.findEnabled();
+        List<Promotion> enabledPromotions = promotionDAO.findEnabled();
 
         assertEquals(2, enabledPromotions.size());
         assertTrue(enabledPromotions.stream().noneMatch(p -> p.id == disabledPromotion.id));
@@ -129,7 +131,7 @@ class PromotionServiceTest extends DatabaseTestBase {
     @DisplayName("测试查询当前有效的促销")
     void testFindActivePromotions() throws Exception {
         // 查询当前有效的促销（启用状态）
-        List<Promotion> activePromotions = PromotionDAO.findActive();
+        List<Promotion> activePromotions = promotionDAO.findActive();
 
         // 应该包含所有启用的促销
         assertTrue(activePromotions.size() >= 2);
@@ -200,10 +202,10 @@ class PromotionServiceTest extends DatabaseTestBase {
     void testUpdatePromotion() throws Exception {
         // 更新促销描述
         testPromotion1.description = "更新后的描述：满100元减10元";
-        PromotionDAO.update(testPromotion1);
+        promotionDAO.update(testPromotion1);
 
         // 验证促销已更新
-        Promotion updatedPromotion = PromotionDAO.findById(testPromotion1.id);
+        Promotion updatedPromotion = promotionDAO.findById(testPromotion1.id);
         assertEquals("更新后的描述：满100元减10元", updatedPromotion.description);
     }
 
@@ -212,16 +214,16 @@ class PromotionServiceTest extends DatabaseTestBase {
     @DisplayName("测试禁用促销")
     void testDisablePromotion() throws Exception {
         testPromotion1.enabled = false;
-        boolean success = PromotionDAO.update(testPromotion1);
+        boolean success = promotionDAO.update(testPromotion1);
 
         assertTrue(success);
 
         // 验证促销已禁用
-        Promotion updatedPromotion = PromotionDAO.findById(testPromotion1.id);
+        Promotion updatedPromotion = promotionDAO.findById(testPromotion1.id);
         assertFalse(updatedPromotion.enabled);
 
         // 验证不包含在启用的促销列表中
-        List<Promotion> enabledPromotions = PromotionDAO.findEnabled();
+        List<Promotion> enabledPromotions = promotionDAO.findEnabled();
         assertFalse(enabledPromotions.stream().anyMatch(p -> p.id == testPromotion1.id));
     }
 
@@ -232,16 +234,16 @@ class PromotionServiceTest extends DatabaseTestBase {
         int promotionId = testPromotion1.id;
 
         // 删除促销
-        boolean success = PromotionDAO.delete(promotionId);
+        boolean success = promotionDAO.delete(promotionId);
 
         assertTrue(success);
 
         // 验证促销已删除
-        Promotion deletedPromotion = PromotionDAO.findById(promotionId);
+        Promotion deletedPromotion = promotionDAO.findById(promotionId);
         assertNull(deletedPromotion);
 
         // 验证不包含在促销列表中
-        List<Promotion> allPromotions = PromotionDAO.findAll();
+        List<Promotion> allPromotions = promotionDAO.findAll();
         assertFalse(allPromotions.stream().anyMatch(p -> p.id == promotionId));
     }
 
@@ -253,10 +255,10 @@ class PromotionServiceTest extends DatabaseTestBase {
 
         // 模拟增加使用计数
         testPromotion1.usageCount = initialUsageCount + 5;
-        PromotionDAO.update(testPromotion1);
+        promotionDAO.update(testPromotion1);
 
         // 验证使用计数已更新
-        Promotion updatedPromotion = PromotionDAO.findById(testPromotion1.id);
+        Promotion updatedPromotion = promotionDAO.findById(testPromotion1.id);
         assertEquals(initialUsageCount + 5, updatedPromotion.usageCount);
     }
 
@@ -267,9 +269,9 @@ class PromotionServiceTest extends DatabaseTestBase {
         // 设置最大使用次数
         testPromotion1.maxUsage = 10;
         testPromotion1.usageCount = 10;
-        PromotionDAO.update(testPromotion1);
+        promotionDAO.update(testPromotion1);
 
-        Promotion updatedPromotion = PromotionDAO.findById(testPromotion1.id);
+        Promotion updatedPromotion = promotionDAO.findById(testPromotion1.id);
 
         // 验证已达到最大使用次数
         assertTrue(updatedPromotion.usageCount >= updatedPromotion.maxUsage);
@@ -307,8 +309,8 @@ class PromotionServiceTest extends DatabaseTestBase {
         promotion.usageCount = 0;
         promotion.maxUsage = 100;
 
-        PromotionDAO.insert(promotion);
-        return PromotionDAO.findById(promotion.id);
+        promotionDAO.insert(promotion);
+        return promotionDAO.findById(promotion.id);
     }
 
     /**

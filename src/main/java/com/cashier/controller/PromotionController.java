@@ -2,7 +2,7 @@ package com.cashier.controller;
 
 import com.cashier.i18n.I18nKeys;
 
-import com.cashier.dao.PromotionDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.service.DataService;
 import com.cashier.model.Promotion;
 import com.cashier.i18n.I18nManager;
@@ -750,22 +750,22 @@ public class PromotionController {
 
     private void persistPromotion(Promotion promotion) throws SQLException {
         if (promotion.id > 0) {
-            PromotionDAO.update(promotion);
+            DAOFactory.getInstance().getPromotionDAO().update(promotion);
         } else {
-            PromotionDAO.insert(promotion);
+            DAOFactory.getInstance().getPromotionDAO().insert(promotion);
         }
     }
 
     private void deletePromotions(List<Promotion> promotions) throws SQLException {
         for (Promotion promotion : promotions) {
-            PromotionDAO.delete(promotion.id);
+            DAOFactory.getInstance().getPromotionDAO().delete(promotion.id);
         }
     }
 
     private void updateSelectedPromotionState(List<Promotion> selected, boolean enabled) throws SQLException {
         for (Promotion promotion : new ArrayList<>(selected)) {
             promotion.enabled = enabled;
-            PromotionDAO.update(promotion);
+            DAOFactory.getInstance().getPromotionDAO().update(promotion);
         }
     }
 

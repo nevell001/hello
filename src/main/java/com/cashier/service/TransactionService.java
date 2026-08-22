@@ -247,7 +247,7 @@ public class TransactionService {
             throw new SQLException(I18nManager.getInstance().get("service.transaction_save_failed", transactionId));
         }
 
-        if (appliedPromotion != null && !PromotionDAO.incrementUsageWithConnection(conn, appliedPromotion.id)) {
+        if (appliedPromotion != null && !DAOFactory.getInstance().getPromotionDAO().incrementUsageWithConnection(conn, appliedPromotion.id)) {
             throw new SQLException(I18nManager.getInstance().get("service.promotion_update_failed", appliedPromotion.id));
         }
     }
