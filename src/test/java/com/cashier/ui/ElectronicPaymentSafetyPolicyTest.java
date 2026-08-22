@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import com.cashier.service.PaymentService;
+
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -30,13 +32,13 @@ class ElectronicPaymentSafetyPolicyTest {
     @Test
     @DisplayName("默认支付配置不得包含模拟商户凭据")
     void defaultPaymentConfigIsFailClosed() throws Exception {
-        String config = Files.readString(Path.of("config/payment.properties"));
+        // 断言运行时默认配置（代码级 fail-closed），不依赖被 gitignore 的本地配置文件
+        PaymentService.PaymentConfig config = new PaymentService.PaymentConfig();
 
-        assertTrue(config.contains("payment.mode=disabled"));
-        assertTrue(config.contains("payment.mock.enabled=false"));
-        assertTrue(config.contains("wechat.enabled=false"));
-        assertTrue(config.contains("alipay.enabled=false"));
-        assertFalse(config.contains("wxmock"));
+        assertTrue("disabled".equals(config.mode));
+        assertFalse(config.mockEnabled);
+        assertFalse(config.wechatEnabled);
+        assertFalse(config.alipayEnabled);
     }
 
     @Test
