@@ -194,7 +194,7 @@ public class DataService {
      */
     public static List<RechargeRecord> loadRechargeRecords() {
         try {
-            return RechargeRecordDAO.findRecent(LEGACY_LOAD_LIMIT);
+            return DAOFactory.getInstance().getRechargeRecordDAO().findRecent(LEGACY_LOAD_LIMIT);
         } catch (SQLException e) {
             logger.error("加载充值记录失败", e);
             return new ArrayList<>();
@@ -206,7 +206,7 @@ public class DataService {
      * @throws SQLException 如果保存失败
      */
     public static void saveRechargeRecords(List<RechargeRecord> records) throws SQLException {
-        RechargeRecordDAO.batchInsert(records);
+        DAOFactory.getInstance().getRechargeRecordDAO().batchInsert(records);
     }
 
     /**

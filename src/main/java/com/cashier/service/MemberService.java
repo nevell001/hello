@@ -1,7 +1,7 @@
 package com.cashier.service;
 
 import com.cashier.dao.MemberDAO;
-import com.cashier.dao.RechargeRecordDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.model.Member;
 import com.cashier.model.RechargeRecord;
 import com.cashier.i18n.I18nManager;
@@ -97,7 +97,7 @@ public class MemberService {
                 record.operator = operator;
                 record.timestamp = new Date();
 
-                if (!RechargeRecordDAO.insertWithConnection(conn, record)) {
+                if (!DAOFactory.getInstance().getRechargeRecordDAO().insertWithConnection(conn, record)) {
                     throw new SQLException(I18nManager.getInstance().get("service.recharge_record_create_failed"));
                 }
 

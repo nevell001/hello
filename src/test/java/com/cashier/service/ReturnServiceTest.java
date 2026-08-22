@@ -21,6 +21,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class ReturnServiceTest extends DatabaseTestBase {
 
+    private final RechargeRecordDAORefactored rechargeRecordDAO = DAOFactory.getInstance().getRechargeRecordDAO();
+
     private Member testMember;
     private Product testProduct1;
     private Product testProduct2;
@@ -227,7 +229,7 @@ class ReturnServiceTest extends DatabaseTestBase {
         assertAmountEquals(initialBalance.add(BigDecimal.valueOf(50.0)), updatedMember.balance);
 
         // 验证充值记录已创建
-        List<RechargeRecord> records = RechargeRecordDAO.findAll();
+        List<RechargeRecord> records = rechargeRecordDAO.findAll();
         assertEquals(1, records.size());
         assertAmountEquals(50.0, records.get(0).amount);
     }
@@ -441,7 +443,7 @@ class ReturnServiceTest extends DatabaseTestBase {
         existingRecord.paymentMethod = "会员余额";
         existingRecord.operator = "预置记录";
         existingRecord.timestamp = new Date();
-        RechargeRecordDAO.insert(existingRecord);
+        rechargeRecordDAO.insert(existingRecord);
 
         boolean success = ReturnService.completeReturnOrder(returnOrder.returnOrderId);
 
@@ -452,7 +454,7 @@ class ReturnServiceTest extends DatabaseTestBase {
         assertEquals("APPROVED", updatedOrder.status);
         assertNull(updatedOrder.completedDate);
         assertAmountEquals(initialBalance, MemberDAO.findByPhone(testMember.phone).balance);
-        assertEquals(1, RechargeRecordDAO.findAll().size());
+        assertEquals(1, rechargeRecordDAO.findAll().size());
     }
 
     /**

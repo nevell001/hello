@@ -207,67 +207,10 @@ public class PurchaseInboundController {
             inboundDatePicker.setValue(java.time.LocalDate.now());
 
             // 商品明细表格
-            TableView<InboundItemWrapper> itemTable = new TableView<>();
-            itemTable.setEditable(true);
-            itemTable.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-
-            TableColumn<InboundItemWrapper, String> productNameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnApproval.PRODUCT_NAME));
-            productNameCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getProductName()));
-
-            TableColumn<InboundItemWrapper, Number> orderQtyCol = new TableColumn<>(I18nManager.getInstance().get("purchase_inbound.order_quantity"));
-            orderQtyCol.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getOrderQuantity()));
-
-            TableColumn<InboundItemWrapper, Number> inboundedQtyCol = new TableColumn<>(I18nManager.getInstance().get("purchase_inbound.already_inbound"));
-            inboundedQtyCol.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getInboundQuantity()));
-
-            TableColumn<InboundItemWrapper, Integer> inboundQtyCol = new TableColumn<>(I18nManager.getInstance().get("purchase_inbound.current_inbound"));
-            inboundQtyCol.setPrefWidth(100);
-            inboundQtyCol.setCellValueFactory(cellData -> cellData.getValue().thisInboundQuantityProperty().asObject());
-            inboundQtyCol.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
-            inboundQtyCol.setOnEditCommit(e -> {
-                int maxQty = e.getRowValue().orderQuantity - e.getRowValue().inboundQuantity;
-                Integer newQty = e.getNewValue();
-                logger.debug("编辑提交 - 新值: {}, 最大可入库: {}", newQty, maxQty);
-                if (newQty == null || newQty < 0) {
-                    newQty = 0;
-                } else if (newQty > maxQty) {
-                    newQty = maxQty;
-                }
-                // 直接更新属性值
-                e.getRowValue().thisInboundQuantity.set(newQty);
-                logger.debug("设置后的值: {}", e.getRowValue().thisInboundQuantity.get());
-            });
-
-            TableColumn<InboundItemWrapper, String> unitPriceCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnApproval.UNIT_PRICE));
-            unitPriceCol.setCellValueFactory(cellData ->
-                new SimpleStringProperty(String.format("%.2f", cellData.getValue().getUnitPrice())));
-
-            TableColumn<InboundItemWrapper, String> totalCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.SUBTOTAL));
-            totalCol.setCellValueFactory(cellData ->
-                new SimpleStringProperty(String.format("%.2f",
-                    cellData.getValue().getUnitPrice().multiply(BigDecimal.valueOf(cellData.getValue().thisInboundQuantity.get())))));
-
-            itemTable.getColumns().addAll(productNameCol, orderQtyCol, inboundedQtyCol, inboundQtyCol, unitPriceCol, totalCol);
+            TableView<InboundItemWrapper> itemTable = createInboundItemTable();
             
             // 加载订单明细
-            List<PurchaseOrderItem> items = PurchaseOrderItemDAO.findByOrderId(order.id);
-            logger.debug("加载订单明细: 订单ID={}, 商品数={}", order.id, items.size());
-            // 使用提取器创建ObservableList，使JavaFX能监听属性变化
-            ObservableList<InboundItemWrapper> wrappers = FXCollections.observableArrayList(wrapper -> 
-                new javafx.beans.Observable[] { wrapper.thisInboundQuantityProperty() }
-            );
-            for (PurchaseOrderItem item : items) {
-                logger.debug("商品明细: productName={}, quantity={}, inboundQuantity={}, unitPrice={}", 
-                        item.productName, item.quantity, item.inboundQuantity, item.unitPrice);
-                if (item.inboundQuantity < item.quantity) {
-                    InboundItemWrapper wrapper = new InboundItemWrapper(item);
-                    logger.debug("创建Wrapper: productName={}, orderQuantity={}, inboundQuantity={}", 
-                            wrapper.getProductName(), wrapper.getOrderQuantity(), wrapper.getInboundQuantity());
-                    wrappers.add(wrapper);
-                }
-            }
-            itemTable.setItems(wrappers);
-            logger.debug("可入库商品数: {}", wrappers.size());
+            loadInboundWrappers(itemTable, order);
 
             // 总金额标签
             Label totalLabel = new Label(I18nManager.getInstance().get("runtime.inbound_total", CurrencyUtil.format(0)));
@@ -296,74 +239,8 @@ public class PurchaseInboundController {
 
             Button cancelButton = new Button(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnOrder.CANCEL));
 
-            confirmButton.setOnAction(e -> {
-                // 检查是否有入库数量
-                boolean hasInbound = itemTable.getItems().stream()
-                    .anyMatch(wrapper -> wrapper.thisInboundQuantity.get() > 0);
-
-                if (!hasInbound) {
-                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.inbound_quantity_required"));
-                    return;
-                }
-
-                try {
-                    // 创建入库单
-                    String inboundNo = "IB" + java.time.LocalDate.now(java.time.ZoneId.systemDefault())
-                        .format(com.cashier.util.DateTimeFormats.COMPACT_DATE) + String.format("%04d", SECURE_RANDOM.nextInt(10000));
-
-                    PurchaseInbound inbound = new PurchaseInbound();
-                    inbound.inboundNo = inboundNo;
-                    inbound.orderId = order.id;
-                    inbound.orderNo = order.orderNo;
-                    inbound.inboundDate = inboundDatePicker.getValue().toString();
-                    inbound.operator = currentUser;
-                    inbound.remark = remarkArea.getText().trim();
-
-                    // 计算总数量和总金额
-                    int totalQty = 0;
-                    BigDecimal totalAmount = BigDecimal.ZERO;
-
-                    for (InboundItemWrapper wrapper : itemTable.getItems()) {
-                        int qty = wrapper.thisInboundQuantity.get();
-                        if (qty > 0) {
-                            totalQty += qty;
-                            totalAmount = totalAmount.add(wrapper.unitPrice.multiply(BigDecimal.valueOf(qty)));
-                        }
-                    }
-
-                    inbound.totalQuantity = totalQty;
-                    inbound.totalAmount = totalAmount;
-
-                    List<PurchaseInboundItem> inboundItems = new ArrayList<>();
-                    for (InboundItemWrapper wrapper : itemTable.getItems()) {
-                        int qty = wrapper.thisInboundQuantity.get();
-                        if (qty > 0) {
-                            PurchaseInboundItem inboundItem = new PurchaseInboundItem();
-                            inboundItem.orderItemId = wrapper.orderItem.id;
-                            inboundItem.productId = wrapper.orderItem.productId;
-                            inboundItem.productName = wrapper.orderItem.productName;
-                            inboundItem.quantity = qty;
-                            inboundItem.unitPrice = wrapper.orderItem.unitPrice;
-                            inboundItem.totalPrice = wrapper.orderItem.unitPrice.multiply(BigDecimal.valueOf(qty));
-                            inboundItems.add(inboundItem);
-                        }
-                    }
-                    PurchaseService.receiveInbound(inbound, inboundItems);
-
-                    updateStatus("入库成功: " + inboundNo);
-                    com.cashier.service.AuditService.success(currentUser, "PURCHASE", "PURCHASE_INBOUND",
-                        "入库单=" + inboundNo + ", 采购单=" + order.orderNo + ", 数量=" + totalQty,
-                        totalQty);
-                    loadApprovedOrders();
-                    dialogStage.close();
-
-                } catch (SQLException ex) {
-                    logger.error("入库失败", ex);
-                    com.cashier.service.AuditService.failure(currentUser, "PURCHASE", "PURCHASE_INBOUND",
-                        "采购单=" + order.orderNo + ", 原因=" + ex.getMessage());
-                    showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + ex.getMessage());
-                }
-            });
+            confirmButton.setOnAction(e ->
+                handleInboundConfirm(dialogStage, itemTable, inboundDatePicker, remarkArea, order));
 
             cancelButton.setOnAction(e -> dialogStage.close());
 
@@ -393,6 +270,133 @@ public class PurchaseInboundController {
         } catch (SQLException e) {
             logger.error("加载订单明细失败", e);
             showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
+        }
+    }
+
+    /** 创建入库明细表格（含可编辑入库数量列与越界修正） */
+    private TableView<InboundItemWrapper> createInboundItemTable() {
+        TableView<InboundItemWrapper> itemTable = new TableView<>();
+        itemTable.setEditable(true);
+        itemTable.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+
+        TableColumn<InboundItemWrapper, String> productNameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnApproval.PRODUCT_NAME));
+        productNameCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getProductName()));
+
+        TableColumn<InboundItemWrapper, Number> orderQtyCol = new TableColumn<>(I18nManager.getInstance().get("purchase_inbound.order_quantity"));
+        orderQtyCol.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getOrderQuantity()));
+
+        TableColumn<InboundItemWrapper, Number> inboundedQtyCol = new TableColumn<>(I18nManager.getInstance().get("purchase_inbound.already_inbound"));
+        inboundedQtyCol.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getInboundQuantity()));
+
+        TableColumn<InboundItemWrapper, Integer> inboundQtyCol = new TableColumn<>(I18nManager.getInstance().get("purchase_inbound.current_inbound"));
+        inboundQtyCol.setPrefWidth(100);
+        inboundQtyCol.setCellValueFactory(cellData -> cellData.getValue().thisInboundQuantityProperty().asObject());
+        inboundQtyCol.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
+        inboundQtyCol.setOnEditCommit(e -> {
+            int maxQty = e.getRowValue().orderQuantity - e.getRowValue().inboundQuantity;
+            Integer newQty = e.getNewValue();
+            logger.debug("编辑提交 - 新值: {}, 最大可入库: {}", newQty, maxQty);
+            if (newQty == null || newQty < 0) {
+                newQty = 0;
+            } else if (newQty > maxQty) {
+                newQty = maxQty;
+            }
+            e.getRowValue().thisInboundQuantity.set(newQty);
+            logger.debug("设置后的值: {}", e.getRowValue().thisInboundQuantity.get());
+        });
+
+        TableColumn<InboundItemWrapper, String> unitPriceCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnApproval.UNIT_PRICE));
+        unitPriceCol.setCellValueFactory(cellData ->
+            new SimpleStringProperty(String.format("%.2f", cellData.getValue().getUnitPrice())));
+
+        TableColumn<InboundItemWrapper, String> totalCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.SUBTOTAL));
+        totalCol.setCellValueFactory(cellData ->
+            new SimpleStringProperty(String.format("%.2f",
+                cellData.getValue().getUnitPrice().multiply(BigDecimal.valueOf(cellData.getValue().thisInboundQuantity.get())))));
+
+        itemTable.getColumns().addAll(productNameCol, orderQtyCol, inboundedQtyCol, inboundQtyCol, unitPriceCol, totalCol);
+        return itemTable;
+    }
+
+    /** 加载订单中尚未完全入库的商品明细 */
+    private void loadInboundWrappers(TableView<InboundItemWrapper> itemTable, PurchaseOrder order) throws SQLException {
+        List<PurchaseOrderItem> items = PurchaseOrderItemDAO.findByOrderId(order.id);
+        logger.debug("加载订单明细: 订单ID={}, 商品数={}", order.id, items.size());
+        ObservableList<InboundItemWrapper> wrappers = FXCollections.observableArrayList(wrapper ->
+            new javafx.beans.Observable[] { wrapper.thisInboundQuantityProperty() }
+        );
+        for (PurchaseOrderItem item : items) {
+            logger.debug("商品明细: productName={}, quantity={}, inboundQuantity={}, unitPrice={}",
+                item.productName, item.quantity, item.inboundQuantity, item.unitPrice);
+            if (item.inboundQuantity < item.quantity) {
+                InboundItemWrapper wrapper = new InboundItemWrapper(item);
+                logger.debug("创建Wrapper: productName={}, orderQuantity={}, inboundQuantity={}",
+                    wrapper.getProductName(), wrapper.getOrderQuantity(), wrapper.getInboundQuantity());
+                wrappers.add(wrapper);
+            }
+        }
+        itemTable.setItems(wrappers);
+        logger.debug("可入库商品数: {}", wrappers.size());
+    }
+
+    /** 处理确认入库：校验、创建入库单与明细、落库、审计并关闭窗口 */
+    private void handleInboundConfirm(Stage dialogStage, TableView<InboundItemWrapper> itemTable,
+                                      DatePicker inboundDatePicker, TextArea remarkArea, PurchaseOrder order) {
+        boolean hasInbound = itemTable.getItems().stream()
+            .anyMatch(wrapper -> wrapper.thisInboundQuantity.get() > 0);
+
+        if (!hasInbound) {
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.inbound_quantity_required"));
+            return;
+        }
+
+        try {
+            String inboundNo = "IB" + java.time.LocalDate.now(java.time.ZoneId.systemDefault())
+                .format(com.cashier.util.DateTimeFormats.COMPACT_DATE) + String.format("%04d", SECURE_RANDOM.nextInt(10000));
+
+            PurchaseInbound inbound = new PurchaseInbound();
+            inbound.inboundNo = inboundNo;
+            inbound.orderId = order.id;
+            inbound.orderNo = order.orderNo;
+            inbound.inboundDate = inboundDatePicker.getValue().toString();
+            inbound.operator = currentUser;
+            inbound.remark = remarkArea.getText().trim();
+
+            int totalQty = 0;
+            BigDecimal totalAmount = BigDecimal.ZERO;
+            List<PurchaseInboundItem> inboundItems = new ArrayList<>();
+            for (InboundItemWrapper wrapper : itemTable.getItems()) {
+                int qty = wrapper.thisInboundQuantity.get();
+                if (qty > 0) {
+                    totalQty += qty;
+                    totalAmount = totalAmount.add(wrapper.unitPrice.multiply(BigDecimal.valueOf(qty)));
+
+                    PurchaseInboundItem inboundItem = new PurchaseInboundItem();
+                    inboundItem.orderItemId = wrapper.orderItem.id;
+                    inboundItem.productId = wrapper.orderItem.productId;
+                    inboundItem.productName = wrapper.orderItem.productName;
+                    inboundItem.quantity = qty;
+                    inboundItem.unitPrice = wrapper.orderItem.unitPrice;
+                    inboundItem.totalPrice = wrapper.orderItem.unitPrice.multiply(BigDecimal.valueOf(qty));
+                    inboundItems.add(inboundItem);
+                }
+            }
+
+            inbound.totalQuantity = totalQty;
+            inbound.totalAmount = totalAmount;
+            PurchaseService.receiveInbound(inbound, inboundItems);
+
+            updateStatus("入库成功: " + inboundNo);
+            com.cashier.service.AuditService.success(currentUser, "PURCHASE", "PURCHASE_INBOUND",
+                "入库单=" + inboundNo + ", 采购单=" + order.orderNo + ", 数量=" + totalQty,
+                totalQty);
+            loadApprovedOrders();
+            dialogStage.close();
+        } catch (SQLException ex) {
+            logger.error("入库失败", ex);
+            com.cashier.service.AuditService.failure(currentUser, "PURCHASE", "PURCHASE_INBOUND",
+                "采购单=" + order.orderNo + ", 原因=" + ex.getMessage());
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + ex.getMessage());
         }
     }
 

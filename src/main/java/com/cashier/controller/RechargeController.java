@@ -3,7 +3,7 @@ package com.cashier.controller;
 import com.cashier.i18n.I18nKeys;
 
 import com.cashier.i18n.I18nManager;
-import com.cashier.dao.RechargeRecordDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.model.Member;
 import com.cashier.model.RechargeRecord;
 import com.cashier.util.CurrencyUtil;
@@ -150,7 +150,7 @@ public class RechargeController {
     private void loadRechargeHistory() {
         new Thread(() -> {
             try {
-                List<RechargeRecord> memberRecords = RechargeRecordDAO.findRecentByMemberPhone(
+                List<RechargeRecord> memberRecords = DAOFactory.getInstance().getRechargeRecordDAO().findRecentByMemberPhone(
                     member.phone,
                     RECHARGE_HISTORY_LIMIT
                 );

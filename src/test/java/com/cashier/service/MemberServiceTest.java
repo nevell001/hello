@@ -1,7 +1,8 @@
 package com.cashier.service;
 
 import com.cashier.dao.MemberDAO;
-import com.cashier.dao.RechargeRecordDAO;
+import com.cashier.dao.DAOFactory;
+import com.cashier.dao.RechargeRecordDAORefactored;
 import com.cashier.util.DatabaseTestBase;
 import com.cashier.model.Member;
 import com.cashier.model.RechargeRecord;
@@ -19,6 +20,8 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class MemberServiceTest extends DatabaseTestBase {
+
+    private final RechargeRecordDAORefactored rechargeRecordDAO = DAOFactory.getInstance().getRechargeRecordDAO();
 
     private Member testMember;
 
@@ -77,7 +80,7 @@ class MemberServiceTest extends DatabaseTestBase {
         assertAmountEquals(9.0, updatedMember.discount);
 
         // 验证充值记录已创建
-        List<RechargeRecord> records = RechargeRecordDAO.findAll();
+        List<RechargeRecord> records = rechargeRecordDAO.findAll();
         assertEquals(1, records.size());
         assertAmountEquals(rechargeAmount, records.get(0).amount);
         assertEquals("现金", records.get(0).paymentMethod);
@@ -102,7 +105,7 @@ class MemberServiceTest extends DatabaseTestBase {
         assertAmountEquals(initialBalance.add(BigDecimal.valueOf(rechargeAmount)), updatedMember.balance);
 
         // 验证充值记录已创建
-        List<RechargeRecord> records = RechargeRecordDAO.findAll();
+        List<RechargeRecord> records = rechargeRecordDAO.findAll();
         assertEquals(1, records.size());
         assertEquals("支付宝", records.get(0).paymentMethod);
     }
@@ -373,7 +376,7 @@ class MemberServiceTest extends DatabaseTestBase {
 
         Member updatedMember = MemberDAO.findByPhone("13800138000");
         assertAmountEquals(initialBalance, updatedMember.balance);
-        assertTrue(RechargeRecordDAO.findAll().isEmpty());
+        assertTrue(rechargeRecordDAO.findAll().isEmpty());
     }
 
     @Test
@@ -383,7 +386,7 @@ class MemberServiceTest extends DatabaseTestBase {
         assertTrue(MemberService.recharge(testMember, 10.0, "现金", "操作员A"));
         assertTrue(MemberService.recharge(testMember, 20.0, "微信", "操作员B"));
 
-        List<RechargeRecord> records = RechargeRecordDAO.findAll();
+        List<RechargeRecord> records = rechargeRecordDAO.findAll();
         assertEquals(2, records.size());
         assertFalse(records.get(0).recordId == null || records.get(0).recordId.isBlank());
         assertFalse(records.get(1).recordId == null || records.get(1).recordId.isBlank());

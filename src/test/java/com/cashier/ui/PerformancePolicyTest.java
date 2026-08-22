@@ -871,11 +871,11 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/controller/RechargeController.java"
         ));
         String dao = Files.readString(Path.of(
-            "src/main/java/com/cashier/dao/RechargeRecordDAO.java"
+            "src/main/java/com/cashier/dao/RechargeRecordDAORefactored.java"
         ));
 
         assertTrue(controller.contains("RECHARGE_HISTORY_LIMIT = 10"));
-        assertTrue(controller.contains("RechargeRecordDAO.findRecentByMemberPhone("));
+        assertTrue(controller.contains("getRechargeRecordDAO().findRecentByMemberPhone("));
         assertFalse(controller.contains("DataService.loadRechargeRecords()"));
         assertFalse(controller.contains("memberRecords.subList(0, 10)"));
 
@@ -890,7 +890,7 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/service/DataService.java"
         ));
         String rechargeDao = Files.readString(Path.of(
-            "src/main/java/com/cashier/dao/RechargeRecordDAO.java"
+            "src/main/java/com/cashier/dao/RechargeRecordDAORefactored.java"
         ));
 
         assertTrue(dataService.contains("LEGACY_LOAD_LIMIT = 5000"));
@@ -899,7 +899,7 @@ class PerformancePolicyTest {
         assertTrue(dataService.contains("MemberDAO.findAll(FIRST_PAGE, LEGACY_LOAD_LIMIT).getData()"));
         assertTrue(dataService.contains("TransactionDAO.findRecent(LEGACY_LOAD_LIMIT)"));
         assertTrue(dataService.contains("PromotionDAO.findRecent(LEGACY_LOAD_LIMIT)"));
-        assertTrue(dataService.contains("RechargeRecordDAO.findRecent(LEGACY_LOAD_LIMIT)"));
+        assertTrue(dataService.contains("getRechargeRecordDAO().findRecent(LEGACY_LOAD_LIMIT)"));
         assertTrue(dataService.contains("OperationLogDAO.findRecent(LEGACY_LOAD_LIMIT)"));
 
         assertTrue(rechargeDao.contains("findRecent(int limit)"));

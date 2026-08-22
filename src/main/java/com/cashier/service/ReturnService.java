@@ -167,7 +167,7 @@ public class ReturnService {
                 record.operator = returnOrder.operatorName;
                 record.timestamp = new Date();
                 record.recordId = returnOrderId;
-                if (!RechargeRecordDAO.insertWithConnection(conn, record)) {
+                if (!DAOFactory.getInstance().getRechargeRecordDAO().insertWithConnection(conn, record)) {
                     throw new SQLException(I18nManager.getInstance().get("service.return_refund_record_insert_failed"));
                 }
                 

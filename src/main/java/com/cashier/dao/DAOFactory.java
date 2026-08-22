@@ -30,6 +30,7 @@ public class DAOFactory {
         register(CategoryDAORefactored.class, new CategoryDAORefactored());
         register(SupplierDAORefactored.class, new SupplierDAORefactored());
         register(ShiftDAORefactored.class, new ShiftDAORefactored());
+        register(RechargeRecordDAORefactored.class, new RechargeRecordDAORefactored());
     }
 
     /**
@@ -95,5 +96,13 @@ public class DAOFactory {
      */
     public ShiftDAORefactored getShiftDAO() {
         return getDAO(ShiftDAORefactored.class);
+    }
+
+    /**
+     * 获取充值记录 DAO（重构版）
+     * @return RechargeRecordDAORefactored 实例
+     */
+    public RechargeRecordDAORefactored getRechargeRecordDAO() {
+        return getDAO(RechargeRecordDAORefactored.class);
     }
 }
