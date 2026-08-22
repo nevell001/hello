@@ -1,6 +1,6 @@
 package com.cashier.controller;
 
-import com.cashier.dao.UserDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.model.User;
 import javafx.animation.FadeTransition;
 import javafx.fxml.FXML;
@@ -95,7 +95,7 @@ public class PasswordResetController {
                 // 查找用户
                 User user;
                 try {
-                    user = UserDAO.findByUsername(username);
+                    user = DAOFactory.getInstance().getUserDAO().findByUsername(username);
                 } catch (SQLException e) {
                     logger.error("查询用户失败", e);
                     showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.password_reset_service_unavailable"));

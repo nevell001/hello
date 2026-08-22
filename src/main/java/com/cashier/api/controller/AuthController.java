@@ -2,7 +2,7 @@ package com.cashier.api.controller;
 
 import com.cashier.api.ApiServer;
 import com.cashier.dao.LoginAttemptDAO;
-import com.cashier.dao.UserDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.model.User;
 import com.cashier.util.PasswordUtil;
 import io.javalin.http.Context;
@@ -48,7 +48,7 @@ public class AuthController {
                 return;
             }
             
-            User user = UserDAO.findByUsername(request.username);
+            User user = DAOFactory.getInstance().getUserDAO().findByUsername(request.username);
 
             if (user == null || !PasswordUtil.verifyPassword(request.password, user.password)) {
                 int attempts = LoginAttemptDAO.recordFailedAttempt(request.username, MAX_LOGIN_ATTEMPTS, LOCKOUT_DURATION_MINUTES * 60 * 1000);
@@ -70,7 +70,7 @@ public class AuthController {
             String token = ApiServer.getInstance().generateToken(user);
             
             // 更新最后登录时间
-            UserDAO.updateLastLoginTime(user.id);
+            DAOFactory.getInstance().getUserDAO().updateLastLoginTime(user.id);
             
             user.password = null;
             

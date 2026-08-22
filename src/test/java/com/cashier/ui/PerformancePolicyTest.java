@@ -206,11 +206,11 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/api/controller/UserApiController.java"
         ));
         String userDao = Files.readString(Path.of(
-            "src/main/java/com/cashier/dao/UserDAO.java"
+            "src/main/java/com/cashier/dao/UserDAORefactored.java"
         ));
 
         assertTrue(userApi.contains("ApiPagination.from(ctx)"));
-        assertTrue(userApi.contains("UserDAO.findAll(page.page(), page.pageSize())"));
+        assertTrue(userApi.contains("getUserDAO().findAll(page.page(), page.pageSize())"));
         assertTrue(userApi.contains("ApiPagination.success(users)"));
         assertFalse(userApi.contains("UserDAO.findAll()"));
 
@@ -227,7 +227,7 @@ class PerformancePolicyTest {
         ));
 
         assertTrue(userController.contains("USER_LIST_PAGE_SIZE = 500"));
-        assertTrue(userController.contains("UserDAO.findAll(FIRST_PAGE, USER_LIST_PAGE_SIZE)"));
+        assertTrue(userController.contains("getUserDAO().findAll(FIRST_PAGE, USER_LIST_PAGE_SIZE)"));
         assertFalse(userController.contains("List<User> userListData = UserDAO.findAll()"));
     }
 
@@ -895,7 +895,7 @@ class PerformancePolicyTest {
 
         assertTrue(dataService.contains("LEGACY_LOAD_LIMIT = 5000"));
         assertTrue(dataService.contains("productDAO.findAll(FIRST_PAGE, LEGACY_LOAD_LIMIT).getData()"));
-        assertTrue(dataService.contains("UserDAO.findAll(FIRST_PAGE, LEGACY_LOAD_LIMIT).getData()"));
+        assertTrue(dataService.contains("getUserDAO().findAll(FIRST_PAGE, LEGACY_LOAD_LIMIT).getData()"));
         assertTrue(dataService.contains("MemberDAO.findAll(FIRST_PAGE, LEGACY_LOAD_LIMIT).getData()"));
         assertTrue(dataService.contains("TransactionDAO.findRecent(LEGACY_LOAD_LIMIT)"));
         assertTrue(dataService.contains("getPromotionDAO().findRecent(LEGACY_LOAD_LIMIT)"));

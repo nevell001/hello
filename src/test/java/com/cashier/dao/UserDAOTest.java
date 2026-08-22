@@ -20,6 +20,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class UserDAOTest extends DatabaseTestBase {
 
+    private final UserDAORefactored userDAO = DAOFactory.getInstance().getUserDAO();
+
     private User testUser;
     private int insertedUserId;
 
@@ -33,7 +35,7 @@ public class UserDAOTest extends DatabaseTestBase {
     @DisplayName("准备测试环境")
     public void setUp() throws Exception {
         testUser = createUser("testuser", "测试用户", "cashier");
-        UserDAO.insert(testUser);
+        userDAO.insert(testUser);
         insertedUserId = testUser.id;
     }
 
@@ -42,7 +44,7 @@ public class UserDAOTest extends DatabaseTestBase {
     @DisplayName("测试插入用户")
     public void testInsertUser() throws Exception {
         User user = createUser("insert_test", "测试用户", "cashier");
-        boolean result = UserDAO.insert(user);
+        boolean result = userDAO.insert(user);
         assertTrue(result);
         assertNotNull(user.id);
         assertTrue(user.id > 0);
@@ -52,7 +54,7 @@ public class UserDAOTest extends DatabaseTestBase {
     @Order(2)
     @DisplayName("测试根据ID查找用户")
     public void testFindById() throws Exception {
-        User found = UserDAO.findById(insertedUserId);
+        User found = userDAO.findById(insertedUserId);
         assertNotNull(found);
         assertEquals(insertedUserId, found.id);
         assertEquals(testUser.username, found.username);
@@ -63,7 +65,7 @@ public class UserDAOTest extends DatabaseTestBase {
     @Order(3)
     @DisplayName("测试根据用户名查找用户")
     public void testFindByUsername() throws Exception {
-        User found = UserDAO.findByUsername(testUser.username);
+        User found = userDAO.findByUsername(testUser.username);
         assertNotNull(found);
         assertEquals(testUser.username, found.username);
         assertEquals("测试用户", found.name);
@@ -74,7 +76,7 @@ public class UserDAOTest extends DatabaseTestBase {
     @Order(4)
     @DisplayName("测试查询所有用户")
     public void testFindAll() throws Exception {
-        List<User> users = UserDAO.findAll();
+        List<User> users = userDAO.findAll();
         assertNotNull(users);
         assertTrue(users.size() > 0);
 
@@ -88,10 +90,10 @@ public class UserDAOTest extends DatabaseTestBase {
     @Order(5)
     @DisplayName("测试分页查询用户")
     public void testFindAllPaged() throws Exception {
-        UserDAO.insert(createUser("alpha_user", "Alpha", "cashier"));
-        UserDAO.insert(createUser("beta_user", "Beta", "cashier"));
+        userDAO.insert(createUser("alpha_user", "Alpha", "cashier"));
+        userDAO.insert(createUser("beta_user", "Beta", "cashier"));
 
-        PageResult<User> page = UserDAO.findAll(1, 2);
+        PageResult<User> page = userDAO.findAll(1, 2);
 
         assertEquals(1, page.getPageNum());
         assertEquals(2, page.getPageSize());
@@ -108,10 +110,10 @@ public class UserDAOTest extends DatabaseTestBase {
         testUser.role = "finance";
         testUser.forcePasswordChange = true;
 
-        boolean result = UserDAO.update(testUser);
+        boolean result = userDAO.update(testUser);
         assertTrue(result);
 
-        User updated = UserDAO.findById(insertedUserId);
+        User updated = userDAO.findById(insertedUserId);
         assertEquals("更新后的测试用户", updated.name);
         assertEquals("finance", updated.role);
         assertTrue(updated.forcePasswordChange);
@@ -122,10 +124,10 @@ public class UserDAOTest extends DatabaseTestBase {
     @DisplayName("测试更新最后登录时间")
     public void testUpdateLastLoginTime() throws Exception {
         long before = System.currentTimeMillis();
-        UserDAO.updateLastLoginTimeByUsername(testUser.username);
+        userDAO.updateLastLoginTimeByUsername(testUser.username);
         long after = System.currentTimeMillis();
 
-        User updated = UserDAO.findByUsername(testUser.username);
+        User updated = userDAO.findByUsername(testUser.username);
         assertNotNull(updated.lastLoginTime);
         assertTrue(updated.lastLoginTime.getTime() >= before);
         assertTrue(updated.lastLoginTime.getTime() <= after);
@@ -135,7 +137,7 @@ public class UserDAOTest extends DatabaseTestBase {
     @Order(8)
     @DisplayName("测试验证用户密码")
     public void testVerifyPassword() throws Exception {
-        User user = UserDAO.findByUsername(testUser.username);
+        User user = userDAO.findByUsername(testUser.username);
         assertNotNull(user);
 
         boolean result = PasswordUtil.verifyPassword("testPassword123", user.password);
@@ -152,18 +154,18 @@ public class UserDAOTest extends DatabaseTestBase {
     public void testSetActive() throws Exception {
         // 停用用户
         testUser.active = false;
-        boolean result = UserDAO.update(testUser);
+        boolean result = userDAO.update(testUser);
         assertTrue(result);
 
-        User deactivated = UserDAO.findByUsername(testUser.username);
+        User deactivated = userDAO.findByUsername(testUser.username);
         assertFalse(deactivated.active);
 
         // 激活用户
         testUser.active = true;
-        result = UserDAO.update(testUser);
+        result = userDAO.update(testUser);
         assertTrue(result);
 
-        User activated = UserDAO.findByUsername(testUser.username);
+        User activated = userDAO.findByUsername(testUser.username);
         assertTrue(activated.active);
     }
 
@@ -171,20 +173,20 @@ public class UserDAOTest extends DatabaseTestBase {
     @Order(10)
     @DisplayName("测试删除用户")
     public void testDeleteUser() throws Exception {
-        boolean result = UserDAO.delete(insertedUserId);
+        boolean result = userDAO.delete(insertedUserId);
         assertTrue(result);
 
-        User deleted = UserDAO.findById(insertedUserId);
+        User deleted = userDAO.findById(insertedUserId);
         assertNull(deleted);
     }
 
     @Test
     @DisplayName("测试查找不存在的用户")
     public void testFindNonExistentUser() throws Exception {
-        User found = UserDAO.findById(999999);
+        User found = userDAO.findById(999999);
         assertNull(found);
 
-        found = UserDAO.findByUsername("nonexistent_user");
+        found = userDAO.findByUsername("nonexistent_user");
         assertNull(found);
     }
 
@@ -197,7 +199,7 @@ public class UserDAOTest extends DatabaseTestBase {
             createUser("batch3", "批量测试用户3", "finance")
         );
 
-        UserDAO.batchInsert(users);
+        userDAO.batchInsert(users);
 
         // 验证插入成功
         for (User u : users) {
@@ -207,7 +209,7 @@ public class UserDAOTest extends DatabaseTestBase {
 
         // 清理测试数据
         for (User u : users) {
-            UserDAO.delete(u.id);
+            userDAO.delete(u.id);
         }
     }
 
@@ -223,7 +225,7 @@ public class UserDAOTest extends DatabaseTestBase {
         user1.createTime = new java.util.Date();
         user1.lastLoginTime = new java.util.Date(0);
 
-        UserDAO.insert(user1);
+        userDAO.insert(user1);
 
         User user2 = new User();
         user2.username = "duplicate_test"; // 相同的用户名
@@ -235,10 +237,10 @@ public class UserDAOTest extends DatabaseTestBase {
         user2.lastLoginTime = new java.util.Date(0);
 
         // 第二次插入应该失败（用户名重复）
-        assertThrows(Exception.class, () -> UserDAO.insert(user2));
+        assertThrows(Exception.class, () -> userDAO.insert(user2));
 
         // 清理
-        UserDAO.delete(user1.id);
+        userDAO.delete(user1.id);
     }
 
     private User createUser(String username, String name, String role) {

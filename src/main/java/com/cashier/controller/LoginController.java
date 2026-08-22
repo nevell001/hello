@@ -5,7 +5,7 @@ import com.cashier.i18n.I18nKeys;
 import com.cashier.CashierSystemFXApplication;
 import com.cashier.constant.AppConstants;
 import com.cashier.dao.LoginAttemptDAO;
-import com.cashier.dao.UserDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.i18n.I18nManager;
 import com.cashier.model.User;
 import com.cashier.service.DataService;
@@ -110,7 +110,7 @@ public class LoginController {
         new Thread(() -> {
             try {
                 // 使用数据库验证用户
-                User user = UserDAO.findByUsername(username);
+                User user = DAOFactory.getInstance().getUserDAO().findByUsername(username);
                 if (user == null) {
                     AuditService.failure(null, "AUTH", "LOGIN", "用户名不存在: " + username);
                     int attempts = LoginAttemptDAO.recordFailedAttempt(username, MAX_LOGIN_ATTEMPTS, LOCKOUT_DURATION_MINUTES * 60 * 1000);
@@ -143,7 +143,7 @@ public class LoginController {
                 }
 
                 // 更新最后登录时间到数据库
-                UserDAO.updateLastLoginTimeByUsername(username);
+                DAOFactory.getInstance().getUserDAO().updateLastLoginTimeByUsername(username);
                 AuditService.success(username, "AUTH", "LOGIN", "登录成功", 1);
 
                 // 重置登录尝试次数（持久化到数据库）
@@ -266,7 +266,7 @@ public class LoginController {
                         String hashedPassword = com.cashier.util.PasswordUtil.hashPassword(newPassword);
 
                         // 更新密码
-                        com.cashier.dao.UserDAO.updatePassword(user.id, hashedPassword);
+                        com.cashier.dao.DAOFactory.getInstance().getUserDAO().updatePassword(user.id, hashedPassword);
 
                         // 显示成功消息
                         StatusBarManager.updateSuccess(com.cashier.i18n.I18nManager.getInstance().get("runtime.password_changed_message"));

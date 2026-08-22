@@ -279,65 +279,7 @@ public class InventoryCheckController {
             remarkArea.getStyleClass().add("form-text-area");
 
             // 商品列表表格
-            TableView<CheckItemWrapper> itemTable = new TableView<>();
-            itemTable.setEditable(true);
-            itemTable.setPlaceholder(new Label(I18nManager.getInstance().get(I18nKeys.Message.DATA_EMPTY)));
-
-            TableColumn<CheckItemWrapper, String> productNameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnApproval.PRODUCT_NAME));
-            productNameCol.setPrefWidth(200);
-            productNameCol.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getProductName()));
-
-            TableColumn<CheckItemWrapper, Integer> bookQtyCol = new TableColumn<>(I18nManager.getInstance().get("runtime.book_quantity"));
-            bookQtyCol.setPrefWidth(100);
-            bookQtyCol.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().bookQuantity).asObject());
-
-            TableColumn<CheckItemWrapper, Integer> actualQtyCol = new TableColumn<>(I18nManager.getInstance().get("runtime.actual_quantity"));
-            actualQtyCol.setPrefWidth(100);
-            actualQtyCol.setCellValueFactory(cellData -> cellData.getValue().actualQuantityProperty().asObject());
-            actualQtyCol.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
-            actualQtyCol.setOnEditCommit(e -> {
-                int bookQty = e.getRowValue().bookQuantity;
-                int actualQty = e.getNewValue();
-                e.getRowValue().actualQuantity.set(actualQty);
-                e.getRowValue().diffQuantity.set(actualQty - bookQty);
-                itemTable.refresh();
-            });
-
-            TableColumn<CheckItemWrapper, Integer> diffQtyCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("shift.difference"));
-            diffQtyCol.setPrefWidth(80);
-            diffQtyCol.setCellValueFactory(cellData -> cellData.getValue().diffQuantityProperty().asObject());
-
-            TableColumn<CheckItemWrapper, String> diffReasonCol = new TableColumn<>(I18nManager.getInstance().get("runtime.difference_reason"));
-            diffReasonCol.setPrefWidth(150);
-            diffReasonCol.setCellValueFactory(new PropertyValueFactory<>("diffReason"));
-            diffReasonCol.setCellFactory(TextFieldTableCell.forTableColumn());
-            diffReasonCol.setOnEditCommit(e -> {
-                e.getRowValue().diffReason.set(e.getNewValue());
-            });
-
-            TableColumn<CheckItemWrapper, String> actionCol = new TableColumn<>(I18nManager.getInstance().get("runtime.action"));
-            actionCol.setPrefWidth(80);
-            actionCol.setCellFactory(col -> new TableCell<CheckItemWrapper, String>() {
-                private final Button deleteBtn = new Button(com.cashier.i18n.I18nManager.getInstance().get("inventory_check.delete"));
-                {
-                    deleteBtn.getStyleClass().add("danger-button");
-                    deleteBtn.setOnAction(e -> {
-                        CheckItemWrapper item = getTableView().getItems().get(getIndex());
-                        itemTable.getItems().remove(item);
-                    });
-                }
-                @Override
-                protected void updateItem(String item, boolean empty) {
-                    super.updateItem(item, empty);
-                    if (empty) {
-                        setGraphic(null);
-                    } else {
-                        setGraphic(deleteBtn);
-                    }
-                }
-            });
-
-            itemTable.getColumns().addAll(productNameCol, bookQtyCol, actualQtyCol, diffQtyCol, diffReasonCol, actionCol);
+            TableView<CheckItemWrapper> itemTable = createCheckItemTable();
 
             ObservableList<CheckItemWrapper> items = FXCollections.observableArrayList();
             itemTable.setItems(items);
@@ -358,23 +300,7 @@ public class InventoryCheckController {
 
             // 如果是编辑模式，填充数据
             boolean isEdit = check != null;
-            if (isEdit) {
-                checkNoField.setText(check.checkNo);
-                checkDatePicker.setValue(java.time.LocalDate.parse(check.checkDate));
-                checkTypeCombo.setValue(check.checkType);
-                remarkArea.setText(check.remark);
-
-                try {
-                    List<InventoryCheckItem> checkItems = InventoryCheckItemDAO.findByCheckId(check.id);
-                    for (InventoryCheckItem item : checkItems) {
-                        items.add(new CheckItemWrapper(item));
-                    }
-                } catch (SQLException ex) {
-                    logger.error("加载盘点明细失败", ex);
-                }
-            } else {
-                checkNoField.setText(generateCheckNo());
-            }
+            populateCheckForm(check, checkNoField, checkDatePicker, checkTypeCombo, remarkArea, items);
 
             // 添加表单元素
             gridPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.inventory_check_no")), 0, 0);
@@ -394,66 +320,9 @@ public class InventoryCheckController {
             saveButton.setMinWidth(110);
             cancelButton.setMinWidth(110);
 
-            saveButton.setOnAction(e -> {
-                saveButton.setDisable(true);
-                InventoryCheck newCheck = new InventoryCheck();
-                newCheck.checkNo = checkNoField.getText();
-                newCheck.checkDate = checkDatePicker.getValue().toString();
-                newCheck.checkType = checkTypeCombo.getValue();
-                newCheck.totalItems = items.size();
-                newCheck.diffItems = (int) items.stream().filter(item -> item.diffQuantity.get() != 0).count();
-                newCheck.status = "checking";
-                newCheck.operator = currentUser;
-                newCheck.remark = remarkArea.getText().trim();
-
-                try {
-                    if (isEdit) {
-                        newCheck.id = check.id;
-                        InventoryCheckDAO.update(newCheck);
-                        // 删除旧明细并插入新明细
-                        InventoryCheckItemDAO.deleteByCheckId(check.id);
-                        for (CheckItemWrapper wrapper : items) {
-                            InventoryCheckItem item = new InventoryCheckItem();
-                            item.checkId = check.id;
-                            item.productId = wrapper.productId;
-                            item.productName = wrapper.productName;
-                            item.bookQuantity = wrapper.bookQuantity;
-                            item.actualQuantity = wrapper.actualQuantity.get();
-                            item.diffQuantity = wrapper.diffQuantity.get();
-                            item.diffReason = wrapper.diffReason.get();
-                            InventoryCheckItemDAO.insert(item);
-                        }
-                        updateStatus(I18nManager.getInstance().get("runtime.inventory_check_updated"));
-                    } else {
-                        newCheck.checkNo = InventoryCheckDAO.generateNextCheckNo(newCheck.checkDate);
-                        checkNoField.setText(newCheck.checkNo);
-                        InventoryCheckDAO.insert(newCheck);
-                        for (CheckItemWrapper wrapper : items) {
-                            InventoryCheckItem item = new InventoryCheckItem();
-                            item.checkId = newCheck.id;
-                            item.productId = wrapper.productId;
-                            item.productName = wrapper.productName;
-                            item.bookQuantity = wrapper.bookQuantity;
-                            item.actualQuantity = wrapper.actualQuantity.get();
-                            item.diffQuantity = wrapper.diffQuantity.get();
-                            item.diffReason = wrapper.diffReason.get();
-                            InventoryCheckItemDAO.insert(item);
-                        }
-                        updateStatus(I18nManager.getInstance().get("runtime.inventory_check_created"));
-                    }
-                    loadChecks();
-                    dialogStage.close();
-
-                } catch (SQLException ex) {
-                    saveButton.setDisable(false);
-                    logger.error("保存盘点单失败", ex);
-                    showError(I18nManager.getInstance().get("runtime.inventory_check_save_failed", ex.getMessage()));
-                } catch (Exception ex) {
-                    saveButton.setDisable(false);
-                    logger.error("保存盘点单失败", ex);
-                    showError(I18nManager.getInstance().get("runtime.inventory_check_save_failed", ex.getMessage()));
-                }
-            });
+            saveButton.setOnAction(e -> handleSaveCheck(
+                saveButton, checkNoField, checkDatePicker, checkTypeCombo, remarkArea,
+                items, dialogStage, check, isEdit));
 
             cancelButton.setOnAction(e -> dialogStage.close());
 
@@ -479,6 +348,141 @@ public class InventoryCheckController {
             logger.error("显示盘点对话框失败", e);
             showError(I18nManager.getInstance().get("runtime.dialog_load_failed", e.getMessage()));
         }
+    }
+
+    /** 创建盘点明细表格（含实际数量/差异/原因/删除列） */
+    private TableView<CheckItemWrapper> createCheckItemTable() {
+        TableView<CheckItemWrapper> itemTable = new TableView<>();
+        itemTable.setEditable(true);
+        itemTable.setPlaceholder(new Label(I18nManager.getInstance().get(I18nKeys.Message.DATA_EMPTY)));
+
+        TableColumn<CheckItemWrapper, String> productNameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnApproval.PRODUCT_NAME));
+        productNameCol.setPrefWidth(200);
+        productNameCol.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getProductName()));
+
+        TableColumn<CheckItemWrapper, Integer> bookQtyCol = new TableColumn<>(I18nManager.getInstance().get("runtime.book_quantity"));
+        bookQtyCol.setPrefWidth(100);
+        bookQtyCol.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().bookQuantity).asObject());
+
+        TableColumn<CheckItemWrapper, Integer> actualQtyCol = new TableColumn<>(I18nManager.getInstance().get("runtime.actual_quantity"));
+        actualQtyCol.setPrefWidth(100);
+        actualQtyCol.setCellValueFactory(cellData -> cellData.getValue().actualQuantityProperty().asObject());
+        actualQtyCol.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
+        actualQtyCol.setOnEditCommit(e -> {
+            int bookQty = e.getRowValue().bookQuantity;
+            int actualQty = e.getNewValue();
+            e.getRowValue().actualQuantity.set(actualQty);
+            e.getRowValue().diffQuantity.set(actualQty - bookQty);
+            itemTable.refresh();
+        });
+
+        TableColumn<CheckItemWrapper, Integer> diffQtyCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("shift.difference"));
+        diffQtyCol.setPrefWidth(80);
+        diffQtyCol.setCellValueFactory(cellData -> cellData.getValue().diffQuantityProperty().asObject());
+
+        TableColumn<CheckItemWrapper, String> diffReasonCol = new TableColumn<>(I18nManager.getInstance().get("runtime.difference_reason"));
+        diffReasonCol.setPrefWidth(150);
+        diffReasonCol.setCellValueFactory(new PropertyValueFactory<>("diffReason"));
+        diffReasonCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        diffReasonCol.setOnEditCommit(e -> e.getRowValue().diffReason.set(e.getNewValue()));
+
+        TableColumn<CheckItemWrapper, String> actionCol = new TableColumn<>(I18nManager.getInstance().get("runtime.action"));
+        actionCol.setPrefWidth(80);
+        actionCol.setCellFactory(col -> new TableCell<CheckItemWrapper, String>() {
+            private final Button deleteBtn = new Button(com.cashier.i18n.I18nManager.getInstance().get("inventory_check.delete"));
+            {
+                deleteBtn.getStyleClass().add("danger-button");
+                deleteBtn.setOnAction(e -> {
+                    CheckItemWrapper item = getTableView().getItems().get(getIndex());
+                    itemTable.getItems().remove(item);
+                });
+            }
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                setGraphic(empty ? null : deleteBtn);
+            }
+        });
+
+        itemTable.getColumns().addAll(productNameCol, bookQtyCol, actualQtyCol, diffQtyCol, diffReasonCol, actionCol);
+        return itemTable;
+    }
+
+    /** 编辑模式回填表单与明细，新建模式自动生成单号 */
+    private void populateCheckForm(InventoryCheck check, TextField checkNoField, DatePicker checkDatePicker,
+                                   ComboBox<String> checkTypeCombo, TextArea remarkArea,
+                                   ObservableList<CheckItemWrapper> items) {
+        if (check != null) {
+            checkNoField.setText(check.checkNo);
+            checkDatePicker.setValue(java.time.LocalDate.parse(check.checkDate));
+            checkTypeCombo.setValue(check.checkType);
+            remarkArea.setText(check.remark);
+            try {
+                List<InventoryCheckItem> checkItems = InventoryCheckItemDAO.findByCheckId(check.id);
+                for (InventoryCheckItem item : checkItems) {
+                    items.add(new CheckItemWrapper(item));
+                }
+            } catch (SQLException ex) {
+                logger.error("加载盘点明细失败", ex);
+            }
+        } else {
+            checkNoField.setText(generateCheckNo());
+        }
+    }
+
+    /** 保存盘点单（新增或更新，含明细重建） */
+    private void handleSaveCheck(Button saveButton, TextField checkNoField, DatePicker checkDatePicker,
+                                 ComboBox<String> checkTypeCombo, TextArea remarkArea,
+                                 ObservableList<CheckItemWrapper> items, Stage dialogStage,
+                                 InventoryCheck check, boolean isEdit) {
+        saveButton.setDisable(true);
+        InventoryCheck newCheck = new InventoryCheck();
+        newCheck.checkNo = checkNoField.getText();
+        newCheck.checkDate = checkDatePicker.getValue().toString();
+        newCheck.checkType = checkTypeCombo.getValue();
+        newCheck.totalItems = items.size();
+        newCheck.diffItems = (int) items.stream().filter(item -> item.diffQuantity.get() != 0).count();
+        newCheck.status = "checking";
+        newCheck.operator = currentUser;
+        newCheck.remark = remarkArea.getText().trim();
+
+        try {
+            if (isEdit) {
+                newCheck.id = check.id;
+                InventoryCheckDAO.update(newCheck);
+                InventoryCheckItemDAO.deleteByCheckId(check.id);
+                for (CheckItemWrapper wrapper : items) {
+                    InventoryCheckItemDAO.insert(toInventoryCheckItem(check.id, wrapper));
+                }
+                updateStatus(I18nManager.getInstance().get("runtime.inventory_check_updated"));
+            } else {
+                newCheck.checkNo = InventoryCheckDAO.generateNextCheckNo(newCheck.checkDate);
+                checkNoField.setText(newCheck.checkNo);
+                InventoryCheckDAO.insert(newCheck);
+                for (CheckItemWrapper wrapper : items) {
+                    InventoryCheckItemDAO.insert(toInventoryCheckItem(newCheck.id, wrapper));
+                }
+                updateStatus(I18nManager.getInstance().get("runtime.inventory_check_created"));
+            }
+            loadChecks();
+            dialogStage.close();
+        } catch (SQLException | RuntimeException ex) {
+            saveButton.setDisable(false);
+            logger.error("保存盘点单失败", ex);
+            showError(I18nManager.getInstance().get("runtime.inventory_check_save_failed", ex.getMessage()));
+        }
+    }
+
+    private static InventoryCheckItem toInventoryCheckItem(int checkId, CheckItemWrapper wrapper) {
+        InventoryCheckItem item = new InventoryCheckItem();
+        item.checkId = checkId;
+        item.productId = wrapper.productId;
+        item.productName = wrapper.productName;
+        item.bookQuantity = wrapper.bookQuantity;
+        item.actualQuantity = wrapper.actualQuantity.get();
+        item.diffQuantity = wrapper.diffQuantity.get();
+        item.diffReason = wrapper.diffReason.get();
+        return item;
     }
 
     /**

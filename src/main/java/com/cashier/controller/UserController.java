@@ -2,7 +2,7 @@ package com.cashier.controller;
 
 import com.cashier.i18n.I18nKeys;
 
-import com.cashier.dao.UserDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.i18n.I18nManager;
 import com.cashier.model.User;
 import com.cashier.util.PasswordUtil;
@@ -162,7 +162,7 @@ public class UserController {
         logger.info("UserController: 开始加载用户数据...");
         new Thread(() -> {
             try {
-                List<User> userListData = UserDAO.findAll(FIRST_PAGE, USER_LIST_PAGE_SIZE).getData();
+                List<User> userListData = DAOFactory.getInstance().getUserDAO().findAll(FIRST_PAGE, USER_LIST_PAGE_SIZE).getData();
                 java.util.HashMap<String, User> userMap = new java.util.HashMap<>();
                 for (User user : userListData) {
                     userMap.put(user.username, user);
@@ -411,7 +411,7 @@ public class UserController {
     }
 
     private void saveNewUser(User result) throws SQLException {
-        if (UserDAO.insert(result)) {
+        if (DAOFactory.getInstance().getUserDAO().insert(result)) {
             audit("USER_CREATED", result.username);
             users.put(result.username, result);
             loadUsers();
@@ -422,7 +422,7 @@ public class UserController {
     }
 
     private void updateExistingUser(User result) throws SQLException {
-        if (UserDAO.update(result)) {
+        if (DAOFactory.getInstance().getUserDAO().update(result)) {
             audit("USER_UPDATED", result.username);
             users.put(result.username, result);
             loadUsers();
@@ -502,7 +502,7 @@ public class UserController {
 
             if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
                 try {
-                    if (UserDAO.deleteByUsername(selected.username)) {
+                    if (DAOFactory.getInstance().getUserDAO().deleteByUsername(selected.username)) {
                         audit("USER_DELETED", selected.username);
                         users.remove(selected.username);
                         loadUsers();
@@ -582,7 +582,7 @@ public class UserController {
 
                 selected.password = PasswordUtil.hashPassword(newPassword);
                 try {
-                    if (UserDAO.update(selected)) {
+                    if (DAOFactory.getInstance().getUserDAO().update(selected)) {
                         audit("USER_PASSWORD_RESET", selected.username);
                         loadUsers();
                         updateStatus(I18nManager.getInstance().get("user.password_reset"));
@@ -631,7 +631,7 @@ public class UserController {
         if (selected != null) {
             selected.active = true;
             try {
-                if (UserDAO.update(selected)) {
+                if (DAOFactory.getInstance().getUserDAO().update(selected)) {
                     audit("USER_ACTIVATED", selected.username);
                     loadUsers();
                     updateStatus(I18nManager.getInstance().get("user.activated"));
@@ -669,7 +669,7 @@ public class UserController {
             if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
                 selected.active = false;
                 try {
-                if (UserDAO.update(selected)) {
+                if (DAOFactory.getInstance().getUserDAO().update(selected)) {
                     audit("USER_DEACTIVATED", selected.username);
                         loadUsers();
                         updateStatus(I18nManager.getInstance().get("user.deactivated"));

@@ -91,7 +91,7 @@ public class DataService {
      */
     public static Map<String, User> loadUsers() {
         try {
-            List<User> users = UserDAO.findAll(FIRST_PAGE, LEGACY_LOAD_LIMIT).getData();
+            List<User> users = DAOFactory.getInstance().getUserDAO().findAll(FIRST_PAGE, LEGACY_LOAD_LIMIT).getData();
             Map<String, User> userMap = new HashMap<>();
             for (User user : users) {
                 userMap.put(user.username, user);
@@ -109,7 +109,7 @@ public class DataService {
      */
     public static void saveUsers(Map<String, User> users) throws SQLException {
         List<User> userList = new ArrayList<>(users.values());
-        UserDAO.batchInsert(userList);
+        DAOFactory.getInstance().getUserDAO().batchInsert(userList);
     }
 
     /**

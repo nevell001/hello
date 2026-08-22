@@ -1,6 +1,6 @@
 package com.cashier.api.controller;
 
-import com.cashier.dao.UserDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.model.PageResult;
 import com.cashier.model.User;
 import com.cashier.util.PasswordUtil;
@@ -52,7 +52,7 @@ public class UserApiController {
         
         try {
             ApiPagination.PageRequest page = ApiPagination.from(ctx);
-            PageResult<User> users = UserDAO.findAll(page.page(), page.pageSize());
+            PageResult<User> users = DAOFactory.getInstance().getUserDAO().findAll(page.page(), page.pageSize());
             
             // 移除密码字段
             users.getData().forEach(u -> u.password = null);
@@ -75,7 +75,7 @@ public class UserApiController {
         int id = ctx.pathParamAsClass("id", Integer.class).get();
         
         try {
-            User user = UserDAO.findById(id);
+            User user = DAOFactory.getInstance().getUserDAO().findById(id);
             if (user == null) {
                 ctx.status(HttpStatus.NOT_FOUND)
                    .json(Map.of(KEY_SUCCESS, false, KEY_MESSAGE, "用户不存在"));
@@ -107,7 +107,7 @@ public class UserApiController {
         
         try {
             // 检查用户名是否已存在
-            if (UserDAO.findByUsername(request.username) != null) {
+            if (DAOFactory.getInstance().getUserDAO().findByUsername(request.username) != null) {
                 ctx.status(HttpStatus.BAD_REQUEST)
                    .json(Map.of(KEY_SUCCESS, false, KEY_MESSAGE, "用户名已存在"));
                 return;
@@ -121,7 +121,7 @@ public class UserApiController {
             user.email = request.email != null ? request.email : "";
             user.active = Objects.requireNonNullElse(request.active, true);
             
-            UserDAO.insert(user);
+            DAOFactory.getInstance().getUserDAO().insert(user);
             
             user.password = null;
             logger.info("创建用户: {}", user.username);
@@ -150,7 +150,7 @@ public class UserApiController {
         }
         
         try {
-            User user = UserDAO.findById(id);
+            User user = DAOFactory.getInstance().getUserDAO().findById(id);
             if (user == null) {
                 ctx.status(HttpStatus.NOT_FOUND)
                    .json(Map.of(KEY_SUCCESS, false, KEY_MESSAGE, "用户不存在"));
@@ -165,7 +165,7 @@ public class UserApiController {
             if (request.email != null) user.email = request.email;
             if (request.active != null) user.active = request.active;
             
-            UserDAO.update(user);
+            DAOFactory.getInstance().getUserDAO().update(user);
             
             user.password = null;
             logger.info("更新用户: {}", user.username);
@@ -187,7 +187,7 @@ public class UserApiController {
         int id = ctx.pathParamAsClass("id", Integer.class).get();
         
         try {
-            User user = UserDAO.findById(id);
+            User user = DAOFactory.getInstance().getUserDAO().findById(id);
             if (user == null) {
                 ctx.status(HttpStatus.NOT_FOUND)
                    .json(Map.of(KEY_SUCCESS, false, KEY_MESSAGE, "用户不存在"));
@@ -202,7 +202,7 @@ public class UserApiController {
                 return;
             }
             
-            UserDAO.delete(id);
+            DAOFactory.getInstance().getUserDAO().delete(id);
             
             logger.info("删除用户: {}", user.username);
             ctx.json(Map.of(KEY_SUCCESS, true, KEY_MESSAGE, "用户删除成功"));

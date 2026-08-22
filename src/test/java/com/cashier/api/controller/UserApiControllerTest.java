@@ -1,7 +1,7 @@
 package com.cashier.api.controller;
 
 import com.cashier.api.support.TestContext;
-import com.cashier.dao.UserDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.model.User;
 import com.cashier.util.DatabaseTestBase;
 import io.javalin.http.HandlerType;
@@ -34,7 +34,7 @@ class UserApiControllerTest extends DatabaseTestBase {
 
     private User insertUser(String username) throws Exception {
         User user = new User(username, "hashed", username + "名称", "收银员");
-        assertTrue(UserDAO.insert(user));
+        assertTrue(DAOFactory.getInstance().getUserDAO().insert(user));
         return user;
     }
 

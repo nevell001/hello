@@ -5,7 +5,7 @@ import com.cashier.api.middleware.AuthMiddleware;
 import com.cashier.api.middleware.AuthorizationMiddleware;
 import com.cashier.api.sync.SyncWebSocketHandler;
 import com.cashier.api.sync.SyncManager;
-import com.cashier.dao.UserDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.model.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -380,7 +380,7 @@ public class ApiServer {
         }
         
         try {
-            return UserDAO.findById(info.userId);
+            return DAOFactory.getInstance().getUserDAO().findById(info.userId);
         } catch (Exception e) {
             logger.error("获取用户失败: {}", info.userId, e);
             return null;
