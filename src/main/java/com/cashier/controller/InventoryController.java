@@ -6,7 +6,6 @@ import com.cashier.controller.base.BaseController;
 import com.cashier.dao.CategoryDAO;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
-import com.cashier.dao.UnitDAO;
 import com.cashier.model.Category;
 import com.cashier.model.PageResult;
 import com.cashier.model.Product;
@@ -787,7 +786,7 @@ public class InventoryController extends BaseController<Product> {
 
         ObservableList<Unit> unitList = FXCollections.observableArrayList();
         try {
-            unitList.addAll(UnitDAO.findAll());
+            unitList.addAll(DAOFactory.getInstance().getUnitDAO().findAll());
         } catch (SQLException e) {
             logger.error("加载单位失败", e);
         }
@@ -859,7 +858,7 @@ public class InventoryController extends BaseController<Product> {
             if (bt == ButtonType.OK) {
                 try {
                     Unit unit = new Unit(nameField.getText().trim(), descField.getText().trim());
-                    if (UnitDAO.insert(unit)) {
+                    if (DAOFactory.getInstance().getUnitDAO().insert(unit)) {
                         unitList.add(unit);
                     }
                 } catch (SQLException e) {
@@ -894,7 +893,7 @@ public class InventoryController extends BaseController<Product> {
             if (bt == ButtonType.OK) {
                 try {
                     unit.description = descField.getText().trim();
-                    if (UnitDAO.update(unit)) {
+                    if (DAOFactory.getInstance().getUnitDAO().update(unit)) {
                         unitList.set(unitList.indexOf(unit), unit);
                     }
                 } catch (SQLException e) {
@@ -907,7 +906,7 @@ public class InventoryController extends BaseController<Product> {
     private void showDeleteUnitDialog(Unit unit, ObservableList<Unit> unitList) {
         if (confirmDeleteWithName(unit.name)) {
             try {
-                if (UnitDAO.deleteByName(unit.name)) {
+                if (DAOFactory.getInstance().getUnitDAO().deleteByName(unit.name)) {
                     unitList.remove(unit);
                 }
             } catch (SQLException e) {

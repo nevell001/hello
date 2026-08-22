@@ -235,8 +235,11 @@ public class PurchaseOrderDAO {
 
             pstmt.setString(1, order.orderNo);
             pstmt.setInt(2, order.supplierId);
-            pstmt.setString(3, order.purchaseDate);
-            pstmt.setString(4, order.expectedDate);
+            // 空字符串日期按 NULL 处理，避免 DATE 列解析空串报错
+            pstmt.setString(3, order.purchaseDate != null && !order.purchaseDate.isEmpty()
+                ? order.purchaseDate : null);
+            pstmt.setString(4, order.expectedDate != null && !order.expectedDate.isEmpty()
+                ? order.expectedDate : null);
             pstmt.setBigDecimal(5, order.totalAmount);
             pstmt.setString(6, order.status);
             pstmt.setString(7, order.purchaser);

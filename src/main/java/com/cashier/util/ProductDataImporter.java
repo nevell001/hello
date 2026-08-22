@@ -3,7 +3,6 @@ package com.cashier.util;
 import com.cashier.dao.CategoryDAO;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
-import com.cashier.dao.UnitDAO;
 import com.cashier.model.Category;
 import com.cashier.model.Product;
 import com.cashier.model.Unit;
@@ -685,7 +684,7 @@ public class ProductDataImporter {
         Map<String, Unit> unitMap = new HashMap<>();
         
         try {
-            List<Unit> units = UnitDAO.findAll();
+            List<Unit> units = DAOFactory.getInstance().getUnitDAO().findAll();
             for (Unit unit : units) {
                 unitMap.put(unit.name, unit);
             }
@@ -693,7 +692,7 @@ public class ProductDataImporter {
             // 确保至少有默认单位
             if (!unitMap.containsKey("个")) {
                 Unit defaultUnit = new Unit("个", "默认单位");
-                UnitDAO.insert(defaultUnit);
+                DAOFactory.getInstance().getUnitDAO().insert(defaultUnit);
                 unitMap.put(defaultUnit.name, defaultUnit);
             }
             
@@ -746,7 +745,7 @@ public class ProductDataImporter {
                 if (!unitMap.containsKey(product.unit)) {
                     try {
                         Unit newUnit = new Unit(product.unit, "导入商品创建");
-                        UnitDAO.insert(newUnit);
+                        DAOFactory.getInstance().getUnitDAO().insert(newUnit);
                         unitMap.put(newUnit.name, newUnit);
                         createdCount++;
                         logger.debug("创建新单位: {}", product.unit);

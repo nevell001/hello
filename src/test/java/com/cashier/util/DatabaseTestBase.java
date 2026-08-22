@@ -117,6 +117,15 @@ public abstract class DatabaseTestBase {
             )
             """);
 
+        // 创建 units 表（计量单位）
+        stmt.execute("""
+            CREATE TABLE IF NOT EXISTS units (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(50) UNIQUE NOT NULL,
+                description VARCHAR(200)
+            )
+            """);
+
         // 创建 products 表
         stmt.execute("""
             CREATE TABLE IF NOT EXISTS products (

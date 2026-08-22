@@ -7,7 +7,6 @@ import com.cashier.i18n.I18nManager;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
 import com.cashier.dao.SupplierDAO;
-import com.cashier.dao.UnitDAO;
 import com.cashier.model.Category;
 import com.cashier.model.Product;
 import com.cashier.model.Supplier;
@@ -160,7 +159,7 @@ public class ProductEditController {
         units.add("个"); // 添加默认单位
 
         try {
-            List<Unit> unitList = UnitDAO.findAll();
+            List<Unit> unitList = DAOFactory.getInstance().getUnitDAO().findAll();
             for (Unit unit : unitList) {
                 units.add(unit.name);
             }

@@ -167,8 +167,8 @@ public abstract class BaseDAO {
      * @throws SQLException 如果查询失败
      */
     protected int queryInt(String sql, Object... params) throws SQLException {
-        Integer value = queryScalar(sql, params);
-        return value != null ? value : 0;
+        Number value = (Number) queryScalar(sql, params);
+        return value != null ? value.intValue() : 0;
     }
 
     /**
