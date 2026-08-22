@@ -3,7 +3,6 @@ package com.cashier.controller;
 import com.cashier.i18n.I18nKeys;
 
 import com.cashier.i18n.I18nManager;
-import com.cashier.dao.CategoryDAO;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.InventoryCheckDAO;
 import com.cashier.dao.InventoryCheckItemDAO;
@@ -577,7 +576,7 @@ public class InventoryCheckController {
             ObservableList<String> categoryList = FXCollections.observableArrayList();
             String allCategories = I18nManager.getInstance().get(I18nKeys.Filter.ALL_CATEGORIES);
             categoryList.add(allCategories);
-            categoryList.addAll(CategoryDAO.findAll().stream()
+            categoryList.addAll(DAOFactory.getInstance().getCategoryDAO().findAll().stream()
                 .map(category -> category.name)
                 .filter(name -> name != null && !name.isEmpty())
                 .collect(Collectors.toCollection(TreeSet::new)));

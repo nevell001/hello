@@ -1,7 +1,6 @@
 package com.cashier.controller;
 
 import com.cashier.CashierSystemFXApplication;
-import com.cashier.dao.CategoryDAO;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.MemberDAO;
 import com.cashier.dao.ProductDAORefactored;
@@ -461,7 +460,7 @@ public class TouchCartController implements CartViewHost {
 
     private void loadCategories() {
         try {
-            List<Category> cats = CategoryDAO.findAll();
+            List<Category> cats = DAOFactory.getInstance().getCategoryDAO().findAll();
             logger.info("加载分类完成,共{}个分类", cats.size());
             categoryBox.getChildren().clear();
             ToggleGroup group = new ToggleGroup();

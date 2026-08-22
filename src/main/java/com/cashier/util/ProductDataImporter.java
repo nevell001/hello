@@ -1,6 +1,5 @@
 package com.cashier.util;
 
-import com.cashier.dao.CategoryDAO;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
 import com.cashier.model.Category;
@@ -658,7 +657,7 @@ public class ProductDataImporter {
         Map<String, Category> categoryMap = new HashMap<>();
         
         try {
-            List<Category> categories = CategoryDAO.findAll();
+            List<Category> categories = DAOFactory.getInstance().getCategoryDAO().findAll();
             for (Category category : categories) {
                 categoryMap.put(category.name, category);
             }
@@ -666,7 +665,7 @@ public class ProductDataImporter {
             // 确保至少有默认分类
             if (!categoryMap.containsKey("默认分类")) {
                 Category defaultCategory = new Category("默认分类", "默认商品分类");
-                CategoryDAO.insert(defaultCategory);
+                DAOFactory.getInstance().getCategoryDAO().insert(defaultCategory);
                 categoryMap.put(defaultCategory.name, defaultCategory);
             }
             
@@ -717,7 +716,7 @@ public class ProductDataImporter {
                 if (!categoryMap.containsKey(product.category)) {
                     try {
                         Category newCategory = new Category(product.category, "导入商品创建");
-                        CategoryDAO.insert(newCategory);
+                        DAOFactory.getInstance().getCategoryDAO().insert(newCategory);
                         categoryMap.put(newCategory.name, newCategory);
                         createdCount++;
                         logger.debug("创建新分类: {}", product.category);

@@ -214,7 +214,7 @@ public class DataService {
      */
     public static List<Category> loadCategories() {
         try {
-            return CategoryDAO.findAll();
+            return DAOFactory.getInstance().getCategoryDAO().findAll();
         } catch (SQLException e) {
             logger.error("加载分类数据失败", e);
             List<Category> categories = new ArrayList<>();
@@ -240,7 +240,7 @@ public class DataService {
             }
             // 批量插入新分类
             if (categories != null && !categories.isEmpty()) {
-                CategoryDAO.batchInsertWithConnection(conn, categories);
+                DAOFactory.getInstance().getCategoryDAO().batchInsertWithConnection(conn, categories);
             }
             return true;
         });

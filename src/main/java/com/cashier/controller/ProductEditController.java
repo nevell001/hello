@@ -2,7 +2,6 @@ package com.cashier.controller;
 
 import com.cashier.i18n.I18nKeys;
 
-import com.cashier.dao.CategoryDAO;
 import com.cashier.i18n.I18nManager;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
@@ -140,7 +139,7 @@ public class ProductEditController {
         categories.add("默认分类"); // 添加默认分类
 
         try {
-            List<Category> categoryList = CategoryDAO.findAll();
+            List<Category> categoryList = DAOFactory.getInstance().getCategoryDAO().findAll();
             for (Category category : categoryList) {
                 categories.add(category.name);
             }

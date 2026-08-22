@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
 import java.time.LocalDateTime;
@@ -119,78 +120,11 @@ public class TransactionService {
 
         try {
             boolean success = DatabaseManager.executeBooleanTransaction(conn -> {
-                for (CartItem item : cartItems) {
-                    Product product = inventory.get(item.product.name);
-                    if (product == null) {
-                        throw new SQLException(I18nManager.getInstance().get("service.product_not_found", item.product.name));
-                    }
-
-                    Product latestProduct = productDAO.findByIdWithConnection(conn, item.product.id);
-                    if (latestProduct == null) {
-                        throw new SQLException(I18nManager.getInstance().get("service.product_not_found", item.product.name));
-                    }
-
-                    if (latestProduct.quantity < item.quantity) {
-                        throw new SQLException(I18nManager.getInstance().get("service.product_out_of_stock",
-                            item.product.name, latestProduct.quantity, item.quantity));
-                    }
-
-                    product.quantity = latestProduct.quantity - item.quantity;
-                    product.version = latestProduct.version;
-
-                    if (!productDAO.updateWithVersionWithConnection(conn, product)) {
-                        throw new SQLException(I18nManager.getInstance().get("service.product_update_failed", item.product.name));
-                    }
-
-                    updatedProducts.add(product);
-                }
-
+                deductInventoryInTransaction(conn, cartItems, inventory, updatedProducts);
                 if (member != null) {
-                    Member latestMember = member.id > 0
-                        ? MemberDAO.findByIdWithConnection(conn, member.id)
-                        : MemberDAO.findByPhoneWithConnection(conn, member.phone);
-                    if (latestMember == null) {
-                        throw new SQLException(I18nManager.getInstance().get("service.member_not_found", member.phone));
-                    }
-
-                    boolean memberBalancePayment = I18nManager.getInstance().get("payment.method.member_balance").equals(transaction.paymentMethod);
-                    if (memberBalancePayment && latestMember.getBalance().compareTo(payableAmount) < 0) {
-                        throw new SQLException(I18nManager.getInstance().get("service.member_balance_insufficient",
-                            latestMember.getBalance(), payableAmount));
-                    }
-
-                    // L-1: 使用 FLOOR 而非 DOWN，保证负数（退货场景）也向下取整，业务行为一致
-                    BigDecimal earnedPoints = payableAmount.multiply(BigDecimal.TEN).setScale(0, RoundingMode.FLOOR);
-                    BigDecimal updatedPoints = latestMember.getPoints().add(earnedPoints);
-                    String updatedLevel = MemberService.calculateLevel(updatedPoints);
-                    BigDecimal updatedDiscount = MemberService.getDiscountByLevelDecimal(updatedLevel);
-
-                    member.id = latestMember.id;
-                    member.memberCode = latestMember.memberCode;
-                    member.phone = latestMember.phone;
-                    member.name = latestMember.name;
-                    member.level = updatedLevel;
-                    member.discount = updatedDiscount;
-                    member.discountRate = updatedDiscount;
-                    member.birthday = latestMember.getBirthday();
-                    member.balance = memberBalancePayment
-                        ? latestMember.getBalance().subtract(payableAmount)
-                        : latestMember.getBalance();
-                    member.points = updatedPoints;
-
-                    if (!MemberDAO.updateWithConnection(conn, member)) {
-                        throw new SQLException(I18nManager.getInstance().get("service.member_update_failed"));
-                    }
+                    applyMemberInTransaction(conn, member, transaction, payableAmount);
                 }
-
-                if (!TransactionDAO.insertWithConnection(conn, transaction)) {
-                    throw new SQLException(I18nManager.getInstance().get("service.transaction_save_failed", transactionId));
-                }
-
-                if (appliedPromotion != null && !PromotionDAO.incrementUsageWithConnection(conn, appliedPromotion.id)) {
-                    throw new SQLException(I18nManager.getInstance().get("service.promotion_update_failed", appliedPromotion.id));
-                }
-
+                persistTransactionAndPromotion(conn, transaction, appliedPromotion, transactionId);
                 return true;
             });
 
@@ -226,6 +160,95 @@ public class TransactionService {
             AuditService.failure(transaction.operatorUsername, "TRANSACTION", "SALE_FAILED",
                 "transactionId=" + transactionId + ", reason=" + e.getMessage());
             return new TransactionResult(false, null, I18nManager.getInstance().get("service.transaction_failed_detail", e.getMessage()), null);
+        }
+    }
+
+    /**
+     * 在事务内扣减库存（乐观锁）。
+     */
+    private static void deductInventoryInTransaction(Connection conn, List<CartItem> cartItems,
+                                                     Map<String, Product> inventory,
+                                                     List<Product> updatedProducts) throws SQLException {
+        for (CartItem item : cartItems) {
+            Product product = inventory.get(item.product.name);
+            if (product == null) {
+                throw new SQLException(I18nManager.getInstance().get("service.product_not_found", item.product.name));
+            }
+
+            Product latestProduct = productDAO.findByIdWithConnection(conn, item.product.id);
+            if (latestProduct == null) {
+                throw new SQLException(I18nManager.getInstance().get("service.product_not_found", item.product.name));
+            }
+
+            if (latestProduct.quantity < item.quantity) {
+                throw new SQLException(I18nManager.getInstance().get("service.product_out_of_stock",
+                    item.product.name, latestProduct.quantity, item.quantity));
+            }
+
+            product.quantity = latestProduct.quantity - item.quantity;
+            product.version = latestProduct.version;
+
+            if (!productDAO.updateWithVersionWithConnection(conn, product)) {
+                throw new SQLException(I18nManager.getInstance().get("service.product_update_failed", item.product.name));
+            }
+
+            updatedProducts.add(product);
+        }
+    }
+
+    /**
+     * 在事务内更新会员积分/余额/等级。
+     */
+    private static void applyMemberInTransaction(Connection conn, Member member, Transaction transaction,
+                                                 BigDecimal payableAmount) throws SQLException {
+        Member latestMember = member.id > 0
+            ? MemberDAO.findByIdWithConnection(conn, member.id)
+            : MemberDAO.findByPhoneWithConnection(conn, member.phone);
+        if (latestMember == null) {
+            throw new SQLException(I18nManager.getInstance().get("service.member_not_found", member.phone));
+        }
+
+        boolean memberBalancePayment = I18nManager.getInstance().get("payment.method.member_balance").equals(transaction.paymentMethod);
+        if (memberBalancePayment && latestMember.getBalance().compareTo(payableAmount) < 0) {
+            throw new SQLException(I18nManager.getInstance().get("service.member_balance_insufficient",
+                latestMember.getBalance(), payableAmount));
+        }
+
+        // L-1: 使用 FLOOR 而非 DOWN，保证负数（退货场景）也向下取整，业务行为一致
+        BigDecimal earnedPoints = payableAmount.multiply(BigDecimal.TEN).setScale(0, RoundingMode.FLOOR);
+        BigDecimal updatedPoints = latestMember.getPoints().add(earnedPoints);
+        String updatedLevel = MemberService.calculateLevel(updatedPoints);
+        BigDecimal updatedDiscount = MemberService.getDiscountByLevelDecimal(updatedLevel);
+
+        member.id = latestMember.id;
+        member.memberCode = latestMember.memberCode;
+        member.phone = latestMember.phone;
+        member.name = latestMember.name;
+        member.level = updatedLevel;
+        member.discount = updatedDiscount;
+        member.discountRate = updatedDiscount;
+        member.birthday = latestMember.getBirthday();
+        member.balance = memberBalancePayment
+            ? latestMember.getBalance().subtract(payableAmount)
+            : latestMember.getBalance();
+        member.points = updatedPoints;
+
+        if (!MemberDAO.updateWithConnection(conn, member)) {
+            throw new SQLException(I18nManager.getInstance().get("service.member_update_failed"));
+        }
+    }
+
+    /**
+     * 在事务内落库交易主记录并累加促销使用次数。
+     */
+    private static void persistTransactionAndPromotion(Connection conn, Transaction transaction,
+                                                       Promotion appliedPromotion, String transactionId) throws SQLException {
+        if (!TransactionDAO.insertWithConnection(conn, transaction)) {
+            throw new SQLException(I18nManager.getInstance().get("service.transaction_save_failed", transactionId));
+        }
+
+        if (appliedPromotion != null && !PromotionDAO.incrementUsageWithConnection(conn, appliedPromotion.id)) {
+            throw new SQLException(I18nManager.getInstance().get("service.promotion_update_failed", appliedPromotion.id));
         }
     }
 

@@ -3,7 +3,6 @@ package com.cashier.controller;
 import com.cashier.i18n.I18nKeys;
 
 import com.cashier.controller.base.BaseController;
-import com.cashier.dao.CategoryDAO;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
 import com.cashier.model.Category;
@@ -165,7 +164,7 @@ public class InventoryController extends BaseController<Product> {
         ObservableList<String> categories = FXCollections.observableArrayList();
         categories.add(i18n.get("inventory.all_categories")); // 全部分类
         try {
-            List<Category> categoryList = CategoryDAO.findAll();
+            List<Category> categoryList = DAOFactory.getInstance().getCategoryDAO().findAll();
             for (Category c : categoryList) {
                 categories.add(c.name);
             }
@@ -620,7 +619,7 @@ public class InventoryController extends BaseController<Product> {
         // 加载分类数据
         ObservableList<Category> categoryList = FXCollections.observableArrayList();
         try {
-            categoryList.addAll(CategoryDAO.findAll());
+            categoryList.addAll(DAOFactory.getInstance().getCategoryDAO().findAll());
         } catch (SQLException e) {
             logger.error("加载分类失败", e);
         }
@@ -697,7 +696,7 @@ public class InventoryController extends BaseController<Product> {
                 try {
                     Category cat = new Category(nameField.getText().trim(), descField.getText().trim());
                     cat.categoryCode = codeField.getText().trim();
-                    if (CategoryDAO.insert(cat)) {
+                    if (DAOFactory.getInstance().getCategoryDAO().insert(cat)) {
                         categoryList.add(cat);
                     }
                 } catch (SQLException e) {
@@ -736,7 +735,7 @@ public class InventoryController extends BaseController<Product> {
                 try {
                     category.categoryCode = codeField.getText().trim();
                     category.description = descField.getText().trim();
-                    if (CategoryDAO.update(category)) {
+                    if (DAOFactory.getInstance().getCategoryDAO().update(category)) {
                         categoryList.set(categoryList.indexOf(category), category);
                     }
                 } catch (SQLException e) {
@@ -749,7 +748,7 @@ public class InventoryController extends BaseController<Product> {
     private void showDeleteCategoryDialog(Category category, ObservableList<Category> categoryList) {
         if (confirmDeleteWithName(category.name)) {
             try {
-                if (CategoryDAO.deleteByName(category.name)) {
+                if (DAOFactory.getInstance().getCategoryDAO().deleteByName(category.name)) {
                     categoryList.remove(category);
                 }
             } catch (SQLException e) {

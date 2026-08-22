@@ -3,7 +3,6 @@ package com.cashier.controller;
 import com.cashier.i18n.I18nKeys;
 
 import com.cashier.i18n.I18nManager;
-import com.cashier.dao.CategoryDAO;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
 import com.cashier.dao.TransactionDAO;
@@ -317,7 +316,7 @@ public class InventoryReportController {
 
     private Set<String> loadAllCategoryNames() throws SQLException {
         Set<String> categories = new TreeSet<>();
-        for (Category category : CategoryDAO.findAll()) {
+        for (Category category : DAOFactory.getInstance().getCategoryDAO().findAll()) {
             if (category.name != null && !category.name.isBlank()) {
                 categories.add(category.name);
             }

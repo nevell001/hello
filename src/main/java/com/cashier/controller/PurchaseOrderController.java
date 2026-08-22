@@ -724,7 +724,7 @@ public class PurchaseOrderController {
             searchBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
 
             // 加载分类数据
-            List<Category> categories = CategoryDAO.findAll();
+            List<Category> categories = DAOFactory.getInstance().getCategoryDAO().findAll();
             ObservableList<String> categoryList = FXCollections.observableArrayList("全部分类");
             for (Category category : categories) {
                 categoryList.add(category.name);

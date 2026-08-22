@@ -27,6 +27,7 @@ public class DAOFactory {
         // 注册新的重构版 DAO
         register(ProductDAORefactored.class, new ProductDAORefactored());
         register(UnitDAORefactored.class, new UnitDAORefactored());
+        register(CategoryDAORefactored.class, new CategoryDAORefactored());
     }
 
     /**
@@ -68,5 +69,13 @@ public class DAOFactory {
      */
     public UnitDAORefactored getUnitDAO() {
         return getDAO(UnitDAORefactored.class);
+    }
+
+    /**
+     * 获取分类 DAO（重构版）
+     * @return CategoryDAORefactored 实例
+     */
+    public CategoryDAORefactored getCategoryDAO() {
+        return getDAO(CategoryDAORefactored.class);
     }
 }

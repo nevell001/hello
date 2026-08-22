@@ -126,6 +126,15 @@ public abstract class DatabaseTestBase {
             )
             """);
 
+        // 创建 categories 表（商品分类）
+        stmt.execute("""
+            CREATE TABLE IF NOT EXISTS categories (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(50) UNIQUE NOT NULL,
+                description VARCHAR(200)
+            )
+            """);
+
         // 创建 products 表
         stmt.execute("""
             CREATE TABLE IF NOT EXISTS products (
@@ -572,6 +581,8 @@ public abstract class DatabaseTestBase {
             stmt.execute("DELETE FROM recharge_records");
             stmt.execute("DELETE FROM settings");
             stmt.execute("DELETE FROM login_attempts");
+            stmt.execute("DELETE FROM categories");
+            stmt.execute("DELETE FROM units");
             // 清空应用级缓存，防止测试之间的缓存污染
             try {
                 com.cashier.util.CacheManager.clearCache();
