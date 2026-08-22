@@ -254,86 +254,18 @@ public class PromotionController {
             createFieldColumn()
         );
 
-        TextField promotionCodeField = new TextField();
-        TextField nameField = new TextField();
-        ComboBox<String> typeComboBox = new ComboBox<>();
-        TextField thresholdField = new TextField();
-        TextField discountField = new TextField();
-        TextArea descriptionArea = new TextArea();
-        DatePicker startDatePicker = new DatePicker();
-        DatePicker endDatePicker = new DatePicker();
-        TextField maxUsageField = new TextField();
-        Label errorLabel = new Label();
-        errorLabel.setWrapText(true);
-        errorLabel.setMaxWidth(Double.MAX_VALUE);
-        errorLabel.getStyleClass().add("error-label");
-        errorLabel.visibleProperty().bind(errorLabel.textProperty().isNotEmpty());
-        errorLabel.managedProperty().bind(errorLabel.visibleProperty());
+        PromotionFormControls controls = createPromotionFormControls();
 
-        stylePromotionDialogControls(
-            promotionCodeField,
-            nameField,
-            typeComboBox,
-            thresholdField,
-            discountField,
-            descriptionArea,
-            startDatePicker,
-            endDatePicker,
-            maxUsageField
-        );
+        populatePromotionForm(promotion, controls);
 
-        typeComboBox.setItems(FXCollections.observableArrayList("满减", "打折", "优惠券"));
-        typeComboBox.setButtonCell(createPromotionTypeCell());
-        typeComboBox.setCellFactory(listView -> createPromotionTypeCell());
-        typeComboBox.getSelectionModel().select("满减");
-        thresholdField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_threshold_hint"));
-        discountField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_reduction_hint"));
-        maxUsageField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_unlimited_hint"));
-        startDatePicker.setValue(LocalDate.now());
-        endDatePicker.setValue(LocalDate.now().plusDays(30));
-
-        if (promotion != null) {
-            promotionCodeField.setText(promotion.promotionCode);
-            promotionCodeField.setDisable(true);  // 编辑时禁用促销编号
-            nameField.setText(promotion.name);
-            typeComboBox.getSelectionModel().select(promotion.type);
-            thresholdField.setText(String.valueOf(promotion.threshold));
-            discountField.setText(String.valueOf(promotion.discount));
-            descriptionArea.setText(promotion.description);
-            startDatePicker.setValue(promotion.startDate.toLocalDate());
-            endDatePicker.setValue(promotion.endDate.toLocalDate());
-            maxUsageField.setText(promotion.maxUsage == -1 ? "" : String.valueOf(promotion.maxUsage));
-        } else {
-            // 新建促销时自动生成编号
-            promotionCodeField.setText(generatePromotionCode());
-            promotionCodeField.setDisable(true);  // 禁用促销编号字段
-            thresholdField.setText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.MemberEdit.POINTS_HINT));
-        }
-
-        typeComboBox.valueProperty().addListener((obs, oldType, newType) -> {
-            updatePromotionFieldHints(newType, thresholdField, discountField);
+        controls.typeComboBox.valueProperty().addListener((obs, oldType, newType) -> {
+            updatePromotionFieldHints(newType, controls.thresholdField, controls.discountField);
         });
-        updatePromotionFieldHints(typeComboBox.getSelectionModel().getSelectedItem(), thresholdField, discountField);
+        updatePromotionFieldHints(
+            controls.typeComboBox.getSelectionModel().getSelectedItem(),
+            controls.thresholdField, controls.discountField);
 
-        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.code")), 0, 0);
-        grid.add(promotionCodeField, 1, 0);
-        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.name_required")), 2, 0);
-        grid.add(nameField, 3, 0);
-        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.type_required")), 0, 1);
-        grid.add(typeComboBox, 1, 1);
-        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.max_usage")), 2, 1);
-        grid.add(maxUsageField, 3, 1);
-        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.threshold_required")), 0, 2);
-        grid.add(thresholdField, 1, 2);
-        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.discount_required")), 2, 2);
-        grid.add(discountField, 3, 2);
-        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.start_date_required")), 0, 3);
-        grid.add(startDatePicker, 1, 3);
-        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.end_date_required")), 2, 3);
-        grid.add(endDatePicker, 3, 3);
-        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.description_label")), 0, 4);
-        grid.add(descriptionArea, 1, 4, 3, 1);
-        grid.add(errorLabel, 1, 5, 3, 1);
+        layoutPromotionForm(grid, controls);
 
         content.getChildren().addAll(titleLabel, grid);
         dialog.getDialogPane().setContent(content);
@@ -350,30 +282,30 @@ public class PromotionController {
             try {
                 Promotion result = buildPromotionFromForm(
                     promotion,
-                    promotionCodeField,
-                    nameField,
-                    typeComboBox,
-                    thresholdField,
-                    discountField,
-                    descriptionArea,
-                    startDatePicker,
-                    endDatePicker,
-                    maxUsageField
+                    controls.promotionCodeField,
+                    controls.nameField,
+                    controls.typeComboBox,
+                    controls.thresholdField,
+                    controls.discountField,
+                    controls.descriptionArea,
+                    controls.startDatePicker,
+                    controls.endDatePicker,
+                    controls.maxUsageField
                 );
-                errorLabel.setText("");
+                controls.errorLabel.setText("");
                 dialog.setResult(result);
                 dialog.close();
                 event.consume();
             } catch (IllegalArgumentException e) {
                 logger.info("促销数据验证失败: {}", e.getMessage());
                 StatusBarManager.updateWarning(e.getMessage());
-                errorLabel.setText(e.getMessage());
+                controls.errorLabel.setText(e.getMessage());
                 event.consume();
             } catch (Exception e) {
                 logger.error("保存促销失败", e);
                 String message = com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_save_validation_error", e.getMessage());
                 StatusBarManager.updateError(message);
-                errorLabel.setText(message);
+                controls.errorLabel.setText(message);
                 event.consume();
             }
         });
@@ -398,6 +330,94 @@ public class PromotionController {
     /**
      * 生成促销编号
      */
+    /** 促销表单控件集合，避免在对话框方法中散落大量局部变量 */
+    private static class PromotionFormControls {
+        final TextField promotionCodeField = new TextField();
+        final TextField nameField = new TextField();
+        final ComboBox<String> typeComboBox = new ComboBox<>();
+        final TextField thresholdField = new TextField();
+        final TextField discountField = new TextField();
+        final TextArea descriptionArea = new TextArea();
+        final DatePicker startDatePicker = new DatePicker();
+        final DatePicker endDatePicker = new DatePicker();
+        final TextField maxUsageField = new TextField();
+        final Label errorLabel = new Label();
+    }
+
+    private PromotionFormControls createPromotionFormControls() {
+        PromotionFormControls controls = new PromotionFormControls();
+        controls.errorLabel.setWrapText(true);
+        controls.errorLabel.setMaxWidth(Double.MAX_VALUE);
+        controls.errorLabel.getStyleClass().add("error-label");
+        controls.errorLabel.visibleProperty().bind(controls.errorLabel.textProperty().isNotEmpty());
+        controls.errorLabel.managedProperty().bind(controls.errorLabel.visibleProperty());
+
+        stylePromotionDialogControls(
+            controls.promotionCodeField,
+            controls.nameField,
+            controls.typeComboBox,
+            controls.thresholdField,
+            controls.discountField,
+            controls.descriptionArea,
+            controls.startDatePicker,
+            controls.endDatePicker,
+            controls.maxUsageField
+        );
+
+        controls.typeComboBox.setItems(FXCollections.observableArrayList("满减", "打折", "优惠券"));
+        controls.typeComboBox.setButtonCell(createPromotionTypeCell());
+        controls.typeComboBox.setCellFactory(listView -> createPromotionTypeCell());
+        controls.typeComboBox.getSelectionModel().select("满减");
+        controls.thresholdField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_threshold_hint"));
+        controls.discountField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_reduction_hint"));
+        controls.maxUsageField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.promotion_unlimited_hint"));
+        controls.startDatePicker.setValue(LocalDate.now());
+        controls.endDatePicker.setValue(LocalDate.now().plusDays(30));
+        return controls;
+    }
+
+    private void populatePromotionForm(Promotion promotion, PromotionFormControls controls) {
+        if (promotion != null) {
+            controls.promotionCodeField.setText(promotion.promotionCode);
+            controls.promotionCodeField.setDisable(true);  // 编辑时禁用促销编号
+            controls.nameField.setText(promotion.name);
+            controls.typeComboBox.getSelectionModel().select(promotion.type);
+            controls.thresholdField.setText(String.valueOf(promotion.threshold));
+            controls.discountField.setText(String.valueOf(promotion.discount));
+            controls.descriptionArea.setText(promotion.description);
+            controls.startDatePicker.setValue(promotion.startDate.toLocalDate());
+            controls.endDatePicker.setValue(promotion.endDate.toLocalDate());
+            controls.maxUsageField.setText(promotion.maxUsage == -1 ? "" : String.valueOf(promotion.maxUsage));
+        } else {
+            // 新建促销时自动生成编号
+            controls.promotionCodeField.setText(generatePromotionCode());
+            controls.promotionCodeField.setDisable(true);  // 禁用促销编号字段
+            controls.thresholdField.setText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.MemberEdit.POINTS_HINT));
+        }
+    }
+
+    private void layoutPromotionForm(GridPane grid, PromotionFormControls controls) {
+        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.code")), 0, 0);
+        grid.add(controls.promotionCodeField, 1, 0);
+        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.name_required")), 2, 0);
+        grid.add(controls.nameField, 3, 0);
+        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.type_required")), 0, 1);
+        grid.add(controls.typeComboBox, 1, 1);
+        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.max_usage")), 2, 1);
+        grid.add(controls.maxUsageField, 3, 1);
+        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.threshold_required")), 0, 2);
+        grid.add(controls.thresholdField, 1, 2);
+        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.discount_required")), 2, 2);
+        grid.add(controls.discountField, 3, 2);
+        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.start_date_required")), 0, 3);
+        grid.add(controls.startDatePicker, 1, 3);
+        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.end_date_required")), 2, 3);
+        grid.add(controls.endDatePicker, 3, 3);
+        grid.add(createFormLabel(I18nManager.getInstance().get("promotion.description_label")), 0, 4);
+        grid.add(controls.descriptionArea, 1, 4, 3, 1);
+        grid.add(controls.errorLabel, 1, 5, 3, 1);
+    }
+
     private String generatePromotionCode() {
         return "P" + System.currentTimeMillis();
     }

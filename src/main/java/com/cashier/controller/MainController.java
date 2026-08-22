@@ -1,12 +1,12 @@
 package com.cashier.controller;
 
 import com.cashier.constant.SystemPropertyKeys;
+import com.cashier.dao.DAOFactory;
 
 import com.cashier.i18n.I18nKeys;
 
 import com.cashier.CashierSystemFXApplication;
 import com.cashier.constant.AppConstants;
-import com.cashier.dao.ShiftDAO;
 import com.cashier.model.Shift;
 import com.cashier.model.User;
 import com.cashier.service.DataService;
@@ -456,7 +456,7 @@ private Button shiftBtn;
      */
     private void updateShiftInfo() {
         try {
-            Shift activeShift = ShiftDAO.findActiveShift();
+            Shift activeShift = DAOFactory.getInstance().getShiftDAO().findActiveShift();
             if (activeShift != null) {
                 // 有活跃班次
                 String startTime = LocalDateTime.ofInstant(activeShift.startTime, ZoneId.systemDefault())

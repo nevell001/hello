@@ -427,7 +427,7 @@ public class DataService {
      */
     public static boolean hasActiveShift() {
         try {
-            return ShiftDAO.hasActiveShift();
+            return DAOFactory.getInstance().getShiftDAO().hasActiveShift();
         } catch (SQLException e) {
             logger.error("检查活跃班次失败", e);
             return false;

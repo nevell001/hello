@@ -582,7 +582,7 @@ class PerformancePolicyTest {
         assertTrue(shiftController.contains("TransactionDAO.getTotalRevenue("));
         assertTrue(shiftController.contains("TransactionDAO.getTransactionCount("));
         assertTrue(shiftController.contains("TransactionDAO.findByDateRange("));
-        assertTrue(shiftController.contains("ShiftDAO.findRecent(SHIFT_HISTORY_LIMIT)"));
+        assertTrue(shiftController.contains("getShiftDAO().findRecent(SHIFT_HISTORY_LIMIT)"));
         assertFalse(shiftController.contains("ShiftDAO.findAll()"));
         assertFalse(shiftController.contains("TransactionDAO.findAll()"));
 

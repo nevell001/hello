@@ -14,6 +14,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DisplayName("班次数据访问对象测试")
 class ShiftDAOTest extends DatabaseTestBase {
 
+    private final ShiftDAORefactored shiftDAO = DAOFactory.getInstance().getShiftDAO();
+
     @Test
     @DisplayName("查询最近班次时按开始时间倒序并限制数量")
     void testFindRecentUsesLimitAndNewestFirst() throws SQLException {
@@ -21,11 +23,11 @@ class ShiftDAOTest extends DatabaseTestBase {
         Shift middleShift = createShift("SHIFT-MIDDLE", Instant.ofEpochMilli(2_000L));
         Shift newestShift = createShift("SHIFT-NEW", Instant.ofEpochMilli(3_000L));
 
-        ShiftDAO.insert(oldShift);
-        ShiftDAO.insert(middleShift);
-        ShiftDAO.insert(newestShift);
+        shiftDAO.insert(oldShift);
+        shiftDAO.insert(middleShift);
+        shiftDAO.insert(newestShift);
 
-        var shifts = ShiftDAO.findRecent(2);
+        var shifts = shiftDAO.findRecent(2);
 
         assertEquals(2, shifts.size());
         assertEquals("SHIFT-NEW", shifts.get(0).shiftId);

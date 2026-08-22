@@ -2,7 +2,7 @@ package com.cashier.controller;
 
 import com.cashier.i18n.I18nKeys;
 
-import com.cashier.dao.ShiftDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.i18n.I18nManager;
 import com.cashier.dao.TransactionDAO;
 import com.cashier.model.Shift;
@@ -213,7 +213,7 @@ public class ShiftController {
     private void loadShifts() {
         logger.info("ShiftController: 开始加载交接班数据...");
         try {
-            allShifts = ShiftDAO.findRecent(SHIFT_HISTORY_LIMIT);
+            allShifts = DAOFactory.getInstance().getShiftDAO().findRecent(SHIFT_HISTORY_LIMIT);
 
             // 收银员只能查看自己的班次
             if (currentUser != null && "cashier".equals(currentUser.role)) {
@@ -567,7 +567,7 @@ public class ShiftController {
     private void updateShiftButtonStates() {
         boolean hasActiveShift = false;
         try {
-            hasActiveShift = ShiftDAO.hasActiveShift();
+            hasActiveShift = DAOFactory.getInstance().getShiftDAO().hasActiveShift();
         } catch (SQLException e) {
             logger.error("检查活跃班次失败", e);
             hasActiveShift = false;
@@ -583,7 +583,7 @@ public class ShiftController {
     public void handleStartShift() {
         // 检查是否已有活跃班次
         try {
-            if (ShiftDAO.hasActiveShift()) {
+            if (DAOFactory.getInstance().getShiftDAO().hasActiveShift()) {
                 showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.shift_already_active"));
                 return;
             }
@@ -639,7 +639,7 @@ public class ShiftController {
 
             // 保存班次到数据库
             try {
-                ShiftDAO.insert(shift);
+                DAOFactory.getInstance().getShiftDAO().insert(shift);
             } catch (SQLException e) {
                 logger.error("保存班次失败", e);
                 showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.SAVE_DATA) + ": " + e.getMessage());
@@ -672,7 +672,7 @@ public class ShiftController {
         // 检查是否有活跃班次
         Shift activeShift = null;
         try {
-            activeShift = ShiftDAO.findActiveShift();
+            activeShift = DAOFactory.getInstance().getShiftDAO().findActiveShift();
         } catch (SQLException e) {
             logger.error("获取活跃班次失败", e);
             showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
@@ -739,7 +739,7 @@ public class ShiftController {
 
             // 保存班次到数据库
             try {
-                ShiftDAO.update(activeShift);
+                DAOFactory.getInstance().getShiftDAO().update(activeShift);
             } catch (SQLException e) {
                 logger.error("更新班次失败", e);
                 showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.SAVE_DATA) + ": " + e.getMessage());
