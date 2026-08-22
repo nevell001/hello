@@ -364,7 +364,7 @@ public class ReturnApprovalController {
 
         // 查找原交易记录
         try {
-            Transaction transaction = TransactionDAO.findById(selectedOrder.originalTransactionId);
+            Transaction transaction = DAOFactory.getInstance().getTransactionDAO().findById(selectedOrder.originalTransactionId);
             if (transaction != null) {
                 // 显示交易详情
                 String details = I18nManager.getInstance().get("runtime.original_transaction_details",

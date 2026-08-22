@@ -1,6 +1,6 @@
 package com.cashier.api.controller;
 
-import com.cashier.dao.TransactionDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.model.Transaction;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
@@ -28,7 +28,7 @@ public class ReportApiController {
             String dateStr = ctx.queryParam("date");
             if (dateStr == null) dateStr = LocalDate.now().toString();
             LocalDate date = LocalDate.parse(dateStr);
-            List<Transaction> dayTransactions = TransactionDAO.findByDateRange(
+            List<Transaction> dayTransactions = DAOFactory.getInstance().getTransactionDAO().findByDateRange(
                 date.atStartOfDay().format(com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME),
                 date.plusDays(1).atStartOfDay().minusSeconds(1).format(com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME)
             );
@@ -85,7 +85,7 @@ public class ReportApiController {
             if (monthStr == null) monthStr = LocalDate.now().format(com.cashier.util.DateTimeFormats.MONTH);
             LocalDate monthStart = LocalDate.parse(monthStr + "-01", com.cashier.util.DateTimeFormats.DATE);
             LocalDate monthEnd = monthStart.plusMonths(1).minusDays(1);
-            List<Transaction> monthTransactions = TransactionDAO.findByDateRange(
+            List<Transaction> monthTransactions = DAOFactory.getInstance().getTransactionDAO().findByDateRange(
                 monthStart.atStartOfDay().format(com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME),
                 monthEnd.plusDays(1).atStartOfDay().minusSeconds(1).format(com.cashier.util.DateTimeFormats.STANDARD_DATE_TIME)
             );
@@ -129,7 +129,7 @@ public class ReportApiController {
         try {
             int requestedLimit = ctx.queryParamAsClass("limit", Integer.class).getOrDefault(DEFAULT_TOP_PRODUCTS_LIMIT);
             int limit = Math.max(1, Math.min(requestedLimit, MAX_TOP_PRODUCTS_LIMIT));
-            List<Map<String, Object>> topList = TransactionDAO.getTopProducts(limit);
+            List<Map<String, Object>> topList = DAOFactory.getInstance().getTransactionDAO().getTopProducts(limit);
             
             ctx.json(Map.of("success", true, "data", topList));
         } catch (Exception e) {
@@ -145,7 +145,7 @@ public class ReportApiController {
      */
     public static void paymentMethods(Context ctx) {
         try {
-            List<Map<String, Object>> result = TransactionDAO.getPaymentMethodStats();
+            List<Map<String, Object>> result = DAOFactory.getInstance().getTransactionDAO().getPaymentMethodStats();
             
             ctx.json(Map.of("success", true, "data", result));
         } catch (Exception e) {

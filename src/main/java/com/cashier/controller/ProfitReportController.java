@@ -6,7 +6,6 @@ import com.cashier.i18n.I18nManager;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
 import com.cashier.dao.PurchaseInboundItemDAO;
-import com.cashier.dao.TransactionDAO;
 import com.cashier.util.CurrencyUtil;
 import com.cashier.util.DateTimeFormats;
 import com.cashier.model.Category;
@@ -424,7 +423,7 @@ public class ProfitReportController {
         if (startDate == null || endDate == null) {
             return new ArrayList<>();
         }
-        return TransactionDAO.findByDateRange(
+        return DAOFactory.getInstance().getTransactionDAO().findByDateRange(
             startDate.atStartOfDay().format(DateTimeFormats.STANDARD_DATE_TIME),
             endDate.plusDays(1).atStartOfDay().minusSeconds(1).format(DateTimeFormats.STANDARD_DATE_TIME)
         );

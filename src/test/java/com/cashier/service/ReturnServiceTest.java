@@ -23,6 +23,7 @@ class ReturnServiceTest extends DatabaseTestBase {
 
     private final RechargeRecordDAORefactored rechargeRecordDAO = DAOFactory.getInstance().getRechargeRecordDAO();
     private final OperationLogDAORefactored operationLogDAO = DAOFactory.getInstance().getOperationLogDAO();
+    private final TransactionDAORefactored transactionDAO = DAOFactory.getInstance().getTransactionDAO();
 
     private Member testMember;
     private Product testProduct1;
@@ -65,7 +66,7 @@ class ReturnServiceTest extends DatabaseTestBase {
         testTransaction.operatorUsername = "test_operator";
         // 初始化 items 列表，避免 NullPointerException
         testTransaction.items = new ArrayList<>();
-        TransactionDAO.insert(testTransaction);
+        transactionDAO.insert(testTransaction);
 
         // 注意：transaction_items表没有单独的TransactionItem模型类
         // 直接使用Product模型在Transaction.items中处理

@@ -2,7 +2,7 @@ package com.cashier.controller;
 
 import com.cashier.i18n.I18nKeys;
 
-import com.cashier.dao.TransactionDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.i18n.I18nManager;
 import com.cashier.model.Transaction;
 import com.cashier.model.Product;
@@ -212,7 +212,7 @@ public class TransactionController {
         LocalDate endDate = endDatePicker.getValue();
         LocalDate effectiveStart = startDate != null ? startDate : LocalDate.now().minusDays(30);
         LocalDate effectiveEnd = endDate != null ? endDate : LocalDate.now();
-        return TransactionDAO.findByDateRange(
+        return DAOFactory.getInstance().getTransactionDAO().findByDateRange(
             effectiveStart.atStartOfDay().format(DateTimeFormats.STANDARD_DATE_TIME),
             effectiveEnd.plusDays(1).atStartOfDay().minusSeconds(1).format(DateTimeFormats.STANDARD_DATE_TIME)
         );

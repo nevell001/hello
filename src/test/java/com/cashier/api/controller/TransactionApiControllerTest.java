@@ -1,7 +1,8 @@
 package com.cashier.api.controller;
 
 import com.cashier.api.support.TestContext;
-import com.cashier.dao.TransactionDAO;
+import com.cashier.dao.DAOFactory;
+import com.cashier.dao.TransactionDAORefactored;
 import com.cashier.model.Transaction;
 import com.cashier.util.DatabaseTestBase;
 import io.javalin.http.HandlerType;
@@ -18,6 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TransactionApiControllerTest extends DatabaseTestBase {
 
+    private final TransactionDAORefactored transactionDAO = DAOFactory.getInstance().getTransactionDAO();
+
     private Transaction insertTransaction(String id) throws Exception {
         Transaction transaction = new Transaction(
             id, "2026-08-06 12:00:00", List.of(),
@@ -25,7 +28,7 @@ class TransactionApiControllerTest extends DatabaseTestBase {
         transaction.paymentMethod = "现金";
         transaction.operatorUsername = "op";
         transaction.operatorName = "操作员";
-        assertTrue(TransactionDAO.insert(transaction));
+        assertTrue(transactionDAO.insert(transaction));
         return transaction;
     }
 

@@ -3,7 +3,7 @@ package com.cashier.service;
 import com.cashier.dao.MemberDAO;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.PromotionDAORefactored;
-import com.cashier.dao.TransactionDAO;
+import com.cashier.dao.TransactionDAORefactored;
 import com.cashier.util.DatabaseTestBase;
 import com.cashier.model.CartItem;
 import com.cashier.model.Member;
@@ -28,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class TransactionServiceTest extends DatabaseTestBase {
 
     private final PromotionDAORefactored promotionDAO = DAOFactory.getInstance().getPromotionDAO();
+    private final TransactionDAORefactored transactionDAO = DAOFactory.getInstance().getTransactionDAO();
 
     private Member testMember;
     private List<Product> testProducts;
@@ -282,7 +283,7 @@ class TransactionServiceTest extends DatabaseTestBase {
         Promotion updatedPromotion = promotionDAO.findById(promotion.id);
         assertNotNull(updatedPromotion);
         assertEquals(1, updatedPromotion.usageCount);
-        assertEquals(1, TransactionDAO.findAll().size());
+        assertEquals(1, transactionDAO.findAll().size());
     }
 
     @Test
@@ -310,7 +311,7 @@ class TransactionServiceTest extends DatabaseTestBase {
         assertTrue(result.getMessage().contains("更新促销使用次数失败"));
         assertEquals(initialProduct1Quantity, DAOFactory.getInstance().getProductDAO().findById(testProducts.get(0).id).quantity);
         assertEquals(initialProduct2Quantity, DAOFactory.getInstance().getProductDAO().findById(testProducts.get(1).id).quantity);
-        assertTrue(TransactionDAO.findAll().isEmpty());
+        assertTrue(transactionDAO.findAll().isEmpty());
     }
 
     @Test

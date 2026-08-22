@@ -1,7 +1,7 @@
 package com.cashier.service;
 
 import com.cashier.dao.InvoiceDAO;
-import com.cashier.dao.TransactionDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.model.Invoice;
 import com.cashier.model.InvoiceItem;
 import com.cashier.model.PageResult;
@@ -58,7 +58,7 @@ public class InvoiceService {
      */
     public static Invoice createInvoiceFromTransaction(String transactionId, InvoiceRequest request) throws SQLException {
         // 获取交易信息
-        Transaction transaction = TransactionDAO.findById(transactionId);
+        Transaction transaction = DAOFactory.getInstance().getTransactionDAO().findById(transactionId);
         if (transaction == null) {
             throw new SQLException("交易不存在: " + transactionId);
         }

@@ -4,7 +4,6 @@ import com.cashier.i18n.I18nKeys;
 
 import com.cashier.dao.DAOFactory;
 import com.cashier.i18n.I18nManager;
-import com.cashier.dao.TransactionDAO;
 import com.cashier.model.Shift;
 import com.cashier.model.Transaction;
 import com.cashier.util.CurrencyUtil;
@@ -615,8 +614,8 @@ public class ShiftController {
             int totalTransactions;
             try {
                 String now = java.time.LocalDateTime.now().format(DateTimeFormats.STANDARD_DATE_TIME);
-                totalRevenue = BigDecimal.valueOf(TransactionDAO.getTotalRevenue(BEGINNING_OF_TIME, now));
-                totalTransactions = TransactionDAO.getTransactionCount(BEGINNING_OF_TIME, now);
+                totalRevenue = BigDecimal.valueOf(DAOFactory.getInstance().getTransactionDAO().getTotalRevenue(BEGINNING_OF_TIME, now));
+                totalTransactions = DAOFactory.getInstance().getTransactionDAO().getTransactionCount(BEGINNING_OF_TIME, now);
             } catch (SQLException e) {
                 logger.error("加载交易统计失败", e);
                 showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
@@ -698,7 +697,7 @@ public class ShiftController {
             // 只加载本班次开始后的交易记录。
             List<Transaction> shiftTransactions;
             try {
-                shiftTransactions = TransactionDAO.findByDateRange(
+                shiftTransactions = DAOFactory.getInstance().getTransactionDAO().findByDateRange(
                     activeShift.startTime.atZone(java.time.ZoneId.systemDefault())
                         .toLocalDateTime()
                         .format(DateTimeFormats.STANDARD_DATE_TIME),

@@ -251,7 +251,7 @@ public class SyncManager {
                     com.cashier.dao.MemberDAO.findAll(page, pageSize);
                 putPageResult(responseData, members);
             } else if ("TRANSACTIONS".equals(entity)) {
-                responseData.put("items", com.cashier.dao.TransactionDAO.findRecent(100));
+                responseData.put("items", com.cashier.dao.DAOFactory.getInstance().getTransactionDAO().findRecent(100));
             } else {
                 responseData.put("status", "error");
                 responseData.put("message", "不支持的同步实体: " + entity);

@@ -143,7 +143,7 @@ public class DataService {
      */
     public static List<Transaction> loadTransactions() {
         try {
-            return TransactionDAO.findRecent(LEGACY_LOAD_LIMIT);
+            return DAOFactory.getInstance().getTransactionDAO().findRecent(LEGACY_LOAD_LIMIT);
         } catch (SQLException e) {
             logger.error("加载交易数据失败", e);
             return new ArrayList<>();
@@ -155,7 +155,7 @@ public class DataService {
      * @throws SQLException 如果保存失败
      */
     public static void saveTransactions(List<Transaction> transactions) throws SQLException {
-        TransactionDAO.batchInsert(transactions);
+        DAOFactory.getInstance().getTransactionDAO().batchInsert(transactions);
     }
 
     /**

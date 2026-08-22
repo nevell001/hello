@@ -471,7 +471,7 @@ public class ReturnOrderController {
 
         // 查询并显示原交易详情
         try {
-            Transaction transaction = TransactionDAO.findById(selectedReturnOrder.originalTransactionId);
+            Transaction transaction = DAOFactory.getInstance().getTransactionDAO().findById(selectedReturnOrder.originalTransactionId);
             if (transaction != null) {
                 String details = com.cashier.i18n.I18nManager.getInstance().get(
                     "runtime.original_transaction_details",

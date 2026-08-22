@@ -15,13 +15,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TransactionDAOTest extends DatabaseTestBase {
 
+    private final TransactionDAORefactored transactionDAO = DAOFactory.getInstance().getTransactionDAO();
+
     private Transaction insertTransaction(String id, String timestamp, String paymentMethod) throws Exception {
         Transaction transaction = new Transaction(
             id, timestamp, List.of(), BigDecimal.TEN, BigDecimal.ZERO, BigDecimal.TEN);
         transaction.paymentMethod = paymentMethod;
         transaction.operatorUsername = "op";
         transaction.operatorName = "操作员";
-        assertTrue(TransactionDAO.insert(transaction));
+        assertTrue(transactionDAO.insert(transaction));
         return transaction;
     }
 
@@ -30,7 +32,7 @@ class TransactionDAOTest extends DatabaseTestBase {
     void insertAndFindById() throws Exception {
         insertTransaction("T-DAO-001", "2026-08-22 10:00:00", "现金");
 
-        Transaction found = TransactionDAO.findById("T-DAO-001");
+        Transaction found = transactionDAO.findById("T-DAO-001");
         assertNotNull(found);
         assertEquals("现金", found.paymentMethod);
     }
@@ -41,7 +43,7 @@ class TransactionDAOTest extends DatabaseTestBase {
         insertTransaction("T-REC-001", "2026-08-22 10:00:00", "现金");
         insertTransaction("T-REC-002", "2026-08-22 11:00:00", "微信");
 
-        List<Transaction> recent = TransactionDAO.findRecent(10);
+        List<Transaction> recent = transactionDAO.findRecent(10);
         assertEquals(2, recent.size());
     }
 
@@ -50,9 +52,9 @@ class TransactionDAOTest extends DatabaseTestBase {
     void findByDateRangeAndPaymentMethod() throws Exception {
         insertTransaction("T-RNG-001", "2026-08-22 10:00:00", "现金");
 
-        assertEquals(1, TransactionDAO.findByDateRange("2026-08-22 00:00:00", "2026-08-22 23:59:59").size());
-        assertEquals(1, TransactionDAO.findByPaymentMethod("现金").size());
-        assertEquals(0, TransactionDAO.findByPaymentMethod("支付宝").size());
+        assertEquals(1, transactionDAO.findByDateRange("2026-08-22 00:00:00", "2026-08-22 23:59:59").size());
+        assertEquals(1, transactionDAO.findByPaymentMethod("现金").size());
+        assertEquals(0, transactionDAO.findByPaymentMethod("支付宝").size());
     }
 
     @Test
@@ -60,17 +62,17 @@ class TransactionDAOTest extends DatabaseTestBase {
     void statistics() throws Exception {
         insertTransaction("T-STAT-001", "2026-08-22 10:00:00", "现金");
 
-        assertEquals(1, TransactionDAO.getTransactionCount("2026-08-22 00:00:00", "2026-08-22 23:59:59"));
+        assertEquals(1, transactionDAO.getTransactionCount("2026-08-22 00:00:00", "2026-08-22 23:59:59"));
         assertEquals(0, BigDecimal.TEN.compareTo(BigDecimal.valueOf(
-            TransactionDAO.getTotalRevenue("2026-08-22 00:00:00", "2026-08-22 23:59:59"))));
-        assertNotNull(TransactionDAO.getStatistics("2026-08-22 00:00:00", "2026-08-22 23:59:59"));
-        assertNotNull(TransactionDAO.getTopProducts(10));
-        assertNotNull(TransactionDAO.getPaymentMethodStats());
+            transactionDAO.getTotalRevenue("2026-08-22 00:00:00", "2026-08-22 23:59:59"))));
+        assertNotNull(transactionDAO.getStatistics("2026-08-22 00:00:00", "2026-08-22 23:59:59"));
+        assertNotNull(transactionDAO.getTopProducts(10));
+        assertNotNull(transactionDAO.getPaymentMethodStats());
     }
 
     @Test
     @DisplayName("不存在的交易返回null")
     void findMissingReturnsNull() throws Exception {
-        assertNull(TransactionDAO.findById("T-MISSING"));
+        assertNull(transactionDAO.findById("T-MISSING"));
     }
 }

@@ -3,7 +3,7 @@ package com.cashier.controller;
 import com.cashier.i18n.I18nKeys;
 
 import com.cashier.i18n.I18nManager;
-import com.cashier.dao.TransactionDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.model.Transaction;
 import com.cashier.util.CurrencyUtil;
 import com.cashier.util.DateTimeFormats;
@@ -173,7 +173,7 @@ public class StatisticsController {
     private void loadTransactions(LocalDate startDate, LocalDate endDate) {
         logger.info("StatisticsController: 开始加载交易数据...");
         try {
-            allTransactions = TransactionDAO.findByDateRange(
+            allTransactions = DAOFactory.getInstance().getTransactionDAO().findByDateRange(
                 startDate.atStartOfDay().format(DateTimeFormats.STANDARD_DATE_TIME),
                 endDate.plusDays(1).atStartOfDay().minusSeconds(1).format(DateTimeFormats.STANDARD_DATE_TIME)
             );

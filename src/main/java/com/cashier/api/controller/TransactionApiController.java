@@ -5,7 +5,6 @@ import com.cashier.dao.MemberDAO;
 import com.cashier.dao.ProductDAORefactored;
 import com.cashier.dao.ReturnOrderDAO;
 import com.cashier.dao.ReturnOrderItemDAO;
-import com.cashier.dao.TransactionDAO;
 import com.cashier.model.*;
 import com.cashier.util.DatabaseManager;
 import io.javalin.http.Context;
@@ -45,8 +44,8 @@ public class TransactionApiController {
             int limit = Math.max(1, Math.min(requestedLimit, MAX_TRANSACTION_LIST_LIMIT));
 
             List<Transaction> transactions = hasDateFilter(startDate, endDate)
-                ? TransactionDAO.findByDateRange(toStartDateTime(startDate), toEndDateTime(endDate))
-                : TransactionDAO.findRecent(limit);
+                ? DAOFactory.getInstance().getTransactionDAO().findByDateRange(toStartDateTime(startDate), toEndDateTime(endDate))
+                : DAOFactory.getInstance().getTransactionDAO().findRecent(limit);
             
             // 按条件筛选
             if (paymentMethod != null && !paymentMethod.isEmpty()) {
@@ -78,7 +77,7 @@ public class TransactionApiController {
     public static void get(Context ctx) {
         try {
             String transactionId = ctx.pathParam("id");
-            Transaction transaction = TransactionDAO.findById(transactionId);
+            Transaction transaction = DAOFactory.getInstance().getTransactionDAO().findById(transactionId);
             
             if (transaction == null) {
                 ctx.status(HttpStatus.NOT_FOUND)
@@ -124,7 +123,7 @@ public class TransactionApiController {
             transaction.operatorUsername = request.operatorUsername != null ? request.operatorUsername : "";
             transaction.operatorName = request.operatorName != null ? request.operatorName : "";
             
-            TransactionDAO.insert(transaction);
+            DAOFactory.getInstance().getTransactionDAO().insert(transaction);
             
             logger.info("创建交易: {} - 金额: {} - 支付方式: {}", 
                 transactionId, transaction.finalAmount, transaction.paymentMethod);
@@ -157,7 +156,7 @@ public class TransactionApiController {
     public static void refund(Context ctx) {
         try {
             String transactionId = ctx.pathParam("id");
-            Transaction transaction = TransactionDAO.findById(transactionId);
+            Transaction transaction = DAOFactory.getInstance().getTransactionDAO().findById(transactionId);
 
             if (!validateRefundRequest(ctx, transaction)) {
                 return;
@@ -205,7 +204,7 @@ public class TransactionApiController {
                 return false;
             }
             adjustMemberPointsAfterRefund(conn, transaction);
-            TransactionDAO.updateStatusWithConnection(conn, transactionId, "REFUNDED");
+            DAOFactory.getInstance().getTransactionDAO().updateStatusWithConnection(conn, transactionId, "REFUNDED");
             return true;
         } catch (SQLException e) {
             logger.error("退款事务执行失败", e);
@@ -322,7 +321,7 @@ public class TransactionApiController {
     public static void todayStats(Context ctx) {
         try {
             String today = LocalDateTime.now().format(com.cashier.util.DateTimeFormats.DATE);
-            List<Transaction> transactions = TransactionDAO.findByDateRange(
+            List<Transaction> transactions = DAOFactory.getInstance().getTransactionDAO().findByDateRange(
                 today + " 00:00:00",
                 today + " 23:59:59"
             );

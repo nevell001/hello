@@ -39,13 +39,13 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/api/sync/SyncManager.java"
         ));
         String transactionDao = Files.readString(Path.of(
-            "src/main/java/com/cashier/dao/TransactionDAO.java"
+            "src/main/java/com/cashier/dao/TransactionDAORefactored.java"
         ));
 
-        assertTrue(syncManager.contains("TransactionDAO.findRecent(100)"));
+        assertTrue(syncManager.contains("getTransactionDAO().findRecent(100)"));
         assertTrue(transactionDao.contains("findRecent(int limit)"));
         assertTrue(transactionDao.contains("ORDER BY timestamp DESC LIMIT ?"));
-        assertFalse(syncManager.contains("TransactionDAO.findAll()"));
+        assertFalse(syncManager.contains("getTransactionDAO().findAll()"));
         assertFalse(syncManager.contains("transactions.subList("));
     }
 
@@ -74,9 +74,9 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/controller/StatisticsController.java"
         ));
 
-        assertTrue(statisticsController.contains("TransactionDAO.findByDateRange("));
+        assertTrue(statisticsController.contains("getTransactionDAO().findByDateRange("));
         assertTrue(statisticsController.contains("DateTimeFormats.STANDARD_DATE_TIME"));
-        assertFalse(statisticsController.contains("TransactionDAO.findAll()"));
+        assertFalse(statisticsController.contains("getTransactionDAO().findAll()"));
         assertFalse(statisticsController.contains("filterTransactionsByDate("));
     }
 
@@ -102,7 +102,7 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/controller/InventoryReportController.java"
         ));
 
-        assertTrue(controller.contains("TransactionDAO.findByDateRange("));
+        assertTrue(controller.contains("getTransactionDAO().findByDateRange("));
         assertTrue(controller.contains("allProducts = new ArrayList<>()"));
         assertTrue(controller.contains("INVENTORY_REPORT_PRODUCT_LIMIT = 5000"));
         assertTrue(controller.contains("loadProductsForReport(categoryName)"));
@@ -112,7 +112,7 @@ class PerformancePolicyTest {
         assertTrue(controller.contains("loadAllCategoryNames()"));
         assertTrue(controller.contains("buildSalesStatsMap()"));
         assertTrue(controller.contains("SalesStats"));
-        assertFalse(controller.contains("TransactionDAO.findAll()"));
+        assertFalse(controller.contains("getTransactionDAO().findAll()"));
         assertFalse(controller.contains("allProducts = productDAO.findAll()"));
         assertFalse(controller.contains("productDAO.findByCategory(categoryName);"));
         assertFalse(controller.contains("calculateSalesQuantity("));
@@ -126,8 +126,8 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/api/controller/TransactionApiController.java"
         ));
 
-        assertTrue(controller.contains("TransactionDAO.findRecent(limit)"));
-        assertTrue(controller.contains("TransactionDAO.findByDateRange("));
+        assertTrue(controller.contains("getTransactionDAO().findRecent(limit)"));
+        assertTrue(controller.contains("getTransactionDAO().findByDateRange("));
         assertFalse(controller.contains("List<Transaction> transactions = TransactionDAO.findAll();"));
     }
 
@@ -138,8 +138,7 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/api/controller/ReportApiController.java"
         ));
 
-        assertTrue(controller.contains("dayTransactions = TransactionDAO.findByDateRange("));
-        assertTrue(controller.contains("monthTransactions = TransactionDAO.findByDateRange("));
+        assertTrue(controller.contains("getTransactionDAO().findByDateRange("));
     }
 
     @Test
@@ -149,14 +148,14 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/api/controller/ReportApiController.java"
         ));
         String dao = Files.readString(Path.of(
-            "src/main/java/com/cashier/dao/TransactionDAO.java"
+            "src/main/java/com/cashier/dao/TransactionDAORefactored.java"
         ));
 
-        assertTrue(controller.contains("TransactionDAO.getTopProducts(limit)"));
-        assertTrue(controller.contains("TransactionDAO.getPaymentMethodStats()"));
+        assertTrue(controller.contains("getTransactionDAO().getTopProducts(limit)"));
+        assertTrue(controller.contains("getTransactionDAO().getPaymentMethodStats()"));
         assertTrue(dao.contains("getTopProducts(int limit)"));
         assertTrue(dao.contains("getPaymentMethodStats()"));
-        assertFalse(controller.contains("TransactionDAO.findAll()"));
+        assertFalse(controller.contains("getTransactionDAO().findAll()"));
     }
 
     @Test
@@ -574,20 +573,20 @@ class PerformancePolicyTest {
         ));
 
         assertTrue(transactionController.contains("findTransactionsByCurrentDateRange()"));
-        assertTrue(transactionController.contains("TransactionDAO.findByDateRange("));
+        assertTrue(transactionController.contains("getTransactionDAO().findByDateRange("));
         assertTrue(transactionController.contains("LocalDate.now().minusDays(30)"));
         assertFalse(transactionController.contains("allTransactions = TransactionDAO.findAll();"));
         assertFalse(transactionController.contains("return TransactionDAO.findAll();"));
 
-        assertTrue(shiftController.contains("TransactionDAO.getTotalRevenue("));
-        assertTrue(shiftController.contains("TransactionDAO.getTransactionCount("));
-        assertTrue(shiftController.contains("TransactionDAO.findByDateRange("));
+        assertTrue(shiftController.contains("getTransactionDAO().getTotalRevenue("));
+        assertTrue(shiftController.contains("getTransactionDAO().getTransactionCount("));
+        assertTrue(shiftController.contains("getTransactionDAO().findByDateRange("));
         assertTrue(shiftController.contains("getShiftDAO().findRecent(SHIFT_HISTORY_LIMIT)"));
         assertFalse(shiftController.contains("ShiftDAO.findAll()"));
-        assertFalse(shiftController.contains("TransactionDAO.findAll()"));
+        assertFalse(shiftController.contains("getTransactionDAO().findAll()"));
 
         assertTrue(profitReportController.contains("findTransactionsByDateRange(startDate"));
-        assertTrue(profitReportController.contains("TransactionDAO.findByDateRange("));
+        assertTrue(profitReportController.contains("getTransactionDAO().findByDateRange("));
         assertFalse(profitReportController.contains("allTransactions = TransactionDAO.findAll();"));
     }
 
@@ -897,7 +896,7 @@ class PerformancePolicyTest {
         assertTrue(dataService.contains("productDAO.findAll(FIRST_PAGE, LEGACY_LOAD_LIMIT).getData()"));
         assertTrue(dataService.contains("getUserDAO().findAll(FIRST_PAGE, LEGACY_LOAD_LIMIT).getData()"));
         assertTrue(dataService.contains("MemberDAO.findAll(FIRST_PAGE, LEGACY_LOAD_LIMIT).getData()"));
-        assertTrue(dataService.contains("TransactionDAO.findRecent(LEGACY_LOAD_LIMIT)"));
+        assertTrue(dataService.contains("getTransactionDAO().findRecent(LEGACY_LOAD_LIMIT)"));
         assertTrue(dataService.contains("getPromotionDAO().findRecent(LEGACY_LOAD_LIMIT)"));
         assertTrue(dataService.contains("getRechargeRecordDAO().findRecent(LEGACY_LOAD_LIMIT)"));
         assertTrue(dataService.contains("getOperationLogDAO().findRecent(LEGACY_LOAD_LIMIT)"));

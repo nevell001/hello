@@ -5,7 +5,6 @@ import com.cashier.i18n.I18nKeys;
 import com.cashier.i18n.I18nManager;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
-import com.cashier.dao.TransactionDAO;
 import com.cashier.model.Category;
 import com.cashier.model.Product;
 import com.cashier.model.Transaction;
@@ -571,7 +570,7 @@ public class InventoryReportController {
 
     private void loadTransactions(LocalDate startDate, LocalDate endDate) {
         try {
-            allTransactions = TransactionDAO.findByDateRange(
+            allTransactions = DAOFactory.getInstance().getTransactionDAO().findByDateRange(
                 startDate.atStartOfDay().format(DateTimeFormats.STANDARD_DATE_TIME),
                 endDate.plusDays(1).atStartOfDay().minusSeconds(1).format(DateTimeFormats.STANDARD_DATE_TIME)
             );

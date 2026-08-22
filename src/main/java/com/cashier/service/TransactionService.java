@@ -243,7 +243,7 @@ public class TransactionService {
      */
     private static void persistTransactionAndPromotion(Connection conn, Transaction transaction,
                                                        Promotion appliedPromotion, String transactionId) throws SQLException {
-        if (!TransactionDAO.insertWithConnection(conn, transaction)) {
+        if (!DAOFactory.getInstance().getTransactionDAO().insertWithConnection(conn, transaction)) {
             throw new SQLException(I18nManager.getInstance().get("service.transaction_save_failed", transactionId));
         }
 
@@ -348,7 +348,7 @@ public class TransactionService {
      */
     public static TransactionStatistics getTransactionStatistics(String startDate, String endDate) {
         try {
-            return TransactionDAO.getStatistics(startDate, endDate);
+            return DAOFactory.getInstance().getTransactionDAO().getStatistics(startDate, endDate);
         } catch (SQLException e) {
             logger.error("获取交易统计失败", e);
             return new TransactionStatistics(0, BigDecimal.ZERO, 0, 0, 0);

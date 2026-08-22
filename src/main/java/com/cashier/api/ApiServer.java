@@ -153,58 +153,79 @@ public class ApiServer {
      * 注册所有 API 路由
      */
     private void registerRoutes() {
-        // 健康检查（无需认证）
+        registerHealthAndAuthRoutes();
+        registerProductRoutes();
+        registerMemberRoutes();
+        registerTransactionRoutes();
+        registerInventoryRoutes();
+        registerReportRoutes();
+        registerSettingsRoutes();
+        registerInvoiceRoutes();
+        registerUserRoutes();
+        registerPrinterRoutes();
+        registerPaymentRoutes();
+        registerBackupRoutes();
+        registerI18nRoutes();
+        registerSyncAndErrorRoutes();
+    }
+
+    private void registerHealthAndAuthRoutes() {
         app.get("/api/health", HealthController::check);
         app.get("/api/health/detail", HealthController::detail);
-        
-        // 认证接口（无需认证）
         app.post("/api/auth/login", AuthController::login);
         app.post("/api/auth/refresh", AuthController::refresh);
         app.post("/api/auth/logout", AuthController::logout);
         app.get("/api/auth/me", AuthController::getCurrentUser);
-        
-        // 商品管理（需要认证）
+    }
+
+    private void registerProductRoutes() {
         app.get("/api/products", ProductApiController::list);
         app.get("/api/products/{id}", ProductApiController::get);
         app.post("/api/products", ProductApiController::create);
         app.put("/api/products/{id}", ProductApiController::update);
         app.delete("/api/products/{id}", ProductApiController::delete);
         app.get("/api/products/low-stock", ProductApiController::lowStock);
-        
-        // 会员管理
+    }
+
+    private void registerMemberRoutes() {
         app.get("/api/members", MemberApiController::list);
         app.get("/api/members/{id}", MemberApiController::get);
         app.get("/api/members/phone/{phone}", MemberApiController::getByPhone);
         app.post("/api/members", MemberApiController::create);
         app.put("/api/members/{id}", MemberApiController::update);
         app.post("/api/members/{id}/recharge", MemberApiController::recharge);
-        
-        // 交易管理
+    }
+
+    private void registerTransactionRoutes() {
         app.get("/api/transactions", TransactionApiController::list);
         app.get("/api/transactions/{id}", TransactionApiController::get);
         app.post("/api/transactions", TransactionApiController::create);
         app.post("/api/transactions/{id}/refund", TransactionApiController::refund);
         app.get("/api/transactions/today", TransactionApiController::todayStats);
-        
-        // 库存管理
+    }
+
+    private void registerInventoryRoutes() {
         app.get("/api/inventory", InventoryApiController::list);
         app.get("/api/inventory/alerts", InventoryApiController::alerts);
         app.put("/api/inventory/{id}", InventoryApiController::updateStock);
         app.post("/api/inventory/check", InventoryApiController::check);
-        
-        // 报表统计
+    }
+
+    private void registerReportRoutes() {
         app.get("/api/reports/daily", ReportApiController::dailySales);
         app.get("/api/reports/monthly", ReportApiController::monthlySales);
         app.get("/api/reports/top-products", ReportApiController::topProducts);
         app.get("/api/reports/payment-methods", ReportApiController::paymentMethods);
-        
-        // 系统设置
+    }
+
+    private void registerSettingsRoutes() {
         app.get("/api/settings", SettingsApiController::list);
         app.get("/api/settings/{key}", SettingsApiController::get);
         app.put("/api/settings/{key}", SettingsApiController::set);
         app.delete("/api/settings/{key}", SettingsApiController::delete);
-        
-        // 发票管理
+    }
+
+    private void registerInvoiceRoutes() {
         app.get("/api/invoices", InvoiceApiController::list);
         app.get("/api/invoices/stats", InvoiceApiController::stats);
         app.get("/api/invoices/{id}", InvoiceApiController::get);
@@ -215,15 +236,17 @@ public class ApiServer {
         app.post("/api/invoices/{id}/print", InvoiceApiController::recordPrint);
         app.get("/api/invoices/seller-info", InvoiceApiController::getSellerInfo);
         app.put("/api/invoices/seller-info", InvoiceApiController::setSellerInfo);
-        
-        // 用户管理（管理员）
+    }
+
+    private void registerUserRoutes() {
         app.get("/api/users", UserApiController::list);
         app.get("/api/users/{id}", UserApiController::get);
         app.post("/api/users", UserApiController::create);
         app.put("/api/users/{id}", UserApiController::update);
         app.delete("/api/users/{id}", UserApiController::delete);
-        
-        // 打印机管理
+    }
+
+    private void registerPrinterRoutes() {
         app.get("/api/printers", PrintApiController::listPrinters);
         app.get("/api/printers/connected", PrintApiController::getConnectedPrinters);
         app.get("/api/printers/discover", PrintApiController::discoverPrinters);
@@ -239,8 +262,9 @@ public class ApiServer {
         app.post("/api/printers/{id}/invoice/{invoiceId}", PrintApiController::printInvoice);
         app.post("/api/printers/{id}/cashdrawer", PrintApiController::openCashDrawer);
         app.delete("/api/printers/{id}", PrintApiController::removePrinter);
-        
-        // 电子支付管理
+    }
+
+    private void registerPaymentRoutes() {
         app.post("/api/payment/create", PaymentApiController::createPayment);
         app.get("/api/payment/{paymentId}/status", PaymentApiController::queryStatus);
         app.get("/api/payment/transaction/{transactionId}", PaymentApiController::getByTransaction);
@@ -251,8 +275,9 @@ public class ApiServer {
         app.get("/api/payment/stats/daily", PaymentApiController::getDailyStats);
         app.get("/api/payment/config", PaymentApiController::getConfig);
         app.put("/api/payment/config", PaymentApiController::setConfig);
-        
-        // 云备份管理
+    }
+
+    private void registerBackupRoutes() {
         app.post("/api/backup/execute", BackupApiController::executeBackup);
         app.post("/api/backup/cleanup", BackupApiController::cleanupBackups);
         app.get("/api/backup/list", BackupApiController::listBackups);
@@ -262,24 +287,25 @@ public class ApiServer {
         app.get("/api/backup/{backupId}", BackupApiController::getBackup);
         app.post("/api/backup/{backupId}/restore", BackupApiController::restoreBackup);
         app.get("/api/backup/{backupId}/download", BackupApiController::downloadBackup);
-        
-        // 国际化管理
+    }
+
+    private void registerI18nRoutes() {
         app.get("/api/i18n/locale", I18nApiController::getCurrentLocale);
         app.put("/api/i18n/locale", I18nApiController::setLocale);
         app.get("/api/i18n/locales", I18nApiController::getAvailableLocales);
         app.get("/api/i18n/messages", I18nApiController::getMessage);
         app.get("/api/i18n/messages/all", I18nApiController::getAllMessages);
         app.get("/api/i18n/messages/locale/{locale}", I18nApiController::getMessagesForLocale);
-        
-        // WebSocket 同步端点
+    }
+
+    private void registerSyncAndErrorRoutes() {
         app.ws("/ws/sync", ws -> {
             ws.onConnect(SyncWebSocketHandler::onConnect);
             ws.onClose(SyncWebSocketHandler::onClose);
             ws.onMessage(SyncWebSocketHandler::onMessage);
             ws.onError(SyncWebSocketHandler::onError);
         });
-        
-        // WebSocket 状态查询 API
+
         app.get("/api/sync/status", ctx -> {
             ctx.json(Map.of(
                 "success", true,
@@ -287,15 +313,13 @@ public class ApiServer {
                 "terminals", SyncManager.getInstance().getOnlineTerminals()
             ));
         });
-        
-        // 全局异常处理
+
         app.exception(Exception.class, (e, ctx) -> {
             logger.error("API 异常: {} - {}", ctx.path(), e.getMessage(), e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
                .json(Map.of("success", false, "message", "服务器内部错误"));
         });
-        
-        // 404 处理
+
         app.error(HttpStatus.NOT_FOUND.getCode(), ctx -> {
             ctx.json(Map.of("success", false, "message", "接口不存在: " + ctx.path()));
         });
