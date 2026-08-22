@@ -43,7 +43,7 @@ public class ProductApiController {
         } catch (Exception e) {
             logger.error("获取商品列表失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "获取商品列表失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "获取商品列表失败"));
         }
     }
     
@@ -66,7 +66,7 @@ public class ProductApiController {
         } catch (Exception e) {
             logger.error("获取商品详情失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "获取商品详情失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "获取商品详情失败"));
         }
     }
     
@@ -106,7 +106,7 @@ public class ProductApiController {
         } catch (Exception e) {
             logger.error("创建商品失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "创建商品失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "创建商品失败"));
         }
     }
     
@@ -140,7 +140,7 @@ public class ProductApiController {
         } catch (Exception e) {
             logger.error("更新商品失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "更新商品失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "更新商品失败"));
         }
     }
 
@@ -194,7 +194,7 @@ public class ProductApiController {
         } catch (Exception e) {
             logger.error("删除商品失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "删除商品失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "删除商品失败"));
         }
     }
     
@@ -210,7 +210,7 @@ public class ProductApiController {
         } catch (Exception e) {
             logger.error("获取低库存商品失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "获取低库存商品失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "获取低库存商品失败"));
         }
     }
     

@@ -34,7 +34,8 @@ class PromotionLoginRechargeFeedbackPolicyTest {
 
         for (String file : controllerFiles) {
             String controller = Files.readString(Path.of(file));
-            assertTrue(controller.contains("StatusBarManager.updateError(message)"), file);
+            assertTrue(controller.contains("StatusBarManager.updateError(message)")
+                    || controller.contains("FXUtils.showError(message)"), file);
         }
 
         String rechargeController = Files.readString(Path.of(

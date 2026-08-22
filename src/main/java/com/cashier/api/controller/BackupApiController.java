@@ -68,7 +68,7 @@ public class BackupApiController {
             logger.error("执行备份失败", e);
             ctx.status(500).json(Map.of(
                 "success", false,
-                "error", "备份失败: " + e.getMessage()
+                "error", "备份失败"
             ));
         }
     }
@@ -98,7 +98,7 @@ public class BackupApiController {
             logger.error("查询备份列表失败", e);
             ctx.status(500).json(Map.of(
                 "success", false,
-                "error", "查询失败: " + e.getMessage()
+                "error", "查询失败"
             ));
         }
     }
@@ -130,7 +130,7 @@ public class BackupApiController {
             logger.error("查询备份详情失败", e);
             ctx.status(500).json(Map.of(
                 "success", false,
-                "error", "查询失败: " + e.getMessage()
+                "error", "查询失败"
             ));
         }
     }
@@ -154,7 +154,7 @@ public class BackupApiController {
             logger.error("恢复备份失败", e);
             ctx.status(500).json(Map.of(
                 "success", false,
-                "error", "恢复失败: " + e.getMessage()
+                "error", "恢复失败"
             ));
         }
     }
@@ -196,7 +196,7 @@ public class BackupApiController {
             logger.error("下载备份失败", e);
             ctx.status(500).json(Map.of(
                 "success", false,
-                "error", "下载失败: " + e.getMessage()
+                "error", "下载失败"
             ));
         } catch (FileNotFoundException e) {
             ctx.status(404).json(Map.of(
@@ -253,7 +253,7 @@ public class BackupApiController {
             logger.error("清理备份失败", e);
             ctx.status(500).json(Map.of(
                 "success", false,
-                "error", "清理失败: " + e.getMessage()
+                "error", "清理失败"
             ));
         }
     }
@@ -275,7 +275,7 @@ public class BackupApiController {
             logger.error("获取备份配置失败", e);
             ctx.status(500).json(Map.of(
                 "success", false,
-                "error", "获取失败: " + e.getMessage()
+                "error", "获取失败"
             ));
         }
     }
@@ -309,7 +309,7 @@ public class BackupApiController {
             logger.error("更新备份配置失败", e);
             ctx.status(500).json(Map.of(
                 "success", false,
-                "error", "更新失败: " + e.getMessage()
+                "error", "更新失败"
             ));
         }
     }
@@ -389,7 +389,7 @@ public class BackupApiController {
             logger.error("获取备份统计失败", e);
             ctx.status(500).json(Map.of(
                 "success", false,
-                "error", "获取失败: " + e.getMessage()
+                "error", "获取失败"
             ));
         }
     }

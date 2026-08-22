@@ -83,7 +83,7 @@ public class PaymentApiController {
             logger.error("创建支付订单失败", e);
             ctx.status(500).json(Map.of(
                 "success", false,
-                "error", "创建失败: " + e.getMessage()
+                "error", "创建失败"
             ));
         }
     }
@@ -115,7 +115,7 @@ public class PaymentApiController {
             logger.error("查询支付状态失败", e);
             ctx.status(500).json(Map.of(
                 "success", false,
-                "error", "查询失败: " + e.getMessage()
+                "error", "查询失败"
             ));
         }
     }
@@ -152,7 +152,7 @@ public class PaymentApiController {
             logger.error("查询交易支付记录失败", e);
             ctx.status(500).json(Map.of(
                 "success", false,
-                "error", "查询失败: " + e.getMessage()
+                "error", "查询失败"
             ));
         }
     }
@@ -265,7 +265,7 @@ public class PaymentApiController {
             logger.error("退款失败", e);
             ctx.status(500).json(Map.of(
                 "success", false,
-                "error", "退款失败: " + e.getMessage()
+                "error", "退款失败"
             ));
         }
     }
@@ -303,7 +303,7 @@ public class PaymentApiController {
             logger.error("查询待支付订单失败", e);
             ctx.status(500).json(Map.of(
                 "success", false,
-                "error", "查询失败: " + e.getMessage()
+                "error", "查询失败"
             ));
         }
     }
@@ -326,7 +326,7 @@ public class PaymentApiController {
             logger.error("关闭过期订单失败", e);
             ctx.status(500).json(Map.of(
                 "success", false,
-                "error", "关闭失败: " + e.getMessage()
+                "error", "关闭失败"
             ));
         }
     }
@@ -355,7 +355,7 @@ public class PaymentApiController {
             logger.error("获取支付统计失败", e);
             ctx.status(500).json(Map.of(
                 "success", false,
-                "error", "查询失败: " + e.getMessage()
+                "error", "查询失败"
             ));
         }
     }
@@ -454,7 +454,7 @@ public class PaymentApiController {
             logger.error("设置支付配置失败", e);
             ctx.status(500).json(Map.of(
                 "success", false,
-                "error", "设置失败: " + e.getMessage()
+                "error", "设置失败"
             ));
         }
     }

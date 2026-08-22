@@ -61,7 +61,7 @@ public class UserApiController {
         } catch (Exception e) {
             logger.error("获取用户列表失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of(KEY_SUCCESS, false, KEY_MESSAGE, "获取用户列表失败: " + e.getMessage()));
+               .json(Map.of(KEY_SUCCESS, false, KEY_MESSAGE, "获取用户列表失败"));
         }
     }
     
@@ -87,7 +87,7 @@ public class UserApiController {
         } catch (Exception e) {
             logger.error("获取用户详情失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of(KEY_SUCCESS, false, KEY_MESSAGE, "获取用户详情失败: " + e.getMessage()));
+               .json(Map.of(KEY_SUCCESS, false, KEY_MESSAGE, "获取用户详情失败"));
         }
     }
     
@@ -130,7 +130,7 @@ public class UserApiController {
         } catch (Exception e) {
             logger.error("创建用户失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .json(Map.of(KEY_SUCCESS, false, KEY_MESSAGE, "创建用户失败: " + e.getMessage()));
+                    .json(Map.of(KEY_SUCCESS, false, KEY_MESSAGE, "创建用户失败"));
         }
     }
     
@@ -173,7 +173,7 @@ public class UserApiController {
         } catch (Exception e) {
             logger.error("更新用户失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of(KEY_SUCCESS, false, KEY_MESSAGE, "更新用户失败: " + e.getMessage()));
+               .json(Map.of(KEY_SUCCESS, false, KEY_MESSAGE, "更新用户失败"));
         }
     }
     
@@ -209,7 +209,7 @@ public class UserApiController {
         } catch (Exception e) {
             logger.error("删除用户失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of(KEY_SUCCESS, false, KEY_MESSAGE, "删除用户失败: " + e.getMessage()));
+               .json(Map.of(KEY_SUCCESS, false, KEY_MESSAGE, "删除用户失败"));
         }
     }
     

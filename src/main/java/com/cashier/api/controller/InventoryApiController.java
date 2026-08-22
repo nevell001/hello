@@ -32,7 +32,7 @@ public class InventoryApiController {
         } catch (Exception e) {
             logger.error("获取库存列表失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "获取库存列表失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "获取库存列表失败"));
         }
     }
     
@@ -50,7 +50,7 @@ public class InventoryApiController {
         } catch (Exception e) {
             logger.error("获取库存预警失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "获取库存预警失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "获取库存预警失败"));
         }
     }
     
@@ -88,7 +88,7 @@ public class InventoryApiController {
         } catch (Exception e) {
             logger.error("更新库存失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "更新库存失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "更新库存失败"));
         }
     }
     
@@ -115,7 +115,7 @@ public class InventoryApiController {
         } catch (Exception e) {
             logger.error("库存盘点失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "库存盘点失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "库存盘点失败"));
         }
     }
     

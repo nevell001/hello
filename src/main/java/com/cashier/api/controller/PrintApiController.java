@@ -233,7 +233,7 @@ public class PrintApiController {
             logger.error("添加打印机失败", e);
             ctx.status(500).json(Map.of(
                 "success", false,
-                "error", "添加打印机失败: " + e.getMessage()
+                "error", "添加打印机失败"
             ));
         }
     }
@@ -520,7 +520,7 @@ public class PrintApiController {
             logger.error("打印小票失败", e);
             ctx.status(500).json(Map.of(
                 "success", false,
-                "error", "打印失败: " + e.getMessage()
+                "error", "打印失败"
             ));
         }
     }
@@ -596,7 +596,7 @@ public class PrintApiController {
             logger.error("打印发票失败", e);
             ctx.status(500).json(Map.of(
                 "success", false,
-                "error", "打印发票失败: " + e.getMessage()
+                "error", "打印发票失败"
             ));
         }
     }

@@ -456,6 +456,8 @@ public class TouchCartController implements CartViewHost {
 
     private static final String HOT_CATEGORY_KEY = "hot";
     private static final String ALL_CATEGORY_KEY = null;
+    /** 触屏商品搜索返回上限，避免全表加载 */
+    private static final int SEARCH_LIMIT = 500;
 
     private void loadCategories() {
         try {
@@ -516,7 +518,8 @@ public class TouchCartController implements CartViewHost {
         try {
             List<Product> products;
             if (currentKeyword != null && !currentKeyword.isBlank()) {
-                products = filterByKeyword(productDAO.findAll(), currentKeyword);
+                // SQL 关键词搜索（带 LIMIT），避免全表加载后在内存过滤导致卡顿
+                products = productDAO.search(currentKeyword, 1, SEARCH_LIMIT).getData();
             } else if (HOT_CATEGORY_KEY.equals(categoryName)) {
                 // 热销推荐：混合模式（手动标记 + 销量统计）
                 products = loadHotProductsHybrid();

@@ -71,7 +71,7 @@ public class ReportApiController {
         } catch (Exception e) {
             logger.error("获取日报失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "获取日报失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "获取日报失败"));
         }
     }
     
@@ -117,7 +117,7 @@ public class ReportApiController {
         } catch (Exception e) {
             logger.error("获取月报失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "获取月报失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "获取月报失败"));
         }
     }
     
@@ -135,7 +135,7 @@ public class ReportApiController {
         } catch (Exception e) {
             logger.error("获取商品排行失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "获取商品排行失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "获取商品排行失败"));
         }
     }
     
@@ -151,7 +151,7 @@ public class ReportApiController {
         } catch (Exception e) {
             logger.error("获取支付方式统计失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "获取支付方式统计失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "获取支付方式统计失败"));
         }
     }
 }

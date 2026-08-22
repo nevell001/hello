@@ -1447,12 +1447,7 @@ public class CartController implements CartViewHost {
      * @param message 错误消息
      */
     private void showError(String message) {
-        com.cashier.util.StatusBarManager.updateError(message);
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Label.ERROR));
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+        com.cashier.util.FXUtils.showError(message);
     }
 
     /**

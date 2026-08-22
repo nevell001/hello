@@ -67,7 +67,7 @@ public class TransactionApiController {
         } catch (Exception e) {
             logger.error("获取交易列表失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "获取交易列表失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "获取交易列表失败"));
         }
     }
     
@@ -90,7 +90,7 @@ public class TransactionApiController {
         } catch (Exception e) {
             logger.error("获取交易详情失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "获取交易详情失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "获取交易详情失败"));
         }
     }
     
@@ -146,7 +146,7 @@ public class TransactionApiController {
         } catch (Exception e) {
             logger.error("创建交易失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "创建交易失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "创建交易失败"));
         }
     }
     
@@ -176,7 +176,7 @@ public class TransactionApiController {
         } catch (Exception e) {
             logger.error("交易退款失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "交易退款失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "交易退款失败"));
         }
     }
 
@@ -345,7 +345,7 @@ public class TransactionApiController {
         } catch (Exception e) {
             logger.error("获取今日交易统计失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "获取今日交易统计失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "获取今日交易统计失败"));
         }
     }
     

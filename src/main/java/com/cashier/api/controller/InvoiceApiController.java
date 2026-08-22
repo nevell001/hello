@@ -47,7 +47,7 @@ public class InvoiceApiController {
         } catch (Exception e) {
             logger.error("获取发票列表失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "获取发票列表失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "获取发票列表失败"));
         }
     }
     
@@ -70,7 +70,7 @@ public class InvoiceApiController {
         } catch (Exception e) {
             logger.error("获取发票详情失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "获取发票详情失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "获取发票详情失败"));
         }
     }
     
@@ -93,7 +93,7 @@ public class InvoiceApiController {
         } catch (Exception e) {
             logger.error("获取交易发票失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "获取交易发票失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "获取交易发票失败"));
         }
     }
     
@@ -124,7 +124,7 @@ public class InvoiceApiController {
         } catch (Exception e) {
             logger.error("创建发票失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "创建发票失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "创建发票失败"));
         }
     }
     
@@ -155,7 +155,7 @@ public class InvoiceApiController {
         } catch (Exception e) {
             logger.error("创建手工发票失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "创建手工发票失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "创建手工发票失败"));
         }
     }
     
@@ -186,7 +186,7 @@ public class InvoiceApiController {
         } catch (Exception e) {
             logger.error("作废发票失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "作废发票失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "作废发票失败"));
         }
     }
     
@@ -211,7 +211,7 @@ public class InvoiceApiController {
         } catch (Exception e) {
             logger.error("记录打印失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "记录打印失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "记录打印失败"));
         }
     }
     
@@ -226,7 +226,7 @@ public class InvoiceApiController {
         } catch (Exception e) {
             logger.error("获取销售方信息失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "获取销售方信息失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "获取销售方信息失败"));
         }
     }
     
@@ -256,7 +256,7 @@ public class InvoiceApiController {
         } catch (Exception e) {
             logger.error("设置销售方信息失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "设置销售方信息失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "设置销售方信息失败"));
         }
     }
     
@@ -311,7 +311,7 @@ public class InvoiceApiController {
         } catch (Exception e) {
             logger.error("发票统计失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "发票统计失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "发票统计失败"));
         }
     }
     

@@ -109,7 +109,8 @@ class StatusBarSeverityPolicyTest {
 
         for (String file : controllerFiles) {
             String controller = Files.readString(Path.of(file));
-            assertTrue(controller.contains("StatusBarManager.updateError(message)"),
+            assertTrue(controller.contains("StatusBarManager.updateError(message)")
+                    || controller.contains("FXUtils.showError(message)"),
                 file + " 的 showError 应同步状态栏错误级别");
         }
     }

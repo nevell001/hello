@@ -84,7 +84,7 @@ public class AuthController {
         } catch (Exception e) {
             logger.error("登录失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "登录失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "登录失败"));
         }
     }
     

@@ -29,7 +29,7 @@ public class MemberApiController {
         } catch (Exception e) {
             logger.error("获取会员列表失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "获取会员列表失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "获取会员列表失败"));
         }
     }
     
@@ -52,7 +52,7 @@ public class MemberApiController {
         } catch (Exception e) {
             logger.error("获取会员详情失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "获取会员详情失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "获取会员详情失败"));
         }
     }
     
@@ -75,7 +75,7 @@ public class MemberApiController {
         } catch (Exception e) {
             logger.error("根据手机号获取会员失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "获取会员失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "获取会员失败"));
         }
     }
     
@@ -134,7 +134,7 @@ public class MemberApiController {
         } catch (Exception e) {
             logger.error("创建会员失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "创建会员失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "创建会员失败"));
         }
     }
     
@@ -183,7 +183,7 @@ public class MemberApiController {
         } catch (Exception e) {
             logger.error("更新会员失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "更新会员失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "更新会员失败"));
         }
     }
     
@@ -231,7 +231,7 @@ public class MemberApiController {
         } catch (Exception e) {
             logger.error("会员充值失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "充值失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "充值失败"));
         }
     }
     

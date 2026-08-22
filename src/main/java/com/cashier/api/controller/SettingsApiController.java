@@ -61,7 +61,7 @@ public class SettingsApiController {
         } catch (Exception e) {
             logger.error("获取系统设置失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "获取系统设置失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "获取系统设置失败"));
         }
     }
     
@@ -84,7 +84,7 @@ public class SettingsApiController {
         } catch (Exception e) {
             logger.error("获取设置项失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "获取设置项失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "获取设置项失败"));
         }
     }
     
@@ -118,7 +118,7 @@ public class SettingsApiController {
         } catch (Exception e) {
             logger.error("更新设置失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "更新设置失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "更新设置失败"));
         }
     }
     
@@ -145,7 +145,7 @@ public class SettingsApiController {
         } catch (Exception e) {
             logger.error("删除设置失败", e);
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
-               .json(Map.of("success", false, "message", "删除设置失败: " + e.getMessage()));
+               .json(Map.of("success", false, "message", "删除设置失败"));
         }
     }
 }

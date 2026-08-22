@@ -80,7 +80,7 @@ public class I18nApiController {
             logger.error("设置语言失败", e);
             ctx.status(500).json(Map.of(
                 "success", false,
-                "error", "设置语言失败: " + e.getMessage()
+                "error", "设置语言失败"
             ));
         }
     }
