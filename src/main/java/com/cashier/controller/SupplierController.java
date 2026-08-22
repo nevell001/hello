@@ -2,7 +2,7 @@ package com.cashier.controller;
 
 import com.cashier.i18n.I18nKeys;
 
-import com.cashier.dao.SupplierDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.i18n.I18nManager;
 import com.cashier.model.Supplier;
 import com.cashier.util.StatusBarManager;
@@ -118,7 +118,7 @@ public class SupplierController {
      */
     private void loadSuppliers() {
         try {
-            setSupplierData(SupplierDAO.findRecent(SUPPLIER_LIST_LIMIT));
+            setSupplierData(DAOFactory.getInstance().getSupplierDAO().findRecent(SUPPLIER_LIST_LIMIT));
         } catch (SQLException e) {
             logger.error("加载供应商数据失败", e);
             showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
@@ -296,7 +296,7 @@ public class SupplierController {
                 if (isEdit) {
                     newSupplier.id = supplier.id;
                     try {
-                        SupplierDAO.update(newSupplier);
+                        DAOFactory.getInstance().getSupplierDAO().update(newSupplier);
                         loadSuppliers();
                         updateStatus("供应商更新成功: " + newSupplier.name);
                         dialogStage.close();
@@ -306,7 +306,7 @@ public class SupplierController {
                     }
                 } else {
                     try {
-                        SupplierDAO.insert(newSupplier);
+                        DAOFactory.getInstance().getSupplierDAO().insert(newSupplier);
                         loadSuppliers();
                         updateStatus("供应商添加成功: " + newSupplier.name);
                         dialogStage.close();
@@ -349,7 +349,7 @@ public class SupplierController {
 
         int count = 0;
         try {
-            count = SupplierDAO.countBySupplierCodePrefix(prefix);
+            count = DAOFactory.getInstance().getSupplierDAO().countBySupplierCodePrefix(prefix);
         } catch (SQLException e) {
             logger.warn("统计供应商编号前缀失败: {}", prefix, e);
         }
@@ -371,7 +371,7 @@ public class SupplierController {
 
             if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
                 try {
-                    SupplierDAO.delete(selected.id);
+                    DAOFactory.getInstance().getSupplierDAO().delete(selected.id);
                     suppliers.remove(selected.id);
                     supplierList.remove(selected);
                     updateCountLabel();
@@ -394,7 +394,7 @@ public class SupplierController {
             loadSuppliers();
         } else {
             try {
-                setSupplierData(SupplierDAO.search(searchText, SUPPLIER_LIST_LIMIT));
+                setSupplierData(DAOFactory.getInstance().getSupplierDAO().search(searchText, SUPPLIER_LIST_LIMIT));
             } catch (SQLException e) {
                 logger.error("搜索供应商失败", e);
                 showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());

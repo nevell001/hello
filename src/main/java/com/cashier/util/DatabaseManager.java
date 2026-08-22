@@ -301,7 +301,47 @@ public class DatabaseManager {
             // 创建数据库（如果不存在）
             stmt.execute("CREATE DATABASE IF NOT EXISTS lisuan_system CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
             stmt.execute("USE lisuan_system");
+            createTableUsers(stmt);
+            createTableProducts(stmt);
+            createTableMembers(stmt);
+            createTableTransactions(stmt);
+            createTableTransactionItems(stmt);
+            createTableShifts(stmt);
+            createTablePromotions(stmt);
+            createTableCategories(stmt);
+            createTableUnits(stmt);
+            createTableRecharges(stmt);
+            createTableOperationLogs(stmt);
+            createTableSettings(stmt);
+            createTableThemePreferences(stmt);
+            createTableSuppliers(stmt);
+            createTablePurchaseOrders(stmt);
+            createTablePurchaseOrderItems(stmt);
+            createTablePurchaseApprovals(stmt);
+            createTablePurchaseInbound(stmt);
+            createTablePurchaseInboundItems(stmt);
+            createTableInventoryCheck(stmt);
+            createTableInventoryCheckItems(stmt);
+            createTableReturnOrders(stmt);
+            createTableReturnOrderItems(stmt);
+            createTableInvoices(stmt);
+            createTableInvoiceItems(stmt);
+            createTableBackupRecords(stmt);
+            createTableBackupConfig(stmt);
+            upgradeTableStructure(stmt);
 
+            // 创建默认管理员用户（如果不存在）
+            createDefaultAdminUser(stmt);
+
+            initialized = true;
+            logger.info("MySQL 数据库初始化成功");
+
+        } catch (SQLException e) {
+            logger.error("数据库表创建失败", e);
+        }
+    }
+
+    private static void createTableUsers(Statement stmt) throws SQLException {
             // 创建用户表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS users (
@@ -319,6 +359,9 @@ public class DatabaseManager {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
                 """);
 
+    }
+
+    private static void createTableProducts(Statement stmt) throws SQLException {
             // 创建商品表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS products (
@@ -363,6 +406,9 @@ public class DatabaseManager {
                 logger.warn("创建挂单表失败", e);
             }
 
+    }
+
+    private static void createTableMembers(Statement stmt) throws SQLException {
             // 创建会员表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS members (
@@ -420,6 +466,9 @@ public class DatabaseManager {
                 logger.warn("检查或添加 version 字段时出错（可能已存在）: " + e.getMessage());
             }
 
+    }
+
+    private static void createTableTransactions(Statement stmt) throws SQLException {
             // 创建交易表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS transactions (
@@ -445,6 +494,9 @@ public class DatabaseManager {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
                 """);
 
+    }
+
+    private static void createTableTransactionItems(Statement stmt) throws SQLException {
             // 创建交易商品明细表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS transaction_items (
@@ -463,6 +515,9 @@ public class DatabaseManager {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
                 """);
 
+    }
+
+    private static void createTableShifts(Statement stmt) throws SQLException {
             // 创建班次表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS shifts (
@@ -487,6 +542,9 @@ public class DatabaseManager {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
                 """);
 
+    }
+
+    private static void createTablePromotions(Statement stmt) throws SQLException {
             // 创建促销表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS promotions (
@@ -507,6 +565,9 @@ public class DatabaseManager {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
                 """);
 
+    }
+
+    private static void createTableCategories(Statement stmt) throws SQLException {
             // 创建分类表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS categories (
@@ -516,6 +577,9 @@ public class DatabaseManager {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
                 """);
 
+    }
+
+    private static void createTableUnits(Statement stmt) throws SQLException {
             // 创建单位表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS units (
@@ -525,6 +589,9 @@ public class DatabaseManager {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
                 """);
 
+    }
+
+    private static void createTableRecharges(Statement stmt) throws SQLException {
             // 创建充值记录表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS recharges (
@@ -543,6 +610,9 @@ public class DatabaseManager {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
                 """);
 
+    }
+
+    private static void createTableOperationLogs(Statement stmt) throws SQLException {
             // 创建操作日志表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS operation_logs (
@@ -564,6 +634,9 @@ public class DatabaseManager {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
                 """);
 
+    }
+
+    private static void createTableSettings(Statement stmt) throws SQLException {
             // 创建系统设置表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS settings (
@@ -574,6 +647,9 @@ public class DatabaseManager {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
                 """);
 
+    }
+
+    private static void createTableThemePreferences(Statement stmt) throws SQLException {
             // 创建主题偏好表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS theme_preferences (
@@ -586,6 +662,9 @@ public class DatabaseManager {
 
             // ========== v2.3.0-v2.3.1 新增表：采购管理相关表 ==========
 
+    }
+
+    private static void createTableSuppliers(Statement stmt) throws SQLException {
             // 创建供应商表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS suppliers (
@@ -605,6 +684,9 @@ public class DatabaseManager {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='供应商表'
                 """);
 
+    }
+
+    private static void createTablePurchaseOrders(Statement stmt) throws SQLException {
             // 创建采购订单表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS purchase_orders (
@@ -630,6 +712,9 @@ public class DatabaseManager {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='采购订单表'
                 """);
 
+    }
+
+    private static void createTablePurchaseOrderItems(Statement stmt) throws SQLException {
             // 创建采购订单明细表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS purchase_order_items (
@@ -649,6 +734,9 @@ public class DatabaseManager {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='采购订单明细表'
                 """);
 
+    }
+
+    private static void createTablePurchaseApprovals(Statement stmt) throws SQLException {
             // 创建采购审批记录表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS purchase_approvals (
@@ -664,6 +752,9 @@ public class DatabaseManager {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='采购审批记录表'
                 """);
 
+    }
+
+    private static void createTablePurchaseInbound(Statement stmt) throws SQLException {
             // 创建采购入库记录表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS purchase_inbound (
@@ -683,6 +774,9 @@ public class DatabaseManager {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='采购入库记录表'
                 """);
 
+    }
+
+    private static void createTablePurchaseInboundItems(Statement stmt) throws SQLException {
             // 创建采购入库明细表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS purchase_inbound_items (
@@ -702,6 +796,9 @@ public class DatabaseManager {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='采购入库明细表'
                 """);
 
+    }
+
+    private static void createTableInventoryCheck(Statement stmt) throws SQLException {
             // 创建库存盘点表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS inventory_check (
@@ -723,6 +820,9 @@ public class DatabaseManager {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='库存盘点表'
                 """);
 
+    }
+
+    private static void createTableInventoryCheckItems(Statement stmt) throws SQLException {
             // 创建库存盘点明细表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS inventory_check_items (
@@ -744,6 +844,9 @@ public class DatabaseManager {
 
             // ========== v2.4.5 新增表：退货管理相关表 ==========
 
+    }
+
+    private static void createTableReturnOrders(Statement stmt) throws SQLException {
             // 创建退货订单表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS return_orders (
@@ -771,6 +874,9 @@ public class DatabaseManager {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='退货订单表'
                 """);
 
+    }
+
+    private static void createTableReturnOrderItems(Statement stmt) throws SQLException {
             // 创建退货订单明细表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS return_order_items (
@@ -795,6 +901,9 @@ public class DatabaseManager {
 
             // ========== v2.5.0 新增表：发票和备份相关表 ==========
 
+    }
+
+    private static void createTableInvoices(Statement stmt) throws SQLException {
             // 创建发票表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS invoices (
@@ -833,6 +942,9 @@ public class DatabaseManager {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='发票表'
                 """);
 
+    }
+
+    private static void createTableInvoiceItems(Statement stmt) throws SQLException {
             // 创建发票商品明细表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS invoice_items (
@@ -852,6 +964,9 @@ public class DatabaseManager {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='发票商品明细表'
                 """);
 
+    }
+
+    private static void createTableBackupRecords(Statement stmt) throws SQLException {
             // 创建备份记录表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS backup_records (
@@ -879,6 +994,9 @@ public class DatabaseManager {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='备份记录表'
                 """);
 
+    }
+
+    private static void createTableBackupConfig(Statement stmt) throws SQLException {
             // 创建备份配置表
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS backup_config (
@@ -904,17 +1022,6 @@ public class DatabaseManager {
             // ========== v2.3.0-v2.3.1 新增表结束 ==========
 
             // 升级表结构（添加 id 字段）
-            upgradeTableStructure(stmt);
-
-            // 创建默认管理员用户（如果不存在）
-            createDefaultAdminUser(stmt);
-
-            initialized = true;
-            logger.info("MySQL 数据库初始化成功");
-
-        } catch (SQLException e) {
-            logger.error("数据库表创建失败", e);
-        }
     }
 
     /**

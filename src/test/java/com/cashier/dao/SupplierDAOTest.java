@@ -15,6 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DisplayName("供应商数据访问对象测试")
 class SupplierDAOTest extends DatabaseTestBase {
 
+    private final SupplierDAORefactored supplierDAO = DAOFactory.getInstance().getSupplierDAO();
+
     @BeforeAll
     static void setup() throws SQLException {
         initTestDatabase();
@@ -32,11 +34,11 @@ class SupplierDAOTest extends DatabaseTestBase {
         Supplier middleSupplier = createSupplier("S202607130002", "中间供应商", 2_000L);
         Supplier newestSupplier = createSupplier("S202607130003", "最新供应商", 3_000L);
 
-        SupplierDAO.insert(oldSupplier);
-        SupplierDAO.insert(middleSupplier);
-        SupplierDAO.insert(newestSupplier);
+        supplierDAO.insert(oldSupplier);
+        supplierDAO.insert(middleSupplier);
+        supplierDAO.insert(newestSupplier);
 
-        var suppliers = SupplierDAO.findRecent(2);
+        var suppliers = supplierDAO.findRecent(2);
 
         assertEquals(2, suppliers.size());
         assertEquals("S202607130003", suppliers.get(0).supplierCode);
@@ -46,11 +48,11 @@ class SupplierDAOTest extends DatabaseTestBase {
     @Test
     @DisplayName("搜索供应商时在数据库侧匹配并限制数量")
     void testSearchUsesKeywordAndLimit() throws SQLException {
-        SupplierDAO.insert(createSupplier("S202607130001", "华东食品", 1_000L));
-        SupplierDAO.insert(createSupplier("S202607130002", "华东日用品", 2_000L));
-        SupplierDAO.insert(createSupplier("S202607130003", "华南文具", 3_000L));
+        supplierDAO.insert(createSupplier("S202607130001", "华东食品", 1_000L));
+        supplierDAO.insert(createSupplier("S202607130002", "华东日用品", 2_000L));
+        supplierDAO.insert(createSupplier("S202607130003", "华南文具", 3_000L));
 
-        var suppliers = SupplierDAO.search("华东", 1);
+        var suppliers = supplierDAO.search("华东", 1);
 
         assertEquals(1, suppliers.size());
         assertEquals("S202607130002", suppliers.get(0).supplierCode);
@@ -59,11 +61,11 @@ class SupplierDAOTest extends DatabaseTestBase {
     @Test
     @DisplayName("按供应商编号前缀统计数量")
     void testCountBySupplierCodePrefix() throws SQLException {
-        SupplierDAO.insert(createSupplier("S202607130001", "供应商一", 1_000L));
-        SupplierDAO.insert(createSupplier("S202607130002", "供应商二", 2_000L));
-        SupplierDAO.insert(createSupplier("S202607140001", "供应商三", 3_000L));
+        supplierDAO.insert(createSupplier("S202607130001", "供应商一", 1_000L));
+        supplierDAO.insert(createSupplier("S202607130002", "供应商二", 2_000L));
+        supplierDAO.insert(createSupplier("S202607140001", "供应商三", 3_000L));
 
-        assertEquals(2, SupplierDAO.countBySupplierCodePrefix("S20260713"));
+        assertEquals(2, supplierDAO.countBySupplierCodePrefix("S20260713"));
     }
 
     @Test
@@ -74,11 +76,11 @@ class SupplierDAOTest extends DatabaseTestBase {
         Supplier inactive = createSupplier("S202607130003", "停用供应商", 4_000L);
         inactive.status = false;
 
-        SupplierDAO.insert(activeOld);
-        SupplierDAO.insert(activeNewest);
-        SupplierDAO.insert(inactive);
+        supplierDAO.insert(activeOld);
+        supplierDAO.insert(activeNewest);
+        supplierDAO.insert(inactive);
 
-        var suppliers = SupplierDAO.findByStatus(true, 1);
+        var suppliers = supplierDAO.findByStatus(true, 1);
 
         assertEquals(1, suppliers.size());
         assertEquals("S202607130002", suppliers.get(0).supplierCode);

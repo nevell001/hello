@@ -5,7 +5,6 @@ import com.cashier.i18n.I18nKeys;
 import com.cashier.i18n.I18nManager;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
-import com.cashier.dao.SupplierDAO;
 import com.cashier.model.Category;
 import com.cashier.model.Product;
 import com.cashier.model.Supplier;
@@ -177,7 +176,7 @@ public class ProductEditController {
         // 不添加默认供应商，要求必须选择
 
         try {
-            List<Supplier> supplierList = SupplierDAO.findByStatus(true, PRODUCT_SUPPLIER_LIMIT);
+            List<Supplier> supplierList = DAOFactory.getInstance().getSupplierDAO().findByStatus(true, PRODUCT_SUPPLIER_LIMIT);
             for (Supplier supplier : supplierList) {
                 suppliers.add(supplier.name);
             }

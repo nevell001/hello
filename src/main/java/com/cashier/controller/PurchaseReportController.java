@@ -5,7 +5,7 @@ import com.cashier.i18n.I18nKeys;
 import com.cashier.i18n.I18nManager;
 import com.cashier.dao.PurchaseOrderDAO;
 import com.cashier.dao.PurchaseOrderItemDAO;
-import com.cashier.dao.SupplierDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.model.PurchaseOrder;
 import com.cashier.model.PurchaseOrderItem;
 import com.cashier.model.Supplier;
@@ -247,7 +247,7 @@ public class PurchaseReportController {
     private void loadData() {
         try {
             allOrders = new ArrayList<>();
-            allSuppliers = SupplierDAO.findRecent(PURCHASE_REPORT_SUPPLIER_LIMIT);
+            allSuppliers = DAOFactory.getInstance().getSupplierDAO().findRecent(PURCHASE_REPORT_SUPPLIER_LIMIT);
             orderItemsMap = new HashMap<>();
 
             // 加载供应商列表到下拉框

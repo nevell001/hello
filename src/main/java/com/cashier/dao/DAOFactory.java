@@ -28,6 +28,7 @@ public class DAOFactory {
         register(ProductDAORefactored.class, new ProductDAORefactored());
         register(UnitDAORefactored.class, new UnitDAORefactored());
         register(CategoryDAORefactored.class, new CategoryDAORefactored());
+        register(SupplierDAORefactored.class, new SupplierDAORefactored());
     }
 
     /**
@@ -77,5 +78,13 @@ public class DAOFactory {
      */
     public CategoryDAORefactored getCategoryDAO() {
         return getDAO(CategoryDAORefactored.class);
+    }
+
+    /**
+     * 获取供应商 DAO（重构版）
+     * @return SupplierDAORefactored 实例
+     */
+    public SupplierDAORefactored getSupplierDAO() {
+        return getDAO(SupplierDAORefactored.class);
     }
 }

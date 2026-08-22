@@ -148,7 +148,7 @@ public class PurchaseOrderController {
      */
     private void loadSuppliers() {
         try {
-            List<Supplier> supplierData = SupplierDAO.findByStatus(true, PURCHASE_SUPPLIER_LIMIT);
+            List<Supplier> supplierData = DAOFactory.getInstance().getSupplierDAO().findByStatus(true, PURCHASE_SUPPLIER_LIMIT);
             suppliers = new HashMap<>();
             for (Supplier supplier : supplierData) {
                 suppliers.put(supplier.id, supplier);
@@ -485,7 +485,7 @@ public class PurchaseOrderController {
         }
 
         try {
-            supplier = SupplierDAO.findById(supplierId);
+            supplier = DAOFactory.getInstance().getSupplierDAO().findById(supplierId);
             if (supplier != null) {
                 suppliers.put(supplier.id, supplier);
             }
@@ -1266,7 +1266,7 @@ public class PurchaseOrderController {
                         supplier.rank = rankCombo.getValue();
                         supplier.status = true;
 
-                        SupplierDAO.insert(supplier);
+                        DAOFactory.getInstance().getSupplierDAO().insert(supplier);
                         
                         // 刷新供应商列表
                         loadSuppliers();

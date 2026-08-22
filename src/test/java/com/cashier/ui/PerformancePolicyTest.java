@@ -665,7 +665,7 @@ class PerformancePolicyTest {
         assertFalse(restockController.contains("productDAO.findAll()"));
         assertFalse(productEditController.contains("productDAO.findAll()"));
         assertTrue(productEditController.contains("PRODUCT_SUPPLIER_LIMIT = 500"));
-        assertTrue(productEditController.contains("SupplierDAO.findByStatus(true, PRODUCT_SUPPLIER_LIMIT)"));
+        assertTrue(productEditController.contains("getSupplierDAO().findByStatus(true, PRODUCT_SUPPLIER_LIMIT)"));
         assertFalse(productEditController.contains("SupplierDAO.findAll()"));
         assertTrue(productEditController.contains("productDAO.countByProductCodePrefix(prefix)"));
         assertTrue(productDao.contains("countByProductCodePrefix(String prefix)"));
@@ -739,7 +739,7 @@ class PerformancePolicyTest {
         assertTrue(purchaseReportController.contains("PurchaseOrderDAO.findByDateRange("));
         assertTrue(purchaseReportController.contains("loadOrdersByDateRange(startDate, endDate)"));
         assertTrue(purchaseReportController.contains("PURCHASE_REPORT_SUPPLIER_LIMIT = 500"));
-        assertTrue(purchaseReportController.contains("SupplierDAO.findRecent(PURCHASE_REPORT_SUPPLIER_LIMIT)"));
+        assertTrue(purchaseReportController.contains("getSupplierDAO().findRecent(PURCHASE_REPORT_SUPPLIER_LIMIT)"));
         assertFalse(purchaseReportController.contains("PurchaseOrderDAO.findAll()"));
         assertFalse(purchaseReportController.contains("SupplierDAO.findAll()"));
 
@@ -831,13 +831,13 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/controller/SupplierController.java"
         ));
         String dao = Files.readString(Path.of(
-            "src/main/java/com/cashier/dao/SupplierDAO.java"
+            "src/main/java/com/cashier/dao/SupplierDAORefactored.java"
         ));
 
         assertTrue(controller.contains("SUPPLIER_LIST_LIMIT = 500"));
-        assertTrue(controller.contains("SupplierDAO.findRecent(SUPPLIER_LIST_LIMIT)"));
-        assertTrue(controller.contains("SupplierDAO.search(searchText, SUPPLIER_LIST_LIMIT)"));
-        assertTrue(controller.contains("SupplierDAO.countBySupplierCodePrefix(prefix)"));
+        assertTrue(controller.contains("getSupplierDAO().findRecent(SUPPLIER_LIST_LIMIT)"));
+        assertTrue(controller.contains("getSupplierDAO().search(searchText, SUPPLIER_LIST_LIMIT)"));
+        assertTrue(controller.contains("getSupplierDAO().countBySupplierCodePrefix(prefix)"));
         assertFalse(controller.contains("SupplierDAO.findAll()"));
 
         assertTrue(dao.contains("findRecent(int limit)"));
@@ -855,7 +855,7 @@ class PerformancePolicyTest {
 
         assertTrue(controller.contains("PRODUCT_SELECTION_PAGE_SIZE = 500"));
         assertTrue(controller.contains("PURCHASE_SUPPLIER_LIMIT = 500"));
-        assertTrue(controller.contains("SupplierDAO.findByStatus(true, PURCHASE_SUPPLIER_LIMIT)"));
+        assertTrue(controller.contains("getSupplierDAO().findByStatus(true, PURCHASE_SUPPLIER_LIMIT)"));
         assertTrue(controller.contains("productDAO.findAll(FIRST_PAGE, PRODUCT_SELECTION_PAGE_SIZE)"));
         assertTrue(controller.contains("productDAO.search(normalizedSearch, FIRST_PAGE, PRODUCT_SELECTION_PAGE_SIZE)"));
         assertTrue(controller.contains("productDAO.findByCategory(category, FIRST_PAGE, PRODUCT_SELECTION_PAGE_SIZE)"));
