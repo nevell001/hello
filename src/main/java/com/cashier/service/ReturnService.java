@@ -110,7 +110,7 @@ public class ReturnService {
                 log.operation = "RETURN_APPROVAL";
                 log.result = "SUCCESS";
                 log.affectedRecords = items.size();
-                return OperationLogDAO.insertWithConnection(conn, log);
+                return DAOFactory.getInstance().getOperationLogDAO().insertWithConnection(conn, log);
             });
 
             if (success) {

@@ -251,7 +251,7 @@ public class DataService {
      */
     public static List<OperationLog> loadOperationLogs() {
         try {
-            return OperationLogDAO.findRecent(LEGACY_LOAD_LIMIT);
+            return DAOFactory.getInstance().getOperationLogDAO().findRecent(LEGACY_LOAD_LIMIT);
         } catch (SQLException e) {
             logger.error("加载操作日志失败", e);
             return new ArrayList<>();
@@ -263,7 +263,7 @@ public class DataService {
      * @throws SQLException 如果保存失败
      */
     public static void saveOperationLogs(List<OperationLog> logs) throws SQLException {
-        OperationLogDAO.batchInsert(logs);
+        DAOFactory.getInstance().getOperationLogDAO().batchInsert(logs);
     }
 
     /**

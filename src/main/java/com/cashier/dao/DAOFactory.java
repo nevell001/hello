@@ -33,6 +33,7 @@ public class DAOFactory {
         register(RechargeRecordDAORefactored.class, new RechargeRecordDAORefactored());
         register(PromotionDAORefactored.class, new PromotionDAORefactored());
         register(UserDAORefactored.class, new UserDAORefactored());
+        register(OperationLogDAORefactored.class, new OperationLogDAORefactored());
     }
 
     /**
@@ -122,5 +123,13 @@ public class DAOFactory {
      */
     public UserDAORefactored getUserDAO() {
         return getDAO(UserDAORefactored.class);
+    }
+
+    /**
+     * 获取操作日志 DAO（重构版）
+     * @return OperationLogDAORefactored 实例
+     */
+    public OperationLogDAORefactored getOperationLogDAO() {
+        return getDAO(OperationLogDAORefactored.class);
     }
 }

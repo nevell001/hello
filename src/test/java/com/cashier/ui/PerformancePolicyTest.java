@@ -678,7 +678,7 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/controller/AuditLogController.java"
         ));
         String operationLogDao = Files.readString(Path.of(
-            "src/main/java/com/cashier/dao/OperationLogDAO.java"
+            "src/main/java/com/cashier/dao/OperationLogDAORefactored.java"
         ));
         String returnOrderController = Files.readString(Path.of(
             "src/main/java/com/cashier/controller/ReturnOrderController.java"
@@ -687,7 +687,7 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/dao/ReturnOrderDAO.java"
         ));
 
-        assertTrue(auditLogController.contains("OperationLogDAO.findRecent(AUDIT_LOG_LIMIT)"));
+        assertTrue(auditLogController.contains("getOperationLogDAO().findRecent(AUDIT_LOG_LIMIT)"));
         assertTrue(operationLogDao.contains("findRecent(int limit)"));
         assertTrue(operationLogDao.contains("ORDER BY timestamp DESC LIMIT ?"));
         assertFalse(auditLogController.contains("OperationLogDAO.findAll()"));
@@ -900,7 +900,7 @@ class PerformancePolicyTest {
         assertTrue(dataService.contains("TransactionDAO.findRecent(LEGACY_LOAD_LIMIT)"));
         assertTrue(dataService.contains("getPromotionDAO().findRecent(LEGACY_LOAD_LIMIT)"));
         assertTrue(dataService.contains("getRechargeRecordDAO().findRecent(LEGACY_LOAD_LIMIT)"));
-        assertTrue(dataService.contains("OperationLogDAO.findRecent(LEGACY_LOAD_LIMIT)"));
+        assertTrue(dataService.contains("getOperationLogDAO().findRecent(LEGACY_LOAD_LIMIT)"));
 
         assertTrue(rechargeDao.contains("findRecent(int limit)"));
         assertTrue(rechargeDao.contains("ORDER BY timestamp DESC LIMIT ?"));

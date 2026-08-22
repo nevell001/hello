@@ -247,71 +247,11 @@ public class PurchaseOrderController {
             root.getStyleClass().add("surface-muted");
 
             // 表单字段
-            GridPane gridPane = new GridPane();
-            gridPane.setHgap(15);
-            gridPane.setVgap(15);
-
-            // 设置列约束
-            javafx.scene.layout.ColumnConstraints col1 = new javafx.scene.layout.ColumnConstraints();
-            col1.setPrefWidth(100);
-            col1.setMinWidth(90);
-            
-            javafx.scene.layout.ColumnConstraints col2 = new javafx.scene.layout.ColumnConstraints();
-            col2.setPrefWidth(180);
-            col2.setMinWidth(150);
-            col2.setHgrow(javafx.scene.layout.Priority.ALWAYS);
-            
-            javafx.scene.layout.ColumnConstraints col3 = new javafx.scene.layout.ColumnConstraints();
-            col3.setPrefWidth(100);
-            col3.setMinWidth(90);
-            
-            javafx.scene.layout.ColumnConstraints col4 = new javafx.scene.layout.ColumnConstraints();
-            col4.setPrefWidth(180);
-            col4.setMinWidth(150);
-            col4.setHgrow(javafx.scene.layout.Priority.ALWAYS);
-            
-            gridPane.getColumnConstraints().addAll(col1, col2, col3, col4);
-
-            TextField orderNoField = new TextField();
-            orderNoField.setEditable(false);
-            orderNoField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ProductEdit.AUTO_GENERATE));
-
-            ComboBox<Supplier> supplierCombo = new ComboBox<>();
-            supplierCombo.getItems().setAll(suppliers.values());
-            supplierCombo.setConverter(createSupplierStringConverter());
-
-            DatePicker purchaseDatePicker = new DatePicker();
-            purchaseDatePicker.setValue(java.time.LocalDate.now());
-
-            DatePicker expectedDatePicker = new DatePicker();
-            expectedDatePicker.setValue(java.time.LocalDate.now().plusDays(7));
-
-            TextField purchaserField = new TextField();
-            purchaserField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("purchase_inbound.purchaser"));
-
-            TextArea remarkArea = new TextArea();
-            remarkArea.setPromptText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Restock.REASON));
-            remarkArea.setPrefRowCount(2);
-            remarkArea.setPrefHeight(50);
+            OrderFormFields form = createOrderFormFields();
 
             // 如果是编辑模式，填充数据
             boolean isEdit = order != null;
-            if (isEdit) {
-                orderNoField.setText(order.orderNo);
-                Supplier supplier = findSupplierForOrder(order.supplierId);
-                if (supplier != null) {
-                    supplierCombo.setValue(supplier);
-                }
-                purchaseDatePicker.setValue(java.time.LocalDate.parse(order.purchaseDate));
-                if (order.expectedDate != null && !order.expectedDate.isEmpty()) {
-                    expectedDatePicker.setValue(java.time.LocalDate.parse(order.expectedDate));
-                }
-                purchaserField.setText(order.purchaser);
-                remarkArea.setText(order.remark);
-            } else {
-                // 自动生成订单号
-                orderNoField.setText(generateOrderNo());
-            }
+            populateOrderForm(order, isEdit, form);
 
             // 创建对话框Stage（需要在按钮回调之前声明）
             final Stage dialogStage = new Stage();
@@ -319,61 +259,7 @@ public class PurchaseOrderController {
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(orderTable.getScene().getWindow());
 
-            // 第一行：订单号和供应商
-            gridPane.add(createLabel(I18nManager.getInstance().get("runtime.order_no")), 0, 0);
-            gridPane.add(orderNoField, 1, 0);
-            gridPane.add(createLabel(I18nManager.getInstance().get("runtime.supplier_required")), 2, 0);
-            HBox supplierBox = new HBox(10);
-            supplierBox.getChildren().add(supplierCombo);
-            Button newSupplierButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("runtime.supplier_new"));
-            newSupplierButton.getStyleClass().addAll("text-xs", "p-3-8");
-            newSupplierButton.setOnAction(e -> showSupplierManagementDialog(dialogStage, supplierCombo));
-            supplierBox.getChildren().add(newSupplierButton);
-            gridPane.add(supplierBox, 3, 0);
-
-            // 供应商详细信息显示区域
-            Label supplierInfoLabel = new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.supplier_info"));
-            supplierInfoLabel.getStyleClass().add(TEXT_MUTED_STYLE);
-            supplierInfoLabel.getStyleClass().add("font-bold");
-            Label supplierDetailLabel = new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.SUPPLIER_SELECT));
-            supplierDetailLabel.getStyleClass().add(TEXT_MUTED_STYLE);
-            supplierDetailLabel.getStyleClass().add("text-sm");
-            supplierDetailLabel.setWrapText(true);
-
-            // 监听供应商选择变化
-            supplierCombo.valueProperty().addListener((obs, oldVal, newVal) -> {
-                if (newVal != null) {
-                    String info = I18nManager.getInstance().get("runtime.supplier_summary",
-                            newVal.contactPerson != null ? newVal.contactPerson : "-",
-                            newVal.phone != null ? newVal.phone : "-");
-                    if (newVal.address != null && !newVal.address.isEmpty()) {
-                        info = I18nManager.getInstance().get("runtime.supplier_summary_address", info, newVal.address);
-                    }
-                    supplierDetailLabel.setText(info);
-                    supplierDetailLabel.getStyleClass().removeAll(TEXT_MUTED_STYLE, TEXT_DEFAULT_STYLE);
-                    supplierDetailLabel.getStyleClass().add(TEXT_DEFAULT_STYLE);
-                } else {
-                    supplierDetailLabel.setText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.SUPPLIER_SELECT));
-                    supplierDetailLabel.getStyleClass().removeAll(TEXT_MUTED_STYLE, TEXT_DEFAULT_STYLE);
-                    supplierDetailLabel.getStyleClass().add(TEXT_MUTED_STYLE);
-                }
-            });
-
-            // 第二行：采购日期和预计到货日期
-            gridPane.add(createLabel(I18nManager.getInstance().get(I18nKeys.Runtime.PURCHASE_DATE)), 0, 1);
-            gridPane.add(purchaseDatePicker, 1, 1);
-            gridPane.add(createLabel(I18nManager.getInstance().get("runtime.expected_date_full")), 2, 1);
-            gridPane.add(expectedDatePicker, 3, 1);
-
-            // 第三行：采购人和备注
-            gridPane.add(createLabel(I18nManager.getInstance().get(I18nKeys.Runtime.PURCHASER)), 0, 2);
-            gridPane.add(purchaserField, 1, 2);
-            gridPane.add(createLabel(I18nManager.getInstance().get("runtime.notes")), 2, 2);
-            gridPane.add(remarkArea, 3, 2);
-
-            // 供应商详细信息显示行
-            gridPane.add(supplierInfoLabel, 0, 3);
-            gridPane.add(supplierDetailLabel, 1, 3, 3, 1); // 跨越3列
+            layoutOrderFormGrid(form, dialogStage);
 
             TableView<PurchaseOrderItem> itemTable = createOrderItemTable();
 
@@ -415,12 +301,12 @@ public class PurchaseOrderController {
                 order,
                 isEdit,
                 dialogStage,
-                supplierCombo,
-                orderNoField,
-                purchaseDatePicker,
-                expectedDatePicker,
-                purchaserField,
-                remarkArea,
+                form.supplierCombo,
+                form.orderNoField,
+                form.purchaseDatePicker,
+                form.expectedDatePicker,
+                form.purchaserField,
+                form.remarkArea,
                 items));
 
             cancelButton.setOnAction(e -> dialogStage.close());
@@ -428,7 +314,7 @@ public class PurchaseOrderController {
             HBox buttonBox = new HBox(10, saveButton, cancelButton);
             buttonBox.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
 
-            root.getChildren().addAll(gridPane, itemLabel, addProductButton, itemTable, totalLabel, buttonBox);
+            root.getChildren().addAll(form.grid, itemLabel, addProductButton, itemTable, totalLabel, buttonBox);
 
             Scene scene = new Scene(root, 750, 550);
             applyCurrentTheme(scene);
@@ -440,6 +326,146 @@ public class PurchaseOrderController {
             logger.error("显示订单对话框失败", e);
             showError(I18nManager.getInstance().get("runtime.dialog_load_failed", e.getMessage()));
         }
+    }
+
+    /** 采购订单表单字段集合 */
+    private static class OrderFormFields {
+        final GridPane grid;
+        final TextField orderNoField;
+        final ComboBox<Supplier> supplierCombo;
+        final DatePicker purchaseDatePicker;
+        final DatePicker expectedDatePicker;
+        final TextField purchaserField;
+        final TextArea remarkArea;
+
+        OrderFormFields(GridPane grid, TextField orderNoField, ComboBox<Supplier> supplierCombo,
+                        DatePicker purchaseDatePicker, DatePicker expectedDatePicker,
+                        TextField purchaserField, TextArea remarkArea) {
+            this.grid = grid;
+            this.orderNoField = orderNoField;
+            this.supplierCombo = supplierCombo;
+            this.purchaseDatePicker = purchaseDatePicker;
+            this.expectedDatePicker = expectedDatePicker;
+            this.purchaserField = purchaserField;
+            this.remarkArea = remarkArea;
+        }
+    }
+
+    private OrderFormFields createOrderFormFields() {
+        GridPane gridPane = new GridPane();
+        gridPane.setHgap(15);
+        gridPane.setVgap(15);
+
+        javafx.scene.layout.ColumnConstraints col1 = new javafx.scene.layout.ColumnConstraints();
+        col1.setPrefWidth(100);
+        col1.setMinWidth(90);
+        javafx.scene.layout.ColumnConstraints col2 = new javafx.scene.layout.ColumnConstraints();
+        col2.setPrefWidth(180);
+        col2.setMinWidth(150);
+        col2.setHgrow(javafx.scene.layout.Priority.ALWAYS);
+        javafx.scene.layout.ColumnConstraints col3 = new javafx.scene.layout.ColumnConstraints();
+        col3.setPrefWidth(100);
+        col3.setMinWidth(90);
+        javafx.scene.layout.ColumnConstraints col4 = new javafx.scene.layout.ColumnConstraints();
+        col4.setPrefWidth(180);
+        col4.setMinWidth(150);
+        col4.setHgrow(javafx.scene.layout.Priority.ALWAYS);
+        gridPane.getColumnConstraints().addAll(col1, col2, col3, col4);
+
+        TextField orderNoField = new TextField();
+        orderNoField.setEditable(false);
+        orderNoField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ProductEdit.AUTO_GENERATE));
+
+        ComboBox<Supplier> supplierCombo = new ComboBox<>();
+        supplierCombo.getItems().setAll(suppliers.values());
+        supplierCombo.setConverter(createSupplierStringConverter());
+
+        DatePicker purchaseDatePicker = new DatePicker();
+        purchaseDatePicker.setValue(java.time.LocalDate.now());
+        DatePicker expectedDatePicker = new DatePicker();
+        expectedDatePicker.setValue(java.time.LocalDate.now().plusDays(7));
+
+        TextField purchaserField = new TextField();
+        purchaserField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("purchase_inbound.purchaser"));
+
+        TextArea remarkArea = new TextArea();
+        remarkArea.setPromptText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Restock.REASON));
+        remarkArea.setPrefRowCount(2);
+        remarkArea.setPrefHeight(50);
+        return new OrderFormFields(gridPane, orderNoField, supplierCombo,
+            purchaseDatePicker, expectedDatePicker, purchaserField, remarkArea);
+    }
+
+    private void populateOrderForm(PurchaseOrder order, boolean isEdit, OrderFormFields form) {
+        if (isEdit) {
+            form.orderNoField.setText(order.orderNo);
+            Supplier supplier = findSupplierForOrder(order.supplierId);
+            if (supplier != null) {
+                form.supplierCombo.setValue(supplier);
+            }
+            form.purchaseDatePicker.setValue(java.time.LocalDate.parse(order.purchaseDate));
+            if (order.expectedDate != null && !order.expectedDate.isEmpty()) {
+                form.expectedDatePicker.setValue(java.time.LocalDate.parse(order.expectedDate));
+            }
+            form.purchaserField.setText(order.purchaser);
+            form.remarkArea.setText(order.remark);
+        } else {
+            form.orderNoField.setText(generateOrderNo());
+        }
+    }
+
+    /** 布局表单网格：订单号/供应商、日期、采购人/备注、供应商详情（含选择联动） */
+    private void layoutOrderFormGrid(OrderFormFields form, Stage dialogStage) {
+        GridPane gridPane = form.grid;
+        gridPane.add(createLabel(I18nManager.getInstance().get("runtime.order_no")), 0, 0);
+        gridPane.add(form.orderNoField, 1, 0);
+        gridPane.add(createLabel(I18nManager.getInstance().get("runtime.supplier_required")), 2, 0);
+        HBox supplierBox = new HBox(10);
+        supplierBox.getChildren().add(form.supplierCombo);
+        Button newSupplierButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("runtime.supplier_new"));
+        newSupplierButton.getStyleClass().addAll("text-xs", "p-3-8");
+        newSupplierButton.setOnAction(e -> showSupplierManagementDialog(dialogStage, form.supplierCombo));
+        supplierBox.getChildren().add(newSupplierButton);
+        gridPane.add(supplierBox, 3, 0);
+
+        Label supplierInfoLabel = new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.supplier_info"));
+        supplierInfoLabel.getStyleClass().add(TEXT_MUTED_STYLE);
+        supplierInfoLabel.getStyleClass().add("font-bold");
+        Label supplierDetailLabel = new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.SUPPLIER_SELECT));
+        supplierDetailLabel.getStyleClass().add(TEXT_MUTED_STYLE);
+        supplierDetailLabel.getStyleClass().add("text-sm");
+        supplierDetailLabel.setWrapText(true);
+
+        form.supplierCombo.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                String info = I18nManager.getInstance().get("runtime.supplier_summary",
+                    newVal.contactPerson != null ? newVal.contactPerson : "-",
+                    newVal.phone != null ? newVal.phone : "-");
+                if (newVal.address != null && !newVal.address.isEmpty()) {
+                    info = I18nManager.getInstance().get("runtime.supplier_summary_address", info, newVal.address);
+                }
+                supplierDetailLabel.setText(info);
+                supplierDetailLabel.getStyleClass().removeAll(TEXT_MUTED_STYLE, TEXT_DEFAULT_STYLE);
+                supplierDetailLabel.getStyleClass().add(TEXT_DEFAULT_STYLE);
+            } else {
+                supplierDetailLabel.setText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.SUPPLIER_SELECT));
+                supplierDetailLabel.getStyleClass().removeAll(TEXT_MUTED_STYLE, TEXT_DEFAULT_STYLE);
+                supplierDetailLabel.getStyleClass().add(TEXT_MUTED_STYLE);
+            }
+        });
+
+        gridPane.add(createLabel(I18nManager.getInstance().get(I18nKeys.Runtime.PURCHASE_DATE)), 0, 1);
+        gridPane.add(form.purchaseDatePicker, 1, 1);
+        gridPane.add(createLabel(I18nManager.getInstance().get("runtime.expected_date_full")), 2, 1);
+        gridPane.add(form.expectedDatePicker, 3, 1);
+
+        gridPane.add(createLabel(I18nManager.getInstance().get(I18nKeys.Runtime.PURCHASER)), 0, 2);
+        gridPane.add(form.purchaserField, 1, 2);
+        gridPane.add(createLabel(I18nManager.getInstance().get("runtime.notes")), 2, 2);
+        gridPane.add(form.remarkArea, 3, 2);
+
+        gridPane.add(supplierInfoLabel, 0, 3);
+        gridPane.add(supplierDetailLabel, 1, 3, 3, 1);
     }
 
     private javafx.util.StringConverter<Supplier> createSupplierStringConverter() {

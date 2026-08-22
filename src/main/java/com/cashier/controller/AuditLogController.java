@@ -1,6 +1,6 @@
 package com.cashier.controller;
 
-import com.cashier.dao.OperationLogDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.i18n.I18nManager;
 import com.cashier.model.OperationLog;
 import com.cashier.util.LoggerFactoryUtil;
@@ -122,7 +122,7 @@ public class AuditLogController {
     private void handleRefresh() {
         new Thread(() -> {
             try {
-                List<OperationLog> logs = OperationLogDAO.findRecent(AUDIT_LOG_LIMIT);
+                List<OperationLog> logs = DAOFactory.getInstance().getOperationLogDAO().findRecent(AUDIT_LOG_LIMIT);
                 Platform.runLater(() -> {
                     allLogs.setAll(logs);
                     handleSearch();

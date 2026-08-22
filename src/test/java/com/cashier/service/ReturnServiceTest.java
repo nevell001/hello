@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ReturnServiceTest extends DatabaseTestBase {
 
     private final RechargeRecordDAORefactored rechargeRecordDAO = DAOFactory.getInstance().getRechargeRecordDAO();
+    private final OperationLogDAORefactored operationLogDAO = DAOFactory.getInstance().getOperationLogDAO();
 
     private Member testMember;
     private Product testProduct1;
@@ -425,7 +426,7 @@ class ReturnServiceTest extends DatabaseTestBase {
         assertEquals("PENDING", updatedOrder.status);
         assertNull(updatedOrder.approvalDate);
         assertEquals(initialQuantity, DAOFactory.getInstance().getProductDAO().findById(testProduct1.id).quantity);
-        assertTrue(OperationLogDAO.findAll().isEmpty());
+        assertTrue(operationLogDAO.findAll().isEmpty());
     }
 
     @Test

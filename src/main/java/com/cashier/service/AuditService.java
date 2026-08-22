@@ -1,6 +1,6 @@
 package com.cashier.service;
 
-import com.cashier.dao.OperationLogDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.model.OperationLog;
 import com.cashier.util.LoggerFactoryUtil;
 import org.slf4j.Logger;
@@ -44,7 +44,7 @@ public final class AuditService {
         audit.ipAddress = "local";
 
         try {
-            OperationLogDAO.insert(audit);
+            DAOFactory.getInstance().getOperationLogDAO().insert(audit);
         } catch (Exception e) {
             logger.warn("审计日志写入失败: category={}, operation={}, result={}",
                 audit.category, audit.operation, audit.result, e);

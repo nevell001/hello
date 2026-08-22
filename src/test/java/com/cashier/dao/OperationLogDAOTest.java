@@ -12,6 +12,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class OperationLogDAOTest extends DatabaseTestBase {
 
+    private final OperationLogDAORefactored operationLogDAO = DAOFactory.getInstance().getOperationLogDAO();
+
     @BeforeEach
     void setUp() throws Exception {
         if (!isInitialized()) {
@@ -30,8 +32,8 @@ class OperationLogDAOTest extends DatabaseTestBase {
         log.details = "用户名不存在";
         log.affectedRecords = 0;
 
-        assertTrue(OperationLogDAO.insert(log));
-        List<OperationLog> result = OperationLogDAO.findAll();
+        assertTrue(operationLogDAO.insert(log));
+        List<OperationLog> result = operationLogDAO.findAll();
 
         assertEquals(1, result.size());
         assertEquals("AUTH", result.get(0).category);
