@@ -696,6 +696,10 @@ When working on files that still use the old `ProductDAO`, consider migrating th
   数据服务设置持久化与主题偏好回退、库存有界加载
 - 补测 商品服务 CRUD/分页/批量导入/删除异常、货币工具格式化/解析/货币切换
 - 补测 查询优化工具（分批查询、批次失败跳过、EXPLAIN 安全校验）
+- 支付回调：`PaymentService.handlePaymentNotify` 增加终态保护（已退款/关闭/取消订单拒绝迟到回调，
+  已成功订单重复通知幂等确认）；新增 `PaymentServiceNotifyTest`（验签/金额/幂等/终态）与
+  `AlipayPrecreatePaymentProviderTest`（支付宝回调验签正反）
+- 打印机降级：`PrinterManagerTest` 补"无可用打印机时任务失败且不中断"覆盖
 
 **REST API 启用步骤（本地冒烟/生产）**
 

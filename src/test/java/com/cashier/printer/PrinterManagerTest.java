@@ -113,4 +113,14 @@ class PrinterManagerTest {
         assertEquals("task-503", recent.get(1).getTaskId());
         assertTrue(printerManager.getRecentPrintHistory(0).isEmpty());
     }
+
+    @Test
+    void testPrintWithoutPrinterFailsGracefully() {
+        PrintTask task = new PrintTask("no-printer-task", "小票", PrintTaskType.RECEIPT, "测试内容");
+
+        boolean success = printerManager.print(task);
+
+        assertFalse(success);
+        assertEquals(PrintTaskStatus.FAILED, task.getStatus());
+    }
 }

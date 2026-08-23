@@ -195,6 +195,19 @@ public final class PaymentService {
         if (order == null || order.channel != channel) {
             return false;
         }
+
+        // 幂等与终态保护：已成功订单重复通知直接确认；已终结订单拒绝迟到回调，防止状态回退
+        if (order.status == PaymentOrder.PaymentStatus.SUCCESS) {
+            logger.info("收到重复支付成功通知，幂等确认: order={}", merchantOrderNo);
+            return true;
+        }
+        if (order.status == PaymentOrder.PaymentStatus.REFUNDED
+                || order.status == PaymentOrder.PaymentStatus.CLOSED
+                || order.status == PaymentOrder.PaymentStatus.CANCELLED) {
+            logger.warn("拒绝已终结订单的支付回调: order={}, status={}", merchantOrderNo, order.status);
+            return false;
+        }
+
         String tradeStatus = notifyData.get("trade_status");
         if (!("SUCCESS".equals(tradeStatus) || "TRADE_SUCCESS".equals(tradeStatus))) {
             return false;
