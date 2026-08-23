@@ -256,7 +256,7 @@ public class TouchCartController implements CartViewHost {
         String result = dialog.showAndWait().orElse("cancel");
         if ("shift".equals(result)) {
             // 对话框已完全关闭，打开交接班窗口（退出模式），交班完成后直接退出
-            com.cashier.controller.ShiftController shiftController = openShiftDialog(true);
+            com.cashier.controller.ShiftController shiftController = openShiftDialog();
             if (shiftController != null && shiftController.isShiftEnded()) {
                 StatusBarManager.updateSuccess("交接班完成，正在退出…");
                 if (application != null) {
@@ -280,18 +280,13 @@ public class TouchCartController implements CartViewHost {
      *
      * @return ShiftController 实例，加载失败时返回 null
      */
-    private com.cashier.controller.ShiftController openShiftDialog() {
-        return openShiftDialog(false);
-    }
-
     /**
      * 打开交接班弹窗（模态），返回 ShiftController 供调用方判断交班状态。
      *
-     * @param exitMode true 表示由退出流程触发：交班完成后直接退出，不弹确认/详情窗口
      * @return ShiftController 实例，加载失败时返回 null
      */
-    private com.cashier.controller.ShiftController openShiftDialog(boolean exitMode) {
-        logger.info("交接班按钮被点击, exitMode={}", exitMode);
+    private com.cashier.controller.ShiftController openShiftDialog() {
+        logger.info("交接班按钮被点击");
         try {
             javafx.fxml.FXMLLoader loader = com.cashier.util.FXMLUtils.loadFXMLLoader("/com/cashier/view/ShiftView.fxml");
             VBox root = loader.load();
@@ -299,7 +294,6 @@ public class TouchCartController implements CartViewHost {
 
             com.cashier.controller.ShiftController controller = loader.getController();
             controller.setCurrentUser(currentUser);
-            controller.setExitMode(exitMode);
 
             javafx.stage.Stage stage = new javafx.stage.Stage();
             stage.setTitle(i18n.get("runtime.shift_handover"));
