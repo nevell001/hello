@@ -399,7 +399,8 @@ public class CashierSystemFXApplication extends Application {
             if (FXUtils.showConfirmAlert(
                 I18nManager.getInstance().get("app.exit_confirm_title"),
                 I18nManager.getInstance().get("app.exit_confirm_message"))) {
-                exitApplication();
+                // 与触屏版一致：退出到登录界面，而非关闭应用
+                logoutToLoginView();
             }
             return;
         }
@@ -419,7 +420,7 @@ public class CashierSystemFXApplication extends Application {
             alert.getButtonTypes().setAll(noButton, cancelButton);
             alert.showAndWait().ifPresent(bt -> {
                 if (bt == noButton) {
-                    exitApplication();
+                    logoutToLoginView();
                 }
             });
         } else {
@@ -441,7 +442,7 @@ public class CashierSystemFXApplication extends Application {
                     tip.showAndWait();
                     logger.info("用户选择先交班，已引导前往交接班入口");
                 } else if (buttonType == noButton) {
-                    exitApplication();
+                    logoutToLoginView();
                 }
             });
         }
