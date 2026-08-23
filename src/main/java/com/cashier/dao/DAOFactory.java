@@ -50,6 +50,7 @@ public class DAOFactory {
         register(BackupDAORefactored.class, new BackupDAORefactored());
         register(HoldOrderDAORefactored.class, new HoldOrderDAORefactored());
         register(LoginAttemptDAORefactored.class, new LoginAttemptDAORefactored());
+        register(SystemSettingsDAORefactored.class, new SystemSettingsDAORefactored());
     }
 
     /**
@@ -275,5 +276,13 @@ public class DAOFactory {
      */
     public LoginAttemptDAORefactored getLoginAttemptDAO() {
         return getDAO(LoginAttemptDAORefactored.class);
+    }
+
+    /**
+     * 获取系统设置 DAO（重构版）
+     * @return SystemSettingsDAORefactored 实例
+     */
+    public SystemSettingsDAORefactored getSystemSettingsDAO() {
+        return getDAO(SystemSettingsDAORefactored.class);
     }
 }

@@ -551,7 +551,7 @@ public class ProfitReportController {
     private double loadOperatingCostRatio() {
         double costRatio = DEFAULT_OPERATING_COST_RATIO;
         try {
-            String ratioStr = com.cashier.dao.SystemSettingsDAO.getSetting("operatingCostRatio");
+            String ratioStr = com.cashier.dao.DAOFactory.getInstance().getSystemSettingsDAO().getSetting("operatingCostRatio");
             if (ratioStr != null) {
                 costRatio = FormValidator.parseDouble(ratioStr);
             }

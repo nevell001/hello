@@ -273,7 +273,7 @@ public class DataService {
         Map<String, String> settings = new HashMap<>();
         try {
             // 使用 getAllSettings 加载所有设置
-            Map<String, String> allSettings = SystemSettingsDAO.getAllSettings();
+            Map<String, String> allSettings = DAOFactory.getInstance().getSystemSettingsDAO().getAllSettings();
             settings.putAll(allSettings);
 
             // 确保必要字段存在（默认值）
@@ -298,7 +298,7 @@ public class DataService {
      */
     public static void saveSettings(Map<String, String> settings) throws SQLException {
         for (Map.Entry<String, String> entry : settings.entrySet()) {
-            SystemSettingsDAO.setSetting(entry.getKey(), entry.getValue());
+            DAOFactory.getInstance().getSystemSettingsDAO().setSetting(entry.getKey(), entry.getValue());
         }
         logger.info("保存设置数据成功，共保存 {} 个设置项", settings.size());
     }
