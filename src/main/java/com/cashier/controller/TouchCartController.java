@@ -43,6 +43,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.shape.Circle;
 import javafx.animation.Timeline;
 import javafx.animation.KeyFrame;
+import javafx.animation.PauseTransition;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.slf4j.Logger;
@@ -138,6 +139,8 @@ public class TouchCartController implements CartViewHost {
     private boolean paymentInProgress = false;
     /** 现金部分支付累计金额 */
     private BigDecimal cashReceivedAmount = BigDecimal.ZERO;
+    /** 扫码/输入停顿后检查“未找到商品”的延迟任务 */
+    private PauseTransition notFoundHint;
 
     @FXML
     private void initialize() {
@@ -165,6 +168,7 @@ public class TouchCartController implements CartViewHost {
             } catch (SQLException e) {
                 logger.error("实时精确匹配商品失败", e);
             }
+            scheduleNotFoundHint(newVal.trim());
             currentKeyword = newVal;
             loadProducts(currentCategoryName);
         });
@@ -722,7 +726,9 @@ public class TouchCartController implements CartViewHost {
         // 添加成功后清空搜索栏，便于连续扫码/输入下一件商品；添加失败（库存不足等）保留输入
         if (searchField != null) {
             searchField.clear();
+            searchField.requestFocus();
         }
+        StatusBarManager.updateSuccess(i18n.get("tpos.scan_added", product.name));
     }
 
     private void incrementQty(CartItem item) {
@@ -1219,6 +1225,28 @@ public class TouchCartController implements CartViewHost {
             product = productDAO.findByProductCode(keyword);
         }
         return product;
+    }
+
+    /** 输入停顿后若仍未命中任何商品，提示“未找到”（避免逐字符误报） */
+    private void scheduleNotFoundHint(String keyword) {
+        if (notFoundHint != null) {
+            notFoundHint.stop();
+        }
+        notFoundHint = new PauseTransition(Duration.millis(400));
+        notFoundHint.setOnFinished(e -> {
+            String current = searchField.getText();
+            if (current == null || current.isBlank() || !current.trim().equals(keyword)) {
+                return; // 输入已变化或已清空
+            }
+            try {
+                if (findExactProduct(current.trim()) == null) {
+                    warn(i18n.get("tpos.scan_not_found", current.trim()));
+                }
+            } catch (SQLException ex) {
+                logger.error("检查未找到商品失败", ex);
+            }
+        });
+        notFoundHint.play();
     }
 
     @FXML
