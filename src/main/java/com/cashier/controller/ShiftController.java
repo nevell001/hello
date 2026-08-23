@@ -37,6 +37,19 @@ public class ShiftController {
     /** 交班是否已成功完成（供调用方判断弹窗关闭后是否需要后续动作，如自动退出） */
     private boolean shiftEnded = false;
 
+    /** 退出模式：供触屏版退出流程使用——交班完成后直接退出，不弹确认与详情窗口 */
+    private boolean exitMode = false;
+
+    /**
+     * 设置退出模式（触屏版退出流程专用）。
+     * 退出模式下「交班」点击后直接结束班次并关闭窗口，不再弹确认/详情弹窗。
+     *
+     * @param exitMode true 表示本次由退出流程触发
+     */
+    public void setExitMode(boolean exitMode) {
+        this.exitMode = exitMode;
+    }
+
     /**
      * 交班是否已成功完成
      * @return true 表示用户在此弹窗内完成了交班操作
@@ -683,14 +696,16 @@ public class ShiftController {
             return;
         }
 
-        // 确认交班
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle(I18nManager.getInstance().get(I18nKeys.Common.CONFIRM));
-        alert.setHeaderText(null);
-        alert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.shift_end_confirm"));
+        if (!exitMode) {
+            // 确认交班（退出模式下直接结束，不弹确认）
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle(I18nManager.getInstance().get(I18nKeys.Common.CONFIRM));
+            alert.setHeaderText(null);
+            alert.setContentText(com.cashier.i18n.I18nManager.getInstance().get("runtime.shift_end_confirm"));
 
-        if (alert.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
-            return;
+            if (alert.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
+                return;
+            }
         }
 
         try {
@@ -728,6 +743,12 @@ public class ShiftController {
             // 刷新列表
             loadShifts();
             updateShiftButtonStates();
+
+            if (exitMode) {
+                // 退出模式：不显示交班详情，直接关闭窗口，由调用方执行退出登录
+                closeWindow();
+                return;
+            }
 
             // 显示交班详情
             I18nManager i18n = I18nManager.getInstance();
