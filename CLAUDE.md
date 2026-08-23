@@ -694,6 +694,7 @@ When working on files that still use the old `ProductDAO`, consider migrating th
 - 补测 DAO：盘点明细、语言偏好（回退链/货币）、备份记录与配置（测试内自建表）
 - 补测 Service：会员等级边界（金卡 5000/钻石 10000、null/负数、折扣映射）、发票金额/税额计算、
   数据服务设置持久化与主题偏好回退、库存有界加载
+- 补测 商品服务 CRUD/分页/批量导入/删除异常、货币工具格式化/解析/货币切换
 
 ## Known Issues
 
