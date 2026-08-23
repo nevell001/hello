@@ -213,20 +213,11 @@ public class TouchCartController implements CartViewHost {
             b.getStyleClass().add("title-md");
         }
         shiftFirstBtn.setCancelButton(false);
+        // 只设置结果并让对话框正常关闭返回；交班窗口在 showAndWait 返回后打开，
+        // 避免在对话框模态事件循环里嵌套新窗口导致对话框残留
+        shiftFirstBtn.setOnAction(e -> dialog.setResult("shift"));
         cancelBtn.setOnAction(e -> dialog.setResult("cancel"));
         confirmBtn.setOnAction(e -> dialog.setResult("exit"));
-        shiftFirstBtn.setOnAction(e -> {
-            // 先关闭退出确认框，避免与交接班窗口嵌套导致弹窗残留；
-            // 交班完成后直接退出到登录界面，否则留在收银台
-            dialog.close();
-            com.cashier.controller.ShiftController shiftController = openShiftDialog(true);
-            if (shiftController != null && shiftController.isShiftEnded()) {
-                StatusBarManager.updateSuccess("交接班完成，正在退出…");
-                if (application != null) {
-                    application.logoutToLoginView();
-                }
-            }
-        });
 
         HBox buttons = new HBox(16, shiftFirstBtn, cancelBtn, confirmBtn);
         buttons.setAlignment(javafx.geometry.Pos.CENTER);
@@ -248,7 +239,16 @@ public class TouchCartController implements CartViewHost {
         }
 
         String result = dialog.showAndWait().orElse("cancel");
-        if ("exit".equals(result) && application != null) {
+        if ("shift".equals(result)) {
+            // 对话框已完全关闭，打开交接班窗口（退出模式），交班完成后直接退出
+            com.cashier.controller.ShiftController shiftController = openShiftDialog(true);
+            if (shiftController != null && shiftController.isShiftEnded()) {
+                StatusBarManager.updateSuccess("交接班完成，正在退出…");
+                if (application != null) {
+                    application.logoutToLoginView();
+                }
+            }
+        } else if ("exit".equals(result) && application != null) {
             application.logoutToLoginView();
         }
     }
