@@ -1531,6 +1531,12 @@ public class TouchCartController implements CartViewHost {
         VBox content = new VBox(12, qrView, status, orderLabel);
         content.setAlignment(Pos.CENTER);
         content.setPadding(new Insets(16));
+        if ("mock".equals(PaymentService.getConfig().mode)) {
+            Button simulateBtn = new Button(i18n.get("payment.mock.simulate"));
+            simulateBtn.getStyleClass().addAll("primary-button", "button-normal");
+            simulateBtn.setOnAction(e -> simulateMockPayment(paymentOrder, status, simulateBtn));
+            content.getChildren().add(simulateBtn);
+        }
         dialog.getDialogPane().setContent(content);
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
 
@@ -1590,6 +1596,29 @@ public class TouchCartController implements CartViewHost {
         paymentInProgress = true;
         poller.play();
         dialog.show();
+    }
+
+    /** mock 模式下触发一次模拟支付回调，轮询会自动发现支付成功并完成交易 */
+    private void simulateMockPayment(PaymentOrder paymentOrder, Label status, Button simulateBtn) {
+        simulateBtn.setDisable(true);
+        try {
+            java.util.Map<String, String> notify = new java.util.HashMap<>();
+            notify.put("out_trade_no", paymentOrder.merchantOrderNo);
+            notify.put("trade_status", "SUCCESS");
+            notify.put("total_amount", paymentOrder.amount.toPlainString());
+            notify.put("transaction_id", "MOCK_" + paymentOrder.paymentId);
+            notify.put("mock_signature", PaymentService.getConfig().mockCallbackSecret);
+            if (PaymentService.handlePaymentNotify(paymentOrder.channel, notify)) {
+                status.setText(i18n.get("payment.mock.simulated"));
+            } else {
+                status.setText(i18n.get("payment.mock.simulate_failed"));
+                simulateBtn.setDisable(false);
+            }
+        } catch (Exception ex) {
+            logger.error("模拟支付回调失败", ex);
+            status.setText(i18n.get("payment.mock.simulate_failed"));
+            simulateBtn.setDisable(false);
+        }
     }
 
     // ===== 结账事务 =====
