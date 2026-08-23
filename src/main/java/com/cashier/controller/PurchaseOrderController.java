@@ -164,7 +164,7 @@ public class PurchaseOrderController {
      */
     private void loadOrders() {
         try {
-            List<PurchaseOrder> orderData = PurchaseOrderDAO.findRecent(PURCHASE_ORDER_LIMIT);
+            List<PurchaseOrder> orderData = DAOFactory.getInstance().getPurchaseOrderDAO().findRecent(PURCHASE_ORDER_LIMIT);
             orders = new HashMap<>();
             for (PurchaseOrder order : orderData) {
                 orders.put(order.id, order);
@@ -692,14 +692,14 @@ public class PurchaseOrderController {
 
         if (isEdit) {
             newOrder.id = existingOrder.id;
-            PurchaseOrderDAO.update(newOrder);
+            DAOFactory.getInstance().getPurchaseOrderDAO().update(newOrder);
             PurchaseOrderItemDAO.deleteByOrderId(existingOrder.id);
             savePurchaseOrderItems(items, existingOrder.id);
             updateStatus("采购订单更新成功");
             return;
         }
 
-        PurchaseOrderDAO.insert(newOrder);
+        DAOFactory.getInstance().getPurchaseOrderDAO().insert(newOrder);
         savePurchaseOrderItems(items, newOrder.id);
         updateStatus("采购订单创建成功");
     }
@@ -1017,7 +1017,7 @@ public class PurchaseOrderController {
             if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
                 try {
                     PurchaseOrderItemDAO.deleteByOrderId(selected.id);
-                    PurchaseOrderDAO.delete(selected.id);
+                    DAOFactory.getInstance().getPurchaseOrderDAO().delete(selected.id);
                     orders.remove(selected.id);
                     filterOrders();
                     updateStatus("采购订单删除成功");

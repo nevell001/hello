@@ -120,7 +120,7 @@ public class PurchaseApprovalController {
      */
     private void loadPendingOrders() {
         try {
-            List<PurchaseOrder> orderData = PurchaseOrderDAO.findByStatus("pending");
+            List<PurchaseOrder> orderData = DAOFactory.getInstance().getPurchaseOrderDAO().findByStatus("pending");
             orders = new HashMap<>();
             for (PurchaseOrder order : orderData) {
                 orders.put(order.id, order);
@@ -140,7 +140,7 @@ public class PurchaseApprovalController {
      */
     private void loadAllOrders() {
         try {
-            List<PurchaseOrder> orderData = PurchaseOrderDAO.findRecent(APPROVAL_ORDER_LIMIT);
+            List<PurchaseOrder> orderData = DAOFactory.getInstance().getPurchaseOrderDAO().findRecent(APPROVAL_ORDER_LIMIT);
             orders = new HashMap<>();
             for (PurchaseOrder order : orderData) {
                 orders.put(order.id, order);
@@ -161,7 +161,7 @@ public class PurchaseApprovalController {
     private void updateCountLabel() {
         countLabel.setText(I18nManager.getInstance().get("runtime.approval_showing", orderList.size()));
         try {
-            int pendingCount = PurchaseOrderDAO.countByStatus("pending");
+            int pendingCount = DAOFactory.getInstance().getPurchaseOrderDAO().countByStatus("pending");
             pendingCountLabel.setText(I18nManager.getInstance().get("runtime.approval_pending", pendingCount));
         } catch (SQLException e) {
             logger.error("统计待审批订单失败", e);

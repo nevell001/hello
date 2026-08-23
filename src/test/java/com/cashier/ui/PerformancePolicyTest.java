@@ -705,7 +705,7 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/controller/PurchaseOrderController.java"
         ));
         String purchaseOrderDao = Files.readString(Path.of(
-            "src/main/java/com/cashier/dao/PurchaseOrderDAO.java"
+            "src/main/java/com/cashier/dao/PurchaseOrderDAORefactored.java"
         ));
         String purchaseInboundController = Files.readString(Path.of(
             "src/main/java/com/cashier/controller/PurchaseInboundController.java"
@@ -714,10 +714,10 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/dao/PurchaseInboundDAO.java"
         ));
 
-        assertTrue(purchaseOrderController.contains("PurchaseOrderDAO.findRecent(PURCHASE_ORDER_LIMIT)"));
+        assertTrue(purchaseOrderController.contains("getPurchaseOrderDAO().findRecent(PURCHASE_ORDER_LIMIT)"));
         assertTrue(purchaseOrderDao.contains("findRecent(int limit)"));
         assertTrue(purchaseOrderDao.contains("ORDER BY po.create_time DESC LIMIT ?"));
-        assertFalse(purchaseOrderController.contains("PurchaseOrderDAO.findAll()"));
+        assertFalse(purchaseOrderController.contains("getPurchaseOrderDAO().findAll()"));
 
         assertTrue(purchaseInboundController.contains("PurchaseInboundDAO.findRecent(INBOUND_HISTORY_LIMIT)"));
         assertTrue(purchaseInboundDao.contains("findRecent(int limit)"));
@@ -735,15 +735,15 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/controller/PurchaseApprovalController.java"
         ));
 
-        assertTrue(purchaseReportController.contains("PurchaseOrderDAO.findByDateRange("));
+        assertTrue(purchaseReportController.contains("getPurchaseOrderDAO().findByDateRange("));
         assertTrue(purchaseReportController.contains("loadOrdersByDateRange(startDate, endDate)"));
         assertTrue(purchaseReportController.contains("PURCHASE_REPORT_SUPPLIER_LIMIT = 500"));
         assertTrue(purchaseReportController.contains("getSupplierDAO().findRecent(PURCHASE_REPORT_SUPPLIER_LIMIT)"));
-        assertFalse(purchaseReportController.contains("PurchaseOrderDAO.findAll()"));
+        assertFalse(purchaseReportController.contains("getPurchaseOrderDAO().findAll()"));
         assertFalse(purchaseReportController.contains("SupplierDAO.findAll()"));
 
-        assertTrue(purchaseApprovalController.contains("PurchaseOrderDAO.findRecent(APPROVAL_ORDER_LIMIT)"));
-        assertFalse(purchaseApprovalController.contains("PurchaseOrderDAO.findAll()"));
+        assertTrue(purchaseApprovalController.contains("getPurchaseOrderDAO().findRecent(APPROVAL_ORDER_LIMIT)"));
+        assertFalse(purchaseApprovalController.contains("getPurchaseOrderDAO().findAll()"));
     }
 
     @Test

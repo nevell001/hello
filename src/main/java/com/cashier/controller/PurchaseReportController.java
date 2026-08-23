@@ -3,7 +3,6 @@ package com.cashier.controller;
 import com.cashier.i18n.I18nKeys;
 
 import com.cashier.i18n.I18nManager;
-import com.cashier.dao.PurchaseOrderDAO;
 import com.cashier.dao.PurchaseOrderItemDAO;
 import com.cashier.dao.DAOFactory;
 import com.cashier.model.PurchaseOrder;
@@ -353,7 +352,7 @@ public class PurchaseReportController {
     }
 
     private void loadOrdersByDateRange(LocalDate startDate, LocalDate endDate) throws SQLException {
-        allOrders = PurchaseOrderDAO.findByDateRange(startDate.toString(), endDate.toString());
+        allOrders = DAOFactory.getInstance().getPurchaseOrderDAO().findByDateRange(startDate.toString(), endDate.toString());
         orderItemsMap = PurchaseOrderItemDAO.findByOrderIds(
                 allOrders.stream().map(order -> order.id).toList()
             ).stream()

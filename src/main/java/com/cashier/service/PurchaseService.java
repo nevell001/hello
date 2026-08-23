@@ -39,7 +39,7 @@ public final class PurchaseService {
         PurchaseApproval approval = new PurchaseApproval(orderId, approver, action, remark);
 
         boolean success = DatabaseManager.executeBooleanTransaction(conn -> {
-            if (!PurchaseOrderDAO.approvePendingWithConnection(conn, orderId, approver, remark, status)) {
+            if (!DAOFactory.getInstance().getPurchaseOrderDAO().approvePendingWithConnection(conn, orderId, approver, remark, status)) {
                 throw new SQLException("采购订单不存在或已完成审批");
             }
             if (!PurchaseApprovalDAO.insertWithConnection(conn, approval)) {
@@ -59,7 +59,7 @@ public final class PurchaseService {
         validateInbound(inbound, items);
 
         boolean success = DatabaseManager.executeBooleanTransaction(conn -> {
-            String orderStatus = PurchaseOrderDAO.findStatusForUpdate(conn, inbound.orderId);
+            String orderStatus = DAOFactory.getInstance().getPurchaseOrderDAO().findStatusForUpdate(conn, inbound.orderId);
             if (!"approved".equals(orderStatus)) {
                 throw new SQLException("只有已审批的采购订单可以入库");
             }
@@ -81,7 +81,7 @@ public final class PurchaseService {
             }
 
             if (PurchaseOrderItemDAO.areAllInboundWithConnection(conn, inbound.orderId)
-                    && !PurchaseOrderDAO.updateStatusWithConnection(conn, inbound.orderId, "completed")) {
+                    && !DAOFactory.getInstance().getPurchaseOrderDAO().updateStatusWithConnection(conn, inbound.orderId, "completed")) {
                 throw new SQLException("更新采购订单完成状态失败");
             }
             return true;

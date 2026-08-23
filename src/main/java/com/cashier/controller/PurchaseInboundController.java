@@ -121,7 +121,7 @@ public class PurchaseInboundController {
      */
     private void loadApprovedOrders() {
         try {
-            List<PurchaseOrder> orderData = PurchaseOrderDAO.findByStatus("approved");
+            List<PurchaseOrder> orderData = DAOFactory.getInstance().getPurchaseOrderDAO().findByStatus("approved");
             logger.info("找到 {} 个审批通过的订单", orderData.size());
 
             orders = new HashMap<>();

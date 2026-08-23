@@ -14,6 +14,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PurchaseOrderDAOTest extends DatabaseTestBase {
 
+    private final PurchaseOrderDAORefactored purchaseOrderDAO = DAOFactory.getInstance().getPurchaseOrderDAO();
+
     private PurchaseOrder insertOrder(String orderNo) throws Exception {
         PurchaseOrder order = new PurchaseOrder();
         order.orderNo = orderNo;
@@ -22,7 +24,7 @@ class PurchaseOrderDAOTest extends DatabaseTestBase {
         order.totalAmount = BigDecimal.valueOf(100);
         order.status = "pending";
         order.purchaser = "采购员";
-        assertTrue(PurchaseOrderDAO.insert(order));
+        assertTrue(purchaseOrderDAO.insert(order));
         return order;
     }
 
@@ -32,8 +34,8 @@ class PurchaseOrderDAOTest extends DatabaseTestBase {
         PurchaseOrder order = insertOrder("PO-DAO-001");
 
         assertTrue(order.id > 0);
-        assertNotNull(PurchaseOrderDAO.findById(order.id));
-        assertEquals("PO-DAO-001", PurchaseOrderDAO.findByOrderNo("PO-DAO-001").orderNo);
+        assertNotNull(purchaseOrderDAO.findById(order.id));
+        assertEquals("PO-DAO-001", purchaseOrderDAO.findByOrderNo("PO-DAO-001").orderNo);
     }
 
     @Test
@@ -41,8 +43,8 @@ class PurchaseOrderDAOTest extends DatabaseTestBase {
     void findByStatusAndSupplier() throws Exception {
         insertOrder("PO-DAO-002");
 
-        assertEquals(1, PurchaseOrderDAO.findByStatus("pending").size());
-        assertEquals(1, PurchaseOrderDAO.findBySupplier(1).size());
+        assertEquals(1, purchaseOrderDAO.findByStatus("pending").size());
+        assertEquals(1, purchaseOrderDAO.findBySupplier(1).size());
     }
 
     @Test
@@ -50,13 +52,13 @@ class PurchaseOrderDAOTest extends DatabaseTestBase {
     void updateStatus() throws Exception {
         PurchaseOrder order = insertOrder("PO-DAO-003");
 
-        assertTrue(PurchaseOrderDAO.updateStatus(order.id, "approved"));
-        assertEquals("approved", PurchaseOrderDAO.findById(order.id).status);
+        assertTrue(purchaseOrderDAO.updateStatus(order.id, "approved"));
+        assertEquals("approved", purchaseOrderDAO.findById(order.id).status);
     }
 
     @Test
     @DisplayName("不存在的单号返回null")
     void findMissingReturnsNull() throws Exception {
-        assertNull(PurchaseOrderDAO.findByOrderNo("PO-MISSING"));
+        assertNull(purchaseOrderDAO.findByOrderNo("PO-MISSING"));
     }
 }

@@ -695,40 +695,17 @@ public class ShiftController {
 
         try {
             // 只加载本班次开始后的交易记录。
-            List<Transaction> shiftTransactions;
-            try {
-                shiftTransactions = DAOFactory.getInstance().getTransactionDAO().findByDateRange(
-                    activeShift.startTime.atZone(java.time.ZoneId.systemDefault())
-                        .toLocalDateTime()
-                        .format(DateTimeFormats.STANDARD_DATE_TIME),
-                    java.time.LocalDateTime.now().format(DateTimeFormats.STANDARD_DATE_TIME)
-                );
-            } catch (SQLException e) {
-                logger.error("加载交易记录失败", e);
-                showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
+            List<Transaction> shiftTransactions = loadShiftTransactions(activeShift);
+            if (shiftTransactions == null) {
                 return;
             }
 
-            BigDecimal cashRevenue = BigDecimal.ZERO;
-            BigDecimal wechatRevenue = BigDecimal.ZERO;
-            BigDecimal alipayRevenue = BigDecimal.ZERO;
-            BigDecimal cardRevenue = BigDecimal.ZERO;
-            BigDecimal totalRevenue = BigDecimal.ZERO;
-
-            for (Transaction t : shiftTransactions) {
-                totalRevenue = totalRevenue.add(t.getFinalAmount());
-
-                // 按支付方式分类统计
-                if ("现金".equals(t.paymentMethod) || "CASH".equals(t.paymentMethod)) {
-                    cashRevenue = cashRevenue.add(t.getFinalAmount());
-                } else if ("微信".equals(t.paymentMethod) || "WECHAT".equals(t.paymentMethod)) {
-                    wechatRevenue = wechatRevenue.add(t.getFinalAmount());
-                } else if ("支付宝".equals(t.paymentMethod) || "ALIPAY".equals(t.paymentMethod)) {
-                    alipayRevenue = alipayRevenue.add(t.getFinalAmount());
-                } else if ("银行卡".equals(t.paymentMethod) || "CARD".equals(t.paymentMethod)) {
-                    cardRevenue = cardRevenue.add(t.getFinalAmount());
-                }
-            }
+            ShiftRevenueStats stats = categorizeShiftRevenue(shiftTransactions);
+            BigDecimal cashRevenue = stats.cashRevenue;
+            BigDecimal wechatRevenue = stats.wechatRevenue;
+            BigDecimal alipayRevenue = stats.alipayRevenue;
+            BigDecimal cardRevenue = stats.cardRevenue;
+            BigDecimal totalRevenue = stats.totalRevenue;
 
             // 结束班次
             // 计算班次结束时的累计总营业额和总交易数
@@ -754,29 +731,7 @@ public class ShiftController {
 
             // 显示交班详情
             I18nManager i18n = I18nManager.getInstance();
-            String sym = CurrencyUtil.getSymbol();
-            String detail = String.format(
-                i18n.get(I18nKeys.Success.SHIFT_END) + "\n\n" +
-                i18n.get("label.shift_id") + ": %s\n" +
-                i18n.get("label.operator") + ": %s\n" +
-                i18n.get("label.shift_duration") + ": %s\n" +
-                i18n.get("label.transaction_count") + ": %d\n" +
-                i18n.get("label.revenue") + ": " + sym + "%.2f\n\n" +
-                i18n.get("label.payment_detail") + ":\n" +
-                i18n.get("label.cash") + ": " + sym + "%.2f\n" +
-                i18n.get("label.wechat") + ": " + sym + "%.2f\n" +
-                i18n.get("label.alipay") + ": " + sym + "%.2f\n" +
-                i18n.get("label.card") + ": " + sym + "%.2f",
-                activeShift.shiftId,
-                activeShift.operatorName,
-                activeShift.getDurationText(),
-                activeShift.shiftTransactionCount,
-                activeShift.shiftRevenue,
-                cashRevenue,
-                wechatRevenue,
-                alipayRevenue,
-                cardRevenue
-            );
+            String detail = buildShiftEndDetail(activeShift, cashRevenue, wechatRevenue, alipayRevenue, cardRevenue);
 
             Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
             successAlert.setTitle(i18n.get(I18nKeys.Success.SHIFT_END));
@@ -795,6 +750,77 @@ public class ShiftController {
             showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED) + ": " + e.getMessage());
             logger.error("交班失败", e);
         }
+    }
+
+    /** 加载本班次开始后的交易记录；失败返回 null（已提示用户） */
+    private List<Transaction> loadShiftTransactions(Shift activeShift) {
+        try {
+            return DAOFactory.getInstance().getTransactionDAO().findByDateRange(
+                activeShift.startTime.atZone(java.time.ZoneId.systemDefault())
+                    .toLocalDateTime()
+                    .format(DateTimeFormats.STANDARD_DATE_TIME),
+                java.time.LocalDateTime.now().format(DateTimeFormats.STANDARD_DATE_TIME)
+            );
+        } catch (SQLException e) {
+            logger.error("加载交易记录失败", e);
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
+            return null;
+        }
+    }
+
+    /** 班次营收分类统计 */
+    private record ShiftRevenueStats(BigDecimal cashRevenue, BigDecimal wechatRevenue,
+                                     BigDecimal alipayRevenue, BigDecimal cardRevenue, BigDecimal totalRevenue) {
+    }
+
+    private ShiftRevenueStats categorizeShiftRevenue(List<Transaction> shiftTransactions) {
+        BigDecimal cashRevenue = BigDecimal.ZERO;
+        BigDecimal wechatRevenue = BigDecimal.ZERO;
+        BigDecimal alipayRevenue = BigDecimal.ZERO;
+        BigDecimal cardRevenue = BigDecimal.ZERO;
+        BigDecimal totalRevenue = BigDecimal.ZERO;
+
+        for (Transaction t : shiftTransactions) {
+            totalRevenue = totalRevenue.add(t.getFinalAmount());
+            if ("现金".equals(t.paymentMethod) || "CASH".equals(t.paymentMethod)) {
+                cashRevenue = cashRevenue.add(t.getFinalAmount());
+            } else if ("微信".equals(t.paymentMethod) || "WECHAT".equals(t.paymentMethod)) {
+                wechatRevenue = wechatRevenue.add(t.getFinalAmount());
+            } else if ("支付宝".equals(t.paymentMethod) || "ALIPAY".equals(t.paymentMethod)) {
+                alipayRevenue = alipayRevenue.add(t.getFinalAmount());
+            } else if ("银行卡".equals(t.paymentMethod) || "CARD".equals(t.paymentMethod)) {
+                cardRevenue = cardRevenue.add(t.getFinalAmount());
+            }
+        }
+        return new ShiftRevenueStats(cashRevenue, wechatRevenue, alipayRevenue, cardRevenue, totalRevenue);
+    }
+
+    private String buildShiftEndDetail(Shift activeShift, BigDecimal cashRevenue, BigDecimal wechatRevenue,
+                                       BigDecimal alipayRevenue, BigDecimal cardRevenue) {
+        I18nManager i18n = I18nManager.getInstance();
+        String sym = CurrencyUtil.getSymbol();
+        return String.format(
+            i18n.get(I18nKeys.Success.SHIFT_END) + "\n\n" +
+            i18n.get("label.shift_id") + ": %s\n" +
+            i18n.get("label.operator") + ": %s\n" +
+            i18n.get("label.shift_duration") + ": %s\n" +
+            i18n.get("label.transaction_count") + ": %d\n" +
+            i18n.get("label.revenue") + ": " + sym + "%.2f\n\n" +
+            i18n.get("label.payment_detail") + ":\n" +
+            i18n.get("label.cash") + ": " + sym + "%.2f\n" +
+            i18n.get("label.wechat") + ": " + sym + "%.2f\n" +
+            i18n.get("label.alipay") + ": " + sym + "%.2f\n" +
+            i18n.get("label.card") + ": " + sym + "%.2f",
+            activeShift.shiftId,
+            activeShift.operatorName,
+            activeShift.getDurationText(),
+            activeShift.shiftTransactionCount,
+            activeShift.shiftRevenue,
+            cashRevenue,
+            wechatRevenue,
+            alipayRevenue,
+            cardRevenue
+        );
     }
 
     /**
