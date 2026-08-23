@@ -1,9 +1,11 @@
 package com.cashier.api;
 
 import com.cashier.model.User;
+import com.cashier.api.ApiConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.Set;
@@ -48,6 +50,26 @@ class ApiServerTest {
 
         apiServer.invalidateToken(token);
         assertNull(apiServer.validateToken(token));
+    }
+
+    @Test
+    @DisplayName("过期 Token 无效")
+    void expiredTokensAreRejected() throws Exception {
+        Field expireField = ApiConfig.class.getDeclaredField("tokenExpireHours");
+        expireField.setAccessible(true);
+        int original = expireField.getInt(null);
+        try {
+            expireField.setInt(null, -1);
+
+            ApiServer apiServer = ApiServer.getInstance();
+            User user = new User();
+            user.id = 42;
+            String token = apiServer.generateToken(user);
+
+            assertNull(apiServer.validateToken(token), "过期 Token 应被拒绝");
+        } finally {
+            expireField.setInt(null, original);
+        }
     }
 
     @Test

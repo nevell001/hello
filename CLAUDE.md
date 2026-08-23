@@ -679,6 +679,17 @@ productDAO.findAll();
 
 When working on files that still use the old `ProductDAO`, consider migrating them to the new pattern.
 
+## Code-Side Release Checks (v2.6)
+
+- 版本号四处同步（`AppConstants`/`pom.xml`/`installer/Installer.java`/`.env.example`）当前均为 `2.6.0`
+- i18n 门禁：`I18nBundleConsistencyTest` 断言三份语言包 key 集合一致、`I18nKeys` 常量齐全、
+  源码字面量 i18n 调用 key 齐全（缺 key 时界面会直接显示 key，属 UI 缺陷）
+- 并发安全：`ConcurrentDeductionTest` 多线程验证乐观锁防库存超卖、防会员余额超扣
+- token 过期：`ApiServerTest.expiredTokensAreRejected` 注入短过期验证过期 token 被拒
+- 连接泄漏：`HealthController.detail` 已改为 try-with-resources（健康检查不再泄漏连接池连接），
+  `HealthControllerTest.detailHealthCheckReportsDatabase` 覆盖该路径
+- 日志轮转：`logback.xml` 已配置 `RollingFileAppender` + `TimeBasedRollingPolicy`（maxHistory 30/90）
+
 ## Known Issues
 
 ### JavaFX Class Loading Warning (macOS + Homebrew JDK)

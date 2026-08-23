@@ -36,10 +36,9 @@ public class HealthController {
         result.put("service", "cashier-api");
         result.put("timestamp", System.currentTimeMillis());
         
-        // 检查数据库
-        try {
-            boolean dbOk = DatabaseManager.getConnection() != null;
-            result.put("database", dbOk ? "connected" : "disconnected");
+        // 检查数据库（try-with-resources 确保连接归还连接池）
+        try (java.sql.Connection conn = DatabaseManager.getConnection()) {
+            result.put("database", conn != null && !conn.isClosed() ? "connected" : "disconnected");
         } catch (Exception e) {
             logger.warn("数据库健康检查失败", e);
             result.put("database", "disconnected");
