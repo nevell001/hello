@@ -377,7 +377,7 @@ public class PurchaseApprovalController {
 
             itemTable.getColumns().addAll(nameCol, qtyCol, priceCol, totalCol);
 
-            List<PurchaseOrderItem> items = PurchaseOrderItemDAO.findByOrderId(order.id);
+            List<PurchaseOrderItem> items = DAOFactory.getInstance().getPurchaseOrderItemDAO().findByOrderId(order.id);
             itemTable.setItems(FXCollections.observableArrayList(items));
 
             // 创建对话框Stage（需要在按钮回调之前声明）

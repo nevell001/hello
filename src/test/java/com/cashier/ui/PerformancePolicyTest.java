@@ -87,12 +87,12 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/controller/PurchaseReportController.java"
         ));
         String dao = Files.readString(Path.of(
-            "src/main/java/com/cashier/dao/PurchaseOrderItemDAO.java"
+            "src/main/java/com/cashier/dao/PurchaseOrderItemDAORefactored.java"
         ));
 
-        assertTrue(controller.contains("PurchaseOrderItemDAO.findByOrderIds("));
+        assertTrue(controller.contains("getPurchaseOrderItemDAO().findByOrderIds("));
         assertTrue(dao.contains("findByOrderIds(Collection<Integer> orderIds)"));
-        assertFalse(controller.contains("PurchaseOrderItemDAO.findByOrderId(order.id)"));
+        assertFalse(controller.contains("getPurchaseOrderItemDAO().findByOrderId(order.id)"));
     }
 
     @Test

@@ -128,7 +128,7 @@ public class PurchaseInboundController {
             for (PurchaseOrder order : orderData) {
                             logger.info("订单: {}, 供应商: {}, 采购日期: {}", order.orderNo, order.supplierName, order.purchaseDate);
                             // 检查是否还有未入库的商品
-                            List<PurchaseOrderItem> items = PurchaseOrderItemDAO.findByOrderId(order.id);
+                            List<PurchaseOrderItem> items = DAOFactory.getInstance().getPurchaseOrderItemDAO().findByOrderId(order.id);
                             boolean hasUninbound = items.stream()
                                 .anyMatch(item -> item.inboundQuantity < item.quantity);
                             logger.info("  订单明细数: {}, 有未入库: {}", items.size(), hasUninbound);
@@ -320,7 +320,7 @@ public class PurchaseInboundController {
 
     /** 加载订单中尚未完全入库的商品明细 */
     private void loadInboundWrappers(TableView<InboundItemWrapper> itemTable, PurchaseOrder order) throws SQLException {
-        List<PurchaseOrderItem> items = PurchaseOrderItemDAO.findByOrderId(order.id);
+        List<PurchaseOrderItem> items = DAOFactory.getInstance().getPurchaseOrderItemDAO().findByOrderId(order.id);
         logger.debug("加载订单明细: 订单ID={}, 商品数={}", order.id, items.size());
         ObservableList<InboundItemWrapper> wrappers = FXCollections.observableArrayList(wrapper ->
             new javafx.beans.Observable[] { wrapper.thisInboundQuantityProperty() }
@@ -482,7 +482,7 @@ public class PurchaseInboundController {
 
             itemTable.getColumns().addAll(nameCol, qtyCol, inboundedCol, priceCol, totalCol);
 
-            List<PurchaseOrderItem> items = PurchaseOrderItemDAO.findByOrderId(order.id);
+            List<PurchaseOrderItem> items = DAOFactory.getInstance().getPurchaseOrderItemDAO().findByOrderId(order.id);
             itemTable.setItems(FXCollections.observableArrayList(items));
 
             // 创建对话框Stage（需要在按钮回调之前声明）

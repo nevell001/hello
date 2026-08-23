@@ -6,7 +6,6 @@ import com.cashier.dao.PurchaseApprovalDAO;
 import com.cashier.dao.PurchaseInboundDAO;
 import com.cashier.dao.PurchaseInboundItemDAO;
 import com.cashier.dao.PurchaseOrderDAO;
-import com.cashier.dao.PurchaseOrderItemDAO;
 import com.cashier.model.PurchaseApproval;
 import com.cashier.model.PurchaseInbound;
 import com.cashier.model.PurchaseInboundItem;
@@ -72,7 +71,7 @@ public final class PurchaseService {
                 if (!PurchaseInboundItemDAO.insertWithConnection(conn, item)) {
                     throw new SQLException("保存采购入库明细失败: " + item.productName);
                 }
-                if (!PurchaseOrderItemDAO.increaseInboundQuantityWithConnection(conn, item.orderItemId, item.quantity)) {
+                if (!DAOFactory.getInstance().getPurchaseOrderItemDAO().increaseInboundQuantityWithConnection(conn, item.orderItemId, item.quantity)) {
                     throw new SQLException("入库数量超过采购数量或订单明细不存在: " + item.productName);
                 }
                 if (!productDAO.updateQuantityWithConnection(conn, item.productId, item.quantity)) {
@@ -80,7 +79,7 @@ public final class PurchaseService {
                 }
             }
 
-            if (PurchaseOrderItemDAO.areAllInboundWithConnection(conn, inbound.orderId)
+            if (DAOFactory.getInstance().getPurchaseOrderItemDAO().areAllInboundWithConnection(conn, inbound.orderId)
                     && !DAOFactory.getInstance().getPurchaseOrderDAO().updateStatusWithConnection(conn, inbound.orderId, "completed")) {
                 throw new SQLException("更新采购订单完成状态失败");
             }

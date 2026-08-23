@@ -512,69 +512,19 @@ public class PackageWizardController {
                     String appName = appNameField.getText().trim();
                     String mavenCmd = findMavenCommand();
                     String version = appVersionField.getText().trim();
-                    String fatJar = "target/" + "lisuan-fx-" + version + "-jar-with-dependencies.jar";
-                    File jarFile = new File(fatJar);
-
-                    // 检查 JAR 是否已存在，如果存在则跳过编译
-                    if (jarFile.exists()) {
-                        updateProgress(0.5, 1.0);
-                        updateMessage("发现已编译的 JAR，跳过编译步骤...");
-                        appendLog("发现已存在的 JAR 文件，跳过 Maven 编译\n");
-                    } else {
-                        // 步骤 1: 编译项目
-                        updateProgress(0.1, 1.0);
-                        updateMessage("正在编译项目...");
-                        appendLog("[1/3] 正在编译项目...");
-
-                        appendLog("使用 Maven: " + mavenCmd + "\n");
-
-                        ProcessBuilder mvnCompile = new ProcessBuilder(mavenCmd, "compile", "-q");
-                        mvnCompile.directory(new File(System.getProperty(SystemPropertyKeys.USER_DIR)));
-                        mvnCompile.redirectErrorStream(true);
-
-                        Process compileProcess = mvnCompile.start();
-                        Thread compileOutputReader = logProcessOutputAsync(compileProcess, Charset.forName("GBK"), null);
-
-                        if (waitForProcess(compileProcess, "Maven 编译", PACKAGE_COMMAND_TIMEOUT_SECONDS) != 0) {
-                            throw new RuntimeException("编译失败");
+                    // Task.updateProgress/updateMessage 是 protected，需在子类作用域内转发
+                    PackagingProgress progress = new PackagingProgress() {
+                        @Override
+                        public void progress(double workDone, double max) {
+                            updateProgress(workDone, max);
                         }
-                        compileOutputReader.join(TimeUnit.SECONDS.toMillis(1));
-                        appendLog("✓ 编译完成\n");
 
-                        // 步骤 2: 打包 JAR
-                        updateProgress(0.3, 1.0);
-                        updateMessage("正在打包 JAR...");
-                        appendLog("[2/3] 正在打包 JAR...");
-
-                        ProcessBuilder mvnPackage = new ProcessBuilder(mavenCmd, "package", "-DskipTests", "-q");
-                        mvnPackage.directory(new File(System.getProperty(SystemPropertyKeys.USER_DIR)));
-                        mvnPackage.redirectErrorStream(true);
-
-                        Process packageProcess = mvnPackage.start();
-                        Thread packageOutputReader = logProcessOutputAsync(packageProcess, Charset.forName("GBK"), null);
-
-                        if (waitForProcess(packageProcess, "Maven 打包", PACKAGE_COMMAND_TIMEOUT_SECONDS) != 0) {
-                            throw new RuntimeException("打包失败");
+                        @Override
+                        public void message(String message) {
+                            updateMessage(message);
                         }
-                        packageOutputReader.join(TimeUnit.SECONDS.toMillis(1));
-                        appendLog("✓ JAR 打包完成\n");
-                    }
-
-                    // 步骤 3: 保存数据库配置
-                    updateProgress(0.6, 1.0);
-                    updateMessage("正在保存数据库配置...");
-                    appendLog("[3/4] 正在保存数据库配置...");
-
-                    saveDatabaseConfig();
-                    appendLog("✓ 数据库配置已保存\n");
-
-                    // 步骤 4: 创建分发包
-                    updateProgress(0.8, 1.0);
-                    updateMessage("正在创建分发包...");
-                    appendLog("[4/4] 正在创建分发包...");
-
-                    createExePackage();
-                    appendLog("✓ 分发包创建完成\n");
+                    };
+                    runPackagingSteps(progress, appName, mavenCmd, version);
 
                     updateProgress(1.0, 1.0);
                     appendLog("========================================");
@@ -583,20 +533,7 @@ public class PackageWizardController {
                     appendLog("启动方式: 双击 " + appName + ".bat");
                     appendLog("========================================");
 
-                    // 打开输出目录
-                    try {
-                        Runtime.getRuntime().exec("explorer " + outputDirField.getText());
-                        appendLog("\n已打开输出目录");
-                    } catch (IOException e) {
-                        logger.error("无法打开输出目录", e);
-                    }
-
-                    javafx.application.Platform.runLater(() -> {
-                        showAlert(Alert.AlertType.INFORMATION, "打包成功",
-                                "分发包已创建！\n\n" +
-                                "输出位置: " + outputDirField.getText() + "\\" + appName + "\n\n" +
-                                "启动方式: 双击 " + appName + ".bat");
-                    });
+                    handlePackagingSuccess(appName);
 
                 } catch (Exception e) {
                     logger.error("打包失败", e);
@@ -633,6 +570,81 @@ public class PackageWizardController {
         statusLabel.textProperty().bind(packagingTask.messageProperty());
 
         executorService.submit(packagingTask);
+    }
+
+    /** 执行打包主流程：编译（或复用已有 JAR）→ 保存数据库配置 → 创建分发包 */
+    /** 打包进度回调（转发 Task 的 protected 更新方法） */
+    private interface PackagingProgress {
+        void progress(double workDone, double max);
+
+        void message(String message);
+    }
+
+    private void runPackagingSteps(PackagingProgress progress, String appName, String mavenCmd, String version) throws Exception {
+        String fatJar = "target/" + "lisuan-fx-" + version + "-jar-with-dependencies.jar";
+        File jarFile = new File(fatJar);
+        if (jarFile.exists()) {
+            progress.progress(0.5, 1.0);
+            progress.message("发现已编译的 JAR，跳过编译步骤...");
+            appendLog("发现已存在的 JAR 文件，跳过 Maven 编译\n");
+        } else {
+            progress.progress(0.1, 1.0);
+            progress.message("正在编译项目...");
+            appendLog("[1/3] 正在编译项目...");
+            appendLog("使用 Maven: " + mavenCmd + "\n");
+
+            ProcessBuilder mvnCompile = new ProcessBuilder(mavenCmd, "compile", "-q");
+            mvnCompile.directory(new File(System.getProperty(SystemPropertyKeys.USER_DIR)));
+            mvnCompile.redirectErrorStream(true);
+            Process compileProcess = mvnCompile.start();
+            Thread compileOutputReader = logProcessOutputAsync(compileProcess, Charset.forName("GBK"), null);
+            if (waitForProcess(compileProcess, "Maven 编译", PACKAGE_COMMAND_TIMEOUT_SECONDS) != 0) {
+                throw new RuntimeException("编译失败");
+            }
+            compileOutputReader.join(TimeUnit.SECONDS.toMillis(1));
+            appendLog("✓ 编译完成\n");
+
+            progress.progress(0.3, 1.0);
+            progress.message("正在打包 JAR...");
+            appendLog("[2/3] 正在打包 JAR...");
+            ProcessBuilder mvnPackage = new ProcessBuilder(mavenCmd, "package", "-DskipTests", "-q");
+            mvnPackage.directory(new File(System.getProperty(SystemPropertyKeys.USER_DIR)));
+            mvnPackage.redirectErrorStream(true);
+            Process packageProcess = mvnPackage.start();
+            Thread packageOutputReader = logProcessOutputAsync(packageProcess, Charset.forName("GBK"), null);
+            if (waitForProcess(packageProcess, "Maven 打包", PACKAGE_COMMAND_TIMEOUT_SECONDS) != 0) {
+                throw new RuntimeException("打包失败");
+            }
+            packageOutputReader.join(TimeUnit.SECONDS.toMillis(1));
+            appendLog("✓ JAR 打包完成\n");
+        }
+
+        progress.progress(0.6, 1.0);
+        progress.message("正在保存数据库配置...");
+        appendLog("[3/4] 正在保存数据库配置...");
+        saveDatabaseConfig();
+        appendLog("✓ 数据库配置已保存\n");
+
+        progress.progress(0.8, 1.0);
+        progress.message("正在创建分发包...");
+        appendLog("[4/4] 正在创建分发包...");
+        createExePackage();
+        appendLog("✓ 分发包创建完成\n");
+    }
+
+    /** 打包成功后打开输出目录并提示 */
+    private void handlePackagingSuccess(String appName) {
+        try {
+            Runtime.getRuntime().exec("explorer " + outputDirField.getText());
+            appendLog("\n已打开输出目录");
+        } catch (IOException e) {
+            logger.error("无法打开输出目录", e);
+        }
+        javafx.application.Platform.runLater(() ->
+            showAlert(Alert.AlertType.INFORMATION, "打包成功",
+                "分发包已创建！\n\n" +
+                "输出位置: " + outputDirField.getText() + "\\" + appName + "\n\n" +
+                "启动方式: 双击 " + appName + ".bat"));
     }
 
     private void createCustomJre() throws Exception {

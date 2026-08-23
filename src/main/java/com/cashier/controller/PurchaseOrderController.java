@@ -269,7 +269,7 @@ public class PurchaseOrderController {
             // 如果是编辑模式，加载订单明细
             if (isEdit) {
                 try {
-                    List<PurchaseOrderItem> orderItems = PurchaseOrderItemDAO.findByOrderId(order.id);
+                    List<PurchaseOrderItem> orderItems = DAOFactory.getInstance().getPurchaseOrderItemDAO().findByOrderId(order.id);
                     items.addAll(orderItems);
                 } catch (SQLException ex) {
                     logger.error("加载订单明细失败", ex);
@@ -693,7 +693,7 @@ public class PurchaseOrderController {
         if (isEdit) {
             newOrder.id = existingOrder.id;
             DAOFactory.getInstance().getPurchaseOrderDAO().update(newOrder);
-            PurchaseOrderItemDAO.deleteByOrderId(existingOrder.id);
+            DAOFactory.getInstance().getPurchaseOrderItemDAO().deleteByOrderId(existingOrder.id);
             savePurchaseOrderItems(items, existingOrder.id);
             updateStatus("采购订单更新成功");
             return;
@@ -707,7 +707,7 @@ public class PurchaseOrderController {
     private void savePurchaseOrderItems(ObservableList<PurchaseOrderItem> items, int orderId) throws SQLException {
         for (PurchaseOrderItem item : items) {
             item.orderId = orderId;
-            PurchaseOrderItemDAO.insert(item);
+            DAOFactory.getInstance().getPurchaseOrderItemDAO().insert(item);
         }
     }
 
@@ -1016,7 +1016,7 @@ public class PurchaseOrderController {
 
             if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
                 try {
-                    PurchaseOrderItemDAO.deleteByOrderId(selected.id);
+                    DAOFactory.getInstance().getPurchaseOrderItemDAO().deleteByOrderId(selected.id);
                     DAOFactory.getInstance().getPurchaseOrderDAO().delete(selected.id);
                     orders.remove(selected.id);
                     filterOrders();
@@ -1086,7 +1086,7 @@ public class PurchaseOrderController {
 
             itemTable.getColumns().addAll(nameCol, qtyCol, priceCol, totalCol);
 
-            List<PurchaseOrderItem> items = PurchaseOrderItemDAO.findByOrderId(order.id);
+            List<PurchaseOrderItem> items = DAOFactory.getInstance().getPurchaseOrderItemDAO().findByOrderId(order.id);
             itemTable.setItems(FXCollections.observableArrayList(items));
 
             // 创建对话框Stage（需要在按钮回调之前声明）

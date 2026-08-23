@@ -12,16 +12,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PurchaseOrderItemDAOTest extends DatabaseTestBase {
 
+    private final PurchaseOrderItemDAORefactored purchaseOrderItemDAO = DAOFactory.getInstance().getPurchaseOrderItemDAO();
+
     @Test
     @DisplayName("插入并按订单查询明细")
     void insertAndFindByOrder() throws Exception {
         PurchaseOrderItem item = new PurchaseOrderItem(1, 1, "测试商品", 2, BigDecimal.valueOf(10));
         item.totalPrice = BigDecimal.valueOf(20);
 
-        assertTrue(PurchaseOrderItemDAO.insert(item));
+        assertTrue(purchaseOrderItemDAO.insert(item));
         assertTrue(item.id > 0);
-        assertEquals(1, PurchaseOrderItemDAO.findByOrderId(1).size());
-        assertEquals(1, PurchaseOrderItemDAO.findByOrder(1).size());
+        assertEquals(1, purchaseOrderItemDAO.findByOrderId(1).size());
+        assertEquals(1, purchaseOrderItemDAO.findByOrder(1).size());
     }
 
     @Test
@@ -29,9 +31,9 @@ class PurchaseOrderItemDAOTest extends DatabaseTestBase {
     void findByOrderAndProduct() throws Exception {
         PurchaseOrderItem item = new PurchaseOrderItem(2, 7, "商品B", 1, BigDecimal.valueOf(5));
         item.totalPrice = BigDecimal.valueOf(5);
-        PurchaseOrderItemDAO.insert(item);
+        purchaseOrderItemDAO.insert(item);
 
-        assertTrue(PurchaseOrderItemDAO.findByOrderAndProduct(2, 7) != null);
-        assertEquals(1, PurchaseOrderItemDAO.findByProductId(7).size());
+        assertTrue(purchaseOrderItemDAO.findByOrderAndProduct(2, 7) != null);
+        assertEquals(1, purchaseOrderItemDAO.findByProductId(7).size());
     }
 }
