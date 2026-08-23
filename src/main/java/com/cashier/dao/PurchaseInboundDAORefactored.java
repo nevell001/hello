@@ -2,13 +2,11 @@ package com.cashier.dao;
 
 import com.cashier.model.PurchaseInbound;
 
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Timestamp;
 import java.util.List;
 
 /**
@@ -221,53 +219,4 @@ public class PurchaseInboundDAORefactored extends BaseDAO {
                 .toList());
     }
 
-    /**
-     * 统计入库记录数量
-     *
-     * @param startDate 开始日期（可为null）
-     * @param endDate   结束日期（可为null）
-     * @return 记录数量
-     * @throws SQLException 数据库操作异常
-     */
-    public int countByDateRange(String startDate, String endDate) throws SQLException {
-        if (startDate == null || startDate.isEmpty()) {
-            return queryInt("SELECT COUNT(*) FROM purchase_inbound");
-        }
-        return queryInt("SELECT COUNT(*) FROM purchase_inbound WHERE inbound_date BETWEEN ? AND ?",
-            startDate, endDate);
-    }
-
-    /**
-     * 统计入库总数量和总金额
-     *
-     * @param startDate 开始日期（可为null）
-     * @param endDate   结束日期（可为null）
-     * @return 数组，[0]=总数量，[1]=总金额
-     * @throws SQLException 数据库操作异常
-     */
-    public Object[] sumByDateRange(String startDate, String endDate) throws SQLException {
-        String sql;
-        if (startDate == null || startDate.isEmpty()) {
-            sql = "SELECT SUM(total_quantity) as total_quantity, SUM(total_amount) as total_amount FROM purchase_inbound";
-        } else {
-            sql = "SELECT SUM(total_quantity) as total_quantity, SUM(total_amount) as total_amount " +
-                "FROM purchase_inbound WHERE inbound_date BETWEEN ? AND ?";
-        }
-        try (Connection conn = getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            if (startDate != null && !startDate.isEmpty()) {
-                pstmt.setString(1, startDate);
-                pstmt.setString(2, endDate);
-            }
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    return new Object[]{
-                        rs.getInt("total_quantity"),
-                        rs.getBigDecimal("total_amount")
-                    };
-                }
-            }
-        }
-        return new Object[]{0, BigDecimal.ZERO};
-    }
 }

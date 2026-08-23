@@ -51,7 +51,6 @@ public class DAOFactory {
         register(HoldOrderDAORefactored.class, new HoldOrderDAORefactored());
         register(LoginAttemptDAORefactored.class, new LoginAttemptDAORefactored());
         register(SystemSettingsDAORefactored.class, new SystemSettingsDAORefactored());
-        register(SpecificationDAORefactored.class, new SpecificationDAORefactored());
         register(LanguagePreferenceDAORefactored.class, new LanguagePreferenceDAORefactored());
         register(FontSizePreferenceDAORefactored.class, new FontSizePreferenceDAORefactored());
         register(ThemePreferenceDAORefactored.class, new ThemePreferenceDAORefactored());
@@ -288,14 +287,6 @@ public class DAOFactory {
      */
     public SystemSettingsDAORefactored getSystemSettingsDAO() {
         return getDAO(SystemSettingsDAORefactored.class);
-    }
-
-    /**
-     * 获取商品规格 DAO（重构版）
-     * @return SpecificationDAORefactored 实例
-     */
-    public SpecificationDAORefactored getSpecificationDAO() {
-        return getDAO(SpecificationDAORefactored.class);
     }
 
     /**

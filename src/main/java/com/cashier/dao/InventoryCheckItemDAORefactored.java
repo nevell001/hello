@@ -94,19 +94,6 @@ public class InventoryCheckItemDAORefactored extends BaseDAO {
     }
 
     /**
-     * 根据盘点ID查找有差异的明细
-     *
-     * @param checkId 盘点ID
-     * @return 有差异的库存盘点明细列表
-     * @throws SQLException 数据库操作异常
-     */
-    public List<InventoryCheckItem> findDifferenceByCheckId(int checkId) throws SQLException {
-        return queryList("SELECT " + SELECT_COLUMNS +
-            " FROM inventory_check_items WHERE check_id = ? AND diff_quantity != 0 ORDER BY id",
-            ITEM_MAPPER, checkId);
-    }
-
-    /**
      * 插入新库存盘点明细
      *
      * @param item 库存盘点明细对象
@@ -192,48 +179,4 @@ public class InventoryCheckItemDAORefactored extends BaseDAO {
                 .toList());
     }
 
-    /**
-     * 统计盘点单的统计信息
-     *
-     * @param checkId 盘点ID
-     * @return 数组，[0]=总商品数，[1]=差异商品数
-     * @throws SQLException 数据库操作异常
-     */
-    public int[] calculateCheckStatistics(int checkId) throws SQLException {
-        String sql = "SELECT COUNT(*) as total_items, SUM(CASE WHEN diff_quantity != 0 THEN 1 ELSE 0 END) as diff_items " +
-            "FROM inventory_check_items WHERE check_id = ?";
-        try (java.sql.Connection conn = getConnection();
-             java.sql.PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, checkId);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    return new int[]{rs.getInt("total_items"), rs.getInt("diff_items")};
-                }
-            }
-        }
-        return new int[]{0, 0};
-    }
-
-    /**
-     * 计算差异数量总和（盘盈+盘亏）
-     *
-     * @param checkId 盘点ID
-     * @return 数组，[0]=盘盈总数，[1]=盘亏总数
-     * @throws SQLException 数据库操作异常
-     */
-    public int[] calculateDiffSummary(int checkId) throws SQLException {
-        String sql = "SELECT SUM(CASE WHEN diff_quantity > 0 THEN diff_quantity ELSE 0 END) as profit_quantity, " +
-            "SUM(CASE WHEN diff_quantity < 0 THEN ABS(diff_quantity) ELSE 0 END) as loss_quantity " +
-            "FROM inventory_check_items WHERE check_id = ?";
-        try (java.sql.Connection conn = getConnection();
-             java.sql.PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, checkId);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    return new int[]{rs.getInt("profit_quantity"), rs.getInt("loss_quantity")};
-                }
-            }
-        }
-        return new int[]{0, 0};
-    }
 }

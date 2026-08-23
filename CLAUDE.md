@@ -655,8 +655,10 @@ SyncManager.broadcastTransactionComplete(transactionId);
 The codebase is migrating from static `ProductDAO` to instance-based `ProductDAORefactored`:
 
 **Status:**
-- ✅ DAO 层：所有 DAO 已完成实例化迁移（30 个 `XxxDAORefactored extends BaseDAO`，通过 `DAOFactory` 注册）；
-  静态方法风格 DAO 已全部移除，仅保留 `BaseDAO`/`DAOFactory`/`RowMapper` 基础设施
+- ✅ DAO 层：所有在用 DAO 已完成实例化迁移（29 个 `XxxDAORefactored extends BaseDAO`，通过 `DAOFactory` 注册）；
+  静态方法风格 DAO 已全部移除；无调用方的 `SpecificationDAORefactored`（商品规格预留类）及
+  `calculate*`/`sumByDateRange`/`countByDateRange` 等统计死方法已清理；
+  仅保留 `BaseDAO`/`DAOFactory`/`RowMapper` 基础设施
 - ✅ Completed: `CartController`, `InventoryController`, `ProductEditController`, `RestockController`, `InventoryAlertController`, `InventoryCheckController`, `ProfitReportController`, `PurchaseOrderController`, `PurchaseInboundController`
 - ✅ Completed: API Controllers (`ProductApiController`, `InventoryApiController`, `TransactionApiController`)
 - ✅ Completed: `CacheManager`, `ProductDataImporter`

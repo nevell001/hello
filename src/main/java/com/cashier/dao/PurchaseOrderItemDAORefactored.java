@@ -4,12 +4,10 @@ import com.cashier.model.PurchaseOrderItem;
 import com.cashier.util.LoggerFactoryUtil;
 import org.slf4j.Logger;
 
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -156,18 +154,4 @@ public class PurchaseOrderItemDAORefactored extends BaseDAO {
                 "VALUES (?, ?, ?, ?, ?, ?, ?)", params);
     }
 
-    public Object[] calculateOrderTotal(int orderId) throws SQLException {
-        String sql = "SELECT SUM(quantity) as total_quantity, SUM(total_price) as total_amount " +
-            "FROM purchase_order_items WHERE order_id = ?";
-        try (Connection conn = getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, orderId);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    return new Object[]{rs.getInt("total_quantity"), rs.getBigDecimal("total_amount")};
-                }
-            }
-        }
-        return new Object[]{0, BigDecimal.ZERO};
-    }
 }

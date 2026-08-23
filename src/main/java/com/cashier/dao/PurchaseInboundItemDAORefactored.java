@@ -269,28 +269,4 @@ public class PurchaseInboundItemDAORefactored extends BaseDAO {
                 .toList());
     }
 
-    /**
-     * 计算入库单的总数量和总金额
-     *
-     * @param inboundId 入库ID
-     * @return 数组，[0]=总数量，[1]=总金额
-     * @throws SQLException 数据库操作异常
-     */
-    public Object[] calculateInboundTotal(int inboundId) throws SQLException {
-        String sql = "SELECT SUM(quantity) as total_quantity, SUM(total_price) as total_amount " +
-            "FROM purchase_inbound_items WHERE inbound_id = ?";
-        try (Connection conn = getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, inboundId);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    return new Object[]{
-                        rs.getInt("total_quantity"),
-                        rs.getBigDecimal("total_amount")
-                    };
-                }
-            }
-        }
-        return new Object[]{0, BigDecimal.ZERO};
-    }
 }

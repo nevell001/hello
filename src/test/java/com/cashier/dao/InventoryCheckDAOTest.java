@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("库存盘点数据访问对象测试")
 class InventoryCheckDAOTest extends DatabaseTestBase {
@@ -61,6 +62,34 @@ class InventoryCheckDAOTest extends DatabaseTestBase {
         assertEquals(2, recentChecks.size());
         assertEquals("IC202607130003", recentChecks.get(0).checkNo);
         assertEquals("IC202607130002", recentChecks.get(1).checkNo);
+    }
+
+    @Test
+    @DisplayName("盘点记录支持状态流转与删除")
+    void testCheckLifecycle() throws SQLException {
+        InventoryCheck check = createCheck("IC202608230001", "2026-08-23", 5_000L);
+        check.remark = "月底盘点";
+
+        assertTrue(inventoryCheckDAO.insert(check));
+        assertTrue(check.id > 0);
+
+        InventoryCheck loaded = inventoryCheckDAO.findById(check.id);
+        assertEquals("IC202608230001", loaded.checkNo);
+        assertEquals("月底盘点", loaded.remark);
+
+        assertTrue(inventoryCheckDAO.updateStatus(check.id, "checking"));
+        assertEquals("checking", inventoryCheckDAO.findById(check.id).status);
+
+        assertTrue(inventoryCheckDAO.updateStatistics(check.id, 10, 2));
+        InventoryCheck updated = inventoryCheckDAO.findById(check.id);
+        assertEquals(10, updated.totalItems);
+        assertEquals(2, updated.diffItems);
+
+        assertTrue(inventoryCheckDAO.complete(check.id, "admin"));
+        assertEquals("completed", inventoryCheckDAO.findById(check.id).status);
+
+        assertTrue(inventoryCheckDAO.delete(check.id));
+        assertEquals(0, inventoryCheckDAO.findByStatus("completed").size());
     }
 
     private InventoryCheck createCheck(String checkNo, String checkDate, long createTimeMillis) {
