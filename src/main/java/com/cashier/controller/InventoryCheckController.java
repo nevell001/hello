@@ -5,7 +5,7 @@ import com.cashier.i18n.I18nKeys;
 import com.cashier.i18n.I18nManager;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.InventoryCheckDAORefactored;
-import com.cashier.dao.InventoryCheckItemDAO;
+import com.cashier.dao.InventoryCheckItemDAORefactored;
 import com.cashier.dao.ProductDAORefactored;
 import com.cashier.model.*;
 import com.cashier.util.StatusBarManager;
@@ -47,6 +47,8 @@ public class InventoryCheckController {
     private static final int INVENTORY_CHECK_LIMIT = 500;
     private final ProductDAORefactored productDAO = DAOFactory.getInstance().getProductDAO();
     private final InventoryCheckDAORefactored inventoryCheckDAO = DAOFactory.getInstance().getInventoryCheckDAO();
+    private final InventoryCheckItemDAORefactored inventoryCheckItemDAO =
+        DAOFactory.getInstance().getInventoryCheckItemDAO();
 
     @FXML
     private TableView<InventoryCheck> checkTable;
@@ -419,7 +421,7 @@ public class InventoryCheckController {
             checkTypeCombo.setValue(check.checkType);
             remarkArea.setText(check.remark);
             try {
-                List<InventoryCheckItem> checkItems = InventoryCheckItemDAO.findByCheckId(check.id);
+                List<InventoryCheckItem> checkItems = inventoryCheckItemDAO.findByCheckId(check.id);
                 for (InventoryCheckItem item : checkItems) {
                     items.add(new CheckItemWrapper(item));
                 }
@@ -451,9 +453,9 @@ public class InventoryCheckController {
             if (isEdit) {
                 newCheck.id = check.id;
                 inventoryCheckDAO.update(newCheck);
-                InventoryCheckItemDAO.deleteByCheckId(check.id);
+                inventoryCheckItemDAO.deleteByCheckId(check.id);
                 for (CheckItemWrapper wrapper : items) {
-                    InventoryCheckItemDAO.insert(toInventoryCheckItem(check.id, wrapper));
+                    inventoryCheckItemDAO.insert(toInventoryCheckItem(check.id, wrapper));
                 }
                 updateStatus(I18nManager.getInstance().get("runtime.inventory_check_updated"));
             } else {
@@ -461,7 +463,7 @@ public class InventoryCheckController {
                 checkNoField.setText(newCheck.checkNo);
                 inventoryCheckDAO.insert(newCheck);
                 for (CheckItemWrapper wrapper : items) {
-                    InventoryCheckItemDAO.insert(toInventoryCheckItem(newCheck.id, wrapper));
+                    inventoryCheckItemDAO.insert(toInventoryCheckItem(newCheck.id, wrapper));
                 }
                 updateStatus(I18nManager.getInstance().get("runtime.inventory_check_created"));
             }
@@ -794,7 +796,7 @@ public class InventoryCheckController {
 
             if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
                 try {
-                    InventoryCheckItemDAO.deleteByCheckId(selected.id);
+                    inventoryCheckItemDAO.deleteByCheckId(selected.id);
                     inventoryCheckDAO.delete(selected.id);
                     checks.remove(selected.id);
                     filterChecks();
@@ -873,7 +875,7 @@ public class InventoryCheckController {
 
             itemTable.getColumns().addAll(nameCol, bookCol, actualCol, diffCol, reasonCol);
 
-            List<InventoryCheckItem> items = InventoryCheckItemDAO.findByCheckId(check.id);
+            List<InventoryCheckItem> items = inventoryCheckItemDAO.findByCheckId(check.id);
             itemTable.setItems(FXCollections.observableArrayList(items));
 
             Button closeButton = new Button(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.CLOSE));
@@ -924,7 +926,7 @@ public class InventoryCheckController {
                     inventoryCheckDAO.complete(selected.id, currentUser);
 
                     // 根据盘点结果调整库存
-                    List<InventoryCheckItem> items = InventoryCheckItemDAO.findByCheckId(selected.id);
+                    List<InventoryCheckItem> items = inventoryCheckItemDAO.findByCheckId(selected.id);
                     for (InventoryCheckItem item : items) {
                         if (item.diffQuantity != 0) {
                             productDAO.updateQuantity(item.productId, item.diffQuantity);

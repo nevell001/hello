@@ -1192,7 +1192,6 @@ public class TouchCartController implements CartViewHost {
             return;
         }
         final BigDecimal finalAmount = TransactionService.calculateFinalAmount(cartItems, currentMember);
-        // 计算剩余需支付金额
         final BigDecimal remainingAmount = finalAmount.subtract(cashReceivedAmount);
 
         Dialog<BigDecimal> dialog = new Dialog<>();
@@ -1209,126 +1208,21 @@ public class TouchCartController implements CartViewHost {
         content.setPadding(new Insets(12, 20, 16, 20));
         content.setPrefWidth(520);
 
-        // ===== 1. 应付金额标题 + 金额 =====
-        Label dueTitleLabel = new Label("应付金额");
-        dueTitleLabel.getStyleClass().add("cash-section-title");
-
-        Label dueLabel = new Label(CurrencyUtil.format(finalAmount.doubleValue()));
-        dueLabel.getStyleClass().add("cash-due-highlight");
-
-        HBox dueBox = new HBox(8, dueTitleLabel, dueLabel);
-        dueBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-
-        // 部分付款时，显示已付和剩余
-        HBox partialBox = null;
-        if (cashReceivedAmount.compareTo(BigDecimal.ZERO) > 0) {
-            Label paidLabel = new Label("已付 " + CurrencyUtil.format(cashReceivedAmount.doubleValue()));
-            paidLabel.getStyleClass().add("cash-paid-label");
-            Label sep = new Label("  |  ");
-            sep.getStyleClass().add("cash-separator");
-            Label remainLabel = new Label("还需 " + CurrencyUtil.format(remainingAmount.doubleValue()));
-            remainLabel.getStyleClass().add("cash-remain-label");
-            partialBox = new HBox(4, paidLabel, sep, remainLabel);
-            partialBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-        }
-
-        // ===== 2. 收款输入框 =====
-        Label inputTitle = new Label("收款金额");
-        inputTitle.getStyleClass().add("cash-section-title");
-
-        TextField receivedField = new TextField();
-        receivedField.setPromptText("请输入收款金额");
-        receivedField.setPrefHeight(56);
-        receivedField.setMaxWidth(Double.MAX_VALUE);
-        receivedField.getStyleClass().add("cash-input-field");
-
-        // ===== 3. 快捷面额按钮 (4×2 GridPane) =====
-        Label quickTitle = new Label("快捷金额");
-        quickTitle.getStyleClass().add("cash-section-title");
-
-        String symbol = CurrencyUtil.getSymbol();
-        int[] amounts = {100, 50, 20, 10, 5, 1};
-        GridPane denomGrid = new GridPane();
-        denomGrid.setHgap(10);
-        denomGrid.setVgap(10);
-        denomGrid.setAlignment(javafx.geometry.Pos.CENTER);
-
-        for (int i = 0; i < amounts.length; i++) {
-            Button b = new Button(symbol + amounts[i]);
-            b.setPrefSize(110, 62);
-            b.getStyleClass().add("cash-denom-btn");
-            final int amt = amounts[i];
-            b.setOnAction(e -> {
-                receivedField.setText(String.valueOf(amt));
-                receivedField.requestFocus();
-            });
-            denomGrid.add(b, i % 4, i / 4);
-        }
-
-        // 精确金额按钮 (col 2)
-        Button exactBtn = new Button("精确金额");
-        exactBtn.setPrefSize(110, 62);
-        exactBtn.getStyleClass().add("cash-exact-btn");
-        exactBtn.setOnAction(e -> {
-            receivedField.setText(finalAmount.toPlainString());
-            receivedField.requestFocus();
-        });
-        denomGrid.add(exactBtn, 2, 1);
-
-        // 清除按钮 (col 3)
-        Button clearBtn = new Button("清除 C");
-        clearBtn.setPrefSize(110, 62);
-        clearBtn.getStyleClass().add("cash-clear-btn");
-        clearBtn.setOnAction(e -> {
-            receivedField.clear();
-            receivedField.requestFocus();
-        });
-        denomGrid.add(clearBtn, 3, 1);
-
-        // ===== 4. 状态标签（找零 / 还需）=====
-        Label statusLabel = new Label("请输入收款金额");
-        statusLabel.getStyleClass().add("cash-status-default");
-        statusLabel.setMaxWidth(Double.MAX_VALUE);
-        statusLabel.setAlignment(javafx.geometry.Pos.CENTER);
-        statusLabel.setPrefHeight(40);
-
-        // 当用户输入金额时更新状态
-        receivedField.textProperty().addListener((o, ov, nv) -> {
-            try {
-                BigDecimal thisPayment = new BigDecimal(nv.trim());
-                BigDecimal totalAfterThis = cashReceivedAmount.add(thisPayment);
-                BigDecimal diff = totalAfterThis.subtract(finalAmount);
-
-                if (thisPayment.compareTo(BigDecimal.ZERO) <= 0) {
-                    statusLabel.setText("请输入收款金额");
-                    statusLabel.getStyleClass().setAll("cash-status-default");
-                } else if (totalAfterThis.compareTo(finalAmount) < 0) {
-                    BigDecimal stillNeed = finalAmount.subtract(totalAfterThis);
-                    statusLabel.setText("还需支付 " + CurrencyUtil.format(stillNeed.doubleValue()));
-                    statusLabel.getStyleClass().setAll("cash-status-warn");
-                } else {
-                    statusLabel.setText("找零 " + CurrencyUtil.format(diff.doubleValue()));
-                    statusLabel.getStyleClass().setAll("cash-status-change");
-                }
-            } catch (NumberFormatException e) {
-                statusLabel.setText("请输入收款金额");
-                statusLabel.getStyleClass().setAll("cash-status-default");
-            }
-        });
-
-        // ===== 5. 确认收款按钮 =====
-        Button continueBtn = new Button("确认收款 (Enter)");
-        continueBtn.setDefaultButton(true);
-        continueBtn.setPrefHeight(52);
-        continueBtn.setMaxWidth(Double.MAX_VALUE);
-        continueBtn.getStyleClass().add("cash-confirm-btn");
+        TextField receivedField = createCashInputField();
+        GridPane denomGrid = createCashDenominationGrid(receivedField, finalAmount);
+        Label statusLabel = createCashStatusLabel(receivedField, finalAmount);
+        Button continueBtn = createCashConfirmButton();
 
         // 组装内容
-        content.getChildren().addAll(dueBox);
+        content.getChildren().add(createCashDueBox(finalAmount));
+        HBox partialBox = createCashPartialBox(remainingAmount);
         if (partialBox != null) {
             content.getChildren().add(partialBox);
         }
-        content.getChildren().addAll(inputTitle, receivedField, quickTitle, denomGrid, statusLabel, continueBtn);
+        content.getChildren().addAll(
+            createCashSectionTitle("收款金额"), receivedField,
+            createCashSectionTitle("快捷金额"), denomGrid,
+            statusLabel, continueBtn);
 
         dialog.getDialogPane().setContent(content);
         dialog.getDialogPane().getButtonTypes().clear();
@@ -1369,24 +1263,159 @@ public class TouchCartController implements CartViewHost {
             }
         });
 
-        dialog.showAndWait().ifPresent(thisPayment -> {
-            // 此处已脱离对话框事件循环，不再嵌套 showAndWait
-            cashReceivedAmount = cashReceivedAmount.add(thisPayment);
-            if (cashReceivedAmount.compareTo(finalAmount) >= 0) {
-                // 已付清，计算找零并完成交易
-                BigDecimal change = cashReceivedAmount.subtract(finalAmount);
-                executePayment("现金", cashReceivedAmount, change);
-                cashReceivedAmount = BigDecimal.ZERO; // 重置
-            } else {
-                // 未付清：提示并重新打开（递归在前一个 showAndWait 返回后，不会卡死）
-                BigDecimal stillNeed = finalAmount.subtract(cashReceivedAmount);
-                Alert info = new Alert(Alert.AlertType.INFORMATION);
-                info.setHeaderText(null);
-                info.setContentText("收款成功！还需: " + CurrencyUtil.format(stillNeed.doubleValue()));
-                info.showAndWait();
-                handleCashPayment();
+        dialog.showAndWait().ifPresent(thisPayment ->
+            handleCashPaymentResult(thisPayment, finalAmount));
+    }
+
+    /** 创建应付金额展示行 */
+    private HBox createCashDueBox(BigDecimal finalAmount) {
+        Label dueTitleLabel = new Label("应付金额");
+        dueTitleLabel.getStyleClass().add("cash-section-title");
+
+        Label dueLabel = new Label(CurrencyUtil.format(finalAmount.doubleValue()));
+        dueLabel.getStyleClass().add("cash-due-highlight");
+
+        HBox dueBox = new HBox(8, dueTitleLabel, dueLabel);
+        dueBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        return dueBox;
+    }
+
+    /** 创建部分付款的“已付/还需”展示行，未发生部分付款时返回 null */
+    private HBox createCashPartialBox(BigDecimal remainingAmount) {
+        if (cashReceivedAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            return null;
+        }
+        Label paidLabel = new Label("已付 " + CurrencyUtil.format(cashReceivedAmount.doubleValue()));
+        paidLabel.getStyleClass().add("cash-paid-label");
+        Label sep = new Label("  |  ");
+        sep.getStyleClass().add("cash-separator");
+        Label remainLabel = new Label("还需 " + CurrencyUtil.format(remainingAmount.doubleValue()));
+        remainLabel.getStyleClass().add("cash-remain-label");
+
+        HBox partialBox = new HBox(4, paidLabel, sep, remainLabel);
+        partialBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        return partialBox;
+    }
+
+    /** 创建现金支付弹窗的分节标题 */
+    private Label createCashSectionTitle(String text) {
+        Label title = new Label(text);
+        title.getStyleClass().add("cash-section-title");
+        return title;
+    }
+
+    /** 创建收款金额输入框 */
+    private TextField createCashInputField() {
+        TextField receivedField = new TextField();
+        receivedField.setPromptText("请输入收款金额");
+        receivedField.setPrefHeight(56);
+        receivedField.setMaxWidth(Double.MAX_VALUE);
+        receivedField.getStyleClass().add("cash-input-field");
+        return receivedField;
+    }
+
+    /** 创建快捷面额按钮区（含精确金额/清除按钮） */
+    private GridPane createCashDenominationGrid(TextField receivedField, BigDecimal finalAmount) {
+        String symbol = CurrencyUtil.getSymbol();
+        int[] amounts = {100, 50, 20, 10, 5, 1};
+        GridPane denomGrid = new GridPane();
+        denomGrid.setHgap(10);
+        denomGrid.setVgap(10);
+        denomGrid.setAlignment(javafx.geometry.Pos.CENTER);
+
+        for (int i = 0; i < amounts.length; i++) {
+            Button b = new Button(symbol + amounts[i]);
+            b.setPrefSize(110, 62);
+            b.getStyleClass().add("cash-denom-btn");
+            final int amt = amounts[i];
+            b.setOnAction(e -> {
+                receivedField.setText(String.valueOf(amt));
+                receivedField.requestFocus();
+            });
+            denomGrid.add(b, i % 4, i / 4);
+        }
+
+        Button exactBtn = new Button("精确金额");
+        exactBtn.setPrefSize(110, 62);
+        exactBtn.getStyleClass().add("cash-exact-btn");
+        exactBtn.setOnAction(e -> {
+            receivedField.setText(finalAmount.toPlainString());
+            receivedField.requestFocus();
+        });
+        denomGrid.add(exactBtn, 2, 1);
+
+        Button clearBtn = new Button("清除 C");
+        clearBtn.setPrefSize(110, 62);
+        clearBtn.getStyleClass().add("cash-clear-btn");
+        clearBtn.setOnAction(e -> {
+            receivedField.clear();
+            receivedField.requestFocus();
+        });
+        denomGrid.add(clearBtn, 3, 1);
+
+        return denomGrid;
+    }
+
+    /** 创建状态标签并绑定输入监听（找零/还需提示） */
+    private Label createCashStatusLabel(TextField receivedField, BigDecimal finalAmount) {
+        Label statusLabel = new Label("请输入收款金额");
+        statusLabel.getStyleClass().add("cash-status-default");
+        statusLabel.setMaxWidth(Double.MAX_VALUE);
+        statusLabel.setAlignment(javafx.geometry.Pos.CENTER);
+        statusLabel.setPrefHeight(40);
+
+        receivedField.textProperty().addListener((o, ov, nv) -> {
+            try {
+                BigDecimal thisPayment = new BigDecimal(nv.trim());
+                BigDecimal totalAfterThis = cashReceivedAmount.add(thisPayment);
+                BigDecimal diff = totalAfterThis.subtract(finalAmount);
+
+                if (thisPayment.compareTo(BigDecimal.ZERO) <= 0) {
+                    statusLabel.setText("请输入收款金额");
+                    statusLabel.getStyleClass().setAll("cash-status-default");
+                } else if (totalAfterThis.compareTo(finalAmount) < 0) {
+                    BigDecimal stillNeed = finalAmount.subtract(totalAfterThis);
+                    statusLabel.setText("还需支付 " + CurrencyUtil.format(stillNeed.doubleValue()));
+                    statusLabel.getStyleClass().setAll("cash-status-warn");
+                } else {
+                    statusLabel.setText("找零 " + CurrencyUtil.format(diff.doubleValue()));
+                    statusLabel.getStyleClass().setAll("cash-status-change");
+                }
+            } catch (NumberFormatException e) {
+                statusLabel.setText("请输入收款金额");
+                statusLabel.getStyleClass().setAll("cash-status-default");
             }
         });
+        return statusLabel;
+    }
+
+    /** 创建确认收款按钮 */
+    private Button createCashConfirmButton() {
+        Button continueBtn = new Button("确认收款 (Enter)");
+        continueBtn.setDefaultButton(true);
+        continueBtn.setPrefHeight(52);
+        continueBtn.setMaxWidth(Double.MAX_VALUE);
+        continueBtn.getStyleClass().add("cash-confirm-btn");
+        return continueBtn;
+    }
+
+    /** 处理现金支付结果：付清则完成交易，未付清则提示并重新打开 */
+    private void handleCashPaymentResult(BigDecimal thisPayment, BigDecimal finalAmount) {
+        // 此处已脱离对话框事件循环，不再嵌套 showAndWait
+        cashReceivedAmount = cashReceivedAmount.add(thisPayment);
+        if (cashReceivedAmount.compareTo(finalAmount) >= 0) {
+            BigDecimal change = cashReceivedAmount.subtract(finalAmount);
+            executePayment("现金", cashReceivedAmount, change);
+            cashReceivedAmount = BigDecimal.ZERO; // 重置
+        } else {
+            // 未付清：提示并重新打开（递归在前一个 showAndWait 返回后，不会卡死）
+            BigDecimal stillNeed = finalAmount.subtract(cashReceivedAmount);
+            Alert info = new Alert(Alert.AlertType.INFORMATION);
+            info.setHeaderText(null);
+            info.setContentText("收款成功！还需: " + CurrencyUtil.format(stillNeed.doubleValue()));
+            info.showAndWait();
+            handleCashPayment();
+        }
     }
 
     // ===== 银行卡支付 =====
