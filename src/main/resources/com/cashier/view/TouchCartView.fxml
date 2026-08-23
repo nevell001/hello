@@ -211,8 +211,8 @@
             <Insets top="8" right="20" bottom="8" left="20"/>
         </padding>
 
-        <!-- 左下角：POS 标识 -->
-        <Label text="POS" styleClass="tpos-status-text"/>
+        <!-- 左下角：触屏版 POS 标识 -->
+        <Label text="%tpos.brand_label" styleClass="tpos-status-text"/>
 
         <Region HBox.hgrow="ALWAYS"/>
 
