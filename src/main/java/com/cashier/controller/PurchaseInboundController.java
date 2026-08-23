@@ -587,7 +587,7 @@ public class PurchaseInboundController {
                 return row;
             });
 
-            List<PurchaseInbound> inboundList = PurchaseInboundDAO.findRecent(INBOUND_HISTORY_LIMIT);
+            List<PurchaseInbound> inboundList = DAOFactory.getInstance().getPurchaseInboundDAO().findRecent(INBOUND_HISTORY_LIMIT);
             inboundTable.setItems(FXCollections.observableArrayList(inboundList));
             inboundTable.setPlaceholder(new Label(I18nManager.getInstance().get("purchase_inbound.history_no_data")));
 

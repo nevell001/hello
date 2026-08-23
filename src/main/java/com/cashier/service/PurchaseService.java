@@ -3,7 +3,6 @@ package com.cashier.service;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
 import com.cashier.dao.PurchaseApprovalDAO;
-import com.cashier.dao.PurchaseInboundDAO;
 import com.cashier.model.PurchaseApproval;
 import com.cashier.model.PurchaseInbound;
 import com.cashier.model.PurchaseInboundItem;
@@ -60,7 +59,7 @@ public final class PurchaseService {
             if (!"approved".equals(orderStatus)) {
                 throw new SQLException("只有已审批的采购订单可以入库");
             }
-            if (!PurchaseInboundDAO.insertWithConnection(conn, inbound)) {
+            if (!DAOFactory.getInstance().getPurchaseInboundDAO().insertWithConnection(conn, inbound)) {
                 throw new SQLException("保存采购入库单失败");
             }
 

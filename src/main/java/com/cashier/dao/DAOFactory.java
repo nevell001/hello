@@ -44,6 +44,7 @@ public class DAOFactory {
         register(InventoryCheckDAORefactored.class, new InventoryCheckDAORefactored());
         register(InventoryCheckItemDAORefactored.class, new InventoryCheckItemDAORefactored());
         register(PurchaseInboundItemDAORefactored.class, new PurchaseInboundItemDAORefactored());
+        register(PurchaseInboundDAORefactored.class, new PurchaseInboundDAORefactored());
     }
 
     /**
@@ -221,5 +222,13 @@ public class DAOFactory {
      */
     public PurchaseInboundItemDAORefactored getPurchaseInboundItemDAO() {
         return getDAO(PurchaseInboundItemDAORefactored.class);
+    }
+
+    /**
+     * 获取采购入库 DAO（重构版）
+     * @return PurchaseInboundDAORefactored 实例
+     */
+    public PurchaseInboundDAORefactored getPurchaseInboundDAO() {
+        return getDAO(PurchaseInboundDAORefactored.class);
     }
 }

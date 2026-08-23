@@ -23,7 +23,7 @@ class PerformancePolicyTest {
 
         assertTrue(controller.contains("getPurchaseInboundItemDAO().findAverageUnitCostByProductId()"));
         assertTrue(controller.contains("productDAO.findByNames(productNames)"));
-        assertFalse(controller.contains("PurchaseInboundDAO.findAll()"));
+        assertFalse(controller.contains("getPurchaseInboundDAO().findAll()"));
         assertFalse(controller.contains("getPurchaseInboundItemDAO().findByInboundIds("));
         assertFalse(controller.contains("allProducts = productDAO.findAll()"));
         assertTrue(dao.contains("findByInboundIds(Collection<Integer> inboundIds)"));
@@ -711,7 +711,7 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/controller/PurchaseInboundController.java"
         ));
         String purchaseInboundDao = Files.readString(Path.of(
-            "src/main/java/com/cashier/dao/PurchaseInboundDAO.java"
+            "src/main/java/com/cashier/dao/PurchaseInboundDAORefactored.java"
         ));
 
         assertTrue(purchaseOrderController.contains("getPurchaseOrderDAO().findRecent(PURCHASE_ORDER_LIMIT)"));
@@ -719,10 +719,10 @@ class PerformancePolicyTest {
         assertTrue(purchaseOrderDao.contains("ORDER BY po.create_time DESC LIMIT ?"));
         assertFalse(purchaseOrderController.contains("getPurchaseOrderDAO().findAll()"));
 
-        assertTrue(purchaseInboundController.contains("PurchaseInboundDAO.findRecent(INBOUND_HISTORY_LIMIT)"));
+        assertTrue(purchaseInboundController.contains("getPurchaseInboundDAO().findRecent(INBOUND_HISTORY_LIMIT)"));
         assertTrue(purchaseInboundDao.contains("findRecent(int limit)"));
         assertTrue(purchaseInboundDao.contains("ORDER BY pi.create_time DESC LIMIT ?"));
-        assertFalse(purchaseInboundController.contains("PurchaseInboundDAO.findAll()"));
+        assertFalse(purchaseInboundController.contains("getPurchaseInboundDAO().findAll()"));
     }
 
     @Test
