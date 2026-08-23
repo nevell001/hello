@@ -2,7 +2,7 @@ package com.cashier.api.controller;
 
 import com.cashier.model.PaymentOrder;
 import com.cashier.model.RefundRecord;
-import com.cashier.dao.PaymentDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.service.PaymentService;
 import com.cashier.util.LoggerFactoryUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -128,7 +128,7 @@ public class PaymentApiController {
         String transactionId = ctx.pathParam("transactionId");
         
         try {
-            List<PaymentOrder> orders = PaymentDAO.findByTransactionId(transactionId);
+            List<PaymentOrder> orders = DAOFactory.getInstance().getPaymentDAO().findByTransactionId(transactionId);
             
             List<Map<String, Object>> orderList = orders.stream()
                 .map(order -> Map.<String, Object>of(
@@ -278,7 +278,7 @@ public class PaymentApiController {
         try {
             int requestedLimit = ctx.queryParamAsClass("limit", Integer.class).getOrDefault(DEFAULT_WAITING_PAYMENT_LIMIT);
             int limit = Math.max(1, Math.min(requestedLimit, MAX_WAITING_PAYMENT_LIMIT));
-            List<PaymentOrder> orders = PaymentDAO.findWaitingOrders(limit);
+            List<PaymentOrder> orders = DAOFactory.getInstance().getPaymentDAO().findWaitingOrders(limit);
             
             List<Map<String, Object>> orderList = orders.stream()
                 .map(order -> Map.<String, Object>of(
@@ -343,7 +343,7 @@ public class PaymentApiController {
                 ? LocalDate.parse(dateStr, com.cashier.util.DateTimeFormats.DATE)
                 : LocalDate.now(ZoneId.systemDefault());
             
-            Map<String, Object> stats = PaymentDAO.getDailyStats(java.sql.Date.valueOf(date));
+            Map<String, Object> stats = DAOFactory.getInstance().getPaymentDAO().getDailyStats(java.sql.Date.valueOf(date));
             
             ctx.json(Map.of(
                 "success", true,

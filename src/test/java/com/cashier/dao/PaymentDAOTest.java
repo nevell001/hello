@@ -19,9 +19,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DisplayName("支付订单数据访问对象测试")
 class PaymentDAOTest extends DatabaseTestBase {
 
+    private final PaymentDAORefactored paymentDAO = DAOFactory.getInstance().getPaymentDAO();
+
     @BeforeEach
     void setUpPaymentTables() throws SQLException {
-        PaymentDAO.createTable();
+        paymentDAO.createTable();
         try (Connection conn = DatabaseManager.getConnection();
              Statement stmt = conn.createStatement()) {
             stmt.execute("DELETE FROM refund_records");
@@ -32,12 +34,12 @@ class PaymentDAOTest extends DatabaseTestBase {
     @Test
     @DisplayName("查询待支付订单时按创建时间倒序并限制数量")
     void testFindWaitingOrdersUsesLimitAndNewestFirst() throws SQLException {
-        PaymentDAO.insert(createOrder("PAY-OLD", "ORDER-OLD", 1_000L, PaymentOrder.PaymentStatus.CREATED));
-        PaymentDAO.insert(createOrder("PAY-MIDDLE", "ORDER-MIDDLE", 2_000L, PaymentOrder.PaymentStatus.WAITING));
-        PaymentDAO.insert(createOrder("PAY-NEW", "ORDER-NEW", 3_000L, PaymentOrder.PaymentStatus.CREATED));
-        PaymentDAO.insert(createOrder("PAY-SUCCESS", "ORDER-SUCCESS", 4_000L, PaymentOrder.PaymentStatus.SUCCESS));
+        paymentDAO.insert(createOrder("PAY-OLD", "ORDER-OLD", 1_000L, PaymentOrder.PaymentStatus.CREATED));
+        paymentDAO.insert(createOrder("PAY-MIDDLE", "ORDER-MIDDLE", 2_000L, PaymentOrder.PaymentStatus.WAITING));
+        paymentDAO.insert(createOrder("PAY-NEW", "ORDER-NEW", 3_000L, PaymentOrder.PaymentStatus.CREATED));
+        paymentDAO.insert(createOrder("PAY-SUCCESS", "ORDER-SUCCESS", 4_000L, PaymentOrder.PaymentStatus.SUCCESS));
 
-        var orders = PaymentDAO.findWaitingOrders(2);
+        var orders = paymentDAO.findWaitingOrders(2);
 
         assertEquals(2, orders.size());
         assertEquals("PAY-NEW", orders.get(0).paymentId);

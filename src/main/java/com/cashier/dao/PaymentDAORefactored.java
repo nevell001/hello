@@ -2,27 +2,30 @@ package com.cashier.dao;
 
 import com.cashier.model.PaymentOrder;
 import com.cashier.model.RefundRecord;
-import com.cashier.util.DatabaseManager;
-import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
+import org.slf4j.Logger;
 
 import java.math.BigDecimal;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 支付订单数据访问层
+ * 支付订单数据访问对象（重构版）
+ * 实例方法 + BaseDAO 通用查询，通过 DAOFactory 获取。
  */
-public class PaymentDAO {
-    private static final Logger logger = LoggerFactoryUtil.getLogger(PaymentDAO.class);
-    
-    /**
-     * 创建支付订单表
-     */
-    public static void createTable() throws SQLException {
+public class PaymentDAORefactored extends BaseDAO {
+    private static final Logger logger = LoggerFactoryUtil.getLogger(PaymentDAORefactored.class);
+
+    public void createTable() throws SQLException {
         String sql = """
             CREATE TABLE IF NOT EXISTS payment_orders (
                 payment_id VARCHAR(50) PRIMARY KEY,
@@ -48,7 +51,6 @@ public class PaymentDAO {
                 notify_content TEXT
             )
             """;
-        
         String refundSql = """
             CREATE TABLE IF NOT EXISTS refund_records (
                 refund_id VARCHAR(50) PRIMARY KEY,
@@ -66,19 +68,15 @@ public class PaymentDAO {
                 operator VARCHAR(50)
             )
             """;
-        
-        try (Connection conn = DatabaseManager.getConnection();
+        try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
             stmt.execute(refundSql);
             logger.info("支付订单表创建成功");
         }
     }
-    
-    /**
-     * 插入支付订单
-     */
-    public static boolean insert(PaymentOrder order) throws SQLException {
+
+    public boolean insert(PaymentOrder order) throws SQLException {
         String sql = """
             INSERT INTO payment_orders (
                 payment_id, transaction_id, merchant_order_no, payment_type, channel,
@@ -87,15 +85,11 @@ public class PaymentDAO {
                 remark, terminal_id, operator, notify_time, notify_content
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
-        
-        // 生成支付ID
         if (order.paymentId == null) {
             order.paymentId = "PAY" + System.currentTimeMillis();
         }
-        
-        try (Connection conn = DatabaseManager.getConnection();
+        try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
             pstmt.setString(1, order.paymentId);
             pstmt.setString(2, order.transactionId);
             pstmt.setString(3, order.merchantOrderNo);
@@ -117,145 +111,98 @@ public class PaymentDAO {
             pstmt.setString(19, order.operator);
             pstmt.setTimestamp(20, order.notifyTime != null ? new Timestamp(order.notifyTime.getTime()) : null);
             pstmt.setString(21, order.notifyContent);
-            
             return pstmt.executeUpdate() > 0;
         }
     }
-    
-    /**
-     * 根据ID查询
-     */
-    public static PaymentOrder findById(String paymentId) throws SQLException {
-        String sql = "SELECT * FROM payment_orders WHERE payment_id = ?";
-        
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
+
+    public PaymentOrder findById(String paymentId) throws SQLException {
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM payment_orders WHERE payment_id = ?")) {
             pstmt.setString(1, paymentId);
-            
             try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToPaymentOrder(rs);
-                }
+                return rs.next() ? mapResultSetToPaymentOrder(rs) : null;
             }
         }
-        return null;
     }
-    
-    /**
-     * 根据商户订单号查询
-     */
-    public static PaymentOrder findByMerchantOrderNo(String merchantOrderNo) throws SQLException {
-        String sql = "SELECT * FROM payment_orders WHERE merchant_order_no = ?";
-        
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
+
+    public PaymentOrder findByMerchantOrderNo(String merchantOrderNo) throws SQLException {
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM payment_orders WHERE merchant_order_no = ?")) {
             pstmt.setString(1, merchantOrderNo);
-            
             try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToPaymentOrder(rs);
-                }
+                return rs.next() ? mapResultSetToPaymentOrder(rs) : null;
             }
         }
-        return null;
     }
-    
-    /**
-     * 根据交易ID查询
-     */
-    public static List<PaymentOrder> findByTransactionId(String transactionId) throws SQLException {
+
+    public List<PaymentOrder> findByTransactionId(String transactionId) throws SQLException {
         String sql = "SELECT * FROM payment_orders WHERE transaction_id = ? ORDER BY create_time DESC";
-        List<PaymentOrder> orders = new ArrayList<>();
-        
-        try (Connection conn = DatabaseManager.getConnection();
+        try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
             pstmt.setString(1, transactionId);
-            
             try (ResultSet rs = pstmt.executeQuery()) {
+                List<PaymentOrder> orders = new ArrayList<>();
                 while (rs.next()) {
                     orders.add(mapResultSetToPaymentOrder(rs));
                 }
+                return orders;
             }
         }
-        return orders;
     }
-    
-    /**
-     * 查询待支付订单
-     */
-    public static List<PaymentOrder> findWaitingOrders() throws SQLException {
+
+    public List<PaymentOrder> findWaitingOrders() throws SQLException {
         return findWaitingOrders(100);
     }
 
-    /**
-     * 查询待支付订单。
-     *
-     * @param limit 最大返回数量
-     */
-    public static List<PaymentOrder> findWaitingOrders(int limit) throws SQLException {
+    public List<PaymentOrder> findWaitingOrders(int limit) throws SQLException {
         int safeLimit = limit > 0 ? limit : 100;
         String sql = "SELECT * FROM payment_orders WHERE status IN ('CREATED', 'WAITING') " +
-                     "AND expire_time > NOW() ORDER BY create_time DESC LIMIT ?";
-        List<PaymentOrder> orders = new ArrayList<>();
-        
-        try (Connection conn = DatabaseManager.getConnection();
+            "AND expire_time > NOW() ORDER BY create_time DESC LIMIT ?";
+        try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
             pstmt.setInt(1, safeLimit);
-            ResultSet rs = pstmt.executeQuery();
-            
-            while (rs.next()) {
-                orders.add(mapResultSetToPaymentOrder(rs));
+            try (ResultSet rs = pstmt.executeQuery()) {
+                List<PaymentOrder> orders = new ArrayList<>();
+                while (rs.next()) {
+                    orders.add(mapResultSetToPaymentOrder(rs));
+                }
+                return orders;
             }
         }
-        return orders;
     }
-    
-    /**
-     * 更新支付状态
-     */
-    public static boolean updateStatus(String paymentId, PaymentOrder.PaymentStatus status) throws SQLException {
-        String sql = "UPDATE payment_orders SET status = ? WHERE payment_id = ?";
-        
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
+
+    public boolean updateStatus(String paymentId, PaymentOrder.PaymentStatus status) throws SQLException {
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement("UPDATE payment_orders SET status = ? WHERE payment_id = ?")) {
             pstmt.setString(1, status.name());
             pstmt.setString(2, paymentId);
-            
             return pstmt.executeUpdate() > 0;
         }
     }
 
-    public static boolean updateStatusIfPending(String paymentId, PaymentOrder.PaymentStatus status) throws SQLException {
+    public boolean updateStatusIfPending(String paymentId, PaymentOrder.PaymentStatus status) throws SQLException {
         String sql = "UPDATE payment_orders SET status = ? WHERE payment_id = ? " +
-                     "AND status IN ('CREATED', 'WAITING', 'PAYING')";
-        try (Connection conn = DatabaseManager.getConnection();
+            "AND status IN ('CREATED', 'WAITING', 'PAYING')";
+        try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, status.name());
             pstmt.setString(2, paymentId);
             return pstmt.executeUpdate() > 0;
         }
     }
-    
-    /**
-     * 更新支付成功信息
-     */
-    public static boolean updatePaymentSuccess(String paymentId, String channelTransactionId,
-                                                String channelUserId, BigDecimal paidAmount,
-                                                BigDecimal discountAmount) throws SQLException {
-        try (Connection conn = DatabaseManager.getConnection()) {
+
+    public boolean updatePaymentSuccess(String paymentId, String channelTransactionId,
+                                        String channelUserId, BigDecimal paidAmount,
+                                        BigDecimal discountAmount) throws SQLException {
+        try (Connection conn = getConnection()) {
             return updatePaymentSuccessWithConnection(conn, paymentId, channelTransactionId,
                 channelUserId, paidAmount, discountAmount);
         }
     }
 
-    public static boolean updatePaymentSuccessWithConnection(Connection conn, String paymentId, String channelTransactionId,
-                                                String channelUserId, BigDecimal paidAmount,
-                                                BigDecimal discountAmount) throws SQLException {
+    public boolean updatePaymentSuccessWithConnection(Connection conn, String paymentId, String channelTransactionId,
+                                                      String channelUserId, BigDecimal paidAmount,
+                                                      BigDecimal discountAmount) throws SQLException {
         String sql = """
             UPDATE payment_orders SET
                 status = 'SUCCESS',
@@ -266,7 +213,6 @@ public class PaymentDAO {
                 discount_amount = ?
             WHERE payment_id = ?
             """;
-
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
             pstmt.setString(2, channelTransactionId);
@@ -278,18 +224,14 @@ public class PaymentDAO {
         }
     }
 
-    /**
-     * 更新回调信息
-     */
-    public static boolean updateNotifyInfo(String paymentId, String notifyContent) throws SQLException {
-        try (Connection conn = DatabaseManager.getConnection()) {
+    public boolean updateNotifyInfo(String paymentId, String notifyContent) throws SQLException {
+        try (Connection conn = getConnection()) {
             return updateNotifyInfoWithConnection(conn, paymentId, notifyContent);
         }
     }
 
-    public static boolean updateNotifyInfoWithConnection(Connection conn, String paymentId, String notifyContent) throws SQLException {
+    public boolean updateNotifyInfoWithConnection(Connection conn, String paymentId, String notifyContent) throws SQLException {
         String sql = "UPDATE payment_orders SET notify_time = ?, notify_content = ? WHERE payment_id = ?";
-
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
             pstmt.setString(2, notifyContent);
@@ -297,44 +239,33 @@ public class PaymentDAO {
             return pstmt.executeUpdate() > 0;
         }
     }
-    
-    /**
-     * 关闭过期订单
-     */
-    public static int closeExpiredOrders() throws SQLException {
+
+    public int closeExpiredOrders() throws SQLException {
         String sql = "UPDATE payment_orders SET status = 'CLOSED' WHERE status IN ('CREATED', 'WAITING') AND expire_time < NOW()";
-        
-        try (Connection conn = DatabaseManager.getConnection();
+        try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
-            
             return stmt.executeUpdate(sql);
         }
     }
-    
-    /**
-     * 查询支付统计
-     */
-    public static Map<String, Object> getDailyStats(Date date) throws SQLException {
+
+    public Map<String, Object> getDailyStats(Date date) throws SQLException {
         String sql = """
-            SELECT 
+            SELECT
                 COUNT(*) as total_count,
                 SUM(amount) as total_amount,
                 SUM(paid_amount) as paid_amount,
                 COUNT(CASE WHEN status = 'SUCCESS' THEN 1 END) as success_count,
                 COUNT(CASE WHEN channel = 'WECHAT' THEN 1 END) as wechat_count,
                 COUNT(CASE WHEN channel = 'ALIPAY' THEN 1 END) as alipay_count
-            FROM payment_orders 
+            FROM payment_orders
             WHERE DATE(create_time) = DATE(?)
             """;
-        
-        try (Connection conn = DatabaseManager.getConnection();
+        try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
             pstmt.setTimestamp(1, new Timestamp(date.getTime()));
-            
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    Map<String, Object> stats = new java.util.HashMap<>();
+                    Map<String, Object> stats = new HashMap<>();
                     stats.put("totalCount", rs.getInt("total_count"));
                     stats.put("totalAmount", rs.getBigDecimal("total_amount"));
                     stats.put("paidAmount", rs.getBigDecimal("paid_amount"));
@@ -345,15 +276,10 @@ public class PaymentDAO {
                 }
             }
         }
-        return new java.util.HashMap<>();
+        return new HashMap<>();
     }
-    
-    // ========== 退款记录操作 ==========
-    
-    /**
-     * 插入退款记录
-     */
-    public static boolean insertRefund(RefundRecord record) throws SQLException {
+
+    public boolean insertRefund(RefundRecord record) throws SQLException {
         String sql = """
             INSERT INTO refund_records (
                 refund_id, payment_id, transaction_id, merchant_refund_no, channel_refund_no,
@@ -361,14 +287,11 @@ public class PaymentDAO {
                 create_time, refund_time, operator
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
-        
         if (record.refundId == null) {
             record.refundId = "RFD" + System.currentTimeMillis();
         }
-        
-        try (Connection conn = DatabaseManager.getConnection();
+        try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
             pstmt.setString(1, record.refundId);
             pstmt.setString(2, record.paymentId);
             pstmt.setString(3, record.transactionId);
@@ -382,40 +305,30 @@ public class PaymentDAO {
             pstmt.setTimestamp(11, record.createTime != null ? new Timestamp(record.createTime.getTime()) : null);
             pstmt.setTimestamp(12, record.refundTime != null ? new Timestamp(record.refundTime.getTime()) : null);
             pstmt.setString(13, record.operator);
-            
             return pstmt.executeUpdate() > 0;
         }
     }
-    
-    /**
-     * 更新退款状态
-     */
-    public static boolean updateRefundStatus(String refundId, RefundRecord.RefundStatus status, 
-                                              String channelRefundNo) throws SQLException {
+
+    public boolean updateRefundStatus(String refundId, RefundRecord.RefundStatus status,
+                                      String channelRefundNo) throws SQLException {
         String sql = """
-            UPDATE refund_records SET 
-                status = ?, 
-                channel_refund_no = ?, 
+            UPDATE refund_records SET
+                status = ?,
+                channel_refund_no = ?,
                 refund_time = ?
             WHERE refund_id = ?
             """;
-        
-        try (Connection conn = DatabaseManager.getConnection();
+        try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
             pstmt.setString(1, status.name());
             pstmt.setString(2, channelRefundNo);
             pstmt.setTimestamp(3, status.isSuccess() ? new Timestamp(System.currentTimeMillis()) : null);
             pstmt.setString(4, refundId);
-            
             return pstmt.executeUpdate() > 0;
         }
     }
-    
-    /**
-     * ResultSet 映射
-     */
-    private static PaymentOrder mapResultSetToPaymentOrder(ResultSet rs) throws SQLException {
+
+    private PaymentOrder mapResultSetToPaymentOrder(ResultSet rs) throws SQLException {
         PaymentOrder order = new PaymentOrder();
         order.paymentId = rs.getString("payment_id");
         order.transactionId = rs.getString("transaction_id");
@@ -428,27 +341,20 @@ public class PaymentDAO {
         order.qrCodeContent = rs.getString("qr_code_content");
         order.paidAmount = rs.getBigDecimal("paid_amount");
         order.discountAmount = rs.getBigDecimal("discount_amount");
-        
-        Timestamp createTime = rs.getTimestamp("create_time");
-        if (createTime != null) order.createTime = new Date(createTime.getTime());
-        
-        Timestamp payTime = rs.getTimestamp("pay_time");
-        if (payTime != null) order.payTime = new Date(payTime.getTime());
-        
-        Timestamp expireTime = rs.getTimestamp("expire_time");
-        if (expireTime != null) order.expireTime = new Date(expireTime.getTime());
-        
+        order.createTime = toDate(rs.getTimestamp("create_time"));
+        order.payTime = toDate(rs.getTimestamp("pay_time"));
+        order.expireTime = toDate(rs.getTimestamp("expire_time"));
         order.channelTransactionId = rs.getString("channel_transaction_id");
         order.channelUserId = rs.getString("channel_user_id");
         order.remark = rs.getString("remark");
         order.terminalId = rs.getString("terminal_id");
         order.operator = rs.getString("operator");
-        
-        Timestamp notifyTime = rs.getTimestamp("notify_time");
-        if (notifyTime != null) order.notifyTime = new Date(notifyTime.getTime());
-        
+        order.notifyTime = toDate(rs.getTimestamp("notify_time"));
         order.notifyContent = rs.getString("notify_content");
-        
         return order;
+    }
+
+    private static Date toDate(Timestamp timestamp) {
+        return timestamp != null ? new Date(timestamp.getTime()) : null;
     }
 }

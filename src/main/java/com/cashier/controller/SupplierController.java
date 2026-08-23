@@ -179,87 +179,14 @@ public class SupplierController {
     private void showSupplierDialog(Supplier supplier) {
         try {
             // 创建对话框内容
-            GridPane gridPane = new GridPane();
-            gridPane.setHgap(15);
-            gridPane.setVgap(15);
-            gridPane.setPadding(new javafx.geometry.Insets(25));
-
-            // 设置列约束：标签列宽度120px，输入框列自动填充
-            javafx.scene.layout.ColumnConstraints labelCol = new javafx.scene.layout.ColumnConstraints();
-            labelCol.setPrefWidth(120);
-            labelCol.setMinWidth(110);
-            labelCol.setMaxWidth(130);
-
-            javafx.scene.layout.ColumnConstraints fieldCol = new javafx.scene.layout.ColumnConstraints();
-            fieldCol.setPrefWidth(300);
-            fieldCol.setMinWidth(250);
-            fieldCol.setHgrow(javafx.scene.layout.Priority.ALWAYS);
-
-            gridPane.getColumnConstraints().addAll(labelCol, fieldCol);
-
-            // 表单字段
-            TextField codeField = new TextField();
-            codeField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ProductEdit.AUTO_GENERATE));
-            codeField.setEditable(false);
-            codeField.setPrefWidth(300);
-
-            TextField nameField = new TextField();
-            nameField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.supplier_name_input_required"));
-            nameField.setPrefWidth(300);
-
-            TextField contactField = new TextField();
-            contactField.setPromptText(I18nManager.getInstance().get("runtime.contact_hint"));
-            contactField.setPrefWidth(300);
-
-            TextField phoneField = new TextField();
-            phoneField.setPromptText(I18nManager.getInstance().get("runtime.phone_hint"));
-            phoneField.setPrefWidth(300);
-
-            TextField addressField = new TextField();
-            addressField.setPromptText(I18nManager.getInstance().get("runtime.address_hint"));
-            addressField.setPrefWidth(300);
-
-            ComboBox<String> rankCombo = new ComboBox<>();
-            rankCombo.getItems().addAll("A", "B", "C");
-            rankCombo.setValue("C");
-            rankCombo.setPrefWidth(300);
-
-            TextArea remarkArea = new TextArea();
-            remarkArea.setPromptText(I18nManager.getInstance().get("runtime.notes_hint"));
-            remarkArea.setPrefRowCount(3);
-            remarkArea.setPrefWidth(300);
+            SupplierFormFields form = createSupplierFormFields();
 
             // 如果是编辑模式，填充数据
             boolean isEdit = supplier != null;
-            if (isEdit) {
-                codeField.setText(supplier.supplierCode);
-                nameField.setText(supplier.name);
-                contactField.setText(supplier.contactPerson);
-                phoneField.setText(supplier.phone);
-                addressField.setText(supplier.address);
-                rankCombo.setValue(supplier.rank);
-                remarkArea.setText(supplier.remark);
-            } else {
-                // 自动生成供应商编号
-                String newCode = generateSupplierCode();
-                codeField.setText(newCode);
-            }
+            populateSupplierForm(supplier, isEdit, form);
 
             // 添加表单元素
-            gridPane.add(new Label(I18nManager.getInstance().get("runtime.supplier_code")), 0, 0);
-            gridPane.add(codeField, 1, 0);
-            gridPane.add(new Label(I18nManager.getInstance().get("runtime.supplier_name_required_label")), 0, 1);
-            gridPane.add(nameField, 1, 1);
-            gridPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.contact")), 0, 2);
-            gridPane.add(contactField, 1, 2);
-            gridPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("settings.store_phone_label")), 0, 3);
-            gridPane.add(phoneField, 1, 3);
-            gridPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.address")), 0, 4);
-            gridPane.add(addressField, 1, 4);
-            gridPane.add(new Label(I18nManager.getInstance().get("runtime.supplier_level")), 0, 5);
-            gridPane.add(rankCombo, 1, 5);
-            gridPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnOrderList.NOTES_LABEL)), 0, 6);
-            gridPane.add(remarkArea, 1, 6);
+            layoutSupplierForm(form);
 
             // 创建对话框
             Stage dialogStage = new Stage();
@@ -277,45 +204,7 @@ public class SupplierController {
             cancelButton.setPrefWidth(80);
             cancelButton.setCancelButton(true);
 
-            saveButton.setOnAction(e -> {
-                if (nameField.getText().trim().isEmpty()) {
-                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.supplier_name_input_required"));
-                    return;
-                }
-
-                Supplier newSupplier = new Supplier();
-                newSupplier.supplierCode = codeField.getText();
-                newSupplier.name = nameField.getText().trim();
-                newSupplier.contactPerson = contactField.getText().trim();
-                newSupplier.phone = phoneField.getText().trim();
-                newSupplier.address = addressField.getText().trim();
-                newSupplier.rank = rankCombo.getValue();
-                newSupplier.status = true;
-                newSupplier.remark = remarkArea.getText().trim();
-
-                if (isEdit) {
-                    newSupplier.id = supplier.id;
-                    try {
-                        DAOFactory.getInstance().getSupplierDAO().update(newSupplier);
-                        loadSuppliers();
-                        updateStatus("供应商更新成功: " + newSupplier.name);
-                        dialogStage.close();
-                    } catch (SQLException ex) {
-                        logger.error("更新供应商失败", ex);
-                        showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.SAVE_DATA) + ": " + ex.getMessage());
-                    }
-                } else {
-                    try {
-                        DAOFactory.getInstance().getSupplierDAO().insert(newSupplier);
-                        loadSuppliers();
-                        updateStatus("供应商添加成功: " + newSupplier.name);
-                        dialogStage.close();
-                    } catch (SQLException ex) {
-                        logger.error("添加供应商失败", ex);
-                        showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.SAVE_DATA) + ": " + ex.getMessage());
-                    }
-                }
-            });
+            saveButton.setOnAction(e -> handleSaveSupplier(dialogStage, supplier, isEdit, form));
 
             cancelButton.setOnAction(e -> dialogStage.close());
 
@@ -323,7 +212,7 @@ public class SupplierController {
             buttonBox.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
             buttonBox.setPadding(new javafx.geometry.Insets(10, 0, 0, 0));
 
-            VBox root = new VBox(15, gridPane, buttonBox);
+            VBox root = new VBox(15, form.grid, buttonBox);
             root.setPadding(new javafx.geometry.Insets(20));
             root.setPrefWidth(500);
 
@@ -336,6 +225,141 @@ public class SupplierController {
         } catch (Exception e) {
             logger.error("显示供应商对话框失败", e);
             showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
+        }
+    }
+
+    /** 供应商表单字段集合 */
+    private static class SupplierFormFields {
+        final GridPane grid;
+        final TextField codeField;
+        final TextField nameField;
+        final TextField contactField;
+        final TextField phoneField;
+        final TextField addressField;
+        final ComboBox<String> rankCombo;
+        final TextArea remarkArea;
+
+        SupplierFormFields(GridPane grid, TextField codeField, TextField nameField, TextField contactField,
+                           TextField phoneField, TextField addressField, ComboBox<String> rankCombo,
+                           TextArea remarkArea) {
+            this.grid = grid;
+            this.codeField = codeField;
+            this.nameField = nameField;
+            this.contactField = contactField;
+            this.phoneField = phoneField;
+            this.addressField = addressField;
+            this.rankCombo = rankCombo;
+            this.remarkArea = remarkArea;
+        }
+    }
+
+    private SupplierFormFields createSupplierFormFields() {
+        GridPane gridPane = new GridPane();
+        gridPane.setHgap(15);
+        gridPane.setVgap(15);
+        gridPane.setPadding(new javafx.geometry.Insets(25));
+
+        javafx.scene.layout.ColumnConstraints labelCol = new javafx.scene.layout.ColumnConstraints();
+        labelCol.setPrefWidth(120);
+        labelCol.setMinWidth(110);
+        labelCol.setMaxWidth(130);
+        javafx.scene.layout.ColumnConstraints fieldCol = new javafx.scene.layout.ColumnConstraints();
+        fieldCol.setPrefWidth(300);
+        fieldCol.setMinWidth(250);
+        fieldCol.setHgrow(javafx.scene.layout.Priority.ALWAYS);
+        gridPane.getColumnConstraints().addAll(labelCol, fieldCol);
+
+        TextField codeField = new TextField();
+        codeField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ProductEdit.AUTO_GENERATE));
+        codeField.setEditable(false);
+        codeField.setPrefWidth(300);
+        TextField nameField = new TextField();
+        nameField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.supplier_name_input_required"));
+        nameField.setPrefWidth(300);
+        TextField contactField = new TextField();
+        contactField.setPromptText(I18nManager.getInstance().get("runtime.contact_hint"));
+        contactField.setPrefWidth(300);
+        TextField phoneField = new TextField();
+        phoneField.setPromptText(I18nManager.getInstance().get("runtime.phone_hint"));
+        phoneField.setPrefWidth(300);
+        TextField addressField = new TextField();
+        addressField.setPromptText(I18nManager.getInstance().get("runtime.address_hint"));
+        addressField.setPrefWidth(300);
+        ComboBox<String> rankCombo = new ComboBox<>();
+        rankCombo.getItems().addAll("A", "B", "C");
+        rankCombo.setValue("C");
+        rankCombo.setPrefWidth(300);
+        TextArea remarkArea = new TextArea();
+        remarkArea.setPromptText(I18nManager.getInstance().get("runtime.notes_hint"));
+        remarkArea.setPrefRowCount(3);
+        remarkArea.setPrefWidth(300);
+        return new SupplierFormFields(gridPane, codeField, nameField, contactField,
+            phoneField, addressField, rankCombo, remarkArea);
+    }
+
+    private void populateSupplierForm(Supplier supplier, boolean isEdit, SupplierFormFields form) {
+        if (isEdit) {
+            form.codeField.setText(supplier.supplierCode);
+            form.nameField.setText(supplier.name);
+            form.contactField.setText(supplier.contactPerson);
+            form.phoneField.setText(supplier.phone);
+            form.addressField.setText(supplier.address);
+            form.rankCombo.setValue(supplier.rank);
+            form.remarkArea.setText(supplier.remark);
+        } else {
+            form.codeField.setText(generateSupplierCode());
+        }
+    }
+
+    private void layoutSupplierForm(SupplierFormFields form) {
+        GridPane gridPane = form.grid;
+        gridPane.add(new Label(I18nManager.getInstance().get("runtime.supplier_code")), 0, 0);
+        gridPane.add(form.codeField, 1, 0);
+        gridPane.add(new Label(I18nManager.getInstance().get("runtime.supplier_name_required_label")), 0, 1);
+        gridPane.add(form.nameField, 1, 1);
+        gridPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.contact")), 0, 2);
+        gridPane.add(form.contactField, 1, 2);
+        gridPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("settings.store_phone_label")), 0, 3);
+        gridPane.add(form.phoneField, 1, 3);
+        gridPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get("runtime.address")), 0, 4);
+        gridPane.add(form.addressField, 1, 4);
+        gridPane.add(new Label(I18nManager.getInstance().get("runtime.supplier_level")), 0, 5);
+        gridPane.add(form.rankCombo, 1, 5);
+        gridPane.add(new Label(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnOrderList.NOTES_LABEL)), 0, 6);
+        gridPane.add(form.remarkArea, 1, 6);
+    }
+
+    private void handleSaveSupplier(Stage dialogStage, Supplier supplier, boolean isEdit, SupplierFormFields form) {
+        if (form.nameField.getText().trim().isEmpty()) {
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.supplier_name_input_required"));
+            return;
+        }
+
+        Supplier newSupplier = new Supplier();
+        newSupplier.supplierCode = form.codeField.getText();
+        newSupplier.name = form.nameField.getText().trim();
+        newSupplier.contactPerson = form.contactField.getText().trim();
+        newSupplier.phone = form.phoneField.getText().trim();
+        newSupplier.address = form.addressField.getText().trim();
+        newSupplier.rank = form.rankCombo.getValue();
+        newSupplier.status = true;
+        newSupplier.remark = form.remarkArea.getText().trim();
+
+        try {
+            if (isEdit) {
+                newSupplier.id = supplier.id;
+                DAOFactory.getInstance().getSupplierDAO().update(newSupplier);
+                loadSuppliers();
+                updateStatus("供应商更新成功: " + newSupplier.name);
+            } else {
+                DAOFactory.getInstance().getSupplierDAO().insert(newSupplier);
+                loadSuppliers();
+                updateStatus("供应商添加成功: " + newSupplier.name);
+            }
+            dialogStage.close();
+        } catch (SQLException ex) {
+            logger.error(isEdit ? "更新供应商失败" : "添加供应商失败", ex);
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.SAVE_DATA) + ": " + ex.getMessage());
         }
     }
 

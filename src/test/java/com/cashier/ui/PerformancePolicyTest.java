@@ -316,7 +316,7 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/api/controller/PaymentApiController.java"
         ));
         String paymentDao = Files.readString(Path.of(
-            "src/main/java/com/cashier/dao/PaymentDAO.java"
+            "src/main/java/com/cashier/dao/PaymentDAORefactored.java"
         ));
 
         assertTrue(transactionApi.contains("MAX_TRANSACTION_LIST_LIMIT = 500"));
@@ -329,7 +329,7 @@ class PerformancePolicyTest {
         assertTrue(backupApi.contains("Math.max(1, Math.min(requestedLimit, MAX_BACKUP_LIST_LIMIT))"));
 
         assertTrue(paymentApi.contains("MAX_WAITING_PAYMENT_LIMIT = 500"));
-        assertTrue(paymentApi.contains("PaymentDAO.findWaitingOrders(limit)"));
+        assertTrue(paymentApi.contains("getPaymentDAO().findWaitingOrders(limit)"));
         assertTrue(paymentDao.contains("findWaitingOrders(int limit)"));
         assertTrue(paymentDao.contains("ORDER BY create_time DESC LIMIT ?"));
     }

@@ -1,7 +1,8 @@
 package com.cashier.api.controller;
 
 import com.cashier.api.support.TestContext;
-import com.cashier.dao.PaymentDAO;
+import com.cashier.dao.DAOFactory;
+import com.cashier.dao.PaymentDAORefactored;
 import com.cashier.service.PaymentService;
 import com.cashier.util.DatabaseTestBase;
 import io.javalin.http.HandlerType;
@@ -64,7 +65,7 @@ class PaymentApiControllerTest extends DatabaseTestBase {
     @DisplayName("显式开启 mock 模式后创建订单成功")
     void createPaymentInMockModeSucceeds() {
         try {
-            PaymentDAO.createTable();
+            DAOFactory.getInstance().getPaymentDAO().createTable();
         } catch (Exception e) {
             throw new IllegalStateException("初始化支付表失败", e);
         }

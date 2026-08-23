@@ -90,7 +90,7 @@ class ElectronicPaymentSafetyPolicyTest {
             "src/main/java/com/cashier/service/payment/WechatNativePaymentProvider.java"
         ));
 
-        assertTrue(paymentService.contains("PaymentDAO.updatePaymentSuccess("));
+        assertTrue(paymentService.contains("getPaymentDAO().updatePaymentSuccess("));
         assertTrue(paymentService.contains("order.channelTransactionId"));
         assertTrue(paymentService.contains("order.channelUserId"));
         assertTrue(apiController.contains("params.forEach("));

@@ -2,7 +2,7 @@ package com.cashier.service;
 
 import com.cashier.api.sync.SyncEventType;
 import com.cashier.api.sync.SyncManager;
-import com.cashier.dao.PaymentDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.exception.DatabaseException;
 import com.cashier.model.PaymentOrder;
 import com.cashier.model.RefundRecord;
@@ -42,7 +42,7 @@ public final class PaymentService {
 
     public static void init() {
         try {
-            PaymentDAO.createTable();
+            DAOFactory.getInstance().getPaymentDAO().createTable();
             reloadConfig();
             logger.info("支付服务初始化成功，模式: {}", config.mode);
         } catch (Exception e) {
@@ -154,21 +154,21 @@ public final class PaymentService {
         PaymentOrder order = PaymentOrder.createScanPayOrder(transactionId, amount, channel, terminalId);
         order.expireTime = new Date(System.currentTimeMillis() + config.orderExpireMinutes * 60_000L);
         provider.createOrder(order);
-        PaymentDAO.insert(order);
+        DAOFactory.getInstance().getPaymentDAO().insert(order);
         SyncManager.getInstance().broadcastSyncEvent(SyncEventType.PAYMENT_ORDER_CREATED,
             Map.of("paymentId", order.paymentId, "amount", amount.toString(), "channel", channel.name()));
         return order;
     }
 
     public static PaymentOrder queryPaymentStatus(String paymentId) throws SQLException {
-        PaymentOrder order = PaymentDAO.findById(paymentId);
+        PaymentOrder order = DAOFactory.getInstance().getPaymentDAO().findById(paymentId);
         if (order == null || order.status.isFinal()) {
             return order;
         }
         PaymentOrder.PaymentStatus status = requireProvider(order.channel).queryStatus(order);
         if (status != order.status) {
             if (status == PaymentOrder.PaymentStatus.SUCCESS) {
-                PaymentDAO.updatePaymentSuccess(
+                DAOFactory.getInstance().getPaymentDAO().updatePaymentSuccess(
                     order.paymentId,
                     order.channelTransactionId,
                     order.channelUserId,
@@ -176,7 +176,7 @@ public final class PaymentService {
                     order.discountAmount != null ? order.discountAmount : BigDecimal.ZERO
                 );
             } else {
-                PaymentDAO.updateStatus(order.paymentId, status);
+                DAOFactory.getInstance().getPaymentDAO().updateStatus(order.paymentId, status);
             }
             order.status = status;
         }
@@ -191,7 +191,7 @@ public final class PaymentService {
             return false;
         }
         String merchantOrderNo = notifyData.get("out_trade_no");
-        PaymentOrder order = PaymentDAO.findByMerchantOrderNo(merchantOrderNo);
+        PaymentOrder order = DAOFactory.getInstance().getPaymentDAO().findByMerchantOrderNo(merchantOrderNo);
         if (order == null || order.channel != channel) {
             return false;
         }
@@ -207,8 +207,8 @@ public final class PaymentService {
         }
         // 两次 DB 更新包裹在同一事务中，确保原子性
         DatabaseManager.executeBooleanTransaction(conn -> {
-            PaymentDAO.updateNotifyInfoWithConnection(conn, order.paymentId, notifyData.toString());
-            PaymentDAO.updatePaymentSuccessWithConnection(conn, order.paymentId, notifyData.get("transaction_id"),
+            DAOFactory.getInstance().getPaymentDAO().updateNotifyInfoWithConnection(conn, order.paymentId, notifyData.toString());
+            DAOFactory.getInstance().getPaymentDAO().updatePaymentSuccessWithConnection(conn, order.paymentId, notifyData.get("transaction_id"),
                 notifyData.get("buyer_id"), paidAmount, BigDecimal.ZERO);
             return true;
         });
@@ -219,7 +219,7 @@ public final class PaymentService {
 
     public static RefundRecord applyRefund(String paymentId, BigDecimal refundAmount,
                                            String reason, String operator) throws SQLException {
-        PaymentOrder order = PaymentDAO.findById(paymentId);
+        PaymentOrder order = DAOFactory.getInstance().getPaymentDAO().findById(paymentId);
         if (order == null) throw new IllegalArgumentException("支付订单不存在: " + paymentId);
         if (!order.status.canRefund()) throw new IllegalStateException("订单状态不允许退款: " + order.status);
         if (refundAmount == null || refundAmount.compareTo(BigDecimal.ZERO) <= 0)
@@ -232,8 +232,8 @@ public final class PaymentService {
         refund.originalAmount = refundable;
         refund.channel = order.channel.name();
         requireProvider(order.channel).refund(order, refund);
-        PaymentDAO.insertRefund(refund);
-        PaymentDAO.updateStatus(paymentId, refundAmount.compareTo(refundable) == 0
+        DAOFactory.getInstance().getPaymentDAO().insertRefund(refund);
+        DAOFactory.getInstance().getPaymentDAO().updateStatus(paymentId, refundAmount.compareTo(refundable) == 0
             ? PaymentOrder.PaymentStatus.REFUNDED : PaymentOrder.PaymentStatus.PARTIAL_REFUND);
         AuditService.success(operator, "REFUND", "PAYMENT_REFUND",
             "退款单=" + refund.merchantRefundNo + ", 支付单=" + paymentId + ", 金额=" + refundAmount, 1);
@@ -241,11 +241,11 @@ public final class PaymentService {
     }
 
     public static int closeExpiredOrders() throws SQLException {
-        return PaymentDAO.closeExpiredOrders();
+        return DAOFactory.getInstance().getPaymentDAO().closeExpiredOrders();
     }
 
     public static boolean cancelPaymentOrder(String paymentId) throws SQLException {
-        return PaymentDAO.updateStatusIfPending(paymentId, PaymentOrder.PaymentStatus.CANCELLED);
+        return DAOFactory.getInstance().getPaymentDAO().updateStatusIfPending(paymentId, PaymentOrder.PaymentStatus.CANCELLED);
     }
 
     public static PaymentConfig getConfig() { return config; }
