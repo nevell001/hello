@@ -327,7 +327,10 @@ public class ApiServer {
 
     static boolean isPublicApiPath(String path) {
         return path.equals("/api/health")
-            || path.equals("/api/auth/login");
+            || path.equals("/api/auth/login")
+            // 支付回调由微信/支付宝服务器直接调用，无法携带本系统 Token；
+            // 安全性由渠道验签（RSA/解密）保证，必须公开
+            || path.startsWith("/api/payment/notify/");
     }
     
     /**

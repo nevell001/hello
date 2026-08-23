@@ -93,7 +93,7 @@ class ElectronicPaymentSafetyPolicyTest {
         assertTrue(paymentService.contains("getPaymentDAO().updatePaymentSuccess("));
         assertTrue(paymentService.contains("order.channelTransactionId"));
         assertTrue(paymentService.contains("order.channelUserId"));
-        assertTrue(apiController.contains("params.forEach("));
+        assertTrue(apiController.contains("formParams.forEach("));
         assertTrue(wechatProvider.contains("decryptAes256Gcm("));
         assertTrue(wechatProvider.contains("loadPublicKeyFromCertificateOrPem("));
         assertTrue(apiController.contains("\"code\", \"SUCCESS\""));

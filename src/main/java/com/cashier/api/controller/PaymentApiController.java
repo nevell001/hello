@@ -168,6 +168,11 @@ public class PaymentApiController {
         try {
             // 解析回调数据
             Map<String, String> notifyData = new HashMap<>();
+            // 先统一解析表单参数（mock 渠道与支付宝回调使用；微信 v3 JSON 回调此处为空，无副作用）
+            Map<String, List<String>> formParams = ctx.formParamMap();
+            formParams.forEach((key, values) ->
+                notifyData.put(key, values == null || values.isEmpty() ? "" : values.get(0)));
+            notifyData.put("transaction_id", notifyData.getOrDefault("trade_no", ""));
             if (channel == PaymentOrder.PaymentChannel.WECHAT) {
                 notifyData.put("raw_body", ctx.body());
                 notifyData.put("Wechatpay-Timestamp", ctx.header("Wechatpay-Timestamp"));
@@ -175,15 +180,15 @@ public class PaymentApiController {
                 notifyData.put("Wechatpay-Signature", ctx.header("Wechatpay-Signature"));
                 notifyData.put("Wechatpay-Serial", ctx.header("Wechatpay-Serial"));
                 extractWechatV3NotifyMetadata(ctx.body(), notifyData);
-            } else {
-                Map<String, List<String>> params = ctx.formParamMap();
-                params.forEach((key, values) -> notifyData.put(key, values == null || values.isEmpty() ? "" : values.get(0)));
-                notifyData.put("transaction_id", notifyData.getOrDefault("trade_no", ""));
             }
             
             if (ctx.formParam("mock_signature") != null) {
                 notifyData.put("mock_signature", ctx.formParam("mock_signature"));
             }
+            logger.info("支付回调接收: channel={}, keys={}, mock_signature={}, out_trade_no={}",
+                channelStr, notifyData.keySet(),
+                notifyData.get("mock_signature") != null ? "***" : null,
+                notifyData.get("out_trade_no"));
             boolean success = PaymentService.handlePaymentNotify(channel, notifyData);
             
             // 返回响应

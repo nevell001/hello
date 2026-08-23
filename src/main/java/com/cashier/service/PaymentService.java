@@ -187,7 +187,10 @@ public final class PaymentService {
                                                Map<String, String> notifyData) throws SQLException {
         PaymentChannelProvider provider = requireProvider(channel);
         if (!provider.verifyNotification(notifyData)) {
-            logger.warn("拒绝未通过签名验证的支付回调: channel={}", channel);
+            logger.warn("拒绝未通过签名验证的支付回调: channel={}, mock_signature={}, secret_configured={}",
+                channel,
+                notifyData.get("mock_signature") != null ? "present" : "missing",
+                config != null && config.mockCallbackSecret != null && !config.mockCallbackSecret.isBlank());
             return false;
         }
         String merchantOrderNo = notifyData.get("out_trade_no");

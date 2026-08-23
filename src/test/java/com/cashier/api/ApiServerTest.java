@@ -80,5 +80,13 @@ class ApiServerTest {
         assertFalse(ApiServer.isPublicApiPath("/api/health/detail"));
         assertFalse(ApiServer.isPublicApiPath("/api/auth/refresh"));
         assertFalse(ApiServer.isPublicApiPath("/api/products"));
+
+        // 支付回调必须公开（微信/支付宝服务器回调无本系统 Token，安全靠验签）
+        assertTrue(ApiServer.isPublicApiPath("/api/payment/notify/wechat"));
+        assertTrue(ApiServer.isPublicApiPath("/api/payment/notify/alipay"));
+        // 其余支付接口（创建/查询/退款/配置）保持受保护
+        assertFalse(ApiServer.isPublicApiPath("/api/payment/create"));
+        assertFalse(ApiServer.isPublicApiPath("/api/payment/PAY123/status"));
+        assertFalse(ApiServer.isPublicApiPath("/api/payment/PAY123/refund"));
     }
 }
