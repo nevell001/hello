@@ -48,6 +48,7 @@ public class ShiftController {
      */
     public void setExitMode(boolean exitMode) {
         this.exitMode = exitMode;
+        logger.info("交接班退出模式已设置: exitMode={}", exitMode);
     }
 
     /**
@@ -681,6 +682,7 @@ public class ShiftController {
      */
     @FXML
     public void handleEndShift() {
+        logger.info("执行交班操作，exitMode={}", exitMode);
         // 检查是否有活跃班次
         Shift activeShift = null;
         try {

@@ -276,7 +276,7 @@ public class TouchCartController implements CartViewHost {
      * @return ShiftController 实例，加载失败时返回 null
      */
     private com.cashier.controller.ShiftController openShiftDialog(boolean exitMode) {
-        logger.info("交接班按钮被点击");
+        logger.info("交接班按钮被点击, exitMode={}", exitMode);
         try {
             javafx.fxml.FXMLLoader loader = com.cashier.util.FXMLUtils.loadFXMLLoader("/com/cashier/view/ShiftView.fxml");
             VBox root = loader.load();
