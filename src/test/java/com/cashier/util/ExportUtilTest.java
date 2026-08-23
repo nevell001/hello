@@ -1,107 +1,92 @@
 package com.cashier.util;
 
-import org.junit.jupiter.api.Test;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.Loader;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * 导出工具测试
+ * 导出工具测试：验证 Excel/PDF 导出文件可正常生成并可被读取。
  */
+@DisplayName("导出工具测试")
 class ExportUtilTest {
 
-    @TempDir
-    Path tempDir;
+    private static final Path EXPORT_ROOT = Path.of("exports", "test");
 
-    @Test
-    @DisplayName("测试导出Excel功能")
-    void testExportExcel() {
-        // 准备测试数据
-        String title = "测试导出";
-        List<String> headers = List.of("姓名", "年龄", "性别");
-        List<String[]> data = new ArrayList<>();
-        data.add(new String[]{"张三", "25", "男"});
-        data.add(new String[]{"李四", "30", "女"});
-        data.add(new String[]{"王五", "28", "男"});
-
-        // 导出Excel
-        String filePath = ExportUtil.export(title, headers, data, ExportUtil.ExportFormat.EXCEL, "test");
-
-        // 验证导出结果
-        assertNotNull(filePath, "导出Excel失败");
-        File file = new File(filePath);
-        assertTrue(file.exists(), "Excel文件不存在");
-        assertTrue(file.length() > 0, "Excel文件为空");
+    @AfterAll
+    static void cleanup() throws IOException {
+        if (Files.exists(EXPORT_ROOT)) {
+            try (var walk = Files.walk(EXPORT_ROOT)) {
+                walk.sorted(Comparator.reverseOrder()).forEach(p -> p.toFile().delete());
+            }
+        }
     }
 
     @Test
-    @DisplayName("测试导出PDF功能")
-    void testExportPDF() {
-        // 准备测试数据
-        String title = "测试导出";
-        List<String> headers = List.of("姓名", "年龄", "性别");
-        List<String[]> data = new ArrayList<>();
-        data.add(new String[]{"张三", "25", "男"});
-        data.add(new String[]{"李四", "30", "女"});
-        data.add(new String[]{"王五", "28", "男"});
+    @DisplayName("Excel 导出文件可被 POI 读回且内容完整")
+    void excelExportCanBeReadBack() throws IOException {
+        String filePath = ExportUtil.export(
+            "销售报表", List.of("日期", "金额"),
+            List.<String[]>of(new String[]{"2026-08-23", "100.50"}, new String[]{"2026-08-22", "88.00"}),
+            ExportUtil.ExportFormat.EXCEL, "test");
 
-        // 导出PDF
-        String filePath = ExportUtil.export(title, headers, data, ExportUtil.ExportFormat.PDF, "test");
+        assertNotNull(filePath, "Excel 导出不应失败");
+        assertTrue(filePath.endsWith(".xlsx"));
+        assertTrue(Files.exists(Path.of(filePath)));
 
-        // 验证导出结果
-        assertNotNull(filePath, "导出PDF失败");
-        File file = new File(filePath);
-        assertTrue(file.exists(), "PDF文件不存在");
-        assertTrue(file.length() > 0, "PDF文件为空");
+        try (Workbook workbook = WorkbookFactory.create(new File(filePath))) {
+            Sheet sheet = workbook.getSheetAt(0);
+            assertNotNull(sheet);
+            assertEquals("销售报表", workbook.getSheetName(0));
+            assertEquals("销售报表", sheet.getRow(0).getCell(0).getStringCellValue());
+            assertEquals("日期", sheet.getRow(1).getCell(0).getStringCellValue());
+            assertEquals("金额", sheet.getRow(1).getCell(1).getStringCellValue());
+            assertEquals("2026-08-23", sheet.getRow(2).getCell(0).getStringCellValue());
+            assertEquals("88.00", sheet.getRow(3).getCell(1).getStringCellValue());
+        }
     }
 
     @Test
-    @DisplayName("测试导出带时间格式数据")
-    void testExportWithDateTime() {
-        // 准备测试数据
-        String title = "测试时间格式导出";
-        List<String> headers = List.of("姓名", "时间");
-        List<String[]> data = new ArrayList<>();
-        data.add(new String[]{"张三", "2026-04-05 12:34:56"});
-        data.add(new String[]{"李四", "2026-04-06 09:12:34"});
+    @DisplayName("PDF 导出文件可被 PDFBox 读回且包含内容")
+    void pdfExportCanBeReadBack() throws IOException {
+        String filePath = ExportUtil.export(
+            "库存报表", List.of("商品", "数量"),
+            List.<String[]>of(new String[]{"可乐", "120"}, new String[]{"雪碧", "80"}),
+            ExportUtil.ExportFormat.PDF, "test");
 
-        // 导出Excel
-        String excelPath = ExportUtil.export(title, headers, data, ExportUtil.ExportFormat.EXCEL, "test");
-        assertNotNull(excelPath, "导出Excel失败");
-        File excelFile = new File(excelPath);
-        assertTrue(excelFile.exists(), "Excel文件不存在");
+        assertNotNull(filePath, "PDF 导出不应失败");
+        assertTrue(filePath.endsWith(".pdf"));
+        assertTrue(Files.exists(Path.of(filePath)));
 
-        // 导出PDF
-        String pdfPath = ExportUtil.export(title, headers, data, ExportUtil.ExportFormat.PDF, "test");
-        assertNotNull(pdfPath, "导出PDF失败");
-        File pdfFile = new File(pdfPath);
-        assertTrue(pdfFile.exists(), "PDF文件不存在");
+        try (PDDocument document = Loader.loadPDF(new File(filePath))) {
+            assertTrue(document.getNumberOfPages() >= 1, "PDF 应至少包含一页");
+            assertEquals(1, document.getNumberOfPages(), "小数据量导出应为一页");
+        }
     }
 
     @Test
-    @DisplayName("测试导出空数据")
-    void testExportEmptyData() {
-        // 准备测试数据
-        String title = "测试空数据导出";
-        List<String> headers = List.of("姓名", "年龄");
-        List<String[]> data = new ArrayList<>();
+    @DisplayName("非法子目录被拒绝且不生成文件")
+    void illegalSubDirIsRejected() {
+        String filePath = ExportUtil.export(
+            "测试", List.of("列"), List.<String[]>of(new String[]{"值"}),
+            ExportUtil.ExportFormat.EXCEL, "../etc");
 
-        // 导出Excel
-        String excelPath = ExportUtil.export(title, headers, data, ExportUtil.ExportFormat.EXCEL, "test");
-        assertNotNull(excelPath, "导出Excel失败");
-        File excelFile = new File(excelPath);
-        assertTrue(excelFile.exists(), "Excel文件不存在");
-
-        // 导出PDF
-        String pdfPath = ExportUtil.export(title, headers, data, ExportUtil.ExportFormat.PDF, "test");
-        assertNotNull(pdfPath, "导出PDF失败");
-        File pdfFile = new File(pdfPath);
-        assertTrue(pdfFile.exists(), "PDF文件不存在");
+        assertNull(filePath, "路径穿越的子目录应被拒绝并返回 null");
     }
 }

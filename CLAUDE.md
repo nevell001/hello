@@ -689,6 +689,9 @@ When working on files that still use the old `ProductDAO`, consider migrating th
 - 连接泄漏：`HealthController.detail` 已改为 try-with-resources（健康检查不再泄漏连接池连接），
   `HealthControllerTest.detailHealthCheckReportsDatabase` 覆盖该路径
 - 日志轮转：`logback.xml` 已配置 `RollingFileAppender` + `TimeBasedRollingPolicy`（maxHistory 30/90）
+- 导出验证：`ExportUtilTest` 用 POI/PDFBox 读回 Excel/PDF 导出文件，验证内容与页数完整；
+  非法子目录（路径穿越）被拒绝
+- 补测 DAO：盘点明细、语言偏好（回退链/货币）、备份记录与配置（测试内自建表）
 
 ## Known Issues
 
