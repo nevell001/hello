@@ -149,6 +149,25 @@ public class TouchCartController implements CartViewHost {
         updateSummary();
         setupShortcuts();
         updateShiftInfo();
+        // 输入时实时精确匹配：完整条码/名称/编号命中唯一商品立即自动加购（无需回车）
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal == null || newVal.isBlank()) {
+                currentKeyword = null;
+                loadProducts(currentCategoryName);
+                return;
+            }
+            try {
+                Product exact = findExactProduct(newVal.trim());
+                if (exact != null) {
+                    addToCart(exact); // 成功后自动清空搜索栏
+                    return;
+                }
+            } catch (SQLException e) {
+                logger.error("实时精确匹配商品失败", e);
+            }
+            currentKeyword = newVal;
+            loadProducts(currentCategoryName);
+        });
     }
 
     // ===== 时钟更新 =====
@@ -1171,15 +1190,9 @@ public class TouchCartController implements CartViewHost {
     /** 尝试按条码 → 名称 → 商品编号精确匹配并直接加入购物车；未命中返回 false */
     private boolean tryAddExactMatch(String keyword) {
         try {
-            Product product = productDAO.findByBarcode(keyword);
+            Product product = findExactProduct(keyword);
             if (product == null) {
-                product = productDAO.findByName(keyword);
-            }
-            if (product == null) {
-                product = productDAO.findByProductCode(keyword);
-            }
-            if (product == null) {
-                // 精确未命中：若模糊搜索结果恰好唯一，也视为“确定商品”直接加入
+                // 精确未命中：若模糊搜索结果恰好唯一，也视为"确定商品"直接加入
                 List<Product> searched = productDAO.search(keyword, 1, SEARCH_LIMIT).getData();
                 if (searched.size() == 1) {
                     product = searched.get(0);
@@ -1194,6 +1207,18 @@ public class TouchCartController implements CartViewHost {
             logger.error("精确匹配商品失败", e);
             return false;
         }
+    }
+
+    /** 按条码 → 名称 → 商品编号精确匹配商品，未命中返回 null */
+    private Product findExactProduct(String keyword) throws SQLException {
+        Product product = productDAO.findByBarcode(keyword);
+        if (product == null) {
+            product = productDAO.findByName(keyword);
+        }
+        if (product == null) {
+            product = productDAO.findByProductCode(keyword);
+        }
+        return product;
     }
 
     @FXML
