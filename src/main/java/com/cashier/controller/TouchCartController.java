@@ -700,6 +700,10 @@ public class TouchCartController implements CartViewHost {
         }
         refreshCartView();
         updateSummary();
+        // 添加成功后清空搜索栏，便于连续扫码/输入下一件商品；添加失败（库存不足等）保留输入
+        if (searchField != null) {
+            searchField.clear();
+        }
     }
 
     private void incrementQty(CartItem item) {

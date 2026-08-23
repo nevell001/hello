@@ -559,6 +559,10 @@ public class CartController implements CartViewHost {
         updateStatistics();
         updateButtonStates();
         selectCartItem(product.name);
+        // 添加成功后清空搜索栏（扫码/双击/回车/按钮路径统一）；添加失败（库存不足等）保留输入
+        if (searchField != null) {
+            searchField.clear();
+        }
     }
 
     private boolean addScannedProductToCart(String scanText) {
