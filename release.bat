@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 setlocal EnableExtensions EnableDelayedExpansion
 REM 狸算(LiSuan) 生产发布候选验证脚本 (Windows)
 REM 与 release.sh 保持同一套发布门禁
@@ -12,7 +13,7 @@ echo ====================================================
 REM 0. 版本一致性门禁
 echo [0/3] 正在校验版本一致性...
 set "VERSION_POM="
-for /f "tokens=2 delims=<>" %%V in ('findstr /B /C:"<version>" pom.xml') do (
+for /f "tokens=3 delims=<>" %%V in ('findstr /R "<version>[0-9]" pom.xml 2^>nul ^| findstr /V "javafx maven java mysql hikaricp"') do (
     set "VERSION_POM=%%V"
     goto :version_pom_found
 )
