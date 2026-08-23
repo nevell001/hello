@@ -1156,10 +1156,36 @@ public class TouchCartController implements CartViewHost {
     private void handleSearchAction() {
         String keyword = searchField.getText();
         if (keyword != null && !keyword.trim().isEmpty()) {
+            // 条码/名称/编号精确命中：直接加入购物车（成功后自动清空搜索栏，便于连续录入）
+            if (tryAddExactMatch(keyword.trim())) {
+                return;
+            }
+            // 未精确命中：刷新网格供选择
             currentKeyword = keyword;
             if (currentCategoryName != null) {
                 loadProducts(currentCategoryName);
             }
+        }
+    }
+
+    /** 尝试按条码 → 名称 → 商品编号精确匹配并直接加入购物车；未命中返回 false */
+    private boolean tryAddExactMatch(String keyword) {
+        try {
+            Product product = productDAO.findByBarcode(keyword);
+            if (product == null) {
+                product = productDAO.findByName(keyword);
+            }
+            if (product == null) {
+                product = productDAO.findByProductCode(keyword);
+            }
+            if (product == null) {
+                return false;
+            }
+            addToCart(product);
+            return true;
+        } catch (SQLException e) {
+            logger.error("精确匹配商品失败", e);
+            return false;
         }
     }
 
