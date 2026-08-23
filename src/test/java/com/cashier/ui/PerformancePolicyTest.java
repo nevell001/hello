@@ -507,7 +507,8 @@ class PerformancePolicyTest {
         assertTrue(app.contains("javafx.application.Platform.exit()"));
 
         assertTrue(loginController.contains("application.requestExit()"));
-        assertTrue(mainController.contains("application.exitApplication()"));
+        // 主界面退出与触屏版一致：确认后回到登录界面（应用保持运行），不直接关闭
+        assertTrue(mainController.contains("application.logoutToLoginView()"));
 
         assertFalse(app.contains("System.exit(0)"));
         assertFalse(loginController.contains("System.exit(0)"));

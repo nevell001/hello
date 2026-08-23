@@ -543,43 +543,8 @@ private Button shiftBtn;
 
     @FXML
     public void handleExit() {
-        // 检查是否有活跃班次
-        if (com.cashier.service.DataService.hasActiveShift()) {
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.CONFIRM_EXIT));
-            alert.setHeaderText(null);
-            alert.setContentText(I18nManager.getInstance().get("runtime.exit_active_shift"));
-            
-            ButtonType yesButton = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get("runtime.end_shift_first"), ButtonBar.ButtonData.YES);
-            ButtonType noButton = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get("runtime.exit_directly"), ButtonBar.ButtonData.NO);
-            ButtonType cancelButton = new ButtonType(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnOrder.CANCEL), ButtonBar.ButtonData.CANCEL_CLOSE);
-            
-            alert.getButtonTypes().setAll(yesButton, noButton, cancelButton);
-            
-            alert.showAndWait().ifPresent(buttonType -> {
-                if (buttonType == yesButton) {
-                    // 用户选择先交班，跳转到交班管理页面
-                    handleShift();
-                } else if (buttonType == noButton) {
-                    // 用户选择直接退出
-                    exitApplication();
-                }
-                // 如果选择取消，不做任何操作
-            });
-        } else {
-            // 没有活跃班次，直接退出
-            if (FXUtils.showConfirmAlert("确认退出", "确定要退出系统吗？")) {
-                exitApplication();
-            }
-        }
-    }
-
-    private void exitApplication() {
-        if (application != null) {
-            application.exitApplication();
-        } else {
-            javafx.application.Platform.exit();
-        }
+        // 与"退出登录"一致：确认后退出到登录界面（不关闭应用），与触屏版行为统一
+        handleLogout();
     }
 
     @FXML
