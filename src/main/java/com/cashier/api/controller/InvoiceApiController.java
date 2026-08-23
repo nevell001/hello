@@ -1,6 +1,6 @@
 package com.cashier.api.controller;
 
-import com.cashier.dao.InvoiceDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.model.Invoice;
 import com.cashier.model.PageResult;
 import com.cashier.service.InvoiceService;
@@ -204,7 +204,7 @@ public class InvoiceApiController {
                 return;
             }
             
-            InvoiceDAO.updatePrintInfo(invoiceId, request.pdfPath, request.imagePath);
+            DAOFactory.getInstance().getInvoiceDAO().updatePrintInfo(invoiceId, request.pdfPath, request.imagePath);
             
             logger.info("发票打印记录: {}", invoiceId);
             ctx.json(Map.of("success", true, "message", "打印记录已更新"));

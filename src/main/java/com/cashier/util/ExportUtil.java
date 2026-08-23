@@ -542,85 +542,12 @@ public class ExportUtil {
     private static float[] calculateColumnWidths(List<String> headers, List<String[]> data, 
                                                   PDFont font, float fontSize, float totalWidth) {
         int columnCount = headers.size();
-        float[] maxWidths = new float[columnCount];
-        boolean[] isDateTimeColumn = new boolean[columnCount];  // 标记是否为时间列
-        
-        // 根据表头名称识别列类型并设置不同的最小宽度
-        float[] minWidths = new float[columnCount];
-        for (int i = 0; i < columnCount; i++) {
-            String header = headers.get(i).toLowerCase();
-            // 时间相关列需要更宽，优先保证
-            if (header.contains("时间") || header.contains("time") || header.contains("date") ||
-                header.contains("开始") || header.contains("结束")) {
-                minWidths[i] = 115;  // 增加时间列最小宽度，确保日期和时间都能显示
-                isDateTimeColumn[i] = true;  // 标记为时间列
-            } 
-            // 金额相关列需要适中宽度（确保能显示货币符号+金额）
-            // 检查常见货币符号以支持多语言
-            else if (header.contains("金额") || header.contains("收入") ||
-                     header.contains("revenue") || header.contains("amount") ||
-                     header.contains("元") || header.contains("¥") ||
-                     header.contains("$") || header.contains("₩")) {
-                minWidths[i] = 65;  // 进一步减小金额列最小宽度
-            }
-            // 备注列需要更宽，但可以适当压缩
-            else if (header.contains("备注") || header.contains("说明") || 
-                     header.contains("note") || header.contains("remark")) {
-                minWidths[i] = 65;
-            }
-            // 操作员等姓名列
-            else if (header.contains("操作员") || header.contains("姓名") || header.contains("name")) {
-                minWidths[i] = 55;
-            }
-            // 班次时长等短文本列
-            else if (header.contains("时长") || header.contains("duration")) {
-                minWidths[i] = 55;
-            }
-            // 交易数量等短文本列
-            else if (header.contains("数量") || header.contains("count")) {
-                minWidths[i] = 40;
-            }
-            // 班次编号列
-            else if (header.contains("编号") || header.contains("id") || header.contains("no")) {
-                minWidths[i] = 85;  // 增加班次编号列宽度
-            }
-            // 默认宽度
-            else {
-                minWidths[i] = 65;
-            }
-        }
+        ColumnLayout layout = computeColumnLayout(headers);
+        float[] minWidths = layout.minWidths;
         
         try {
-            // 计算每列的最大宽度（逐个字符测试）
-            for (int i = 0; i < columnCount; i++) {
-                float headerWidth = font.getStringWidth(headers.get(i)) / 1000 * fontSize;
-                maxWidths[i] = Math.max(headerWidth, minWidths[i]);
-            }
-            
-            for (String[] row : data) {
-                for (int i = 0; i < columnCount && i < row.length; i++) {
-                    String cell = row[i] != null ? row[i] : "";
-                    
-                    // 如果是时间列且包含日期时间格式，按两行计算宽度（确保两行都能显示）
-                    if (isDateTimeColumn[i] && isDateTimeFormat(cell)) {
-                        String[] parts = splitDateTimeToLines(cell);
-                        float maxPartWidth = 0;
-                        for (String part : parts) {
-                            float partWidth = font.getStringWidth(part) / 1000 * fontSize;
-                            maxPartWidth = Math.max(maxPartWidth, partWidth);
-                        }
-                        maxWidths[i] = Math.max(maxWidths[i], maxPartWidth);
-                        // 时间列需要额外空间，因为有两行
-                        maxWidths[i] += 5; // 增加额外空间确保两行都能显示
-                    } else {
-                        // 普通列，按整行文本计算
-                        float cellWidth = font.getStringWidth(cell) / 1000 * fontSize;
-                        maxWidths[i] = Math.max(maxWidths[i], cellWidth);
-                    }
-                    // 确保至少达到最小宽度
-                    maxWidths[i] = Math.max(maxWidths[i], minWidths[i]);
-                }
-            }
+            float[] maxWidths = computeMaxWidths(headers, data, font, fontSize, minWidths, layout.isDateTimeColumn);
+            return allocateColumnWidths(maxWidths, minWidths, totalWidth);
         } catch (IOException e) {
             // 如果无法计算，使用平均宽度
             float avgWidth = totalWidth / columnCount;
@@ -630,46 +557,105 @@ public class ExportUtil {
             }
             return widths;
         }
-        
-        // 添加一些内边距
+    }
+
+    /** 列布局：最小宽度 + 时间列标记 */
+    private record ColumnLayout(float[] minWidths, boolean[] isDateTimeColumn) {
+    }
+
+    /** 根据表头名称识别列类型并设置不同的最小宽度 */
+    private static ColumnLayout computeColumnLayout(List<String> headers) {
+        int columnCount = headers.size();
+        float[] minWidths = new float[columnCount];
+        boolean[] isDateTimeColumn = new boolean[columnCount];
+        for (int i = 0; i < columnCount; i++) {
+            String header = headers.get(i).toLowerCase();
+            if (header.contains("时间") || header.contains("time") || header.contains("date") ||
+                header.contains("开始") || header.contains("结束")) {
+                minWidths[i] = 115;
+                isDateTimeColumn[i] = true;
+            } else if (header.contains("金额") || header.contains("收入") ||
+                header.contains("revenue") || header.contains("amount") ||
+                header.contains("元") || header.contains("¥") ||
+                header.contains("$") || header.contains("₩")) {
+                minWidths[i] = 65;
+            } else if (header.contains("备注") || header.contains("说明") ||
+                header.contains("note") || header.contains("remark")) {
+                minWidths[i] = 65;
+            } else if (header.contains("操作员") || header.contains("姓名") || header.contains("name")) {
+                minWidths[i] = 55;
+            } else if (header.contains("时长") || header.contains("duration")) {
+                minWidths[i] = 55;
+            } else if (header.contains("数量") || header.contains("count")) {
+                minWidths[i] = 40;
+            } else if (header.contains("编号") || header.contains("id") || header.contains("no")) {
+                minWidths[i] = 85;
+            } else {
+                minWidths[i] = 65;
+            }
+        }
+        return new ColumnLayout(minWidths, isDateTimeColumn);
+    }
+
+    /** 计算每列内容最大宽度（时间列按两行估算） */
+    private static float[] computeMaxWidths(List<String> headers, List<String[]> data,
+                                            PDFont font, float fontSize,
+                                            float[] minWidths, boolean[] isDateTimeColumn) throws IOException {
+        int columnCount = headers.size();
+        float[] maxWidths = new float[columnCount];
+        for (int i = 0; i < columnCount; i++) {
+            maxWidths[i] = Math.max(font.getStringWidth(headers.get(i)) / 1000 * fontSize, minWidths[i]);
+        }
+        for (String[] row : data) {
+            for (int i = 0; i < columnCount && i < row.length; i++) {
+                String cell = row[i] != null ? row[i] : "";
+                if (isDateTimeColumn[i] && isDateTimeFormat(cell)) {
+                    float maxPartWidth = 0;
+                    for (String part : splitDateTimeToLines(cell)) {
+                        maxPartWidth = Math.max(maxPartWidth, font.getStringWidth(part) / 1000 * fontSize);
+                    }
+                    maxWidths[i] = Math.max(maxWidths[i], maxPartWidth) + 5;
+                } else {
+                    maxWidths[i] = Math.max(maxWidths[i], font.getStringWidth(cell) / 1000 * fontSize);
+                }
+                maxWidths[i] = Math.max(maxWidths[i], minWidths[i]);
+            }
+        }
+        return maxWidths;
+    }
+
+    /** 按最小/最大宽度与可用总宽度分配列宽 */
+    private static float[] allocateColumnWidths(float[] maxWidths, float[] minWidths, float totalWidth) {
+        int columnCount = maxWidths.length;
         float totalMaxWidth = 0;
         for (float w : maxWidths) {
             totalMaxWidth += w;
         }
-        totalMaxWidth += columnCount * 3; // 减少内边距从5到3
-        
+        totalMaxWidth += columnCount * 3;
+
         float[] widths = new float[columnCount];
-        
         if (totalMaxWidth <= totalWidth) {
-            // 内容不多，按比例分配剩余空间
             float scale = totalWidth / totalMaxWidth;
             for (int i = 0; i < columnCount; i++) {
-                widths[i] = (maxWidths[i] + 3) * scale; // 减少内边距从5到3
-                // 确保不低于最小宽度
-                widths[i] = Math.max(widths[i], minWidths[i]);
+                widths[i] = Math.max((maxWidths[i] + 3) * scale, minWidths[i]);
             }
         } else {
-            // 内容太多，按比例压缩，但确保不低于最小宽度
             float totalMinWidth = 0;
             for (float mw : minWidths) {
                 totalMinWidth += mw;
             }
-            
             if (totalMinWidth > totalWidth) {
-                // 即使最小宽度也超出总宽度，按比例缩小
                 float scale = totalWidth / totalMinWidth;
                 for (int i = 0; i < columnCount; i++) {
                     widths[i] = minWidths[i] * scale;
                 }
             } else {
-                // 内容超出，优先满足最小宽度，剩余空间按比例分配
                 float remainingWidth = totalWidth - totalMinWidth;
                 float extraWidth = 0;
                 for (int i = 0; i < columnCount; i++) {
                     widths[i] = minWidths[i];
                     extraWidth += (maxWidths[i] - minWidths[i]);
                 }
-                
                 if (extraWidth > 0) {
                     float scale = remainingWidth / extraWidth;
                     for (int i = 0; i < columnCount; i++) {
@@ -678,7 +664,6 @@ public class ExportUtil {
                 }
             }
         }
-        
         return widths;
     }
 

@@ -240,7 +240,7 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/service/InvoiceService.java"
         ));
         String invoiceDao = Files.readString(Path.of(
-            "src/main/java/com/cashier/dao/InvoiceDAO.java"
+            "src/main/java/com/cashier/dao/InvoiceDAORefactored.java"
         ));
 
         assertTrue(invoiceApi.contains("ApiPagination.from(ctx)"));

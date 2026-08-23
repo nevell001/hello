@@ -1,6 +1,5 @@
 package com.cashier.service;
 
-import com.cashier.dao.InvoiceDAO;
 import com.cashier.dao.DAOFactory;
 import com.cashier.model.Invoice;
 import com.cashier.model.InvoiceItem;
@@ -46,7 +45,7 @@ public class InvoiceService {
      */
     public static void init() {
         try {
-            InvoiceDAO.createTable();
+            DAOFactory.getInstance().getInvoiceDAO().createTable();
             logger.info("发票系统初始化完成");
         } catch (SQLException e) {
             logger.error("创建发票表失败", e);
@@ -71,11 +70,11 @@ public class InvoiceService {
 
         // 检查+插入在同一事务内，消除 TOCTOU 竞态
         DatabaseManager.executeBooleanTransaction(conn -> {
-            Invoice existing = InvoiceDAO.findByTransactionIdWithConnection(conn, transactionId);
+            Invoice existing = DAOFactory.getInstance().getInvoiceDAO().findByTransactionIdWithConnection(conn, transactionId);
             if (existing != null && !"VOIDED".equals(existing.status)) {
                 throw new SQLException("该交易已开具发票: " + existing.invoiceId);
             }
-            InvoiceDAO.insertWithConnection(conn, invoice);
+            DAOFactory.getInstance().getInvoiceDAO().insertWithConnection(conn, invoice);
             return true;
         });
 
@@ -98,7 +97,7 @@ public class InvoiceService {
         invoice.createBy = request.createBy != null ? request.createBy : "";
         
         // 保存发票
-        InvoiceDAO.insert(invoice);
+        DAOFactory.getInstance().getInvoiceDAO().insert(invoice);
         
         logger.info("手工发票创建成功: {} - 金额: {}", invoice.invoiceId, invoice.finalAmount);
         
@@ -166,7 +165,7 @@ public class InvoiceService {
      * 作废发票
      */
     public static Invoice voidInvoice(String invoiceId, String reason) throws SQLException {
-        Invoice invoice = InvoiceDAO.findById(invoiceId);
+        Invoice invoice = DAOFactory.getInstance().getInvoiceDAO().findById(invoiceId);
         if (invoice == null) {
             throw new SQLException("发票不存在: " + invoiceId);
         }
@@ -175,7 +174,7 @@ public class InvoiceService {
             throw new SQLException("发票已作废");
         }
         
-        InvoiceDAO.voidInvoice(invoiceId, reason);
+        DAOFactory.getInstance().getInvoiceDAO().voidInvoice(invoiceId, reason);
         
         invoice.status = "VOIDED";
         invoice.voidReason = reason;
@@ -190,14 +189,14 @@ public class InvoiceService {
      * 查询发票
      */
     public static Invoice getInvoice(String invoiceId) throws SQLException {
-        return InvoiceDAO.findById(invoiceId);
+        return DAOFactory.getInstance().getInvoiceDAO().findById(invoiceId);
     }
     
     /**
      * 查询交易发票
      */
     public static Invoice getInvoiceByTransaction(String transactionId) throws SQLException {
-        return InvoiceDAO.findByTransactionId(transactionId);
+        return DAOFactory.getInstance().getInvoiceDAO().findByTransactionId(transactionId);
     }
     
     /**
@@ -217,14 +216,14 @@ public class InvoiceService {
             int pageNum,
             int pageSize
     ) throws SQLException {
-        return InvoiceDAO.findPage(startDate, endDate, status, pageNum, pageSize);
+        return DAOFactory.getInstance().getInvoiceDAO().findPage(startDate, endDate, status, pageNum, pageSize);
     }
     
     /**
      * 按日期查询发票
      */
     public static List<Invoice> getInvoicesByDateRange(LocalDate startDate, LocalDate endDate) throws SQLException {
-        return InvoiceDAO.findByDateRange(startDate, endDate);
+        return DAOFactory.getInstance().getInvoiceDAO().findByDateRange(startDate, endDate);
     }
     
     /**

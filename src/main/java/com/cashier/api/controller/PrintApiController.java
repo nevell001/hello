@@ -4,7 +4,7 @@ import com.cashier.printer.*;
 import com.cashier.service.InvoicePrintService;
 import com.cashier.model.Invoice;
 import com.cashier.model.InvoiceItem;
-import com.cashier.dao.InvoiceDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.api.sync.SyncManager;
 import com.cashier.api.sync.SyncEventType;
 import com.cashier.util.LoggerFactoryUtil;
@@ -534,7 +534,7 @@ public class PrintApiController {
         String invoiceId = ctx.pathParam(INVOICE_ID_FIELD);
         
         try {
-            Invoice invoice = InvoiceDAO.findById(invoiceId);
+            Invoice invoice = DAOFactory.getInstance().getInvoiceDAO().findById(invoiceId);
             
             if (invoice == null) {
                 ctx.status(404).json(Map.of(
@@ -573,7 +573,7 @@ public class PrintApiController {
                 device.cutPaper();
                 
                 // 更新打印信息
-                InvoiceDAO.updatePrintInfo(invoiceId, filePath, null);
+                DAOFactory.getInstance().getInvoiceDAO().updatePrintInfo(invoiceId, filePath, null);
                 
                 // 广播打印事件
                 SyncManager.getInstance().broadcastSyncEvent(SyncEventType.INVOICE_PRINTED, 

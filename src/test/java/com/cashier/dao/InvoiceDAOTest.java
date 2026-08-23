@@ -17,6 +17,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DisplayName("发票数据访问对象测试")
 class InvoiceDAOTest extends DatabaseTestBase {
 
+    private final InvoiceDAORefactored invoiceDAO = DAOFactory.getInstance().getInvoiceDAO();
+
     @Test
     @DisplayName("分页查询发票时支持日期和状态过滤")
     void testFindPageWithDateAndStatusFilters() throws SQLException {
@@ -24,11 +26,11 @@ class InvoiceDAOTest extends DatabaseTestBase {
         Invoice recentIssued = createInvoice("INV-RECENT", "ISSUED", LocalDate.of(2026, 7, 10));
         Invoice recentVoided = createInvoice("INV-VOIDED", "VOIDED", LocalDate.of(2026, 7, 11));
 
-        InvoiceDAO.insert(oldIssued);
-        InvoiceDAO.insert(recentIssued);
-        InvoiceDAO.insert(recentVoided);
+        invoiceDAO.insert(oldIssued);
+        invoiceDAO.insert(recentIssued);
+        invoiceDAO.insert(recentVoided);
 
-        var page = InvoiceDAO.findPage(
+        var page = invoiceDAO.findPage(
             LocalDate.of(2026, 7, 1),
             LocalDate.of(2026, 7, 31),
             "ISSUED",
@@ -45,11 +47,11 @@ class InvoiceDAOTest extends DatabaseTestBase {
     @Test
     @DisplayName("分页查询发票时按开票时间倒序并限制数量")
     void testFindPageUsesLimitAndNewestFirst() throws SQLException {
-        InvoiceDAO.insert(createInvoice("INV-1", "ISSUED", LocalDate.of(2026, 7, 1)));
-        InvoiceDAO.insert(createInvoice("INV-2", "ISSUED", LocalDate.of(2026, 7, 2)));
-        InvoiceDAO.insert(createInvoice("INV-3", "ISSUED", LocalDate.of(2026, 7, 3)));
+        invoiceDAO.insert(createInvoice("INV-1", "ISSUED", LocalDate.of(2026, 7, 1)));
+        invoiceDAO.insert(createInvoice("INV-2", "ISSUED", LocalDate.of(2026, 7, 2)));
+        invoiceDAO.insert(createInvoice("INV-3", "ISSUED", LocalDate.of(2026, 7, 3)));
 
-        var page = InvoiceDAO.findPage(null, null, null, 1, 2);
+        var page = invoiceDAO.findPage(null, null, null, 1, 2);
 
         assertEquals(3, page.getTotal());
         assertEquals(2, page.getData().size());
