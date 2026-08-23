@@ -401,7 +401,7 @@ public class DatabaseManager {
 
             // 挂单表
             try {
-                com.cashier.dao.HoldOrderDAO.createTable();
+                com.cashier.dao.DAOFactory.getInstance().getHoldOrderDAO().createTable();
             } catch (SQLException e) {
                 logger.warn("创建挂单表失败", e);
             }

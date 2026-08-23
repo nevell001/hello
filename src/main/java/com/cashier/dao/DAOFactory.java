@@ -48,6 +48,7 @@ public class DAOFactory {
         register(PurchaseApprovalDAORefactored.class, new PurchaseApprovalDAORefactored());
         register(ReturnOrderItemDAORefactored.class, new ReturnOrderItemDAORefactored());
         register(BackupDAORefactored.class, new BackupDAORefactored());
+        register(HoldOrderDAORefactored.class, new HoldOrderDAORefactored());
     }
 
     /**
@@ -257,5 +258,13 @@ public class DAOFactory {
      */
     public BackupDAORefactored getBackupDAO() {
         return getDAO(BackupDAORefactored.class);
+    }
+
+    /**
+     * 获取挂单 DAO（重构版）
+     * @return HoldOrderDAORefactored 实例
+     */
+    public HoldOrderDAORefactored getHoldOrderDAO() {
+        return getDAO(HoldOrderDAORefactored.class);
     }
 }

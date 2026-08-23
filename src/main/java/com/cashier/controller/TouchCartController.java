@@ -61,7 +61,7 @@ import java.util.List;
 import java.util.Map;
 import com.cashier.model.PaymentOrder;
 import com.cashier.model.HoldOrder;
-import com.cashier.dao.HoldOrderDAO;
+import com.cashier.dao.HoldOrderDAORefactored;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import com.cashier.service.PaymentService;
@@ -88,6 +88,7 @@ public class TouchCartController implements CartViewHost {
     private static final Logger logger = LoggerFactoryUtil.getLogger(TouchCartController.class);
     private static final I18nManager i18n = I18nManager.getInstance();
     private static final ProductDAORefactored productDAO = DAOFactory.getInstance().getProductDAO();
+    private static final HoldOrderDAORefactored holdOrderDAO = DAOFactory.getInstance().getHoldOrderDAO();
 
     @FXML private VBox categoryBox;
     @FXML private TextField searchField;
@@ -873,7 +874,7 @@ public class TouchCartController implements CartViewHost {
             holdOrder.finalAmount = finalAmt;
             holdOrder.itemCount = cartItems.size();
             holdOrder.itemsJson = serializeCartItems();
-            HoldOrderDAO.insert(holdOrder);
+            holdOrderDAO.insert(holdOrder);
 
             clearCartForHold();
             showInfo(i18n.get("cart.hold.success", holdOrder.orderNumber));
@@ -890,8 +891,8 @@ public class TouchCartController implements CartViewHost {
         try {
             int userId = currentUser != null ? currentUser.id : 0;
             List<HoldOrder> holdOrders = userId > 0
-                ? HoldOrderDAO.findActiveByUserId(userId)
-                : HoldOrderDAO.findAllActive();
+                ? holdOrderDAO.findActiveByUserId(userId)
+                : holdOrderDAO.findAllActive();
             if (holdOrders.isEmpty()) {
                 showInfo(i18n.get("cart.hold.no_orders"));
                 return;
@@ -979,7 +980,7 @@ public class TouchCartController implements CartViewHost {
             for (CartItem ci : cartItems) {
                 inventoryMap.putIfAbsent(ci.product.name, ci.product);
             }
-            HoldOrderDAO.updateStatus(order.id, 1);
+            holdOrderDAO.updateStatus(order.id, 1);
             refreshCartView();
             updateSummary();
             showInfo(i18n.get("cart.hold.resume_success", order.orderNumber));

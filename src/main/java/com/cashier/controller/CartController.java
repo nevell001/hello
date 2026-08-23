@@ -4,6 +4,7 @@ import com.cashier.i18n.I18nKeys;
 
 import com.cashier.i18n.I18nManager;
 import com.cashier.dao.DAOFactory;
+import com.cashier.dao.HoldOrderDAORefactored;
 import com.cashier.dao.ProductDAORefactored;
 import com.cashier.model.CartItem;
 import com.cashier.model.Promotion;
@@ -158,6 +159,7 @@ public class CartController implements CartViewHost {
     private String lastSuccessfulScanText;
     private long lastSuccessfulScanAt;
     private final ProductDAORefactored productDAO = DAOFactory.getInstance().getProductDAO();
+    private final HoldOrderDAORefactored holdOrderDAO = DAOFactory.getInstance().getHoldOrderDAO();
     private final I18nManager i18n = I18nManager.getInstance();
 
     /**
@@ -1831,7 +1833,7 @@ public class CartController implements CartViewHost {
             holdOrder.itemsJson = serializeCartItems();
 
             // 保存到数据库
-            com.cashier.dao.HoldOrderDAO.insert(holdOrder);
+            holdOrderDAO.insert(holdOrder);
 
             // 清空购物车
             handleClearCart();
@@ -1854,8 +1856,8 @@ public class CartController implements CartViewHost {
             // 获取当前用户的活跃挂单列表
             int userId = currentUser != null ? currentUser.id : 0;
             List<com.cashier.model.HoldOrder> holdOrders =
-                userId > 0 ? com.cashier.dao.HoldOrderDAO.findActiveByUserId(userId)
-                           : com.cashier.dao.HoldOrderDAO.findAllActive();
+                userId > 0 ? holdOrderDAO.findActiveByUserId(userId)
+                           : holdOrderDAO.findAllActive();
 
             if (holdOrders.isEmpty()) {
                 showInfo(I18nManager.getInstance().get("cart.hold.no_orders"));
@@ -1961,7 +1963,7 @@ public class CartController implements CartViewHost {
             }
 
             // 更新挂单状态
-            com.cashier.dao.HoldOrderDAO.updateStatus(order.id, 1);
+            holdOrderDAO.updateStatus(order.id, 1);
 
             // 更新显示
             updateStatistics();
