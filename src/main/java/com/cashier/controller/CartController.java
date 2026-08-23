@@ -1180,8 +1180,13 @@ public class CartController implements CartViewHost {
         productTable.setDisable(inProgress);
         searchField.setDisable(inProgress);
         memberPhoneField.setDisable(inProgress);
-        addButton.setDisable(inProgress);
-        removeButton.setDisable(inProgress);
+        // CartView.fxml 未提供 addButton/removeButton 节点（遗留字段），必须判空
+        if (addButton != null) {
+            addButton.setDisable(inProgress);
+        }
+        if (removeButton != null) {
+            removeButton.setDisable(inProgress);
+        }
         clearButton.setDisable(inProgress);
         updateStatistics();
     }
