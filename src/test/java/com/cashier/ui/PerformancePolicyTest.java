@@ -18,18 +18,18 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/controller/ProfitReportController.java"
         ));
         String dao = Files.readString(Path.of(
-            "src/main/java/com/cashier/dao/PurchaseInboundItemDAO.java"
+            "src/main/java/com/cashier/dao/PurchaseInboundItemDAORefactored.java"
         ));
 
-        assertTrue(controller.contains("PurchaseInboundItemDAO.findAverageUnitCostByProductId()"));
+        assertTrue(controller.contains("getPurchaseInboundItemDAO().findAverageUnitCostByProductId()"));
         assertTrue(controller.contains("productDAO.findByNames(productNames)"));
         assertFalse(controller.contains("PurchaseInboundDAO.findAll()"));
-        assertFalse(controller.contains("PurchaseInboundItemDAO.findByInboundIds("));
+        assertFalse(controller.contains("getPurchaseInboundItemDAO().findByInboundIds("));
         assertFalse(controller.contains("allProducts = productDAO.findAll()"));
         assertTrue(dao.contains("findByInboundIds(Collection<Integer> inboundIds)"));
         assertTrue(dao.contains("findAverageUnitCostByProductId()"));
         assertTrue(dao.contains("GROUP BY product_id"));
-        assertFalse(controller.contains("PurchaseInboundItemDAO.findByInboundId(inbound.id)"));
+        assertFalse(controller.contains("getPurchaseInboundItemDAO().findByInboundId(inbound.id)"));
     }
 
     @Test

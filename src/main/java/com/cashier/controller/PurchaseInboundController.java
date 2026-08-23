@@ -665,7 +665,7 @@ public class PurchaseInboundController {
             itemTable.getColumns().addAll(productNameCol, quantityCol, unitPriceCol, totalCol);
 
             // 加载入库明细
-            List<PurchaseInboundItem> items = PurchaseInboundItemDAO.findByInboundId(inbound.id);
+            List<PurchaseInboundItem> items = DAOFactory.getInstance().getPurchaseInboundItemDAO().findByInboundId(inbound.id);
             itemTable.setItems(FXCollections.observableArrayList(items));
 
             Button closeButton = new Button(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.CLOSE));

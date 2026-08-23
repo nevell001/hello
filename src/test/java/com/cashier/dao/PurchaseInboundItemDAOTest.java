@@ -15,6 +15,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @DisplayName("采购入库明细数据访问对象测试")
 class PurchaseInboundItemDAOTest extends DatabaseTestBase {
 
+    private final PurchaseInboundItemDAORefactored inboundItemDAO =
+        DAOFactory.getInstance().getPurchaseInboundItemDAO();
+
     @Test
     @DisplayName("按商品聚合加权平均入库成本")
     void testFindAverageUnitCostByProductId() throws SQLException {
@@ -23,7 +26,7 @@ class PurchaseInboundItemDAOTest extends DatabaseTestBase {
         insertInboundItem(1, 2, 5, BigDecimal.valueOf(20));
         insertInboundItem(1, 3, 0, BigDecimal.valueOf(99));
 
-        var averageCosts = PurchaseInboundItemDAO.findAverageUnitCostByProductId();
+        var averageCosts = inboundItemDAO.findAverageUnitCostByProductId();
 
         assertEquals(0, BigDecimal.valueOf(11).compareTo(averageCosts.get(1)));
         assertEquals(0, BigDecimal.valueOf(20).compareTo(averageCosts.get(2)));

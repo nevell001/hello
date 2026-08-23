@@ -5,7 +5,6 @@ import com.cashier.i18n.I18nKeys;
 import com.cashier.i18n.I18nManager;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
-import com.cashier.dao.PurchaseInboundItemDAO;
 import com.cashier.util.CurrencyUtil;
 import com.cashier.util.DateTimeFormats;
 import com.cashier.model.Category;
@@ -323,7 +322,7 @@ public class ProfitReportController {
      * 加载每个商品的加权平均采购成本
      */
     private void loadProductActualCosts() throws SQLException {
-        Map<Integer, BigDecimal> averageCostByProductId = PurchaseInboundItemDAO.findAverageUnitCostByProductId();
+        Map<Integer, BigDecimal> averageCostByProductId = DAOFactory.getInstance().getPurchaseInboundItemDAO().findAverageUnitCostByProductId();
         for (Product product : productNameMap.values()) {
             BigDecimal averageCost = averageCostByProductId.get(product.id);
             if (averageCost != null && product.name != null && !product.name.isEmpty()) {

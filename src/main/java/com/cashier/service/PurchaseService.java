@@ -4,7 +4,6 @@ import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
 import com.cashier.dao.PurchaseApprovalDAO;
 import com.cashier.dao.PurchaseInboundDAO;
-import com.cashier.dao.PurchaseInboundItemDAO;
 import com.cashier.model.PurchaseApproval;
 import com.cashier.model.PurchaseInbound;
 import com.cashier.model.PurchaseInboundItem;
@@ -67,7 +66,7 @@ public final class PurchaseService {
 
             for (PurchaseInboundItem item : items) {
                 item.inboundId = inbound.id;
-                if (!PurchaseInboundItemDAO.insertWithConnection(conn, item)) {
+                if (!DAOFactory.getInstance().getPurchaseInboundItemDAO().insertWithConnection(conn, item)) {
                     throw new SQLException("保存采购入库明细失败: " + item.productName);
                 }
                 if (!DAOFactory.getInstance().getPurchaseOrderItemDAO().increaseInboundQuantityWithConnection(conn, item.orderItemId, item.quantity)) {
