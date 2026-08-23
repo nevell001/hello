@@ -6,7 +6,6 @@ import com.cashier.model.InventoryStatistics;
 import com.cashier.model.Product;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
 
 import java.math.BigDecimal;
 import java.util.*;

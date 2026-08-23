@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import com.cashier.util.DateTimeFormats;
 import com.cashier.util.LoggerFactoryUtil;
 
-import java.util.Date;
 
 /**
  * 打印工具类

@@ -7,6 +7,8 @@ import com.cashier.controller.LoginController;
 import com.cashier.controller.MainController;
 import com.cashier.controller.PosModeController;
 import com.cashier.constant.FXConstants;
+import com.cashier.i18n.I18nKeys;
+import com.cashier.i18n.I18nManager;
 import com.cashier.service.DataService;
 import com.cashier.model.User;
 import com.cashier.util.FXMLUtils;
@@ -394,7 +396,9 @@ public class CashierSystemFXApplication extends Application {
 
         if (!hasActiveShift) {
             // 没有活跃班次，直接确认退出
-            if (FXUtils.showConfirmAlert("确认退出", "确定要退出系统吗？")) {
+            if (FXUtils.showConfirmAlert(
+                I18nManager.getInstance().get("app.exit_confirm_title"),
+                I18nManager.getInstance().get("app.exit_confirm_message"))) {
                 exitApplication();
             }
             return;
@@ -402,14 +406,16 @@ public class CashierSystemFXApplication extends Application {
 
         // 有活跃班次：按是否已登录区分
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("确认退出");
+        alert.setTitle(I18nManager.getInstance().get("app.exit_confirm_title"));
         alert.setHeaderText(null);
 
         if (user == null) {
             // 未登录（登录界面）：无法在此交班，不提供"先交班"，仅"直接退出/取消"
-            alert.setContentText("当前有活跃班次未交班！\n\n请重新登录后进行交班，或直接退出系统。");
-            ButtonType noButton = new ButtonType("直接退出", ButtonBar.ButtonData.NO);
-            ButtonType cancelButton = new ButtonType("取消", ButtonBar.ButtonData.CANCEL_CLOSE);
+            alert.setContentText(I18nManager.getInstance().get("app.exit_active_shift_message"));
+            ButtonType noButton = new ButtonType(
+                I18nManager.getInstance().get("app.exit_direct"), ButtonBar.ButtonData.NO);
+            ButtonType cancelButton = new ButtonType(
+                I18nManager.getInstance().get(I18nKeys.Common.CANCEL), ButtonBar.ButtonData.CANCEL_CLOSE);
             alert.getButtonTypes().setAll(noButton, cancelButton);
             alert.showAndWait().ifPresent(bt -> {
                 if (bt == noButton) {
@@ -418,17 +424,20 @@ public class CashierSystemFXApplication extends Application {
             });
         } else {
             // 已登录：三选，"先交班"取消退出并引导前往交接班入口（不再空操作）
-            alert.setContentText("当前有活跃班次未交班！\n\n确定要退出系统吗？\n\n提示：建议先交班后再退出。");
-            ButtonType yesButton = new ButtonType("先交班", ButtonBar.ButtonData.YES);
-            ButtonType noButton = new ButtonType("直接退出", ButtonBar.ButtonData.NO);
-            ButtonType cancelButton = new ButtonType("取消", ButtonBar.ButtonData.CANCEL_CLOSE);
+            alert.setContentText(I18nManager.getInstance().get("app.exit_active_shift_confirm"));
+            ButtonType yesButton = new ButtonType(
+                I18nManager.getInstance().get("app.exit_shift_first"), ButtonBar.ButtonData.YES);
+            ButtonType noButton = new ButtonType(
+                I18nManager.getInstance().get("app.exit_direct"), ButtonBar.ButtonData.NO);
+            ButtonType cancelButton = new ButtonType(
+                I18nManager.getInstance().get(I18nKeys.Common.CANCEL), ButtonBar.ButtonData.CANCEL_CLOSE);
             alert.getButtonTypes().setAll(yesButton, noButton, cancelButton);
             alert.showAndWait().ifPresent(buttonType -> {
                 if (buttonType == yesButton) {
                     Alert tip = new Alert(Alert.AlertType.INFORMATION);
-                    tip.setTitle("请前往交接班");
+                    tip.setTitle(I18nManager.getInstance().get("app.go_shift_title"));
                     tip.setHeaderText(null);
-                    tip.setContentText("请点击界面上的「交接班」按钮完成交班后再退出。");
+                    tip.setContentText(I18nManager.getInstance().get("app.go_shift_message"));
                     tip.showAndWait();
                     logger.info("用户选择先交班，已引导前往交接班入口");
                 } else if (buttonType == noButton) {

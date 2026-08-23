@@ -3,7 +3,6 @@ package com.cashier.dao;
 import com.cashier.model.Product;
 import com.cashier.model.Transaction;
 import com.cashier.model.TransactionStatistics;
-import com.cashier.util.DatabaseManager;
 import com.cashier.util.LoggerFactoryUtil;
 import org.slf4j.Logger;
 

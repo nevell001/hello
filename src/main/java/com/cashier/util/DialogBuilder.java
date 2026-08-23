@@ -1,6 +1,5 @@
 package com.cashier.util;
 
-import com.cashier.i18n.I18nManager;
 import javafx.scene.control.*;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;

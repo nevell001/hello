@@ -2,7 +2,6 @@ package com.cashier.api.controller;
 
 import com.cashier.api.support.TestContext;
 import com.cashier.dao.DAOFactory;
-import com.cashier.dao.PaymentDAORefactored;
 import com.cashier.service.PaymentService;
 import com.cashier.util.DatabaseTestBase;
 import io.javalin.http.HandlerType;

@@ -9,7 +9,6 @@ import io.javalin.http.HttpStatus;
 import org.slf4j.Logger;
 import com.cashier.util.LoggerFactoryUtil;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 

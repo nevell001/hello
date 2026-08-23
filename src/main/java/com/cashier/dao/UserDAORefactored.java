@@ -3,7 +3,6 @@ package com.cashier.dao;
 import com.cashier.model.PageResult;
 import com.cashier.model.User;
 
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;

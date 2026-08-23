@@ -22,7 +22,6 @@ import javafx.stage.Stage;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 商品编辑控制器
