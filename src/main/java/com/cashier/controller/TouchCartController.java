@@ -91,6 +91,9 @@ public class TouchCartController implements CartViewHost {
     private static final I18nManager i18n = I18nManager.getInstance();
     private static final ProductDAORefactored productDAO = DAOFactory.getInstance().getProductDAO();
     private static final HoldOrderDAORefactored holdOrderDAO = DAOFactory.getInstance().getHoldOrderDAO();
+    private static final String SCAN_SUCCESS_SOUND = "/sounds/scan_success.wav";
+    private static final String SCAN_ERROR_SOUND = "/sounds/scan_error.wav";
+    private static final String SCAN_NOT_FOUND_SOUND = "/sounds/scan_not_found.wav";
 
     @FXML private VBox categoryBox;
     @FXML private TextField searchField;
@@ -713,6 +716,7 @@ public class TouchCartController implements CartViewHost {
         CartItem existing = findCartItem(product.id);
         int inCart = existing != null ? existing.quantity : 0;
         if (inCart + 1 > stock) {
+            playScanErrorSound();
             warn(i18n.get("tpos.out_of_stock_warn", product.name));
             return;
         }
@@ -729,6 +733,7 @@ public class TouchCartController implements CartViewHost {
             searchField.requestFocus();
         }
         StatusBarManager.updateSuccess(i18n.get("tpos.scan_added", product.name));
+        playScanSuccessSound();
     }
 
     private void incrementQty(CartItem item) {
@@ -1240,6 +1245,7 @@ public class TouchCartController implements CartViewHost {
             }
             try {
                 if (findExactProduct(current.trim()) == null) {
+                    playScanNotFoundSound();
                     warn(i18n.get("tpos.scan_not_found", current.trim()));
                 }
             } catch (SQLException ex) {
@@ -1247,6 +1253,34 @@ public class TouchCartController implements CartViewHost {
             }
         });
         notFoundHint.play();
+    }
+
+    /** 播放扫码成功短促提示音 */
+    private void playScanSuccessSound() {
+        playSound(SCAN_SUCCESS_SOUND);
+    }
+
+    /** 播放扫码错误提示音（库存不足等） */
+    private void playScanErrorSound() {
+        playSound(SCAN_ERROR_SOUND);
+    }
+
+    /** 播放未找到商品提示音 */
+    private void playScanNotFoundSound() {
+        playSound(SCAN_NOT_FOUND_SOUND);
+    }
+
+    private void playSound(String resource) {
+        try {
+            javafx.scene.media.Media sound = new javafx.scene.media.Media(
+                getClass().getResource(resource).toString()
+            );
+            javafx.scene.media.MediaPlayer mediaPlayer = new javafx.scene.media.MediaPlayer(sound);
+            mediaPlayer.play();
+            logger.debug("播放扫码提示音: {}", resource);
+        } catch (Exception e) {
+            logger.debug("播放扫码提示音失败（音效文件可能不存在）: {}", e.getMessage());
+        }
     }
 
     @FXML
