@@ -692,6 +692,8 @@ When working on files that still use the old `ProductDAO`, consider migrating th
 - 导出验证：`ExportUtilTest` 用 POI/PDFBox 读回 Excel/PDF 导出文件，验证内容与页数完整；
   非法子目录（路径穿越）被拒绝
 - 补测 DAO：盘点明细、语言偏好（回退链/货币）、备份记录与配置（测试内自建表）
+- 补测 Service：会员等级边界（金卡 5000/钻石 10000、null/负数、折扣映射）、发票金额/税额计算、
+  数据服务设置持久化与主题偏好回退、库存有界加载
 
 ## Known Issues
 
