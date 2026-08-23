@@ -1179,7 +1179,14 @@ public class TouchCartController implements CartViewHost {
                 product = productDAO.findByProductCode(keyword);
             }
             if (product == null) {
-                return false;
+                // 精确未命中：若模糊搜索结果恰好唯一，也视为“确定商品”直接加入
+                List<Product> searched = productDAO.search(keyword, 1, SEARCH_LIMIT).getData();
+                if (searched.size() == 1) {
+                    product = searched.get(0);
+                } else {
+                    logger.info("搜索未命中可直加商品: keyword={}, 候选={}", keyword, searched.size());
+                    return false;
+                }
             }
             addToCart(product);
             return true;
