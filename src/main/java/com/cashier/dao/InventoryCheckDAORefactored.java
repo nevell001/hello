@@ -1,0 +1,286 @@
+package com.cashier.dao;
+
+import com.cashier.model.InventoryCheck;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.List;
+
+/**
+ * 库存盘点数据访问对象（重构版）
+ * 实例方法 + BaseDAO 通用查询，通过 DAOFactory 获取。
+ */
+public class InventoryCheckDAORefactored extends BaseDAO {
+
+    private static final String SELECT_COLUMNS =
+        "id, check_no, check_date, check_type, total_items, diff_items, status, operator, checker, remark, create_time, update_time ";
+
+    private static final RowMapper<InventoryCheck> CHECK_MAPPER = new RowMapper<InventoryCheck>() {
+        @Override
+        public InventoryCheck mapRow(ResultSet rs, int rowNum) throws SQLException {
+            InventoryCheck check = new InventoryCheck();
+            check.id = rs.getInt("id");
+            check.checkNo = rs.getString("check_no");
+            check.checkDate = rs.getString("check_date");
+            check.checkType = rs.getString("check_type");
+            check.totalItems = rs.getInt("total_items");
+            check.diffItems = rs.getInt("diff_items");
+            check.status = rs.getString("status");
+            check.operator = rs.getString("operator");
+            check.checker = rs.getString("checker");
+            check.remark = rs.getString("remark");
+            check.createTime = rs.getTimestamp("create_time");
+            check.updateTime = rs.getTimestamp("update_time");
+            return check;
+        }
+    };
+
+    /**
+     * 根据ID查找库存盘点记录
+     *
+     * @param id 盘点ID
+     * @return 库存盘点对象，如果未找到返回null
+     * @throws SQLException 数据库操作异常
+     */
+    public InventoryCheck findById(int id) throws SQLException {
+        return queryOneOrNull("SELECT " + SELECT_COLUMNS +
+            " FROM inventory_check WHERE id = ?", CHECK_MAPPER, id);
+    }
+
+    /**
+     * 查询所有库存盘点记录
+     *
+     * @return 库存盘点记录列表
+     * @throws SQLException 数据库操作异常
+     */
+    public List<InventoryCheck> findAll() throws SQLException {
+        return queryList("SELECT " + SELECT_COLUMNS +
+            " FROM inventory_check ORDER BY create_time DESC", CHECK_MAPPER);
+    }
+
+    /**
+     * 查询最近的库存盘点记录，用于桌面列表默认加载。
+     *
+     * @param limit 最大返回数量
+     * @return 库存盘点记录列表
+     * @throws SQLException 数据库操作异常
+     */
+    public List<InventoryCheck> findRecent(int limit) throws SQLException {
+        int safeLimit = limit > 0 ? limit : 100;
+        return queryList("SELECT " + SELECT_COLUMNS +
+            " FROM inventory_check ORDER BY create_time DESC LIMIT ?", CHECK_MAPPER, safeLimit);
+    }
+
+    /**
+     * 根据盘点单号查找库存盘点记录
+     *
+     * @param checkNo 盘点单号
+     * @return 库存盘点对象，如果未找到返回null
+     * @throws SQLException 数据库操作异常
+     */
+    public InventoryCheck findByCheckNo(String checkNo) throws SQLException {
+        return queryOneOrNull("SELECT " + SELECT_COLUMNS +
+            " FROM inventory_check WHERE check_no = ?", CHECK_MAPPER, checkNo);
+    }
+
+    /**
+     * 根据数据库中已有单号生成下一个盘点单号。
+     *
+     * @param checkDate 盘点日期（yyyy-MM-dd）
+     * @return 新盘点单号，格式 ICyyyyMMdd0001
+     * @throws SQLException 数据库操作异常
+     */
+    public String generateNextCheckNo(String checkDate) throws SQLException {
+        String dateStr = checkDate != null ? checkDate.replaceAll("[^0-9]", "") : "";
+        if (dateStr.length() != 8) {
+            dateStr = java.time.LocalDate.now(java.time.ZoneId.systemDefault())
+                .format(com.cashier.util.DateTimeFormats.COMPACT_DATE);
+        }
+
+        String prefix = "IC" + dateStr;
+        String latestCheckNo = queryOneOrNull(
+            "SELECT check_no FROM inventory_check WHERE check_no LIKE ? ORDER BY check_no DESC LIMIT 1",
+            (rs, rowNum) -> rs.getString("check_no"), prefix + "%");
+
+        int maxSeq = 0;
+        if (latestCheckNo != null && latestCheckNo.length() > prefix.length()) {
+            try {
+                maxSeq = Integer.parseInt(latestCheckNo.substring(prefix.length()));
+            } catch (NumberFormatException ignored) {
+                maxSeq = 0;
+            }
+        }
+
+        return prefix + String.format("%04d", maxSeq + 1);
+    }
+
+    /**
+     * 根据盘点类型查找库存盘点记录
+     *
+     * @param checkType 盘点类型（full-全盘，partial-部分盘点）
+     * @return 库存盘点记录列表
+     * @throws SQLException 数据库操作异常
+     */
+    public List<InventoryCheck> findByCheckType(String checkType) throws SQLException {
+        return queryList("SELECT " + SELECT_COLUMNS +
+            " FROM inventory_check WHERE check_type = ? ORDER BY create_time DESC", CHECK_MAPPER, checkType);
+    }
+
+    /**
+     * 根据状态查找库存盘点记录
+     *
+     * @param status 盘点状态（pending-待盘点，checking-盘点中，completed-已完成）
+     * @return 库存盘点记录列表
+     * @throws SQLException 数据库操作异常
+     */
+    public List<InventoryCheck> findByStatus(String status) throws SQLException {
+        return queryList("SELECT " + SELECT_COLUMNS +
+            " FROM inventory_check WHERE status = ? ORDER BY create_time DESC", CHECK_MAPPER, status);
+    }
+
+    /**
+     * 根据盘点人查找库存盘点记录
+     *
+     * @param operator 盘点人
+     * @return 库存盘点记录列表
+     * @throws SQLException 数据库操作异常
+     */
+    public List<InventoryCheck> findByOperator(String operator) throws SQLException {
+        return queryList("SELECT " + SELECT_COLUMNS +
+            " FROM inventory_check WHERE operator = ? ORDER BY create_time DESC", CHECK_MAPPER, operator);
+    }
+
+    /**
+     * 根据日期范围查找库存盘点记录
+     *
+     * @param startDate 开始日期（yyyy-MM-dd）
+     * @param endDate   结束日期（yyyy-MM-dd）
+     * @return 库存盘点记录列表
+     * @throws SQLException 数据库操作异常
+     */
+    public List<InventoryCheck> findByDateRange(String startDate, String endDate) throws SQLException {
+        return queryList("SELECT " + SELECT_COLUMNS +
+            " FROM inventory_check WHERE check_date BETWEEN ? AND ? ORDER BY create_time DESC",
+            CHECK_MAPPER, startDate, endDate);
+    }
+
+    /**
+     * 插入新库存盘点记录
+     *
+     * @param check 库存盘点对象
+     * @return 是否插入成功
+     * @throws SQLException 数据库操作异常
+     */
+    public boolean insert(InventoryCheck check) throws SQLException {
+        long id = executeInsertReturnId(
+            "INSERT INTO inventory_check (check_no, check_date, check_type, total_items, diff_items, status, operator, checker, remark, create_time, update_time) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            check.checkNo, check.checkDate, check.checkType, check.totalItems, check.diffItems,
+            check.status, check.operator, check.checker, check.remark, check.createTime, check.updateTime);
+        check.id = (int) id;
+        return id > 0;
+    }
+
+    /**
+     * 更新库存盘点记录
+     *
+     * @param check 库存盘点对象
+     * @return 是否更新成功
+     * @throws SQLException 数据库操作异常
+     */
+    public boolean update(InventoryCheck check) throws SQLException {
+        return executeUpdate(
+            "UPDATE inventory_check SET check_no = ?, check_date = ?, check_type = ?, " +
+                "total_items = ?, diff_items = ?, status = ?, operator = ?, checker = ?, remark = ?, update_time = ? " +
+                "WHERE id = ?",
+            check.checkNo, check.checkDate, check.checkType, check.totalItems, check.diffItems,
+            check.status, check.operator, check.checker, check.remark,
+            new Timestamp(System.currentTimeMillis()), check.id) > 0;
+    }
+
+    /**
+     * 更新库存盘点状态
+     *
+     * @param id     盘点ID
+     * @param status 新状态
+     * @return 是否更新成功
+     * @throws SQLException 数据库操作异常
+     */
+    public boolean updateStatus(int id, String status) throws SQLException {
+        return executeUpdate(
+            "UPDATE inventory_check SET status = ?, update_time = ? WHERE id = ?",
+            status, new Timestamp(System.currentTimeMillis()), id) > 0;
+    }
+
+    /**
+     * 更新盘点统计信息
+     *
+     * @param id         盘点ID
+     * @param totalItems 总商品数
+     * @param diffItems  差异数
+     * @return 是否更新成功
+     * @throws SQLException 数据库操作异常
+     */
+    public boolean updateStatistics(int id, int totalItems, int diffItems) throws SQLException {
+        return executeUpdate(
+            "UPDATE inventory_check SET total_items = ?, diff_items = ?, update_time = ? WHERE id = ?",
+            totalItems, diffItems, new Timestamp(System.currentTimeMillis()), id) > 0;
+    }
+
+    /**
+     * 完成盘点
+     *
+     * @param id      盘点ID
+     * @param checker 审核人
+     * @return 是否更新成功
+     * @throws SQLException 数据库操作异常
+     */
+    public boolean complete(int id, String checker) throws SQLException {
+        return executeUpdate(
+            "UPDATE inventory_check SET status = 'completed', checker = ?, update_time = ? WHERE id = ?",
+            checker, new Timestamp(System.currentTimeMillis()), id) > 0;
+    }
+
+    /**
+     * 删除库存盘点记录
+     *
+     * @param id 盘点ID
+     * @return 是否删除成功
+     * @throws SQLException 数据库操作异常
+     */
+    public boolean delete(int id) throws SQLException {
+        return executeUpdate("DELETE FROM inventory_check WHERE id = ?", id) > 0;
+    }
+
+    /**
+     * 批量插入库存盘点记录
+     *
+     * @param checks 库存盘点记录列表
+     * @throws SQLException 数据库操作异常
+     */
+    public void batchInsert(List<InventoryCheck> checks) throws SQLException {
+        batchUpdate(
+            "INSERT INTO inventory_check (check_no, check_date, check_type, total_items, diff_items, status, operator, checker, remark, create_time, update_time) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            checks.stream()
+                .map(check -> new Object[]{
+                    check.checkNo, check.checkDate, check.checkType, check.totalItems, check.diffItems,
+                    check.status, check.operator, check.checker, check.remark, check.createTime, check.updateTime})
+                .toList());
+    }
+
+    /**
+     * 统计盘点记录数量
+     *
+     * @param status 盘点状态（可为null）
+     * @return 记录数量
+     * @throws SQLException 数据库操作异常
+     */
+    public int countByStatus(String status) throws SQLException {
+        if (status == null || status.isEmpty()) {
+            return queryInt("SELECT COUNT(*) FROM inventory_check");
+        }
+        return queryInt("SELECT COUNT(*) FROM inventory_check WHERE status = ?", status);
+    }
+}

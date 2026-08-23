@@ -5,7 +5,6 @@ import com.cashier.dao.ProductDAORefactored;
 import com.cashier.dao.PurchaseApprovalDAO;
 import com.cashier.dao.PurchaseInboundDAO;
 import com.cashier.dao.PurchaseInboundItemDAO;
-import com.cashier.dao.PurchaseOrderDAO;
 import com.cashier.model.PurchaseApproval;
 import com.cashier.model.PurchaseInbound;
 import com.cashier.model.PurchaseInboundItem;

@@ -15,6 +15,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DisplayName("库存盘点数据访问对象测试")
 class InventoryCheckDAOTest extends DatabaseTestBase {
 
+    private final InventoryCheckDAORefactored inventoryCheckDAO =
+        DAOFactory.getInstance().getInventoryCheckDAO();
+
     @BeforeAll
     static void setup() throws SQLException {
         initTestDatabase();
@@ -35,9 +38,9 @@ class InventoryCheckDAOTest extends DatabaseTestBase {
         existing.status = "checking";
         existing.operator = "admin";
 
-        InventoryCheckDAO.insert(existing);
+        inventoryCheckDAO.insert(existing);
 
-        String nextCheckNo = InventoryCheckDAO.generateNextCheckNo("2026-06-17");
+        String nextCheckNo = inventoryCheckDAO.generateNextCheckNo("2026-06-17");
 
         assertEquals("IC202606170002", nextCheckNo);
     }
@@ -49,11 +52,11 @@ class InventoryCheckDAOTest extends DatabaseTestBase {
         InventoryCheck middleCheck = createCheck("IC202607130002", "2026-07-13", 2_000L);
         InventoryCheck newestCheck = createCheck("IC202607130003", "2026-07-13", 3_000L);
 
-        InventoryCheckDAO.insert(oldCheck);
-        InventoryCheckDAO.insert(middleCheck);
-        InventoryCheckDAO.insert(newestCheck);
+        inventoryCheckDAO.insert(oldCheck);
+        inventoryCheckDAO.insert(middleCheck);
+        inventoryCheckDAO.insert(newestCheck);
 
-        var recentChecks = InventoryCheckDAO.findRecent(2);
+        var recentChecks = inventoryCheckDAO.findRecent(2);
 
         assertEquals(2, recentChecks.size());
         assertEquals("IC202607130003", recentChecks.get(0).checkNo);

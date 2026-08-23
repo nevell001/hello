@@ -4,7 +4,7 @@ import com.cashier.i18n.I18nKeys;
 
 import com.cashier.i18n.I18nManager;
 import com.cashier.dao.DAOFactory;
-import com.cashier.dao.InventoryCheckDAO;
+import com.cashier.dao.InventoryCheckDAORefactored;
 import com.cashier.dao.InventoryCheckItemDAO;
 import com.cashier.dao.ProductDAORefactored;
 import com.cashier.model.*;
@@ -46,6 +46,7 @@ public class InventoryCheckController {
     private static final int CHECK_PRODUCT_PAGE_SIZE = 500;
     private static final int INVENTORY_CHECK_LIMIT = 500;
     private final ProductDAORefactored productDAO = DAOFactory.getInstance().getProductDAO();
+    private final InventoryCheckDAORefactored inventoryCheckDAO = DAOFactory.getInstance().getInventoryCheckDAO();
 
     @FXML
     private TableView<InventoryCheck> checkTable;
@@ -153,7 +154,7 @@ public class InventoryCheckController {
      */
     private void loadChecks() {
         try {
-            List<InventoryCheck> checkData = InventoryCheckDAO.findRecent(INVENTORY_CHECK_LIMIT);
+            List<InventoryCheck> checkData = inventoryCheckDAO.findRecent(INVENTORY_CHECK_LIMIT);
             checks = new HashMap<>();
             for (InventoryCheck check : checkData) {
                 checks.put(check.id, check);
@@ -449,16 +450,16 @@ public class InventoryCheckController {
         try {
             if (isEdit) {
                 newCheck.id = check.id;
-                InventoryCheckDAO.update(newCheck);
+                inventoryCheckDAO.update(newCheck);
                 InventoryCheckItemDAO.deleteByCheckId(check.id);
                 for (CheckItemWrapper wrapper : items) {
                     InventoryCheckItemDAO.insert(toInventoryCheckItem(check.id, wrapper));
                 }
                 updateStatus(I18nManager.getInstance().get("runtime.inventory_check_updated"));
             } else {
-                newCheck.checkNo = InventoryCheckDAO.generateNextCheckNo(newCheck.checkDate);
+                newCheck.checkNo = inventoryCheckDAO.generateNextCheckNo(newCheck.checkDate);
                 checkNoField.setText(newCheck.checkNo);
-                InventoryCheckDAO.insert(newCheck);
+                inventoryCheckDAO.insert(newCheck);
                 for (CheckItemWrapper wrapper : items) {
                     InventoryCheckItemDAO.insert(toInventoryCheckItem(newCheck.id, wrapper));
                 }
@@ -499,157 +500,22 @@ public class InventoryCheckController {
             root.setPadding(new javafx.geometry.Insets(10));
             root.getStyleClass().add("dialog-content");
 
-            // 分类筛选
             ComboBox<String> categoryCombo = new ComboBox<>();
             categoryCombo.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.all_categories"));
             categoryCombo.setPrefWidth(150);
-            
-            // 搜索框
+
             TextField searchField = new TextField();
             searchField.setPromptText(com.cashier.i18n.I18nManager.getInstance().get("runtime.search_product_hint"));
-            HBox filterBox = new HBox(10, new Label(com.cashier.i18n.I18nManager.getInstance().get("product.edit.category")), categoryCombo, new Label(com.cashier.i18n.I18nManager.getInstance().get("purchase_inbound.search_label")), searchField);
-
-            // 商品表格
-            TableView<Product> productTable = new TableView<>();
-            productTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-            productTable.setPlaceholder(new Label(I18nManager.getInstance().get(I18nKeys.Message.DATA_EMPTY)));
-            
-            // 添加复选框列
-            TableColumn<Product, Boolean> selectColumn = new TableColumn<>();
-            selectColumn.setPrefWidth(50);
-            selectColumn.setSortable(false);
-            selectColumn.setCellValueFactory(param -> new SimpleBooleanProperty(true)); // 总是显示复选框
-            selectColumn.setCellFactory(col -> new TableCell<Product, Boolean>() {
-                private final CheckBox checkBox = new CheckBox();
-                
-                {
-                    // 设置复选框点击事件
-                    checkBox.setOnAction(e -> {
-                        if (!isEmpty()) {
-                            Product product = getTableView().getItems().get(getIndex());
-                            if (checkBox.isSelected()) {
-                                getTableView().getSelectionModel().select(product);
-                            } else {
-                                getTableView().getSelectionModel().clearSelection(getIndex());
-                            }
-                        }
-                    });
-                }
-                
-                @Override
-                protected void updateItem(Boolean item, boolean empty) {
-                    super.updateItem(item, empty);
-                    if (empty) {
-                        setGraphic(null);
-                    } else {
-                        Product product = getTableView().getItems().get(getIndex());
-                        checkBox.setSelected(productTable.getSelectionModel().getSelectedItems().contains(product));
-                        setGraphic(checkBox);
-                    }
-                }
-            });
-            
-            // 监听选择状态变化，刷新表格以更新复选框显示
-            productTable.getSelectionModel().getSelectedItems().addListener((javafx.collections.ListChangeListener<Product>) c -> {
-                Platform.runLater(() -> productTable.refresh());
-            });
-            
-            TableColumn<Product, String> nameCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnApproval.PRODUCT_NAME));
-            nameCol.setPrefWidth(200);
-            nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
-
-            TableColumn<Product, String> barcodeCol = new TableColumn<>(I18nManager.getInstance().get("runtime.barcode"));
-            barcodeCol.setPrefWidth(130);
-            barcodeCol.setCellValueFactory(new PropertyValueFactory<>("barcode"));
-
-            TableColumn<Product, String> categoryCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get("return_report.category"));
-            categoryCol.setPrefWidth(100);
-            categoryCol.setCellValueFactory(new PropertyValueFactory<>("category"));
-
-            TableColumn<Product, Number> stockCol = new TableColumn<>(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Product.STOCK));
-            stockCol.setPrefWidth(80);
-            stockCol.setCellValueFactory(new PropertyValueFactory<>("quantity"));
-
-            TableColumn<Product, Number> costCol = new TableColumn<>(I18nManager.getInstance().get("runtime.cost_price"));
-            costCol.setPrefWidth(100);
-            costCol.setCellValueFactory(new PropertyValueFactory<>("cost"));
-
-            productTable.getColumns().addAll(selectColumn, nameCol, barcodeCol, categoryCol, stockCol, costCol);
-            
-            // 加载分类列表
-            ObservableList<String> categoryList = FXCollections.observableArrayList();
             String allCategories = I18nManager.getInstance().get(I18nKeys.Filter.ALL_CATEGORIES);
-            categoryList.add(allCategories);
-            categoryList.addAll(DAOFactory.getInstance().getCategoryDAO().findAll().stream()
-                .map(category -> category.name)
-                .filter(name -> name != null && !name.isEmpty())
-                .collect(Collectors.toCollection(TreeSet::new)));
-            categoryCombo.setItems(categoryList);
-            categoryCombo.setValue(allCategories);
-
+            HBox filterBox = createProductFilterBox(categoryCombo, searchField);
+            TableView<Product> productTable = createProductSelectionTable();
+            loadCategoryOptions(categoryCombo, allCategories);
             loadProductSelectionPage(productTable, allCategories, "", allCategories);
+            wireProductFilterEvents(categoryCombo, searchField, productTable, allCategories);
 
-            // 分类筛选和全选功能
-            categoryCombo.setOnAction(e -> {
-                loadProductSelectionPage(productTable, allCategories, searchField.getText(), categoryCombo.getValue());
-            });
-
-            // 搜索功能
-            searchField.textProperty().addListener((obs, oldVal, newVal) -> {
-                loadProductSelectionPage(productTable, allCategories, newVal, categoryCombo.getValue());
-            });
-
-            // 全选/取消全选按钮
-            Button selectAllButton = new Button(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Shortcut.SELECT_ALL));
-            selectAllButton.setOnAction(e -> {
-                ObservableList<Product> items = productTable.getItems();
-                productTable.getSelectionModel().selectAll();
-            });
-
-            Button deselectAllButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("runtime.deselect_all"));
-            deselectAllButton.setOnAction(e -> {
-                productTable.getSelectionModel().clearSelection();
-            });
-
-            HBox selectButtonsBox = new HBox(10, selectAllButton, deselectAllButton);
-
-            // 添加按钮
-            Button addButton = new Button(com.cashier.i18n.I18nManager.getInstance().get("runtime.add_selected_products"));
-            addButton.getStyleClass().addAll("primary-button", "button-normal");
-            addButton.setOnAction(e -> {
-                ObservableList<Product> selectedProducts = productTable.getSelectionModel().getSelectedItems();
-                if (selectedProducts == null || selectedProducts.isEmpty()) {
-                    showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_PRODUCT_FIRST));
-                    return;
-                }
-                
-                int addedCount = 0;
-                for (Product selected : selectedProducts) {
-                    // 检查是否已经添加过
-                    boolean exists = itemTable.getItems().stream()
-                        .anyMatch(item -> item.productId == selected.id);
-                    
-                    if (!exists) {
-                        logger.debug("选中的商品 - ID: {}, 名称: {}", selected.id, selected.name);
-                        CheckItemWrapper wrapper = new CheckItemWrapper(selected);
-                        itemTable.getItems().add(wrapper);
-                        addedCount++;
-                    }
-                }
-                
-                if (addedCount > 0) {
-                    itemTable.refresh();
-                    logger.info("成功添加 {} 个商品", addedCount);
-                    selectorStage.close();
-                } else {
-                    showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.product_already_added"));
-                }
-            });
-
-            Button cancelButton = new Button(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnOrder.CANCEL));
-            cancelButton.getStyleClass().addAll("secondary-button", "button-normal");
-            cancelButton.setOnAction(e -> selectorStage.close());
-
+            HBox selectButtonsBox = createSelectionButtonsBox(productTable);
+            Button addButton = createAddProductsButton(itemTable, productTable, selectorStage);
+            Button cancelButton = createCancelButton(selectorStage);
             HBox buttonBox = new HBox(10, addButton, cancelButton);
             buttonBox.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
 
@@ -665,6 +531,171 @@ public class InventoryCheckController {
             logger.error("加载商品数据失败", e);
             showError(I18nManager.getInstance().get("runtime.product_load_failed", e.getMessage()));
         }
+    }
+
+    /** 创建商品选择器的分类 + 搜索筛选行 */
+    private HBox createProductFilterBox(ComboBox<String> categoryCombo, TextField searchField) {
+        Label categoryLabel = new Label(com.cashier.i18n.I18nManager.getInstance().get("product.edit.category"));
+        Label searchLabel = new Label(com.cashier.i18n.I18nManager.getInstance().get("purchase_inbound.search_label"));
+        return new HBox(10, categoryLabel, categoryCombo, searchLabel, searchField);
+    }
+
+    /** 创建商品选择表格（复选框 + 名称/条码/分类/库存/成本列） */
+    private TableView<Product> createProductSelectionTable() {
+        TableView<Product> productTable = new TableView<>();
+        productTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        productTable.setPlaceholder(new Label(I18nManager.getInstance().get(I18nKeys.Message.DATA_EMPTY)));
+
+        TableColumn<Product, Boolean> selectColumn = new TableColumn<>();
+        selectColumn.setPrefWidth(50);
+        selectColumn.setSortable(false);
+        selectColumn.setCellValueFactory(param -> new SimpleBooleanProperty(true));
+        selectColumn.setCellFactory(col -> createSelectionCheckBoxCell(productTable));
+
+        productTable.getSelectionModel().getSelectedItems().addListener(
+            (javafx.collections.ListChangeListener<Product>) c -> Platform.runLater(productTable::refresh));
+
+        TableColumn<Product, String> nameCol = new TableColumn<>(
+            com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnApproval.PRODUCT_NAME));
+        nameCol.setPrefWidth(200);
+        nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
+
+        TableColumn<Product, String> barcodeCol = new TableColumn<>(
+            I18nManager.getInstance().get("runtime.barcode"));
+        barcodeCol.setPrefWidth(130);
+        barcodeCol.setCellValueFactory(new PropertyValueFactory<>("barcode"));
+
+        TableColumn<Product, String> categoryCol = new TableColumn<>(
+            com.cashier.i18n.I18nManager.getInstance().get("return_report.category"));
+        categoryCol.setPrefWidth(100);
+        categoryCol.setCellValueFactory(new PropertyValueFactory<>("category"));
+
+        TableColumn<Product, Number> stockCol = new TableColumn<>(
+            com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Product.STOCK));
+        stockCol.setPrefWidth(80);
+        stockCol.setCellValueFactory(new PropertyValueFactory<>("quantity"));
+
+        TableColumn<Product, Number> costCol = new TableColumn<>(
+            I18nManager.getInstance().get("runtime.cost_price"));
+        costCol.setPrefWidth(100);
+        costCol.setCellValueFactory(new PropertyValueFactory<>("cost"));
+
+        productTable.getColumns().addAll(selectColumn, nameCol, barcodeCol, categoryCol, stockCol, costCol);
+        return productTable;
+    }
+
+    /** 复选框列单元格：勾选与表格选择状态双向同步 */
+    private TableCell<Product, Boolean> createSelectionCheckBoxCell(TableView<Product> productTable) {
+        return new TableCell<Product, Boolean>() {
+            private final CheckBox checkBox = new CheckBox();
+
+            {
+                checkBox.setOnAction(e -> {
+                    if (!isEmpty()) {
+                        Product product = getTableView().getItems().get(getIndex());
+                        if (checkBox.isSelected()) {
+                            getTableView().getSelectionModel().select(product);
+                        } else {
+                            getTableView().getSelectionModel().clearSelection(getIndex());
+                        }
+                    }
+                });
+            }
+
+            @Override
+            protected void updateItem(Boolean item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    Product product = getTableView().getItems().get(getIndex());
+                    checkBox.setSelected(productTable.getSelectionModel().getSelectedItems().contains(product));
+                    setGraphic(checkBox);
+                }
+            }
+        };
+    }
+
+    /** 加载分类下拉列表 */
+    private void loadCategoryOptions(ComboBox<String> categoryCombo, String allCategories) throws SQLException {
+        ObservableList<String> categoryList = FXCollections.observableArrayList();
+        categoryList.add(allCategories);
+        categoryList.addAll(DAOFactory.getInstance().getCategoryDAO().findAll().stream()
+            .map(category -> category.name)
+            .filter(name -> name != null && !name.isEmpty())
+            .collect(Collectors.toCollection(TreeSet::new)));
+        categoryCombo.setItems(categoryList);
+        categoryCombo.setValue(allCategories);
+    }
+
+    /** 绑定分类与搜索筛选事件 */
+    private void wireProductFilterEvents(ComboBox<String> categoryCombo, TextField searchField,
+                                         TableView<Product> productTable, String allCategories) {
+        categoryCombo.setOnAction(e ->
+            loadProductSelectionPage(productTable, allCategories, searchField.getText(), categoryCombo.getValue()));
+        searchField.textProperty().addListener((obs, oldVal, newVal) ->
+            loadProductSelectionPage(productTable, allCategories, newVal, categoryCombo.getValue()));
+    }
+
+    /** 创建全选/取消全选按钮组 */
+    private HBox createSelectionButtonsBox(TableView<Product> productTable) {
+        Button selectAllButton = new Button(
+            com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Shortcut.SELECT_ALL));
+        selectAllButton.setOnAction(e -> productTable.getSelectionModel().selectAll());
+
+        Button deselectAllButton = new Button(I18nManager.getInstance().get("runtime.deselect_all"));
+        deselectAllButton.setOnAction(e -> productTable.getSelectionModel().clearSelection());
+
+        return new HBox(10, selectAllButton, deselectAllButton);
+    }
+
+    /** 创建“添加选中商品”按钮 */
+    private Button createAddProductsButton(TableView<CheckItemWrapper> itemTable,
+                                           TableView<Product> productTable, Stage selectorStage) {
+        Button addButton = new Button(
+            com.cashier.i18n.I18nManager.getInstance().get("runtime.add_selected_products"));
+        addButton.getStyleClass().addAll("primary-button", "button-normal");
+        addButton.setOnAction(e -> addSelectedProducts(itemTable, productTable, selectorStage));
+        return addButton;
+    }
+
+    /** 将选中商品加入盘点明细，已存在的商品跳过 */
+    private void addSelectedProducts(TableView<CheckItemWrapper> itemTable,
+                                     TableView<Product> productTable, Stage selectorStage) {
+        ObservableList<Product> selectedProducts = productTable.getSelectionModel().getSelectedItems();
+        if (selectedProducts == null || selectedProducts.isEmpty()) {
+            showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Runtime.SELECT_PRODUCT_FIRST));
+            return;
+        }
+
+        int addedCount = 0;
+        for (Product selected : selectedProducts) {
+            boolean exists = itemTable.getItems().stream()
+                .anyMatch(item -> item.productId == selected.id);
+
+            if (!exists) {
+                logger.debug("选中的商品 - ID: {}, 名称: {}", selected.id, selected.name);
+                itemTable.getItems().add(new CheckItemWrapper(selected));
+                addedCount++;
+            }
+        }
+
+        if (addedCount > 0) {
+            itemTable.refresh();
+            logger.info("成功添加 {} 个商品", addedCount);
+            selectorStage.close();
+        } else {
+            showError(com.cashier.i18n.I18nManager.getInstance().get("runtime.product_already_added"));
+        }
+    }
+
+    /** 创建取消按钮 */
+    private Button createCancelButton(Stage selectorStage) {
+        Button cancelButton = new Button(
+            com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.ReturnOrder.CANCEL));
+        cancelButton.getStyleClass().addAll("secondary-button", "button-normal");
+        cancelButton.setOnAction(e -> selectorStage.close());
+        return cancelButton;
     }
 
     private void loadProductSelectionPage(
@@ -742,7 +773,7 @@ public class InventoryCheckController {
      */
     private String generateCheckNo() {
         try {
-            return InventoryCheckDAO.generateNextCheckNo(LocalDate.now(ZoneId.systemDefault()).format(com.cashier.util.DateTimeFormats.DATE));
+            return inventoryCheckDAO.generateNextCheckNo(LocalDate.now(ZoneId.systemDefault()).format(com.cashier.util.DateTimeFormats.DATE));
         } catch (SQLException ex) {
             logger.warn("生成盘点单号失败，使用本地时间兜底", ex);
             return "IC" + LocalDate.now(ZoneId.systemDefault()).format(com.cashier.util.DateTimeFormats.COMPACT_DATE) + "0001";
@@ -764,7 +795,7 @@ public class InventoryCheckController {
             if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
                 try {
                     InventoryCheckItemDAO.deleteByCheckId(selected.id);
-                    InventoryCheckDAO.delete(selected.id);
+                    inventoryCheckDAO.delete(selected.id);
                     checks.remove(selected.id);
                     filterChecks();
                     updateStatus(I18nManager.getInstance().get("runtime.inventory_check_deleted"));
@@ -890,7 +921,7 @@ public class InventoryCheckController {
             if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
                 try {
                     // 更新盘点单状态
-                    InventoryCheckDAO.complete(selected.id, currentUser);
+                    inventoryCheckDAO.complete(selected.id, currentUser);
 
                     // 根据盘点结果调整库存
                     List<InventoryCheckItem> items = InventoryCheckItemDAO.findByCheckId(selected.id);

@@ -4,9 +4,11 @@ import com.cashier.model.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.Base64;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -26,7 +28,8 @@ class ApiServerTest {
 
             assertTrue(token.matches("[A-Za-z0-9_-]{43}\\.[A-Za-z0-9_-]{43}"),
                 "Token 应为 32 字节随机数加 HMAC 签名的 Base64URL 格式");
-            assertFalse(token.startsWith("TK"), "Token 不应使用可预测前缀");
+            byte[] tokenIdBytes = Base64.getUrlDecoder().decode(token.split("\\.")[0]);
+            assertEquals(32, tokenIdBytes.length, "Token 随机部分应为 32 字节，不可预测");
             assertTrue(generatedTokens.add(token), "Token 不应重复");
         }
     }

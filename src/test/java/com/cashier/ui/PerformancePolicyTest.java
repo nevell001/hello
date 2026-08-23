@@ -812,12 +812,12 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/controller/InventoryCheckController.java"
         ));
         String dao = Files.readString(Path.of(
-            "src/main/java/com/cashier/dao/InventoryCheckDAO.java"
+            "src/main/java/com/cashier/dao/InventoryCheckDAORefactored.java"
         ));
 
         assertTrue(controller.contains("INVENTORY_CHECK_LIMIT = 500"));
-        assertTrue(controller.contains("InventoryCheckDAO.findRecent(INVENTORY_CHECK_LIMIT)"));
-        assertFalse(controller.contains("InventoryCheckDAO.findAll()"));
+        assertTrue(controller.contains("inventoryCheckDAO.findRecent(INVENTORY_CHECK_LIMIT)"));
+        assertFalse(controller.contains("inventoryCheckDAO.findAll()"));
 
         assertTrue(dao.contains("findRecent(int limit)"));
         assertTrue(dao.contains("ORDER BY create_time DESC LIMIT ?"));
