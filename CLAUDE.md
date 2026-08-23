@@ -697,6 +697,13 @@ When working on files that still use the old `ProductDAO`, consider migrating th
 - 补测 商品服务 CRUD/分页/批量导入/删除异常、货币工具格式化/解析/货币切换
 - 补测 查询优化工具（分批查询、批次失败跳过、EXPLAIN 安全校验）
 
+**REST API 启用步骤（本地冒烟/生产）**
+
+1. `config/api.properties` 已生成就绪版本（随机 `token.secret`，`api.enabled=false`，gitignored 不入库）
+2. 本地冒烟：`api.enabled=true` + `cors.allowed.origins=*`（仅本机临时）后重启，验证 `/api/health` 与 `/api/auth/login`
+3. 生产：必须用环境变量 `TOKEN_SECRET`（≥64 字符）覆盖、`CORS_ALLOWED_ORIGINS` 限制具体域名、`api.host` 收紧到受信网段
+4. 生产禁用时应用会打印 `REST API 服务器已禁用` 并拒绝全部 API 请求（安全默认）
+
 ## Known Issues
 
 ### JavaFX Class Loading Warning (macOS + Homebrew JDK)
