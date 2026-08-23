@@ -73,19 +73,19 @@ docker-compose restart
 ## 备份数据
 
 ```bash
-# 备份到 docker/mysql-backup 目录
-docker exec lisuan-mysql mysqldump -u root -pYOUR_ROOT_PASSWORD lisuan_system > docker/mysql-backup/backup_$(date +%Y%m%d).sql
+# 备份到 backups/sql 目录
+docker exec lisuan-mysql mysqldump -u root -pYOUR_ROOT_PASSWORD lisuan_system > backups/sql/backup_$(date +%Y%m%d).sql
 
 # 恢复备份
-docker exec -i lisuan-mysql mysql -u root -pYOUR_ROOT_PASSWORD lisuan_system < docker/mysql-backup/backup_20250203.sql
+docker exec -i lisuan-mysql mysql -u root -pYOUR_ROOT_PASSWORD lisuan_system < backups/sql/backup_20250203.sql
 ```
 
 ## 配置文件
 
-- **docker-compose.yml.example**: Docker Compose 配置示例（复制为 docker-compose.yml）
+- **docker-compose.yml**: Docker Compose 配置
 - **docker/my.cnf**: MySQL 配置文件
 - **docker/mysql-init/**: 初始化 SQL 脚本
-- **docker/mysql-backup/**: 备份文件目录
+- **backups/sql/**: 备份文件目录
 
 ## 故障排查
 
@@ -116,5 +116,5 @@ docker-compose up -d
 ## 更多信息
 
 详细文档请参阅：
-- [Docker MySQL 完整指南](../docker-mysql-setup.md)
+- [Docker 配置文档](../docs/DOCKER_CONFIGURATION.md)
 - [MySQL 部署文档](../docs/MYSQL_SETUP.md)

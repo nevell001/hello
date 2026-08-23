@@ -55,7 +55,7 @@ class SettingsBackupRestoreFeedbackPolicyTest {
     }
 
     @Test
-    @DisplayName("设置页默认 SQL 备份目录应为 backup/sql")
+    @DisplayName("设置页默认 SQL 备份目录应为 backups/sql")
     void settingsDefaultSqlBackupPathUsesBackupSqlDirectory() throws Exception {
         String settingsController = Files.readString(Path.of(
             "src/main/java/com/cashier/controller/SettingsController.java"

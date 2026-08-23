@@ -23,7 +23,7 @@ if %errorlevel% neq 0 (
 REM Create necessary directories
 echo [1/4] Creating necessary directories...
 if not exist "docker\mysql-init" mkdir "docker\mysql-init"
-if not exist "docker\mysql-backup" mkdir "docker\mysql-backup"
+if not exist "backups\sql" mkdir "backups\sql"
 if not exist "config" mkdir "config"
 echo [Done] Directories created
 echo.

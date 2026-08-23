@@ -72,7 +72,7 @@ LiSuan Cashier System is a desktop POS (Point of Sale) cashier system built with
 
 ### Data Backup & Recovery
 - In-menu data backup and restore.
-- SQL backups default to `backup/sql`.
+- SQL backups default to `backups/sql`.
 - Backup service packages database, config, logs, invoices, and business data.
 - Supports local backup, automated backup configuration, retention policies, and auto-cleanup.
 - API retains cloud backup config fields for object storage integration.

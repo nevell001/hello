@@ -17,7 +17,7 @@ services:
     volumes:
       - lisuan-mysql-data:/var/lib/mysql
       - ./docker/mysql-init/00-init-complete.sql:/docker-entrypoint-initdb.d/00-init-complete.sql:ro
-      - ./docker/mysql-backup:/backup
+      - ./backups/sql:/backup
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s

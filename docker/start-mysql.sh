@@ -41,7 +41,7 @@ fi
 # 创建必要的目录
 echo -e "${YELLOW}创建必要的目录...${NC}"
 mkdir -p docker/mysql-init
-mkdir -p docker/mysql-backup
+mkdir -p backups/sql
 mkdir -p config
 
 # 检查配置文件

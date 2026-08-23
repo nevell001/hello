@@ -30,9 +30,6 @@ docker/create-cashier-user.sql
 
 # Windows 批处理文件（跟踪这些文件）
 # *.bat
-!FLATLAF_README.md
-!FLATLAF_UPGRADE_SUMMARY.md
-!ICON_FIX_SUMMARY.md
 
 # Claude/iFlow 配置
 .iflow/
@@ -57,11 +54,9 @@ exports/
 backup_*/
 data_backup_*/
 backups/sql/
-docker/mysql-backup/
 
 # JAR 文件（如果使用包管理器则忽略）
 *.jar
-!flatlaf-3.5.jar
 
 # Maven Shade 插件生成的文件
 dependency-reduced-pom.xml
