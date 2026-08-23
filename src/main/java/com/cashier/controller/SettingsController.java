@@ -3,9 +3,12 @@ package com.cashier.controller;
 import com.cashier.i18n.I18nKeys;
 
 import com.cashier.constant.FXConstants;
+import com.cashier.dao.DAOFactory;
 import com.cashier.service.DataService;
 import com.cashier.service.PaymentService;
 import com.cashier.i18n.I18nManager;
+import com.cashier.model.User;
+import com.cashier.util.PasswordUtil;
 import com.cashier.util.FormValidator;
 import com.cashier.util.DatabaseManager;
 import java.sql.SQLException;
@@ -1037,6 +1040,12 @@ public class SettingsController {
                 confirmAlert.setContentText(I18nManager.getInstance().get("runtime.restore_confirm", backupFileName));
                 
                 if (confirmAlert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+                    // 恢复前必须验证管理员密码，防止未授权覆盖数据
+                    if (!confirmAdminPassword()) {
+                        com.cashier.util.StatusBarManager.updateWarning(
+                            I18nManager.getInstance().get(I18nKeys.Status.CANCELLED));
+                        return;
+                    }
                     DataService.restoreData(backupFile.getAbsolutePath());
                     showSuccess(com.cashier.i18n.I18nManager.getInstance().get("runtime.restore_success"));
                     
@@ -1050,6 +1059,51 @@ public class SettingsController {
                 showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED));
             }
         });
+    }
+
+    /**
+     * 恢复备份前的管理员密码确认。
+     * 校验 admin 账号密码，通过返回 true；取消或密码错误返回 false。
+     */
+    private boolean confirmAdminPassword() {
+        javafx.scene.control.Dialog<String> dialog = new javafx.scene.control.Dialog<>();
+        dialog.setTitle(I18nManager.getInstance().get("runtime.confirm_restore"));
+        dialog.setHeaderText(I18nManager.getInstance().get("runtime.restore_admin_password_hint"));
+
+        javafx.scene.control.PasswordField passwordField = new javafx.scene.control.PasswordField();
+        passwordField.setPromptText(I18nManager.getInstance().get("runtime.password"));
+
+        VBox content = new VBox(10, passwordField);
+        dialog.getDialogPane().setContent(content);
+
+        ButtonType okType = new ButtonType(
+            I18nManager.getInstance().get(I18nKeys.Common.CONFIRM), ButtonBar.ButtonData.OK_DONE);
+        ButtonType cancelType = new ButtonType(
+            I18nManager.getInstance().get(I18nKeys.Common.CANCEL), ButtonBar.ButtonData.CANCEL_CLOSE);
+        dialog.getDialogPane().getButtonTypes().addAll(okType, cancelType);
+        dialog.setResultConverter(btn -> btn == okType ? passwordField.getText() : null);
+
+        Optional<String> password = dialog.showAndWait();
+        if (password.isEmpty()) {
+            return false;
+        }
+
+        try {
+            User admin = DAOFactory.getInstance().getUserDAO().findByUsername("admin");
+            if (admin == null || admin.password == null || admin.password.isBlank()) {
+                showError(I18nManager.getInstance().get("runtime.restore_admin_not_configured"));
+                return false;
+            }
+            if (!PasswordUtil.verifyPassword(password.get(), admin.password)) {
+                showError(I18nManager.getInstance().get("runtime.password_incorrect"));
+                return false;
+            }
+            return true;
+        } catch (SQLException e) {
+            logger.error("验证管理员密码失败", e);
+            showError(I18nManager.getInstance().get(I18nKeys.Message.OPERATION_FAILED));
+            return false;
+        }
     }
 
     /**
