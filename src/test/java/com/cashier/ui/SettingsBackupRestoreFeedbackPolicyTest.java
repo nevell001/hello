@@ -3,6 +3,7 @@ package com.cashier.ui;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -12,10 +13,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SettingsBackupRestoreFeedbackPolicyTest {
 
+    /** 读取源码/资源时统一行尾，兼容 Windows CRLF 检出，避免多行断言误判 */
+    private static String readNormalized(Path path) throws IOException {
+        return Files.readString(path).replace("\r\n", "\n");
+    }
+
     @Test
     @DisplayName("备份路径创建失败应给出明确错误")
     void backupPathCreateFailureShowsExplicitError() throws Exception {
-        String settingsController = Files.readString(Path.of(
+        String settingsController = readNormalized(Path.of(
             "src/main/java/com/cashier/controller/SettingsController.java"
         ));
 
@@ -27,7 +33,7 @@ class SettingsBackupRestoreFeedbackPolicyTest {
     @Test
     @DisplayName("恢复备份取消选择或取消确认应同步状态栏")
     void restoreCancelUpdatesStatusBar() throws Exception {
-        String settingsController = Files.readString(Path.of(
+        String settingsController = readNormalized(Path.of(
             "src/main/java/com/cashier/controller/SettingsController.java"
         ));
 
@@ -49,7 +55,7 @@ class SettingsBackupRestoreFeedbackPolicyTest {
         );
 
         for (String file : bundleFiles) {
-            String bundle = Files.readString(Path.of(file));
+            String bundle = readNormalized(Path.of(file));
             assertTrue(bundle.contains("runtime.backup_path_create_failed="), file);
         }
     }
@@ -57,10 +63,10 @@ class SettingsBackupRestoreFeedbackPolicyTest {
     @Test
     @DisplayName("设置页默认 SQL 备份目录应为 backups/sql")
     void settingsDefaultSqlBackupPathUsesBackupSqlDirectory() throws Exception {
-        String settingsController = Files.readString(Path.of(
+        String settingsController = readNormalized(Path.of(
             "src/main/java/com/cashier/controller/SettingsController.java"
         ));
-        String dataService = Files.readString(Path.of(
+        String dataService = readNormalized(Path.of(
             "src/main/java/com/cashier/service/DataService.java"
         ));
 
@@ -75,7 +81,7 @@ class SettingsBackupRestoreFeedbackPolicyTest {
     @Test
     @DisplayName("CSV 导入完成后不得阻塞 JavaFX 线程")
     void csvImportProgressHideUsesPauseTransition() throws Exception {
-        String settingsController = Files.readString(Path.of(
+        String settingsController = readNormalized(Path.of(
             "src/main/java/com/cashier/controller/SettingsController.java"
         ));
 
