@@ -343,7 +343,7 @@ public class PurchaseApprovalController {
             approvalHistoryArea.setPrefRowCount(3);
 
             try {
-                List<PurchaseApproval> approvals = PurchaseApprovalDAO.findByOrderId(order.id);
+                List<PurchaseApproval> approvals = DAOFactory.getInstance().getPurchaseApprovalDAO().findByOrderId(order.id);
                 StringBuilder history = new StringBuilder();
                 for (PurchaseApproval approval : approvals) {
                     history.append(String.format("%s - %s: %s\n",

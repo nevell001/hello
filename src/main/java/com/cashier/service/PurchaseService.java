@@ -2,7 +2,6 @@ package com.cashier.service;
 
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
-import com.cashier.dao.PurchaseApprovalDAO;
 import com.cashier.model.PurchaseApproval;
 import com.cashier.model.PurchaseInbound;
 import com.cashier.model.PurchaseInboundItem;
@@ -38,7 +37,7 @@ public final class PurchaseService {
             if (!DAOFactory.getInstance().getPurchaseOrderDAO().approvePendingWithConnection(conn, orderId, approver, remark, status)) {
                 throw new SQLException("采购订单不存在或已完成审批");
             }
-            if (!PurchaseApprovalDAO.insertWithConnection(conn, approval)) {
+            if (!DAOFactory.getInstance().getPurchaseApprovalDAO().insertWithConnection(conn, approval)) {
                 throw new SQLException("保存采购审批记录失败");
             }
             return true;
