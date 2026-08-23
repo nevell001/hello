@@ -397,7 +397,7 @@ public class DataService {
      */
     public static String loadFontSizePreference(String username) {
         try {
-            return FontSizePreferenceDAO.getFontSizePreference(username);
+            return DAOFactory.getInstance().getFontSizePreferenceDAO().getFontSizePreference(username);
         } catch (SQLException e) {
             logger.error("加载字号偏好失败", e);
             return "medium"; // 默认中等字号
@@ -416,7 +416,7 @@ public class DataService {
      */
     public static void saveFontSizePreference(String username, String fontSize) {
         try {
-            FontSizePreferenceDAO.setFontSizePreference(username, fontSize);
+            DAOFactory.getInstance().getFontSizePreferenceDAO().setFontSizePreference(username, fontSize);
         } catch (SQLException e) {
             logger.error("保存字号偏好失败", e);
         }
