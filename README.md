@@ -6,8 +6,11 @@
 
 **当前版本**: v2.6.0 | **最新更新**: 2026-07-24 | **测试覆盖**: 486 个测试用例
 
-> 测试口径：默认构建运行 469 个用例；`LoginControllerUITest`（17 个用例）需要真实显示环境，
-> 在桌面环境用 `mvn -Pui-tests -Dtest=LoginControllerUITest test` 显式运行，全量共 486 个。
+**当前版本**: v2.6.0 | **最新更新**: 2026-08-23 | **测试覆盖**: 515 个测试用例
+
+> 测试口径：`mvn -q clean verify` 默认运行 515 个用例（含测试 + SpotBugs + JaCoCo 门禁）；
+> `LoginControllerUITest`（17 个用例）需要真实显示环境，在桌面环境用
+> `mvn -Pui-tests -Dtest=LoginControllerUITest test` 显式运行，全量共 532 个。
 
 ![Java](https://img.shields.io/badge/Java-17-orange)
 ![JavaFX](https://img.shields.io/badge/JavaFX-17.0.12-blue)
@@ -20,9 +23,12 @@
 ### 收银管理
 - 结账收银、购物车增删改、商品搜索、会员手机号识别
 - 支持现金、微信、支付宝、银行卡等支付方式
+- 支付支持 `disabled` / `mock` / `production` 三种模式；mock 模式可在支付弹窗一键“模拟支付成功”，本地闭环验证整条支付链路
 - 会员折扣、积分、余额消费与交易记录联动
 - 小票打印、打印预览、钱箱打开、快捷键帮助
 - 交班管理，记录班次销售额和收银员业绩
+- 触屏版：扫码/输入精确命中商品自动加入购物车（含成功/未找到/库存不足提示音），连续快速录入
+- 触屏版底部状态栏显示“触屏版POS”、班次、日期(含星期)与时间；退出交班流程与 PC 版一致（交班 / 取消 / 确定）
 
 ### 商品与库存
 - 商品增删改查，支持商品编码、条码、分类、单位、规格、售价、成本价和库存信息
@@ -70,12 +76,14 @@
 - 备份服务支持数据库、配置、日志、发票和业务数据文件打包
 - 支持本地备份、自动备份配置、保留策略和备份清理
 - API 侧保留云备份配置字段，便于对接对象存储
+- 恢复备份前必须输入管理员密码确认，防止未授权覆盖数据
 
 ### REST API 与同步
 - 内置 Javalin API 服务，默认端口 `8080`
 - 当前注册 90+ HTTP 路由和 WebSocket 同步端点
 - 覆盖认证、商品、会员、交易、库存、报表、设置、发票、用户、打印、支付、备份、国际化和同步状态
 - Token 身份认证、角色授权、请求限流和安全响应头
+- 支付回调路由（`/api/payment/notify/*`）对外公开，安全由渠道验签（微信 RSA/AES-GCM、支付宝 RSA、mock 密钥）保证
 - WebSocket 同步端点：`/ws/sync`
 
 ### 硬件支持
@@ -220,6 +228,9 @@ mvn test -Dtest=PasswordUtilTest#testHashPassword
 
 # 静态质量检查
 mvn -q -DskipTests spotbugs:check
+
+# 完整门禁：测试 + SpotBugs + JaCoCo 覆盖率
+mvn -q clean verify
 ```
 
 ## 快捷键
@@ -277,7 +288,8 @@ export CORS_ALLOWED_ORIGINS=https://your-domain.example
 | 国际化 | `/api/i18n/*` | 语言、消息和语言包查询 |
 | 同步 | `/ws/sync`, `/api/sync/status` | 多终端同步和在线状态 |
 
-除 `/api/health` 和 `/api/auth/login` 外，API 默认需要认证。
+除 `/api/health`、`/api/auth/login` 和支付回调 `/api/payment/notify/*` 外，API 默认需要认证
+（支付回调由微信/支付宝服务器直接调用，无法携带本系统 Token，安全性由渠道验签保证）。
 
 ## 数据库
 
@@ -332,6 +344,13 @@ src/main/resources/
 └── images/                # 应用图标和图片资源
 ```
 
+## 相关文档
+
+- [CLAUDE.md](CLAUDE.md) — 项目架构、迁移状态与开发约定
+- [docs/GO_LIVE_CHECKLIST.md](docs/GO_LIVE_CHECKLIST.md) — 上线走查清单
+- [docs/CREDENTIALS_CHECKLIST.md](docs/CREDENTIALS_CHECKLIST.md) — 上线凭据准备清单（数据库/API/支付/云备份）
+- [docs/DATABASE_INIT.md](docs/DATABASE_INIT.md) — 数据库初始化说明
+
 ## 代码质量与安全
 
 ### 安全措施
@@ -339,14 +358,20 @@ src/main/resources/
 - **SQL 注入防护**: 全部使用 `PreparedStatement` 参数化查询
 - **随机数生成**: 安全敏感场景使用 `SecureRandom`
 - **资源管理**: JDBC 连接使用 try-with-resources 防止泄漏
+- **登录防暴力**: 登录失败按用户累计并锁定，成功/过期自动重置
+- **恢复保护**: 数据恢复前校验管理员密码
+- **支付安全**: 回调验签 + 金额校验 + 终态保护（已退款/关闭订单拒绝迟到回调，重复回调幂等）
 - **API 认证**: Token 基础认证，24 小时过期
 - **角色授权**: 三级权限（管理员、收银员、财务）
 - **请求限流**: 每 IP 每分钟最多 60 次请求
 - **安全响应头**: X-Content-Type-Options, X-Frame-Options, X-XSS-Protection
 
 ### 代码质量
-- **单元测试**: 469 个测试用例，覆盖核心业务逻辑（全量 486，含需显示环境的 UI 测试）
+- **单元测试**: 515 个测试用例（`mvn -q clean verify`），覆盖 DAO、Service、工具类、并发安全与 API（全量 532，含需显示环境的 UI 测试）
 - **静态检查**: SpotBugs 高风险缺陷门禁
+- **覆盖率门禁**: JaCoCo 行覆盖率 ≥10%
+- **i18n 门禁**: 强制三套语言包 key 一致、`I18nKeys` 常量齐全、源码 i18n 调用 key 齐全
+- **并发安全测试**: 乐观锁防库存超卖、防会员余额超扣
 - **依赖管理**: Maven Enforcer 插件确保依赖一致性
 - **日志规范**: 统一使用 SLF4J + LoggerFactoryUtil
 - **代码规范**: 遵循 CLAUDE.md 中的行为指南
@@ -362,6 +387,16 @@ src/main/resources/
 - 代码质量警告修复后至少运行编译，涉及公共逻辑时补跑测试。
 
 ## 最近更新
+
+### v2.6.0 (2026-08-23)
+- DAO 层全部完成实例化迁移（`XxxDAORefactored extends BaseDAO` + `DAOFactory`），移除静态 DAO 与死代码
+- 支付：支持 mock 模式“模拟支付成功”按钮，界面内闭环测试支付；支付回调路由公开并由渠道验签保证安全
+- 支付回调业务加固：金额校验、重复回调幂等、已退款/关闭订单拒绝迟到回调
+- 恢复备份前必须输入管理员密码确认
+- 触屏版：扫码/输入精确命中商品自动加购 + 成功/未找到/库存不足提示音；退出交班流程（交班/取消/确定，交班后直接退出）；底部状态栏显示“触屏版POS”、班次与日期星期时间；支付弹窗增加模拟支付按钮
+- PC 版：主界面退出改为退出到登录界面（登录页退出仍关闭应用）；结账添加商品成功后清空搜索栏
+- 代码质量：修复支付回调被鉴权拦截、健康检查连接泄漏、电子支付弹窗 NPE 等问题；i18n 完整性门禁、并发安全测试、token 过期测试
+- 新增上线走查清单 `docs/GO_LIVE_CHECKLIST.md` 与凭据准备清单 `docs/CREDENTIALS_CHECKLIST.md`
 
 ### v2.6.0 (2026-07-24)
 - 触屏版新增语言切换功能：工具栏一键切换简体中文/英文/繁體中文

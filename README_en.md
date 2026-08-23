@@ -4,7 +4,11 @@
 
 LiSuan Cashier System is a desktop POS (Point of Sale) cashier system built with JavaFX 17. It is designed for daily retail operations, covering checkout, products, members, purchasing, inventory, returns, reports, user permissions, data backup, and hardware integration.
 
-**Current Version**: v2.6.0 | **Latest Update**: 2026-07-24 | **Test Coverage**: 380 test cases
+**Current Version**: v2.6.0 | **Latest Update**: 2026-08-23 | **Test Coverage**: 515 test cases
+
+> Test scope: `mvn -q clean verify` runs 515 test cases by default (including SpotBugs and JaCoCo gates);
+> `LoginControllerUITest` (17 cases) requires a real display environment and is run explicitly with
+> `mvn -Pui-tests -Dtest=LoginControllerUITest test`, for a total of 532 cases.
 
 ![Java](https://img.shields.io/badge/Java-17-orange)
 ![JavaFX](https://img.shields.io/badge/JavaFX-17.0.12-blue)
@@ -19,9 +23,12 @@ LiSuan Cashier System is a desktop POS (Point of Sale) cashier system built with
 ### Checkout Management
 - Checkout & cash register, shopping cart CRUD, product search, member phone number recognition.
 - Supports multiple payment methods including cash, WeChat Pay, Alipay, and bank cards.
+- Payment modes: `disabled` / `mock` / `production`; in mock mode the payment dialog offers a "Simulate Payment" button for closed-loop local testing.
 - Member discounts, points accumulation, and balance consumption linked with transaction history.
 - Receipt printing, print preview, cash drawer trigger, and shortcut key help.
 - Shift management to record shift sales and cashier performance.
+- Touch screen POS: scanning/typing an exact product match adds it to the cart automatically (with success/not-found/low-stock sounds), enabling fast continuous entry.
+- Touch screen POS bottom status bar shows "Touch POS", shift info, date (with weekday) and time; the exit-and-handover flow is aligned with the desktop version (Handover / Cancel / OK).
 
 ### Product & Inventory
 - Product CRUD supporting product code, barcode, category, unit, specification, selling price, cost price, and stock levels.
@@ -69,12 +76,14 @@ LiSuan Cashier System is a desktop POS (Point of Sale) cashier system built with
 - Backup service packages database, config, logs, invoices, and business data.
 - Supports local backup, automated backup configuration, retention policies, and auto-cleanup.
 - API retains cloud backup config fields for object storage integration.
+- Restoring a backup now requires administrator password confirmation to prevent unauthorized data overwrites.
 
 ### REST API & Synchronization
 - Built-in Javalin API service, running on port `8080` by default.
 - Currently registers 90+ HTTP routes and WebSocket sync endpoints.
 - Covers auth, products, members, transactions, inventory, reports, settings, invoices, users, printing, payments, backup, i18n, and sync status.
 - Token-based authentication, role-based authorization, rate limiting, and security headers.
+- Payment callback routes (`/api/payment/notify/*`) are public; security is guaranteed by channel signature verification (WeChat RSA/AES-GCM, Alipay RSA, mock secret).
 - WebSocket sync endpoint: `/ws/sync`.
 
 ### Hardware Support
@@ -286,7 +295,9 @@ Key API endpoints grouping:
 | Internationalization | `/api/i18n/*` | Query language, messages, and language packs |
 | Synchronization | `/ws/sync`, `/api/sync/status` | Multi-terminal sync and online status |
 
-All API endpoints except `/api/health` and `/api/auth/login` require authentication by default.
+All API endpoints except `/api/health`, `/api/auth/login`, and the payment callbacks
+`/api/payment/notify/*` require authentication by default (payment callbacks are invoked by
+WeChat/Alipay servers without our system token; their security relies on channel signature verification).
 
 ---
 
@@ -345,6 +356,13 @@ src/main/resources/
 └── images/                # App icons and image assets
 ```
 
+## Related Documents
+
+- [CLAUDE.md](CLAUDE.md) — architecture, migration status, and development conventions
+- [docs/GO_LIVE_CHECKLIST.md](docs/GO_LIVE_CHECKLIST.md) — go-live checklist
+- [docs/CREDENTIALS_CHECKLIST.md](docs/CREDENTIALS_CHECKLIST.md) — credential preparation checklist (database/API/payment/cloud backup)
+- [docs/DATABASE_INIT.md](docs/DATABASE_INIT.md) — database initialization guide
+
 ---
 
 ## Code Quality & Security
@@ -354,14 +372,20 @@ src/main/resources/
 - **SQL Injection Prevention**: All queries use `PreparedStatement` parameterization
 - **Random Number Generation**: Security-sensitive scenarios use `SecureRandom`
 - **Resource Management**: JDBC connections use try-with-resources to prevent leaks
+- **Login Anti-Brute-Force**: Failed attempts are counted per user and locked; reset on success or expiry
+- **Restore Protection**: Data restore requires administrator password confirmation
+- **Payment Security**: Callback signature verification + amount validation + terminal-state protection (late callbacks rejected for refunded/closed orders, duplicate callbacks idempotent)
 - **API Authentication**: Token-based authentication with 24-hour expiration
 - **Role Authorization**: Three-tier permissions (Administrator, Cashier, Accountant)
 - **Rate Limiting**: Maximum 60 requests per IP per minute
 - **Security Headers**: X-Content-Type-Options, X-Frame-Options, X-XSS-Protection
 
 ### Code Quality
-- **Unit Tests**: 380 test cases covering core business logic
+- **Unit Tests**: 515 test cases (`mvn -q clean verify`) covering DAOs, services, utilities, concurrency safety, and the API (532 in total including display-dependent UI tests)
 - **Static Analysis**: SpotBugs high-risk defect gate
+- **Coverage Gate**: JaCoCo line coverage ≥10%
+- **i18n Gate**: Enforces identical keys across the three language bundles, complete `I18nKeys` constants, and complete keys for source i18n calls
+- **Concurrency Tests**: Optimistic locking prevents overselling stock and over-drawing member balances
 - **Dependency Management**: Maven Enforcer plugin ensures dependency consistency
 - **Logging Standards**: Unified use of SLF4J + LoggerFactoryUtil
 - **Code Standards**: Follows guidelines in CLAUDE.md
@@ -381,6 +405,16 @@ src/main/resources/
 ---
 
 ## Recent Updates
+
+### v2.6.0 (2026-08-23)
+- DAO layer fully migrated to instance-based `XxxDAORefactored extends BaseDAO` + `DAOFactory`; static DAOs and dead code removed
+- Payment: mock mode "Simulate Payment" button for closed-loop UI testing; payment callback routes made public with channel signature verification
+- Payment callback hardening: amount validation, idempotent duplicate callbacks, terminal-state protection for refunded/closed orders
+- Data restore now requires administrator password confirmation
+- Touch screen POS: exact-match scanning adds to cart automatically with success/not-found/low-stock sounds; exit-and-handover flow (Handover/Cancel/OK, exits after handover); bottom status bar shows "Touch POS", shift info, date with weekday and time; payment dialog simulate button
+- Desktop: main-view exit returns to the login screen (login screen exit still closes the app); search bar clears after adding a product
+- Code quality: fixed payment callback auth interception, health-check connection leak, and electronic payment dialog NPE; added i18n completeness gate, concurrency-safety tests, and token-expiry tests
+- Added go-live checklist `docs/GO_LIVE_CHECKLIST.md` and credentials checklist `docs/CREDENTIALS_CHECKLIST.md`
 
 ### v2.6.0 (2026-07-24)
 - Touch screen POS adds language switching: One-tap toggle between Simplified Chinese/English/Traditional Chinese from toolbar
