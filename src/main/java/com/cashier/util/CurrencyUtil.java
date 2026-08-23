@@ -1,6 +1,6 @@
 package com.cashier.util;
 
-import com.cashier.dao.LanguagePreferenceDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.i18n.I18nManager;
 import org.slf4j.Logger;
 
@@ -87,7 +87,7 @@ public class CurrencyUtil {
         try {
             // 从数据库获取用户货币偏好
             String username = getCurrentUsername();
-            String currencyCode = LanguagePreferenceDAO.getCurrencyPreference(username);
+            String currencyCode = DAOFactory.getInstance().getLanguagePreferenceDAO().getCurrencyPreference(username);
 
             CurrencyInfo currencyInfo = SUPPORTED_CURRENCIES.get(currencyCode);
             if (currencyInfo == null) {
@@ -138,7 +138,7 @@ public class CurrencyUtil {
 
         try {
             String username = getCurrentUsername();
-            boolean success = LanguagePreferenceDAO.setCurrencyPreference(username, currencyCode);
+            boolean success = DAOFactory.getInstance().getLanguagePreferenceDAO().setCurrencyPreference(username, currencyCode);
             if (success) {
                 updateFormat();
                 logger.info("货币已设置为: {}", currencyCode);

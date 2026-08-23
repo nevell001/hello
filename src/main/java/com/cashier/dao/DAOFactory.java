@@ -52,6 +52,7 @@ public class DAOFactory {
         register(LoginAttemptDAORefactored.class, new LoginAttemptDAORefactored());
         register(SystemSettingsDAORefactored.class, new SystemSettingsDAORefactored());
         register(SpecificationDAORefactored.class, new SpecificationDAORefactored());
+        register(LanguagePreferenceDAORefactored.class, new LanguagePreferenceDAORefactored());
     }
 
     /**
@@ -293,5 +294,13 @@ public class DAOFactory {
      */
     public SpecificationDAORefactored getSpecificationDAO() {
         return getDAO(SpecificationDAORefactored.class);
+    }
+
+    /**
+     * 获取语言偏好 DAO（重构版）
+     * @return LanguagePreferenceDAORefactored 实例
+     */
+    public LanguagePreferenceDAORefactored getLanguagePreferenceDAO() {
+        return getDAO(LanguagePreferenceDAORefactored.class);
     }
 }

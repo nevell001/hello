@@ -374,7 +374,7 @@ public class SettingsController {
 
         // 加载货币偏好 - 从数据库加载当前用户的货币偏好
         try {
-            String savedCurrency = com.cashier.dao.LanguagePreferenceDAO.getCurrencyPreference(username);
+            String savedCurrency = com.cashier.dao.DAOFactory.getInstance().getLanguagePreferenceDAO().getCurrencyPreference(username);
             String savedCurrencyName = convertCurrencyCodeToName(savedCurrency);
             currencyComboBox.getSelectionModel().select(savedCurrencyName);
             initialCurrency = savedCurrency;
@@ -450,7 +450,7 @@ public class SettingsController {
             if (selectedCurrency != null && currencyChanged) {
                 try {
                     String username = (currentUser != null) ? currentUser.username : "default";
-                    com.cashier.dao.LanguagePreferenceDAO.setCurrencyPreference(username, newCurrencyCode);
+                    com.cashier.dao.DAOFactory.getInstance().getLanguagePreferenceDAO().setCurrencyPreference(username, newCurrencyCode);
                     com.cashier.util.CurrencyUtil.setCurrency(newCurrencyCode);
                     logger.info("货币已更新为: {}", newCurrencyCode);
                 } catch (Exception e) {

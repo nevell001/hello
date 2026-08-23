@@ -1,26 +1,25 @@
 package com.cashier.dao;
 
-import com.cashier.util.DatabaseManager;
-import com.cashier.util.LoggerFactoryUtil;
-
-import java.sql.*;
-import org.slf4j.Logger;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 /**
- * 语言偏好数据访问对象
- * 负责语言偏好和货币偏好相关的数据库操作
+ * 语言偏好数据访问对象（重构版）
+ * 负责语言偏好和货币偏好相关的数据库操作，通过 DAOFactory 获取。
  */
-public class LanguagePreferenceDAO {
-    private static final Logger logger = LoggerFactoryUtil.getLogger(LanguagePreferenceDAO.class);
+public class LanguagePreferenceDAORefactored extends BaseDAO {
 
     /**
      * 获取语言偏好
      * 优先返回用户特定偏好，若不存在则返回全局默认（"default"用户），最后返回系统默认
      */
-    public static String getLanguagePreference(String username) throws SQLException {
+    public String getLanguagePreference(String username) throws SQLException {
         String sql = "SELECT language_tag FROM language_preferences WHERE username = ?";
 
-        try (Connection conn = DatabaseManager.getConnection();
+        try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             // 首先尝试获取用户特定偏好
@@ -50,13 +49,12 @@ public class LanguagePreferenceDAO {
     /**
      * 设置语言偏好
      */
-    public static boolean setLanguagePreference(String username, String languageTag) throws SQLException {
+    public boolean setLanguagePreference(String username, String languageTag) throws SQLException {
         String sql = "INSERT INTO language_preferences (username, language_tag, updated_at) VALUES (?, ?, ?) " +
-                     "ON DUPLICATE KEY UPDATE language_tag = ?, updated_at = ?";
+            "ON DUPLICATE KEY UPDATE language_tag = ?, updated_at = ?";
 
-        try (Connection conn = DatabaseManager.getConnection();
+        try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
             long now = System.currentTimeMillis();
             pstmt.setString(1, username);
             pstmt.setString(2, languageTag);
@@ -70,12 +68,11 @@ public class LanguagePreferenceDAO {
     /**
      * 获取货币偏好
      */
-    public static String getCurrencyPreference(String username) throws SQLException {
+    public String getCurrencyPreference(String username) throws SQLException {
         String sql = "SELECT currency_code FROM language_preferences WHERE username = ?";
 
-        try (Connection conn = DatabaseManager.getConnection();
+        try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
             pstmt.setString(1, username);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
@@ -96,15 +93,14 @@ public class LanguagePreferenceDAO {
     /**
      * 设置货币偏好
      */
-    public static boolean setCurrencyPreference(String username, String currencyCode) throws SQLException {
+    public boolean setCurrencyPreference(String username, String currencyCode) throws SQLException {
         boolean columnEnsured = false;
         while (true) {
             String sql = "INSERT INTO language_preferences (username, language_tag, currency_code, updated_at) VALUES (?, ?, ?, ?) " +
-                         "ON DUPLICATE KEY UPDATE currency_code = ?, updated_at = ?";
+                "ON DUPLICATE KEY UPDATE currency_code = ?, updated_at = ?";
 
-            try (Connection conn = DatabaseManager.getConnection();
+            try (Connection conn = getConnection();
                  PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
                 long now = System.currentTimeMillis();
                 // 获取当前语言偏好
                 String currentLanguage = getLanguagePreference(username);
@@ -133,8 +129,10 @@ public class LanguagePreferenceDAO {
      * 检测异常是否为 currency_code 字段缺失
      * 使用 SQLState + 空安全消息检查，避免依赖 getMessage() 字符串匹配
      */
-    private static boolean isMissingCurrencyColumn(SQLException e) {
-        if (e == null) return false;
+    private boolean isMissingCurrencyColumn(SQLException e) {
+        if (e == null) {
+            return false;
+        }
         // SQLState 42S22 = MySQL "Unknown column", 42122 = H2 "Column not found"
         // 均以 "42" 开头（SQL标准：语法错误或访问规则违反）
         String sqlState = e.getSQLState();
@@ -149,8 +147,8 @@ public class LanguagePreferenceDAO {
     /**
      * 确保 currency_code 字段存在（ALTER TABLE 升级）
      */
-    private static void ensureCurrencyColumn() {
-        try (Connection conn = DatabaseManager.getConnection();
+    private void ensureCurrencyColumn() {
+        try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
             stmt.execute("ALTER TABLE language_preferences ADD COLUMN currency_code VARCHAR(10) DEFAULT 'CNY'");
             logger.info("已成功添加 currency_code 字段");

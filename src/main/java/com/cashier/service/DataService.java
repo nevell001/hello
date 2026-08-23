@@ -360,7 +360,7 @@ public class DataService {
      */
     public static String loadLanguagePreference(String username) {
         try {
-            return LanguagePreferenceDAO.getLanguagePreference(username);
+            return DAOFactory.getInstance().getLanguagePreferenceDAO().getLanguagePreference(username);
         } catch (SQLException e) {
             logger.error("加载语言偏好失败", e);
             return "zh-CN"; // 默认简体中文
@@ -379,7 +379,7 @@ public class DataService {
      */
     public static void saveLanguagePreference(String username, String languageTag) {
         try {
-            LanguagePreferenceDAO.setLanguagePreference(username, languageTag);
+            DAOFactory.getInstance().getLanguagePreferenceDAO().setLanguagePreference(username, languageTag);
         } catch (SQLException e) {
             logger.error("保存语言偏好失败", e);
         }
