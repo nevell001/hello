@@ -14,6 +14,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class ReturnOrderItemDAOTest extends DatabaseTestBase {
 
+    private final ReturnOrderItemDAORefactored returnOrderItemDAO =
+        DAOFactory.getInstance().getReturnOrderItemDAO();
+
     @BeforeEach
     void setUp() throws Exception {
         if (!DatabaseTestBase.isInitialized()) {
@@ -38,9 +41,9 @@ class ReturnOrderItemDAOTest extends DatabaseTestBase {
         item.reason = "顾客退货";
         item.condition = "DAMAGED";
 
-        ReturnOrderItemDAO.insert(item);
+        returnOrderItemDAO.insert(item);
 
-        List<ReturnOrderItem> items = ReturnOrderItemDAO.findByReturnOrderId(item.returnOrderId);
+        List<ReturnOrderItem> items = returnOrderItemDAO.findByReturnOrderId(item.returnOrderId);
 
         assertFalse(items.isEmpty());
         assertEquals("DAMAGED", items.get(0).condition);

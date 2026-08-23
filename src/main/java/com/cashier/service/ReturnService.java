@@ -39,7 +39,7 @@ public class ReturnService {
                     return false;
                 }
 
-                return items == null || items.isEmpty() || ReturnOrderItemDAO.batchInsertWithConnection(conn, items);
+                return items == null || items.isEmpty() || DAOFactory.getInstance().getReturnOrderItemDAO().batchInsertWithConnection(conn, items);
             });
 
             if (success) {
@@ -86,7 +86,7 @@ public class ReturnService {
                     return true;
                 }
 
-                List<ReturnOrderItem> items = ReturnOrderItemDAO.findByReturnOrderIdWithConnection(conn, returnOrderId);
+                List<ReturnOrderItem> items = DAOFactory.getInstance().getReturnOrderItemDAO().findByReturnOrderIdWithConnection(conn, returnOrderId);
                 for (ReturnOrderItem item : items) {
                     Product product = productDAO.findByIdWithConnection(conn, item.productId);
                     if (product == null) {

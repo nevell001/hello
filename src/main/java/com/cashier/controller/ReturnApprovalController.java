@@ -250,7 +250,7 @@ public class ReturnApprovalController {
 
     private void loadOrderItems(String returnOrderId) {
         itemList.clear();
-        List<ReturnOrderItem> items = ReturnOrderItemDAO.findByReturnOrderId(returnOrderId);
+        List<ReturnOrderItem> items = DAOFactory.getInstance().getReturnOrderItemDAO().findByReturnOrderId(returnOrderId);
         itemList.addAll(items);
     }
 

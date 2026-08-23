@@ -2,7 +2,6 @@ package com.cashier.api.controller;
 
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
-import com.cashier.dao.ReturnOrderItemDAO;
 import com.cashier.model.*;
 import com.cashier.util.DatabaseManager;
 import io.javalin.http.Context;
@@ -236,7 +235,7 @@ public class TransactionApiController {
             returnItems.add(createReturnOrderItem(returnOrderId, product));
             productDAO.updateQuantityWithConnection(conn, product.id, product.quantity);
         }
-        return ReturnOrderItemDAO.batchInsertWithConnection(conn, returnItems);
+        return DAOFactory.getInstance().getReturnOrderItemDAO().batchInsertWithConnection(conn, returnItems);
     }
 
     private static ReturnOrderItem createReturnOrderItem(String returnOrderId, Product product) {

@@ -119,7 +119,7 @@ class ReturnServiceTest extends DatabaseTestBase {
         assertAmountEquals(30.0, createdOrder.totalAmount);
 
         // 验证退货明细已创建
-        List<ReturnOrderItem> createdItems = ReturnOrderItemDAO.findByReturnOrderId(returnOrder.returnOrderId);
+        List<ReturnOrderItem> createdItems = DAOFactory.getInstance().getReturnOrderItemDAO().findByReturnOrderId(returnOrder.returnOrderId);
         assertEquals(2, createdItems.size());
     }
 
@@ -402,7 +402,7 @@ class ReturnServiceTest extends DatabaseTestBase {
         assertFalse(success);
         assertNotNull(returnOrder.returnOrderId);
         assertNull(returnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId));
-        assertTrue(ReturnOrderItemDAO.findByReturnOrderId(returnOrder.returnOrderId).isEmpty());
+        assertTrue(DAOFactory.getInstance().getReturnOrderItemDAO().findByReturnOrderId(returnOrder.returnOrderId).isEmpty());
     }
 
     @Test

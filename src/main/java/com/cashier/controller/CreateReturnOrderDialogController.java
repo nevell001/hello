@@ -354,7 +354,7 @@ public class CreateReturnOrderDialogController {
             // 统计所有已退货的商品和数量
             java.util.Map<Integer, Integer> returnedQuantities = new java.util.HashMap<>();
             for (ReturnOrder returnOrder : existingReturns) {
-                List<ReturnOrderItem> items = ReturnOrderItemDAO.findByReturnOrderId(returnOrder.returnOrderId);
+                List<ReturnOrderItem> items = DAOFactory.getInstance().getReturnOrderItemDAO().findByReturnOrderId(returnOrder.returnOrderId);
                 for (ReturnOrderItem item : items) {
                     returnedQuantities.put(item.productId,
                         returnedQuantities.getOrDefault(item.productId, 0) + item.returnQuantity);

@@ -289,7 +289,7 @@ public class ReturnOrderController {
 
     private void loadReturnOrderItems(String returnOrderId) {
         itemList.clear();
-        List<ReturnOrderItem> items = ReturnOrderItemDAO.findByReturnOrderId(returnOrderId);
+        List<ReturnOrderItem> items = DAOFactory.getInstance().getReturnOrderItemDAO().findByReturnOrderId(returnOrderId);
         itemList.addAll(items);
     }
 
@@ -504,7 +504,7 @@ public class ReturnOrderController {
         }
 
         // 获取退货商品明细
-        List<ReturnOrderItem> returnItems = ReturnOrderItemDAO.findByReturnOrderId(selectedReturnOrder.returnOrderId);
+        List<ReturnOrderItem> returnItems = DAOFactory.getInstance().getReturnOrderItemDAO().findByReturnOrderId(selectedReturnOrder.returnOrderId);
         
         if (returnItems == null || returnItems.isEmpty()) {
             showAlert(Alert.AlertType.WARNING, com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.InventoryAlert.INFO), com.cashier.i18n.I18nManager.getInstance().get("runtime.return_items_empty"));

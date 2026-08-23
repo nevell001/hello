@@ -393,7 +393,7 @@ public class ReturnReportController {
 
         // 汇总分类退货金额
         for (ReturnOrder order : orders) {
-            List<ReturnOrderItem> items = ReturnOrderItemDAO.findByReturnOrderId(order.returnOrderId);
+            List<ReturnOrderItem> items = DAOFactory.getInstance().getReturnOrderItemDAO().findByReturnOrderId(order.returnOrderId);
             for (ReturnOrderItem item : items) {
                 String category = item.category != null && !item.category.isEmpty()
                     ? item.category : I18nManager.getInstance().get(I18nKeys.Report.UNCATEGORIZED);
