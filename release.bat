@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 setlocal EnableExtensions EnableDelayedExpansion
 REM 狸算(LiSuan) 生产发布候选验证脚本 (Windows)
 REM 与 release.sh 保持同一套发布门禁
