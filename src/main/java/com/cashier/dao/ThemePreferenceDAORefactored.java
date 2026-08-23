@@ -1,20 +1,22 @@
 package com.cashier.dao;
 
 import com.cashier.constant.FXConstants;
-import com.cashier.util.DatabaseManager;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 /**
- * 主题偏好数据访问对象
- * 负责主题偏好相关的数据库操作
+ * 主题偏好数据访问对象（重构版）
+ * 负责主题偏好相关的数据库操作，通过 DAOFactory 获取。
  */
-public class ThemePreferenceDAO {
+public class ThemePreferenceDAORefactored extends BaseDAO {
 
     /**
      * 获取主题偏好
      */
-    public static String getThemePreference(String username) throws SQLException {
+    public String getThemePreference(String username) throws SQLException {
         String themeName = findThemePreference(username);
         return themeName != null ? themeName : FXConstants.DEFAULT_THEME;
     }
@@ -22,12 +24,11 @@ public class ThemePreferenceDAO {
     /**
      * 查找主题偏好；不存在时返回 null，便于上层处理兼容兜底。
      */
-    public static String findThemePreference(String username) throws SQLException {
+    public String findThemePreference(String username) throws SQLException {
         String sql = "SELECT theme_name FROM theme_preferences WHERE username = ?";
 
-        try (Connection conn = DatabaseManager.getConnection();
+        try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
             pstmt.setString(1, username);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
@@ -41,13 +42,12 @@ public class ThemePreferenceDAO {
     /**
      * 设置主题偏好
      */
-    public static boolean setThemePreference(String username, String themeName) throws SQLException {
+    public boolean setThemePreference(String username, String themeName) throws SQLException {
         String sql = "INSERT INTO theme_preferences (username, theme_name, updated_at) VALUES (?, ?, ?) " +
-                     "ON DUPLICATE KEY UPDATE theme_name = ?, updated_at = ?";
+            "ON DUPLICATE KEY UPDATE theme_name = ?, updated_at = ?";
 
-        try (Connection conn = DatabaseManager.getConnection();
+        try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
             long now = System.currentTimeMillis();
             pstmt.setString(1, username);
             pstmt.setString(2, themeName);

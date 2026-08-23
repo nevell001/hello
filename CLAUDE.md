@@ -655,9 +655,8 @@ SyncManager.broadcastTransactionComplete(transactionId);
 The codebase is migrating from static `ProductDAO` to instance-based `ProductDAORefactored`:
 
 **Status:**
-- ⏳ DAO 层：`ProductDAORefactored`、`UnitDAORefactored`、`CategoryDAORefactored`、`SupplierDAORefactored`、`ShiftDAORefactored`、`RechargeRecordDAORefactored`、`PromotionDAORefactored`、`UserDAORefactored`、`OperationLogDAORefactored`、`TransactionDAORefactored`、`PaymentDAORefactored`、`PurchaseOrderDAORefactored`、`MemberDAORefactored`、`ReturnOrderDAORefactored`、`InvoiceDAORefactored`、`PurchaseOrderItemDAORefactored`、`InventoryCheckDAORefactored`、`InventoryCheckItemDAORefactored`、`PurchaseInboundItemDAORefactored`、`PurchaseInboundDAORefactored`、`PurchaseApprovalDAORefactored`、`ReturnOrderItemDAORefactored`、`BackupDAORefactored`、`HoldOrderDAORefactored`、`LoginAttemptDAORefactored`、`SystemSettingsDAORefactored`、`SpecificationDAORefactored`、`LanguagePreferenceDAORefactored`、`FontSizePreferenceDAORefactored` 已完成实例化
-  （`extends BaseDAO` 并通过 `DAOFactory` 注册）；其余约 1 个 DAO（`ThemePreferenceDAO`）
-  仍为静态方法风格，迁移未完成
+- ✅ DAO 层：所有 DAO 已完成实例化迁移（30 个 `XxxDAORefactored extends BaseDAO`，通过 `DAOFactory` 注册）；
+  静态方法风格 DAO 已全部移除，仅保留 `BaseDAO`/`DAOFactory`/`RowMapper` 基础设施
 - ✅ Completed: `CartController`, `InventoryController`, `ProductEditController`, `RestockController`, `InventoryAlertController`, `InventoryCheckController`, `ProfitReportController`, `PurchaseOrderController`, `PurchaseInboundController`
 - ✅ Completed: API Controllers (`ProductApiController`, `InventoryApiController`, `TransactionApiController`)
 - ✅ Completed: `CacheManager`, `ProductDataImporter`

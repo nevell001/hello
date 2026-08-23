@@ -315,9 +315,9 @@ public class DataService {
      */
     public static String loadThemePreference(String username) {
         try {
-            String themeName = ThemePreferenceDAO.findThemePreference(username);
+            String themeName = DAOFactory.getInstance().getThemePreferenceDAO().findThemePreference(username);
             if (themeName == null && !"default".equals(username)) {
-                themeName = ThemePreferenceDAO.findThemePreference("default");
+                themeName = DAOFactory.getInstance().getThemePreferenceDAO().findThemePreference("default");
             }
             return normalizeThemeName(themeName != null ? themeName : FXConstants.DEFAULT_THEME);
         } catch (SQLException e) {
@@ -338,7 +338,7 @@ public class DataService {
      */
     public static void saveThemePreference(String username, String themeName) {
         try {
-            ThemePreferenceDAO.setThemePreference(username, normalizeThemeName(themeName));
+            DAOFactory.getInstance().getThemePreferenceDAO().setThemePreference(username, normalizeThemeName(themeName));
         } catch (SQLException e) {
             logger.error("保存主题偏好失败", e);
         }

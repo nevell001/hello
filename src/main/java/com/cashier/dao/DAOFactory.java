@@ -54,6 +54,7 @@ public class DAOFactory {
         register(SpecificationDAORefactored.class, new SpecificationDAORefactored());
         register(LanguagePreferenceDAORefactored.class, new LanguagePreferenceDAORefactored());
         register(FontSizePreferenceDAORefactored.class, new FontSizePreferenceDAORefactored());
+        register(ThemePreferenceDAORefactored.class, new ThemePreferenceDAORefactored());
     }
 
     /**
@@ -311,5 +312,13 @@ public class DAOFactory {
      */
     public FontSizePreferenceDAORefactored getFontSizePreferenceDAO() {
         return getDAO(FontSizePreferenceDAORefactored.class);
+    }
+
+    /**
+     * 获取主题偏好 DAO（重构版）
+     * @return ThemePreferenceDAORefactored 实例
+     */
+    public ThemePreferenceDAORefactored getThemePreferenceDAO() {
+        return getDAO(ThemePreferenceDAORefactored.class);
     }
 }
