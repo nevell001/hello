@@ -1,8 +1,8 @@
 package com.cashier.api.controller;
 
+import com.cashier.dao.DAOFactory;
 import com.cashier.model.BackupRecord;
 import com.cashier.model.BackupConfig;
-import com.cashier.dao.BackupDAO;
 import com.cashier.service.BackupService;
 import com.cashier.api.sync.SyncManager;
 import com.cashier.api.sync.SyncEventType;
@@ -82,7 +82,7 @@ public class BackupApiController {
         int limit = Math.max(1, Math.min(requestedLimit, MAX_BACKUP_LIST_LIMIT));
         
         try {
-            List<BackupRecord> records = BackupDAO.findRecent(limit);
+            List<BackupRecord> records = DAOFactory.getInstance().getBackupDAO().findRecent(limit);
             
             List<Map<String, Object>> list = records.stream()
                 .map(BackupApiController::toBackupRecordData)
@@ -111,7 +111,7 @@ public class BackupApiController {
         String backupId = ctx.pathParam(BACKUP_ID_FIELD);
         
         try {
-            BackupRecord record = BackupDAO.findById(backupId);
+            BackupRecord record = DAOFactory.getInstance().getBackupDAO().findById(backupId);
             
             if (record == null) {
                 ctx.status(404).json(Map.of(
@@ -167,7 +167,7 @@ public class BackupApiController {
         String backupId = ctx.pathParam(BACKUP_ID_FIELD);
         
         try {
-            BackupRecord record = BackupDAO.findById(backupId);
+            BackupRecord record = DAOFactory.getInstance().getBackupDAO().findById(backupId);
             
             if (record == null || record.localPath == null) {
                 ctx.status(404).json(Map.of(
@@ -207,7 +207,7 @@ public class BackupApiController {
     }
 
     private static File resolveDownloadableBackupFile(BackupRecord record) throws SQLException, FileNotFoundException {
-        BackupConfig config = BackupDAO.getConfig();
+        BackupConfig config = DAOFactory.getInstance().getBackupDAO().getConfig();
         Path backupRoot = Path.of(
             config.localBackupPath == null || config.localBackupPath.isBlank()
                 ? DEFAULT_BACKUP_DIR
@@ -362,8 +362,8 @@ public class BackupApiController {
      */
     public static void getStats(Context ctx) {
         try {
-            int totalBackups = BackupDAO.countBackups();
-            List<BackupRecord> successful = BackupDAO.findSuccessful();
+            int totalBackups = DAOFactory.getInstance().getBackupDAO().countBackups();
+            List<BackupRecord> successful = DAOFactory.getInstance().getBackupDAO().findSuccessful();
             
             long totalSize = successful.stream()
                 .mapToLong(r -> r.fileSize)
