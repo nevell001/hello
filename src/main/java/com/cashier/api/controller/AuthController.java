@@ -1,7 +1,6 @@
 package com.cashier.api.controller;
 
 import com.cashier.api.ApiServer;
-import com.cashier.dao.LoginAttemptDAO;
 import com.cashier.dao.DAOFactory;
 import com.cashier.model.User;
 import com.cashier.util.PasswordUtil;
@@ -41,8 +40,8 @@ public class AuthController {
 
             // 检查账户锁定（与桌面端登录保持一致策略，持久化到数据库）
             request.username = request.username.trim();
-            if (LoginAttemptDAO.isLocked(request.username)) {
-                long remainingSeconds = LoginAttemptDAO.getRemainingLockoutSeconds(request.username);
+            if (DAOFactory.getInstance().getLoginAttemptDAO().isLocked(request.username)) {
+                long remainingSeconds = DAOFactory.getInstance().getLoginAttemptDAO().getRemainingLockoutSeconds(request.username);
                 ctx.status(HttpStatus.TOO_MANY_REQUESTS)
                    .json(Map.of("success", false, "message", "账户已锁定，请 " + remainingSeconds + " 秒后重试"));
                 return;
@@ -51,7 +50,7 @@ public class AuthController {
             User user = DAOFactory.getInstance().getUserDAO().findByUsername(request.username);
 
             if (user == null || !PasswordUtil.verifyPassword(request.password, user.password)) {
-                int attempts = LoginAttemptDAO.recordFailedAttempt(request.username, MAX_LOGIN_ATTEMPTS, LOCKOUT_DURATION_MINUTES * 60 * 1000);
+                int attempts = DAOFactory.getInstance().getLoginAttemptDAO().recordFailedAttempt(request.username, MAX_LOGIN_ATTEMPTS, LOCKOUT_DURATION_MINUTES * 60 * 1000);
                 ctx.status(HttpStatus.UNAUTHORIZED)
                    .json(Map.of("success", false, "message", "用户名或密码错误，剩余尝试次数: " + (MAX_LOGIN_ATTEMPTS - attempts)));
                 return;
@@ -64,7 +63,7 @@ public class AuthController {
             }
 
             // 登录成功，重置失败次数
-            LoginAttemptDAO.resetAttempts(request.username);
+            DAOFactory.getInstance().getLoginAttemptDAO().resetAttempts(request.username);
             
             // 生成 Token
             String token = ApiServer.getInstance().generateToken(user);

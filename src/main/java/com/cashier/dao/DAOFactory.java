@@ -49,6 +49,7 @@ public class DAOFactory {
         register(ReturnOrderItemDAORefactored.class, new ReturnOrderItemDAORefactored());
         register(BackupDAORefactored.class, new BackupDAORefactored());
         register(HoldOrderDAORefactored.class, new HoldOrderDAORefactored());
+        register(LoginAttemptDAORefactored.class, new LoginAttemptDAORefactored());
     }
 
     /**
@@ -266,5 +267,13 @@ public class DAOFactory {
      */
     public HoldOrderDAORefactored getHoldOrderDAO() {
         return getDAO(HoldOrderDAORefactored.class);
+    }
+
+    /**
+     * 获取登录尝试 DAO（重构版）
+     * @return LoginAttemptDAORefactored 实例
+     */
+    public LoginAttemptDAORefactored getLoginAttemptDAO() {
+        return getDAO(LoginAttemptDAORefactored.class);
     }
 }

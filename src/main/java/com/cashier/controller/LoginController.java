@@ -4,7 +4,6 @@ import com.cashier.i18n.I18nKeys;
 
 import com.cashier.CashierSystemFXApplication;
 import com.cashier.constant.AppConstants;
-import com.cashier.dao.LoginAttemptDAO;
 import com.cashier.dao.DAOFactory;
 import com.cashier.i18n.I18nManager;
 import com.cashier.model.User;
@@ -97,8 +96,8 @@ public class LoginController {
         }
 
         // 检查是否处于锁定状态（从数据库读取，支持跨重启持久化）
-        if (LoginAttemptDAO.isLocked(username)) {
-            long remainingSeconds = LoginAttemptDAO.getRemainingLockoutSeconds(username);
+        if (DAOFactory.getInstance().getLoginAttemptDAO().isLocked(username)) {
+            long remainingSeconds = DAOFactory.getInstance().getLoginAttemptDAO().getRemainingLockoutSeconds(username);
             showError(I18nManager.getInstance().get("runtime.login_rate_limited", remainingSeconds));
             return;
         }
@@ -113,7 +112,7 @@ public class LoginController {
                 User user = DAOFactory.getInstance().getUserDAO().findByUsername(username);
                 if (user == null) {
                     AuditService.failure(null, "AUTH", "LOGIN", "用户名不存在: " + username);
-                    int attempts = LoginAttemptDAO.recordFailedAttempt(username, MAX_LOGIN_ATTEMPTS, LOCKOUT_DURATION_MINUTES * 60 * 1000);
+                    int attempts = DAOFactory.getInstance().getLoginAttemptDAO().recordFailedAttempt(username, MAX_LOGIN_ATTEMPTS, LOCKOUT_DURATION_MINUTES * 60 * 1000);
                     Platform.runLater(() -> {
                         showError(I18nManager.getInstance().get("runtime.login_user_missing", MAX_LOGIN_ATTEMPTS - attempts));
                         shakeTextField(usernameField);
@@ -124,7 +123,7 @@ public class LoginController {
 
                 if (!PasswordUtil.verifyPassword(password, user.password, username)) {
                     AuditService.failure(username, "AUTH", "LOGIN", "密码验证失败");
-                    int attempts = LoginAttemptDAO.recordFailedAttempt(username, MAX_LOGIN_ATTEMPTS, LOCKOUT_DURATION_MINUTES * 60 * 1000);
+                    int attempts = DAOFactory.getInstance().getLoginAttemptDAO().recordFailedAttempt(username, MAX_LOGIN_ATTEMPTS, LOCKOUT_DURATION_MINUTES * 60 * 1000);
                     Platform.runLater(() -> {
                         showError(I18nManager.getInstance().get("runtime.login_wrong_password", MAX_LOGIN_ATTEMPTS - attempts));
                         shakeTextField(passwordField);
@@ -147,7 +146,7 @@ public class LoginController {
                 AuditService.success(username, "AUTH", "LOGIN", "登录成功", 1);
 
                 // 重置登录尝试次数（持久化到数据库）
-                LoginAttemptDAO.resetAttempts(username);
+                DAOFactory.getInstance().getLoginAttemptDAO().resetAttempts(username);
 
                 // 登录成功，切换到主界面
                 javafx.application.Platform.runLater(() -> {
