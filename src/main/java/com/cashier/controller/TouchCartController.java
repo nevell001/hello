@@ -207,7 +207,7 @@ public class TouchCartController implements CartViewHost {
 
         Button shiftFirstBtn = new Button(i18n.get("tpos.exit_shift_first"));
         Button cancelBtn = new Button(i18n.get("common.cancel"));
-        Button confirmBtn = new Button(i18n.get("common.confirm"));
+        Button confirmBtn = new Button(i18n.get("tpos.exit_confirm_btn"));
         for (Button b : new Button[]{shiftFirstBtn, cancelBtn, confirmBtn}) {
             b.setPrefSize(180, 56);
             b.getStyleClass().add("title-md");
@@ -216,18 +216,16 @@ public class TouchCartController implements CartViewHost {
         cancelBtn.setOnAction(e -> dialog.setResult("cancel"));
         confirmBtn.setOnAction(e -> dialog.setResult("exit"));
         shiftFirstBtn.setOnAction(e -> {
-            // 先交班：弹出交接班页面，交班完成后直接退出
+            // 先关闭退出确认框，避免与交接班窗口嵌套导致弹窗残留；
+            // 交班完成后直接退出到登录界面，否则留在收银台
+            dialog.close();
             com.cashier.controller.ShiftController shiftController = openShiftDialog();
             if (shiftController != null && shiftController.isShiftEnded()) {
                 StatusBarManager.updateSuccess("交接班完成，正在退出…");
                 if (application != null) {
                     application.logoutToLoginView();
                 }
-            } else {
-                StatusBarManager.updateSuccess("交接班操作完成");
-                updateStatus();
             }
-            dialog.close();
         });
 
         HBox buttons = new HBox(16, shiftFirstBtn, cancelBtn, confirmBtn);
