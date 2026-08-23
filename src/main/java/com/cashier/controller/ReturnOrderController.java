@@ -343,12 +343,12 @@ public class ReturnOrderController {
         LocalDate startDate = startDatePicker.getValue();
         LocalDate endDate = endDatePicker.getValue();
         if (startDate == null && endDate == null) {
-            return ReturnOrderDAO.findRecent(RETURN_ORDER_LIMIT);
+            return DAOFactory.getInstance().getReturnOrderDAO().findRecent(RETURN_ORDER_LIMIT);
         }
 
         LocalDate effectiveStart = startDate != null ? startDate : LocalDate.now().minusDays(30);
         LocalDate effectiveEnd = endDate != null ? endDate : LocalDate.now();
-        return ReturnOrderDAO.findByDateRange(
+        return DAOFactory.getInstance().getReturnOrderDAO().findByDateRange(
             java.util.Date.from(effectiveStart.atStartOfDay(ZoneId.systemDefault()).toInstant()),
             java.util.Date.from(effectiveEnd.plusDays(1).atStartOfDay(ZoneId.systemDefault()).minusNanos(1).toInstant())
         );

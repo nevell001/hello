@@ -15,6 +15,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
+import javafx.util.Callback;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 
@@ -168,115 +169,99 @@ public class CreateReturnOrderDialogController {
         // 退货数量（可编辑）
         returnQuantityColumn.setCellValueFactory(cellData -> 
             new javafx.beans.property.ReadOnlyObjectWrapper<>(cellData.getValue().getReturnQuantity()));
-        returnQuantityColumn.setCellFactory(column -> new TableCell<ReturnItem, Integer>() {
+        returnQuantityColumn.setCellFactory(createReturnQuantityCellFactory());
+
+        // 单价
+        unitPriceColumn.setCellValueFactory(cellData ->
+            new javafx.beans.property.ReadOnlyObjectWrapper<>(cellData.getValue().getUnitPrice()));
+        unitPriceColumn.setCellFactory(createCurrencyCellFactory());
+
+        // 退货金额
+        returnAmountColumn.setCellValueFactory(cellData ->
+            new javafx.beans.property.ReadOnlyObjectWrapper<>(cellData.getValue().getReturnAmount()));
+        returnAmountColumn.setCellFactory(createCurrencyCellFactory());
+
+        // 商品状态（可编辑）
+        conditionColumn.setCellValueFactory(cellData ->
+            new javafx.beans.property.ReadOnlyObjectWrapper<>(cellData.getValue().getCondition()));
+        conditionColumn.setCellFactory(createConditionCellFactory());
+
+        returnItemTable.setItems(returnItems);
+    }
+
+    /** 退货数量列：可编辑 Spinner，联动选中状态与总额 */
+    private Callback<TableColumn<ReturnItem, Integer>, TableCell<ReturnItem, Integer>> createReturnQuantityCellFactory() {
+        return column -> new TableCell<ReturnItem, Integer>() {
             private Spinner<Integer> spinner;
 
             @Override
             protected void updateItem(Integer item, boolean empty) {
                 super.updateItem(item, empty);
-
                 if (empty || getTableRow() == null || getTableRow().getItem() == null) {
                     setGraphic(null);
                     return;
                 }
-
                 ReturnItem returnItem = getTableRow().getItem();
-
                 if (spinner == null) {
                     spinner = new Spinner<>(0, returnItem.originalQuantity, returnItem.returnQuantity);
                     spinner.setEditable(true);
                     spinner.setPrefWidth(80);
-
                     spinner.valueProperty().addListener((obs, oldVal, newVal) -> {
                         if (returnItem.isSelected()) {
                             returnItem.returnQuantity = newVal;
                             calculateTotal();
                         }
                     });
-
                     returnItem.selectedProperty().addListener((obs, oldVal, newVal) -> {
-                        if (newVal) {
-                            spinner.setDisable(false);
-                        } else {
-                            spinner.setDisable(true);
+                        spinner.setDisable(!newVal);
+                        if (!newVal) {
                             spinner.getValueFactory().setValue(0);
                         }
                     });
                 }
-
                 spinner.getValueFactory().setValue(returnItem.returnQuantity);
                 spinner.setDisable(!returnItem.isSelected());
                 setGraphic(spinner);
             }
-        });
+        };
+    }
 
-        // 单价
-        unitPriceColumn.setCellValueFactory(cellData -> 
-            new javafx.beans.property.ReadOnlyObjectWrapper<>(cellData.getValue().getUnitPrice()));
-        unitPriceColumn.setCellFactory(column -> new TableCell<ReturnItem, Double>() {
+    /** 金额列：格式化两位小数的只读单元格 */
+    private Callback<TableColumn<ReturnItem, Double>, TableCell<ReturnItem, Double>> createCurrencyCellFactory() {
+        return column -> new TableCell<ReturnItem, Double>() {
             @Override
             protected void updateItem(Double item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                } else {
-                    setText(CurrencyUtil.format(item));
-                }
+                setText(empty || item == null ? null : CurrencyUtil.format(item));
             }
-        });
+        };
+    }
 
-        // 退货金额
-        returnAmountColumn.setCellValueFactory(cellData ->
-            new javafx.beans.property.ReadOnlyObjectWrapper<>(cellData.getValue().getReturnAmount()));
-        returnAmountColumn.setCellFactory(column -> new TableCell<ReturnItem, Double>() {
-            @Override
-            protected void updateItem(Double item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                } else {
-                    setText(CurrencyUtil.format(item));
-                }
-            }
-        });
-
-        // 商品状态（可编辑）
-        conditionColumn.setCellValueFactory(cellData -> 
-            new javafx.beans.property.ReadOnlyObjectWrapper<>(cellData.getValue().getCondition()));
-        conditionColumn.setCellFactory(column -> new TableCell<ReturnItem, String>() {
+    /** 商品状态列：可编辑下拉框（GOOD/DAMAGED/OPENED） */
+    private Callback<TableColumn<ReturnItem, String>, TableCell<ReturnItem, String>> createConditionCellFactory() {
+        return column -> new TableCell<ReturnItem, String>() {
             private ComboBox<String> comboBox;
 
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-
                 if (empty || getTableRow() == null || getTableRow().getItem() == null) {
                     setGraphic(null);
                     return;
                 }
-
                 ReturnItem returnItem = getTableRow().getItem();
-
                 if (comboBox == null) {
-                    comboBox = new ComboBox<>(FXCollections.observableArrayList(
-                        "GOOD", "DAMAGED", "OPENED"
-                    ));
+                    comboBox = new ComboBox<>(FXCollections.observableArrayList("GOOD", "DAMAGED", "OPENED"));
                     com.cashier.util.I18nUiUtils.configureComboBox(
                         comboBox, com.cashier.util.I18nUiUtils::itemCondition);
                     comboBox.setMinWidth(118);
                     comboBox.setPrefWidth(128);
-
-                    comboBox.setOnAction(event -> {
-                        returnItem.condition = comboBox.getValue();
-                    });
+                    comboBox.setOnAction(event -> returnItem.condition = comboBox.getValue());
                 }
-
                 comboBox.setValue(returnItem.condition);
                 setGraphic(comboBox);
             }
-        });
-
-        returnItemTable.setItems(returnItems);
+        };
     }
 
     /**
@@ -358,7 +343,7 @@ public class CreateReturnOrderDialogController {
     private String validateReturnItems() {
         try {
             // 查询该交易的所有已存在退货订单（不包括已拒绝的）
-            List<ReturnOrder> existingReturns = ReturnOrderDAO.findByOriginalTransactionId(
+            List<ReturnOrder> existingReturns = DAOFactory.getInstance().getReturnOrderDAO().findByOriginalTransactionId(
                 originalTransaction.transactionId
             );
 

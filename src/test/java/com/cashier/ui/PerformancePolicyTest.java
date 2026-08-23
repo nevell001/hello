@@ -683,7 +683,7 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/controller/ReturnOrderController.java"
         ));
         String returnOrderDao = Files.readString(Path.of(
-            "src/main/java/com/cashier/dao/ReturnOrderDAO.java"
+            "src/main/java/com/cashier/dao/ReturnOrderDAORefactored.java"
         ));
 
         assertTrue(auditLogController.contains("getOperationLogDAO().findRecent(AUDIT_LOG_LIMIT)"));
@@ -691,11 +691,11 @@ class PerformancePolicyTest {
         assertTrue(operationLogDao.contains("ORDER BY timestamp DESC LIMIT ?"));
         assertFalse(auditLogController.contains("OperationLogDAO.findAll()"));
 
-        assertTrue(returnOrderController.contains("ReturnOrderDAO.findRecent(RETURN_ORDER_LIMIT)"));
-        assertTrue(returnOrderController.contains("ReturnOrderDAO.findByDateRange("));
+        assertTrue(returnOrderController.contains("getReturnOrderDAO().findRecent(RETURN_ORDER_LIMIT)"));
+        assertTrue(returnOrderController.contains("getReturnOrderDAO().findByDateRange("));
         assertTrue(returnOrderDao.contains("findRecent(int limit)"));
         assertTrue(returnOrderDao.contains("ORDER BY create_time DESC LIMIT ?"));
-        assertFalse(returnOrderController.contains("ReturnOrderDAO.findAll()"));
+        assertFalse(returnOrderController.contains("getReturnOrderDAO().findAll()"));
     }
 
     @Test

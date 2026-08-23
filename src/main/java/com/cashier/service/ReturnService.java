@@ -26,7 +26,7 @@ public class ReturnService {
     public static boolean createReturnOrder(ReturnOrder returnOrder, List<ReturnOrderItem> items) {
         try {
             boolean success = DatabaseManager.executeBooleanTransaction(conn -> {
-                returnOrder.returnOrderId = ReturnOrderDAO.generateNextReturnOrderId(conn);
+                returnOrder.returnOrderId = DAOFactory.getInstance().getReturnOrderDAO().generateNextReturnOrderId(conn);
                 returnOrder.status = "PENDING";
 
                 if (items != null && !items.isEmpty()) {
@@ -35,7 +35,7 @@ public class ReturnService {
                     }
                 }
 
-                if (!ReturnOrderDAO.insertWithConnection(conn, returnOrder)) {
+                if (!DAOFactory.getInstance().getReturnOrderDAO().insertWithConnection(conn, returnOrder)) {
                     return false;
                 }
 
@@ -68,7 +68,7 @@ public class ReturnService {
                                               String approvalComment, boolean approved) {
         try {
             boolean success = DatabaseManager.executeBooleanTransaction(conn -> {
-                ReturnOrder returnOrder = ReturnOrderDAO.findByReturnOrderIdWithConnection(conn, returnOrderId);
+                ReturnOrder returnOrder = DAOFactory.getInstance().getReturnOrderDAO().findByReturnOrderIdWithConnection(conn, returnOrderId);
                 if (returnOrder == null) {
                     return false;
                 }
@@ -78,7 +78,7 @@ public class ReturnService {
                 returnOrder.approvalDate = java.time.Instant.now();
                 returnOrder.approvalComment = approvalComment;
 
-                if (!ReturnOrderDAO.updateWithConnection(conn, returnOrder)) {
+                if (!DAOFactory.getInstance().getReturnOrderDAO().updateWithConnection(conn, returnOrder)) {
                     return false;
                 }
 
@@ -129,7 +129,7 @@ public class ReturnService {
     public static boolean completeReturnOrder(String returnOrderId) {
         try {
             boolean success = DatabaseManager.executeBooleanTransaction(conn -> {
-                ReturnOrder returnOrder = ReturnOrderDAO.findByReturnOrderIdWithConnection(conn, returnOrderId);
+                ReturnOrder returnOrder = DAOFactory.getInstance().getReturnOrderDAO().findByReturnOrderIdWithConnection(conn, returnOrderId);
                 if (returnOrder == null) {
                     return false;
                 }
@@ -141,7 +141,7 @@ public class ReturnService {
                 returnOrder.status = "COMPLETED";
                 returnOrder.completedDate = java.time.Instant.now();
 
-                if (!ReturnOrderDAO.updateWithConnection(conn, returnOrder)) {
+                if (!DAOFactory.getInstance().getReturnOrderDAO().updateWithConnection(conn, returnOrder)) {
                     return false;
                 }
 
@@ -198,28 +198,28 @@ public class ReturnService {
      * 获取待审批的退货订单列表
      */
     public static List<ReturnOrder> getPendingReturnOrders() {
-        return ReturnOrderDAO.findByStatus("PENDING");
+        return DAOFactory.getInstance().getReturnOrderDAO().findByStatus("PENDING");
     }
 
     /**
      * 获取已批准的退货订单列表
      */
     public static List<ReturnOrder> getApprovedReturnOrders() {
-        return ReturnOrderDAO.findByStatus("APPROVED");
+        return DAOFactory.getInstance().getReturnOrderDAO().findByStatus("APPROVED");
     }
 
     /**
      * 获取已完成的退货订单列表
      */
     public static List<ReturnOrder> getCompletedReturnOrders() {
-        return ReturnOrderDAO.findByStatus("COMPLETED");
+        return DAOFactory.getInstance().getReturnOrderDAO().findByStatus("COMPLETED");
     }
 
     /**
      * 获取会员的退货订单列表
      */
     public static List<ReturnOrder> getMemberReturnOrders(int memberId) {
-        return ReturnOrderDAO.findByMemberId(memberId);
+        return DAOFactory.getInstance().getReturnOrderDAO().findByMemberId(memberId);
     }
 
     /**
@@ -228,7 +228,7 @@ public class ReturnService {
     public static ReturnStatistics calculateReturnStatistics(Date startDate, Date endDate) {
         ReturnStatistics stats = new ReturnStatistics();
 
-        Map<String, Object> data = ReturnOrderDAO.getStatistics(startDate, endDate);
+        Map<String, Object> data = DAOFactory.getInstance().getReturnOrderDAO().getStatistics(startDate, endDate);
 
         stats.totalReturnOrders = (int) data.get("total_return_orders");
         stats.totalReturnAmount = (BigDecimal) data.get("total_return_amount");

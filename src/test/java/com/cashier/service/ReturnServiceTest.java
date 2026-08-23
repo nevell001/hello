@@ -25,6 +25,7 @@ class ReturnServiceTest extends DatabaseTestBase {
     private final OperationLogDAORefactored operationLogDAO = DAOFactory.getInstance().getOperationLogDAO();
     private final TransactionDAORefactored transactionDAO = DAOFactory.getInstance().getTransactionDAO();
     private final MemberDAORefactored memberDAO = DAOFactory.getInstance().getMemberDAO();
+    private final ReturnOrderDAORefactored returnOrderDAO = DAOFactory.getInstance().getReturnOrderDAO();
 
     private Member testMember;
     private Product testProduct1;
@@ -112,7 +113,7 @@ class ReturnServiceTest extends DatabaseTestBase {
         assertTrue(success);
 
         // 验证退货订单已创建
-        ReturnOrder createdOrder = ReturnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId);
+        ReturnOrder createdOrder = returnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId);
         assertNotNull(createdOrder);
         assertEquals("PENDING", createdOrder.status);
         assertAmountEquals(30.0, createdOrder.totalAmount);
@@ -141,7 +142,7 @@ class ReturnServiceTest extends DatabaseTestBase {
         assertTrue(success);
 
         // 验证退货订单已创建
-        ReturnOrder createdOrder = ReturnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId);
+        ReturnOrder createdOrder = returnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId);
         assertNotNull(createdOrder);
         assertEquals("PENDING", createdOrder.status);
     }
@@ -167,7 +168,7 @@ class ReturnServiceTest extends DatabaseTestBase {
         assertTrue(success);
 
         // 验证退货订单状态已更新
-        ReturnOrder updatedOrder = ReturnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId);
+        ReturnOrder updatedOrder = returnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId);
         assertEquals("APPROVED", updatedOrder.status);
         assertEquals("测试审批员", updatedOrder.approverName);
         assertNotNull(updatedOrder.approvalDate);
@@ -198,7 +199,7 @@ class ReturnServiceTest extends DatabaseTestBase {
         assertTrue(success);
 
         // 验证退货订单状态已更新
-        ReturnOrder updatedOrder = ReturnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId);
+        ReturnOrder updatedOrder = returnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId);
         assertEquals("REJECTED", updatedOrder.status);
         assertEquals("测试审批员", updatedOrder.approverName);
 
@@ -223,7 +224,7 @@ class ReturnServiceTest extends DatabaseTestBase {
         assertTrue(success);
 
         // 验证退货订单状态已更新
-        ReturnOrder updatedOrder = ReturnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId);
+        ReturnOrder updatedOrder = returnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId);
         assertEquals("COMPLETED", updatedOrder.status);
         assertNotNull(updatedOrder.completedDate);
 
@@ -251,7 +252,7 @@ class ReturnServiceTest extends DatabaseTestBase {
         assertTrue(success);
 
         // 验证退货订单状态已更新
-        ReturnOrder updatedOrder = ReturnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId);
+        ReturnOrder updatedOrder = returnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId);
         assertEquals("COMPLETED", updatedOrder.status);
         assertNotNull(updatedOrder.completedDate);
 
@@ -273,7 +274,7 @@ class ReturnServiceTest extends DatabaseTestBase {
         assertFalse(success);
 
         // 验证退货订单状态没有变化
-        ReturnOrder updatedOrder = ReturnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId);
+        ReturnOrder updatedOrder = returnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId);
         assertEquals("PENDING", updatedOrder.status);
         assertNull(updatedOrder.completedDate);
     }
@@ -400,7 +401,7 @@ class ReturnServiceTest extends DatabaseTestBase {
 
         assertFalse(success);
         assertNotNull(returnOrder.returnOrderId);
-        assertNull(ReturnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId));
+        assertNull(returnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId));
         assertTrue(ReturnOrderItemDAO.findByReturnOrderId(returnOrder.returnOrderId).isEmpty());
     }
 
@@ -423,7 +424,7 @@ class ReturnServiceTest extends DatabaseTestBase {
 
         assertFalse(success);
 
-        ReturnOrder updatedOrder = ReturnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId);
+        ReturnOrder updatedOrder = returnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId);
         assertNotNull(updatedOrder);
         assertEquals("PENDING", updatedOrder.status);
         assertNull(updatedOrder.approvalDate);
@@ -452,7 +453,7 @@ class ReturnServiceTest extends DatabaseTestBase {
 
         assertFalse(success);
 
-        ReturnOrder updatedOrder = ReturnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId);
+        ReturnOrder updatedOrder = returnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId);
         assertNotNull(updatedOrder);
         assertEquals("APPROVED", updatedOrder.status);
         assertNull(updatedOrder.completedDate);
@@ -483,7 +484,7 @@ class ReturnServiceTest extends DatabaseTestBase {
         items.add(item);
 
         ReturnService.createReturnOrder(returnOrder, items);
-        return ReturnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId);
+        return returnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId);
     }
 
     /**
@@ -509,7 +510,7 @@ class ReturnServiceTest extends DatabaseTestBase {
         items.add(item);
 
         ReturnService.createReturnOrder(returnOrder, items);
-        return ReturnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId);
+        return returnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId);
     }
 
     /**
@@ -536,7 +537,7 @@ class ReturnServiceTest extends DatabaseTestBase {
 
         ReturnService.createReturnOrder(returnOrder, items);
         ReturnService.approveReturnOrder(returnOrder.returnOrderId, "测试审批员", "同意", true);
-        return ReturnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId);
+        return returnOrderDAO.findByReturnOrderId(returnOrder.returnOrderId);
     }
 
     /**

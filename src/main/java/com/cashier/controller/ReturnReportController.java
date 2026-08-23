@@ -320,7 +320,7 @@ public class ReturnReportController {
 
             // 加载退货订单列表
             returnOrderList.clear();
-            List<ReturnOrder> orders = ReturnOrderDAO.findByDateRange(start, end);
+            List<ReturnOrder> orders = DAOFactory.getInstance().getReturnOrderDAO().findByDateRange(start, end);
             returnOrderList.addAll(orders);
 
             // 更新图表

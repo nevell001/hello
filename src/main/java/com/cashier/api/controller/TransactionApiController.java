@@ -2,7 +2,6 @@ package com.cashier.api.controller;
 
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
-import com.cashier.dao.ReturnOrderDAO;
 import com.cashier.dao.ReturnOrderItemDAO;
 import com.cashier.model.*;
 import com.cashier.util.DatabaseManager;
@@ -196,7 +195,7 @@ public class TransactionApiController {
             throws SQLException {
         try {
             ReturnOrder returnOrder = createRefundReturnOrder(conn, transactionId, transaction);
-            if (!ReturnOrderDAO.insertWithConnection(conn, returnOrder)) {
+            if (!DAOFactory.getInstance().getReturnOrderDAO().insertWithConnection(conn, returnOrder)) {
                 return false;
             }
             if (!createReturnItemsAndRestoreInventory(conn, transaction, returnOrder.returnOrderId)) {
@@ -222,7 +221,7 @@ public class TransactionApiController {
         returnOrder.paymentMethod = mapPaymentMethodToRefund(transaction.paymentMethod);
         returnOrder.operatorName = transaction.operatorName;
         returnOrder.status = "COMPLETED"; // 直接完成，无需审批
-        returnOrder.returnOrderId = ReturnOrderDAO.generateNextReturnOrderId(conn);
+        returnOrder.returnOrderId = DAOFactory.getInstance().getReturnOrderDAO().generateNextReturnOrderId(conn);
         return returnOrder;
     }
 

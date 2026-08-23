@@ -14,6 +14,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ReturnOrderDAOTest extends DatabaseTestBase {
 
+    private final ReturnOrderDAORefactored returnOrderDAO = DAOFactory.getInstance().getReturnOrderDAO();
+
     private ReturnOrder insertReturnOrder(String returnOrderId) {
         ReturnOrder order = new ReturnOrder();
         order.returnOrderId = returnOrderId;
@@ -22,7 +24,7 @@ class ReturnOrderDAOTest extends DatabaseTestBase {
         order.totalAmount = BigDecimal.valueOf(50);
         order.status = "PENDING";
         order.operatorName = "操作员";
-        assertTrue(ReturnOrderDAO.insert(order));
+        assertTrue(returnOrderDAO.insert(order));
         return order;
     }
 
@@ -31,7 +33,7 @@ class ReturnOrderDAOTest extends DatabaseTestBase {
     void insertAndFindByReturnOrderId() {
         insertReturnOrder("R-DAO-001");
 
-        ReturnOrder found = ReturnOrderDAO.findByReturnOrderId("R-DAO-001");
+        ReturnOrder found = returnOrderDAO.findByReturnOrderId("R-DAO-001");
         assertNotNull(found);
         assertEquals("PENDING", found.status);
     }
@@ -41,7 +43,7 @@ class ReturnOrderDAOTest extends DatabaseTestBase {
     void findByStatus() {
         insertReturnOrder("R-DAO-002");
 
-        assertEquals(1, ReturnOrderDAO.findByStatus("PENDING").size());
+        assertEquals(1, returnOrderDAO.findByStatus("PENDING").size());
     }
 
     @Test
@@ -49,10 +51,10 @@ class ReturnOrderDAOTest extends DatabaseTestBase {
     void update() {
         insertReturnOrder("R-DAO-003");
         // 重新读取以获得持久化 id（insert 不回填 id）
-        ReturnOrder order = ReturnOrderDAO.findByReturnOrderId("R-DAO-003");
+        ReturnOrder order = returnOrderDAO.findByReturnOrderId("R-DAO-003");
         order.status = "APPROVED";
 
-        assertTrue(ReturnOrderDAO.update(order));
-        assertEquals("APPROVED", ReturnOrderDAO.findByReturnOrderId("R-DAO-003").status);
+        assertTrue(returnOrderDAO.update(order));
+        assertEquals("APPROVED", returnOrderDAO.findByReturnOrderId("R-DAO-003").status);
     }
 }
