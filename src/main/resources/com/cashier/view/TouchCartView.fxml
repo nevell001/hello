@@ -211,12 +211,16 @@
             <Insets top="8" right="20" bottom="8" left="20"/>
         </padding>
 
-        <Label fx:id="dateLabel" text="2026-02-23" styleClass="tpos-status-text"/>
-        <Label fx:id="timeLabel" text="18:00:00" styleClass="tpos-status-text"/>
+        <!-- 左下角：POS 标识 -->
+        <Label text="POS" styleClass="tpos-status-text"/>
 
         <Region HBox.hgrow="ALWAYS"/>
 
-        <Label fx:id="statusLabel" text="%pos.ready" styleClass="tpos-status-ready"/>
+        <!-- 右下角：班次 + 日期(含星期) + 时间，与 PC 版一致 -->
+        <Label fx:id="shiftInfoLabel" text="%status.shift_not_started" styleClass="tpos-status-text"/>
+        <Label text="│" styleClass="tpos-status-text"/>
+        <Label fx:id="dateLabel" text="2026-08-23 星期日" styleClass="tpos-status-text"/>
+        <Label fx:id="timeLabel" text="18:00:00" styleClass="tpos-status-text"/>
     </HBox>
 
 </VBox>

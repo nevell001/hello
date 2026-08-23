@@ -61,6 +61,7 @@ import java.util.List;
 import java.util.Map;
 import com.cashier.model.PaymentOrder;
 import com.cashier.model.HoldOrder;
+import com.cashier.model.Shift;
 import com.cashier.dao.HoldOrderDAORefactored;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -117,7 +118,7 @@ public class TouchCartController implements CartViewHost {
     @FXML private Label dateLabel;
     @FXML private Label timeLabel;
     @FXML private Button shiftButton;
-    @FXML private Label statusLabel;
+    @FXML private Label shiftInfoLabel;
 
     private CashierSystemFXApplication application;
     private User currentUser;
@@ -147,7 +148,7 @@ public class TouchCartController implements CartViewHost {
         refreshCartView();
         updateSummary();
         setupShortcuts();
-        updateStatus();
+        updateShiftInfo();
     }
 
     // ===== 时钟更新 =====
@@ -170,17 +171,31 @@ public class TouchCartController implements CartViewHost {
     private void updateDateTime() {
         LocalDateTime now = LocalDateTime.now();
         if (dateLabel != null) {
-            dateLabel.setText(now.format(DateTimeFormats.DATE));
+            dateLabel.setText(now.format(DateTimeFormats.FULL_DATE));
         }
         if (timeLabel != null) {
             timeLabel.setText(now.format(DateTimeFormats.TIME));
         }
     }
 
-    private void updateStatus() {
-        if (statusLabel != null) {
-            boolean hasShift = com.cashier.service.DataService.hasActiveShift();
-            statusLabel.setText(hasShift ? i18n.get("pos.ready") : i18n.get("pos.no_shift"));
+    /** 更新右下角班次信息（与 PC 版 MainView 一致） */
+    private void updateShiftInfo() {
+        if (shiftInfoLabel == null) {
+            return;
+        }
+        try {
+            Shift activeShift = DAOFactory.getInstance().getShiftDAO().findActiveShift();
+            if (activeShift != null) {
+                String startTime = LocalDateTime.ofInstant(activeShift.startTime, ZoneId.systemDefault())
+                    .format(DateTimeFormats.TIME_HOUR_MINUTE);
+                shiftInfoLabel.setText(i18n.get("runtime.shift_summary",
+                    activeShift.shiftId, activeShift.operatorName, startTime));
+            } else {
+                shiftInfoLabel.setText(i18n.get("status.shift_not_started"));
+            }
+        } catch (Exception e) {
+            logger.error("更新班次信息失败", e);
+            shiftInfoLabel.setText(i18n.get("runtime.shift_unknown"));
         }
     }
 
@@ -313,7 +328,7 @@ public class TouchCartController implements CartViewHost {
         com.cashier.controller.ShiftController controller = openShiftDialog();
         if (controller != null) {
             StatusBarManager.updateSuccess("交接班操作完成");
-            updateStatus();
+            updateShiftInfo();
         }
     }
 
@@ -1728,7 +1743,7 @@ public class TouchCartController implements CartViewHost {
         }
         refreshCartView();
         updateSummary();
-        updateStatus();
+        updateShiftInfo();
         loadProducts(currentCategoryName); // 刷新库存显示(库存已扣减)
     }
 
