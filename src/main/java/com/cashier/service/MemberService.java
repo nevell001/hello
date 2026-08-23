@@ -1,6 +1,5 @@
 package com.cashier.service;
 
-import com.cashier.dao.MemberDAO;
 import com.cashier.dao.DAOFactory;
 import com.cashier.model.Member;
 import com.cashier.model.RechargeRecord;
@@ -51,7 +50,7 @@ public class MemberService {
      */
     public static Member findMemberByPhone(String phone) {
         try {
-            return MemberDAO.findByPhone(phone);
+            return DAOFactory.getInstance().getMemberDAO().findByPhone(phone);
         } catch (SQLException e) {
             logger.error("查找会员失败: phone={}", phone, e);
             throw new RuntimeException("查找会员失败", e);
@@ -72,7 +71,7 @@ public class MemberService {
         try {
             boolean success = DatabaseManager.executeBooleanTransaction(conn -> {
                 // 获取最新会员信息
-                Member latestMember = MemberDAO.findByIdWithConnection(conn, member.id);
+                Member latestMember = DAOFactory.getInstance().getMemberDAO().findByIdWithConnection(conn, member.id);
                 if (latestMember == null) {
                     throw new SQLException(I18nManager.getInstance().get("service.member_not_found_id", member.id));
                 }
@@ -83,7 +82,7 @@ public class MemberService {
                 latestMember.level = calculateLevel(latestMember.points);
                 latestMember.discount = LEVEL_DISCOUNTS.getOrDefault(latestMember.level, BigDecimal.TEN);
                 latestMember.discountRate = latestMember.discount;
-                if (!MemberDAO.updateWithConnection(conn, latestMember)) {
+                if (!DAOFactory.getInstance().getMemberDAO().updateWithConnection(conn, latestMember)) {
                     throw new SQLException(I18nManager.getInstance().get("service.member_update_failed"));
                 }
 
@@ -153,7 +152,7 @@ public class MemberService {
     public static boolean updateMemberLevel(Member member) {
         try {
             return DatabaseManager.executeBooleanTransaction(conn -> {
-                Member latestMember = MemberDAO.findByIdWithConnection(conn, member.id);
+                Member latestMember = DAOFactory.getInstance().getMemberDAO().findByIdWithConnection(conn, member.id);
                 if (latestMember == null) {
                     return false;
                 }
@@ -163,7 +162,7 @@ public class MemberService {
                 if (!newLevel.equals(latestMember.level)) {
                     latestMember.level = newLevel;
                     latestMember.discount = LEVEL_DISCOUNTS.get(newLevel);
-                    MemberDAO.updateWithConnection(conn, latestMember);
+                    DAOFactory.getInstance().getMemberDAO().updateWithConnection(conn, latestMember);
                     // 同步传入的 member 对象
                     member.level = newLevel;
                     member.discount = latestMember.discount;
@@ -221,7 +220,7 @@ public class MemberService {
      */
     public static boolean checkBalanceSufficient(Member member, BigDecimal amount) {
         try {
-            Member latestMember = MemberDAO.findById(member.id);
+            Member latestMember = DAOFactory.getInstance().getMemberDAO().findById(member.id);
             return latestMember != null && latestMember.getBalance().compareTo(amount) >= 0;
         } catch (SQLException e) {
             logger.error("检查会员余额失败", e);
@@ -268,10 +267,10 @@ public class MemberService {
     public static Map<String, Object> getMemberStatistics() {
         Map<String, Object> stats = new HashMap<>();
         try {
-            Map<String, Object> summary = MemberDAO.getMemberSummary();
+            Map<String, Object> summary = DAOFactory.getInstance().getMemberDAO().getMemberSummary();
             BigDecimal totalBalance = (BigDecimal) summary.getOrDefault("totalBalance", BigDecimal.ZERO);
             BigDecimal totalPoints = (BigDecimal) summary.getOrDefault("totalPoints", BigDecimal.ZERO);
-            Map<String, Integer> levelStats = MemberDAO.countByLevel();
+            Map<String, Integer> levelStats = DAOFactory.getInstance().getMemberDAO().countByLevel();
 
             stats.put("totalCount", ((Number) summary.getOrDefault("totalCount", 0L)).intValue());
             stats.put("totalBalance", totalBalance.doubleValue());

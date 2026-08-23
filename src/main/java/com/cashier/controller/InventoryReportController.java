@@ -447,90 +447,89 @@ public class InventoryReportController {
                 !categoryName.equals(product.category)) {
                 continue;
             }
-
+            ProductStat s = computeProductStat(product,
+                salesStatsMap.getOrDefault(product.name, SalesStats.empty()), daysBetween,
+                slowSalesThreshold, inventoryDaysThreshold);
             totalProducts++;
-            double stockValue = product.getCost().multiply(BigDecimal.valueOf(product.quantity)).doubleValue();
-            totalStockValue += stockValue;
-
-            // 统计销售数量
-            SalesStats salesStats = salesStatsMap.getOrDefault(product.name, SalesStats.empty());
-            int salesQuantity = salesStats.quantity;
-
-            // 计算周转率 = 销售数量 / 平均库存
-            // 平均库存 = (期初库存 + 期末库存) / 2
-            // 这里简化为：周转率 = 销售数量 / 当前库存 * (365 / 分析天数)
-            double turnoverRate = product.quantity > 0
-                ? (salesQuantity / (double) product.quantity) * (365.0 / daysBetween)
-                : 0.0;
-            totalTurnoverRate += turnoverRate;
-
-            // 计算库存天数
-            double inventoryDays = salesQuantity > 0
-                ? (product.quantity / (double) salesQuantity) * daysBetween
-                : 999.0; // 如果没有销售，设为999天
-
-            // 库存状态
-            String status = "正常";
-            if (product.quantity <= product.minStock) {
-                status = "库存不足";
+            totalStockValue += s.stockValue;
+            totalTurnoverRate += s.turnoverRate;
+            if (s.lowStock) {
                 lowStockCount++;
             }
-            if (salesQuantity < slowSalesThreshold) {
-                status = "滞销";
+            if (s.slowSales) {
                 slowSalesCount++;
             }
-            if (inventoryDays > inventoryDaysThreshold) {
-                status = "积压";
+            if (s.overstock) {
                 overstockCount++;
             }
-
-            // 获取最后销售日期
-            String lastSaleDate = salesStats.lastSaleDate();
-
-            // 商品记录
             productRecords.add(new InventoryReportRecord(
-                product.name,
-                product.category != null ? product.category : I18nManager.getInstance().get(I18nKeys.Report.UNCATEGORIZED),
-                product.quantity,
-                stockValue,
-                salesQuantity,
-                turnoverRate,
-                inventoryDays,
-                status
-            ));
-
-            // 更新分类统计
-            String category = product.category != null ? product.category : I18nManager.getInstance().get(I18nKeys.Report.UNCATEGORIZED);
-            categoryQuantityMap.put(category, categoryQuantityMap.getOrDefault(category, 0) + product.quantity);
-            categoryAmountMap.put(category, categoryAmountMap.getOrDefault(category, 0.0) + stockValue);
-
-            // 滞销商品记录
-            if (salesQuantity < slowSalesThreshold) {
+                product.name, s.category, product.quantity, s.stockValue,
+                s.salesQuantity, s.turnoverRate, s.inventoryDays, s.status));
+            categoryQuantityMap.merge(s.category, product.quantity, Integer::sum);
+            categoryAmountMap.merge(s.category, s.stockValue, Double::sum);
+            if (s.slowSales) {
                 slowSalesRecords.add(new InventoryReportRecord(
-                    product.name,
-                    product.category != null ? product.category : I18nManager.getInstance().get(I18nKeys.Report.UNCATEGORIZED),
-                    product.quantity,
-                    salesQuantity,
-                    lastSaleDate
-                ));
+                    product.name, s.category, product.quantity, s.salesQuantity, s.lastSaleDate));
             }
-
-            // 积压商品记录
-            if (inventoryDays > inventoryDaysThreshold) {
+            if (s.overstock) {
                 overstockRecords.add(new InventoryReportRecord(
-                    product.name,
-                    product.category != null ? product.category : I18nManager.getInstance().get(I18nKeys.Report.UNCATEGORIZED),
-                    product.quantity,
-                    stockValue,
-                    inventoryDays
-                ));
+                    product.name, s.category, product.quantity, s.stockValue, s.inventoryDays));
             }
         }
 
         // 计算平均周转率
         double avgTurnoverRate = totalProducts > 0 ? totalTurnoverRate / totalProducts : 0.0;
+        updateStatisticsDisplay(totalProducts, totalStockValue, avgTurnoverRate,
+            lowStockCount, slowSalesCount, overstockCount,
+            productRecords, slowSalesRecords, overstockRecords,
+            categoryQuantityMap, categoryAmountMap);
+    }
 
-        // 更新统计卡片
+    /** 单个商品统计结果 */
+    private record ProductStat(double stockValue, int salesQuantity, double turnoverRate,
+                               double inventoryDays, String status, String category,
+                               boolean lowStock, boolean slowSales, boolean overstock,
+                               String lastSaleDate) {
+    }
+
+    private ProductStat computeProductStat(Product product, SalesStats salesStats, long daysBetween,
+                                           int slowSalesThreshold, double inventoryDaysThreshold) {
+        double stockValue = product.getCost().multiply(BigDecimal.valueOf(product.quantity)).doubleValue();
+        int salesQuantity = salesStats.quantity;
+        double turnoverRate = product.quantity > 0
+            ? (salesQuantity / (double) product.quantity) * (365.0 / daysBetween)
+            : 0.0;
+        double inventoryDays = salesQuantity > 0
+            ? (product.quantity / (double) salesQuantity) * daysBetween
+            : 999.0;
+
+        String status = "正常";
+        boolean lowStock = product.quantity <= product.minStock;
+        boolean slowSales = salesQuantity < slowSalesThreshold;
+        boolean overstock = inventoryDays > inventoryDaysThreshold;
+        if (lowStock) {
+            status = "库存不足";
+        }
+        if (slowSales) {
+            status = "滞销";
+        }
+        if (overstock) {
+            status = "积压";
+        }
+        String category = product.category != null
+            ? product.category
+            : I18nManager.getInstance().get(I18nKeys.Report.UNCATEGORIZED);
+        return new ProductStat(stockValue, salesQuantity, turnoverRate, inventoryDays,
+            status, category, lowStock, slowSales, overstock, salesStats.lastSaleDate());
+    }
+
+    private void updateStatisticsDisplay(int totalProducts, double totalStockValue, double avgTurnoverRate,
+                                         int lowStockCount, int slowSalesCount, int overstockCount,
+                                         List<InventoryReportRecord> productRecords,
+                                         List<InventoryReportRecord> slowSalesRecords,
+                                         List<InventoryReportRecord> overstockRecords,
+                                         Map<String, Integer> categoryQuantityMap,
+                                         Map<String, Double> categoryAmountMap) {
         totalProductsLabel.setText(String.valueOf(totalProducts));
         totalStockValueLabel.setText(CurrencyUtil.format(totalStockValue));
         avgTurnoverRateLabel.setText(String.format("%.2f", avgTurnoverRate));
@@ -538,12 +537,9 @@ public class InventoryReportController {
         slowSalesCountLabel.setText(String.valueOf(slowSalesCount));
         overstockCountLabel.setText(String.valueOf(overstockCount));
 
-        // 更新表格
         updateProductTable(productRecords);
         updateSlowSalesTable(slowSalesRecords);
         updateOverstockTable(overstockRecords);
-
-        // 更新图表
         updateCharts(productRecords, categoryQuantityMap, categoryAmountMap);
     }
 

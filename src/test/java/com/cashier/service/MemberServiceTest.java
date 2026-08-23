@@ -1,8 +1,8 @@
 package com.cashier.service;
 
-import com.cashier.dao.MemberDAO;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.RechargeRecordDAORefactored;
+import com.cashier.dao.MemberDAORefactored;
 import com.cashier.util.DatabaseTestBase;
 import com.cashier.model.Member;
 import com.cashier.model.RechargeRecord;
@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class MemberServiceTest extends DatabaseTestBase {
 
     private final RechargeRecordDAORefactored rechargeRecordDAO = DAOFactory.getInstance().getRechargeRecordDAO();
+    private final MemberDAORefactored memberDAO = DAOFactory.getInstance().getMemberDAO();
 
     private Member testMember;
 
@@ -73,7 +74,7 @@ class MemberServiceTest extends DatabaseTestBase {
         assertTrue(success);
 
         // 验证余额、积分和等级都已更新
-        Member updatedMember = MemberDAO.findByPhone("13800138000");
+        Member updatedMember = memberDAO.findByPhone("13800138000");
         assertAmountEquals(initialBalance.add(BigDecimal.valueOf(rechargeAmount)), updatedMember.balance);
         assertAmountEquals(initialPoints.add(BigDecimal.valueOf(rechargeAmount).multiply(BigDecimal.TEN)), updatedMember.points);
         assertEquals("金卡", updatedMember.level);
@@ -101,7 +102,7 @@ class MemberServiceTest extends DatabaseTestBase {
         assertTrue(success);
 
         // 验证余额已增加
-        Member updatedMember = MemberDAO.findByPhone("13800138000");
+        Member updatedMember = memberDAO.findByPhone("13800138000");
         assertAmountEquals(initialBalance.add(BigDecimal.valueOf(rechargeAmount)), updatedMember.balance);
 
         // 验证充值记录已创建
@@ -169,7 +170,7 @@ class MemberServiceTest extends DatabaseTestBase {
     void testUpdateMemberLevelUpgradeToSilver() throws Exception {
         // 设置积分达到银卡门槛
         testMember.points = BigDecimal.valueOf(2000.0);
-        MemberDAO.update(testMember);
+        memberDAO.update(testMember);
 
         // 更新等级
         boolean success = MemberService.updateMemberLevel(testMember);
@@ -177,7 +178,7 @@ class MemberServiceTest extends DatabaseTestBase {
         assertTrue(success);
 
         // 验证等级已更新
-        Member updatedMember = MemberDAO.findByPhone("13800138000");
+        Member updatedMember = memberDAO.findByPhone("13800138000");
         assertEquals("银卡", updatedMember.level);
         assertAmountEquals(9.5, updatedMember.discount);
     }
@@ -188,7 +189,7 @@ class MemberServiceTest extends DatabaseTestBase {
     void testUpdateMemberLevelUpgradeToGold() throws Exception {
         // 设置积分达到金卡门槛
         testMember.points = BigDecimal.valueOf(6000.0);
-        MemberDAO.update(testMember);
+        memberDAO.update(testMember);
 
         // 更新等级
         boolean success = MemberService.updateMemberLevel(testMember);
@@ -196,7 +197,7 @@ class MemberServiceTest extends DatabaseTestBase {
         assertTrue(success);
 
         // 验证等级已更新
-        Member updatedMember = MemberDAO.findByPhone("13800138000");
+        Member updatedMember = memberDAO.findByPhone("13800138000");
         assertEquals("金卡", updatedMember.level);
         assertAmountEquals(9.0, updatedMember.discount);
     }
@@ -207,7 +208,7 @@ class MemberServiceTest extends DatabaseTestBase {
     void testUpdateMemberLevelUpgradeToDiamond() throws Exception {
         // 设置积分达到钻石门槛
         testMember.points = BigDecimal.valueOf(11000.0);
-        MemberDAO.update(testMember);
+        memberDAO.update(testMember);
 
         // 更新等级
         boolean success = MemberService.updateMemberLevel(testMember);
@@ -215,7 +216,7 @@ class MemberServiceTest extends DatabaseTestBase {
         assertTrue(success);
 
         // 验证等级已更新
-        Member updatedMember = MemberDAO.findByPhone("13800138000");
+        Member updatedMember = memberDAO.findByPhone("13800138000");
         assertEquals("钻石", updatedMember.level);
         assertAmountEquals(8.5, updatedMember.discount);
     }
@@ -226,7 +227,7 @@ class MemberServiceTest extends DatabaseTestBase {
     void testUpdateMemberLevelNoUpgrade() throws Exception {
         // 积分不够升级
         testMember.points = BigDecimal.valueOf(500.0);
-        MemberDAO.update(testMember);
+        memberDAO.update(testMember);
 
         // 更新等级
         boolean success = MemberService.updateMemberLevel(testMember);
@@ -234,7 +235,7 @@ class MemberServiceTest extends DatabaseTestBase {
         assertTrue(success);
 
         // 验证等级没有变化
-        Member updatedMember = MemberDAO.findByPhone("13800138000");
+        Member updatedMember = memberDAO.findByPhone("13800138000");
         assertEquals("普通", updatedMember.level);
         assertAmountEquals(10.0, updatedMember.discount);
     }
@@ -292,7 +293,7 @@ class MemberServiceTest extends DatabaseTestBase {
         // 银卡会员（9.5折）
         testMember.level = "银卡";
         testMember.discount = BigDecimal.valueOf(9.5);
-        MemberDAO.update(testMember);
+        memberDAO.update(testMember);
 
         double discountedAmount = MemberService.calculateDiscountedAmount(originalAmount, testMember);
         assertEquals(95.0, discountedAmount, 0.01); // 100 * 0.95
@@ -300,7 +301,7 @@ class MemberServiceTest extends DatabaseTestBase {
         // 金卡会员（9折）
         testMember.level = "金卡";
         testMember.discount = BigDecimal.valueOf(9.0);
-        MemberDAO.update(testMember);
+        memberDAO.update(testMember);
 
         discountedAmount = MemberService.calculateDiscountedAmount(originalAmount, testMember);
         assertEquals(90.0, discountedAmount, 0.01); // 100 * 0.9
@@ -308,7 +309,7 @@ class MemberServiceTest extends DatabaseTestBase {
         // 钻石会员（8.5折）
         testMember.level = "钻石";
         testMember.discount = BigDecimal.valueOf(8.5);
-        MemberDAO.update(testMember);
+        memberDAO.update(testMember);
 
         discountedAmount = MemberService.calculateDiscountedAmount(originalAmount, testMember);
         assertEquals(85.0, discountedAmount, 0.01); // 100 * 0.85
@@ -374,7 +375,7 @@ class MemberServiceTest extends DatabaseTestBase {
 
         assertFalse(success);
 
-        Member updatedMember = MemberDAO.findByPhone("13800138000");
+        Member updatedMember = memberDAO.findByPhone("13800138000");
         assertAmountEquals(initialBalance, updatedMember.balance);
         assertTrue(rechargeRecordDAO.findAll().isEmpty());
     }
@@ -405,8 +406,8 @@ class MemberServiceTest extends DatabaseTestBase {
         member.level = "普通";
         member.discount = BigDecimal.TEN;
 
-        MemberDAO.insert(member);
-        return MemberDAO.findByPhone(phone);
+        memberDAO.insert(member);
+        return memberDAO.findByPhone(phone);
     }
 
     private void assertAmountEquals(double expected, BigDecimal actual) {

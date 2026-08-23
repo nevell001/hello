@@ -440,7 +440,7 @@ public class CreateReturnOrderDialogController {
             return null;
         }
         try {
-            Member member = MemberDAO.findByPhone(originalTransaction.memberPhone);
+            Member member = DAOFactory.getInstance().getMemberDAO().findByPhone(originalTransaction.memberPhone);
             return member != null ? member.id : null;
         } catch (SQLException e) {
             logger.error("查询会员信息失败: {}", e.getMessage());

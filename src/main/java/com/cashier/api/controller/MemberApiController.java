@@ -1,6 +1,6 @@
 package com.cashier.api.controller;
 
-import com.cashier.dao.MemberDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.model.Member;
 import com.cashier.model.PageResult;
 import io.javalin.http.Context;
@@ -24,7 +24,7 @@ public class MemberApiController {
     public static void list(Context ctx) {
         try {
             ApiPagination.PageRequest page = ApiPagination.from(ctx);
-            PageResult<Member> members = MemberDAO.findAll(page.page(), page.pageSize());
+            PageResult<Member> members = DAOFactory.getInstance().getMemberDAO().findAll(page.page(), page.pageSize());
             ctx.json(ApiPagination.success(members));
         } catch (Exception e) {
             logger.error("获取会员列表失败", e);
@@ -40,7 +40,7 @@ public class MemberApiController {
     public static void get(Context ctx) {
         try {
             int id = ctx.pathParamAsClass("id", Integer.class).get();
-            Member member = MemberDAO.findById(id);
+            Member member = DAOFactory.getInstance().getMemberDAO().findById(id);
             
             if (member == null) {
                 ctx.status(HttpStatus.NOT_FOUND)
@@ -63,7 +63,7 @@ public class MemberApiController {
     public static void getByPhone(Context ctx) {
         try {
             String phone = ctx.pathParam("phone");
-            Member member = MemberDAO.findByPhone(phone);
+            Member member = DAOFactory.getInstance().getMemberDAO().findByPhone(phone);
             
             if (member == null) {
                 ctx.status(HttpStatus.NOT_FOUND)
@@ -99,7 +99,7 @@ public class MemberApiController {
             }
             
             // 检查是否已存在
-            Member existing = MemberDAO.findByPhone(request.phone);
+            Member existing = DAOFactory.getInstance().getMemberDAO().findByPhone(request.phone);
             if (existing != null) {
                 ctx.status(HttpStatus.BAD_REQUEST)
                    .json(Map.of("success", false, "message", "该手机号已注册"));
@@ -115,7 +115,7 @@ public class MemberApiController {
             member.balance = BigDecimal.ZERO;
             member.points = BigDecimal.ZERO;
             
-            MemberDAO.insert(member);
+            DAOFactory.getInstance().getMemberDAO().insert(member);
             
             logger.info("创建会员: {} - {}", member.phone, member.name);
             
@@ -152,7 +152,7 @@ public class MemberApiController {
                 return;
             }
             
-            Member member = MemberDAO.findById(id);
+            Member member = DAOFactory.getInstance().getMemberDAO().findById(id);
             if (member == null) {
                 ctx.status(HttpStatus.NOT_FOUND)
                    .json(Map.of("success", false, "message", "会员不存在"));
@@ -164,7 +164,7 @@ public class MemberApiController {
             if (request.level != null) member.level = request.level;
             if (request.discount != null) member.discount = request.discount;
             
-            MemberDAO.update(member);
+            DAOFactory.getInstance().getMemberDAO().update(member);
             
             logger.info("更新会员: {}", member.phone);
             
@@ -201,7 +201,7 @@ public class MemberApiController {
                 return;
             }
             
-            Member member = MemberDAO.findById(id);
+            Member member = DAOFactory.getInstance().getMemberDAO().findById(id);
             if (member == null) {
                 ctx.status(HttpStatus.NOT_FOUND)
                    .json(Map.of("success", false, "message", "会员不存在"));

@@ -3,7 +3,6 @@ package com.cashier.controller;
 import com.cashier.i18n.I18nKeys;
 
 import com.cashier.i18n.I18nManager;
-import com.cashier.dao.MemberDAO;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.ProductDAORefactored;
 import com.cashier.model.CartItem;
@@ -776,7 +775,7 @@ public class CartController implements CartViewHost {
 
         Member member = null;
         try {
-            member = MemberDAO.findByPhone(phone);
+            member = DAOFactory.getInstance().getMemberDAO().findByPhone(phone);
         } catch (Exception e) {
             logger.error("从数据库查找会员失败", e);
             showError(com.cashier.i18n.I18nManager.getInstance().get(I18nKeys.Error.LOAD_DATA) + ": " + e.getMessage());
@@ -1949,7 +1948,7 @@ public class CartController implements CartViewHost {
             // 恢复会员信息
             if (order.memberId != null) {
                 try {
-                    currentMember = MemberDAO.findById(order.memberId);
+                    currentMember = DAOFactory.getInstance().getMemberDAO().findById(order.memberId);
                     if (currentMember != null) {
                         memberPhoneField.setText(currentMember.phone);
                         // 更新会员信息显示

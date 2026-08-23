@@ -149,13 +149,13 @@ public class ReturnService {
                     return true;
                 }
 
-                Member member = MemberDAO.findByIdWithConnection(conn, returnOrder.memberId);
+                Member member = DAOFactory.getInstance().getMemberDAO().findByIdWithConnection(conn, returnOrder.memberId);
                 if (member == null) {
                     throw new SQLException(I18nManager.getInstance().get("service.return_member_not_found", returnOrder.memberId));
                 }
 
                 member.balance = member.getBalance().add(returnOrder.getTotalAmount());
-                if (!MemberDAO.updateWithConnection(conn, member)) {
+                if (!DAOFactory.getInstance().getMemberDAO().updateWithConnection(conn, member)) {
                     throw new SQLException(I18nManager.getInstance().get("service.return_member_balance_update_failed", returnOrder.memberId));
                 }
 

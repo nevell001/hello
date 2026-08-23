@@ -56,7 +56,7 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/api/sync/SyncManager.java"
         ));
         String memberDao = Files.readString(Path.of(
-            "src/main/java/com/cashier/dao/MemberDAO.java"
+            "src/main/java/com/cashier/dao/MemberDAORefactored.java"
         ));
 
         assertTrue(syncManager.contains("findAll(page, pageSize)"));
@@ -64,7 +64,7 @@ class PerformancePolicyTest {
         assertTrue(syncManager.contains("MAX_SYNC_PAGE_SIZE"));
         assertTrue(memberDao.contains("PageResult<Member> findAll(int pageNum, int pageSize)"));
         assertFalse(syncManager.contains("getProductDAO().findAll())"));
-        assertFalse(syncManager.contains("MemberDAO.findAll())"));
+        assertFalse(syncManager.contains("getMemberDAO().findAll())"));
     }
 
     @Test
@@ -184,8 +184,8 @@ class PerformancePolicyTest {
         assertFalse(productApi.contains("productDAO.findAll()"));
         assertFalse(productApi.contains("productDAO.search(keyword)"));
 
-        assertTrue(memberApi.contains("MemberDAO.findAll(page.page(), page.pageSize())"));
-        assertFalse(memberApi.contains("MemberDAO.findAll()"));
+        assertTrue(memberApi.contains("getMemberDAO().findAll(page.page(), page.pageSize())"));
+        assertFalse(memberApi.contains("getMemberDAO().findAll()"));
 
         assertTrue(inventoryApi.contains("productDAO.findAll(page.page(), page.pageSize())"));
         assertTrue(inventoryApi.contains("productDAO.findLowStock(page.page(), page.pageSize())"));
@@ -603,14 +603,14 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/controller/InventoryController.java"
         ));
         String memberDao = Files.readString(Path.of(
-            "src/main/java/com/cashier/dao/MemberDAO.java"
+            "src/main/java/com/cashier/dao/MemberDAORefactored.java"
         ));
 
-        assertTrue(memberController.contains("MemberDAO.findAll(FIRST_PAGE, DESKTOP_PAGE_SIZE)"));
-        assertTrue(memberController.contains("MemberDAO.search(searchText, FIRST_PAGE, DESKTOP_PAGE_SIZE)"));
-        assertFalse(memberController.contains("MemberDAO.findAll()"));
-        assertTrue(memberEditController.contains("MemberDAO.findByPhone(phone)"));
-        assertFalse(memberEditController.contains("MemberDAO.findAll()"));
+        assertTrue(memberController.contains("getMemberDAO().findAll(FIRST_PAGE, DESKTOP_PAGE_SIZE)"));
+        assertTrue(memberController.contains("getMemberDAO().search(searchText, FIRST_PAGE, DESKTOP_PAGE_SIZE)"));
+        assertFalse(memberController.contains("getMemberDAO().findAll()"));
+        assertTrue(memberEditController.contains("getMemberDAO().findByPhone(phone)"));
+        assertFalse(memberEditController.contains("getMemberDAO().findAll()"));
 
         assertTrue(inventoryController.contains("productDAO.findAll(FIRST_PAGE, DESKTOP_PAGE_SIZE)"));
         assertTrue(inventoryController.contains("productDAO.search(searchText, FIRST_PAGE, DESKTOP_PAGE_SIZE)"));
@@ -792,11 +792,11 @@ class PerformancePolicyTest {
             "src/main/java/com/cashier/service/MemberService.java"
         ));
         String memberDao = Files.readString(Path.of(
-            "src/main/java/com/cashier/dao/MemberDAO.java"
+            "src/main/java/com/cashier/dao/MemberDAORefactored.java"
         ));
 
-        assertTrue(memberService.contains("MemberDAO.getMemberSummary()"));
-        assertTrue(memberService.contains("MemberDAO.countByLevel()"));
+        assertTrue(memberService.contains("getMemberDAO().getMemberSummary()"));
+        assertTrue(memberService.contains("getMemberDAO().countByLevel()"));
         assertFalse(memberService.contains("List<Member> members = MemberDAO.findAll()"));
 
         assertTrue(memberDao.contains("getMemberSummary()"));
@@ -895,7 +895,7 @@ class PerformancePolicyTest {
         assertTrue(dataService.contains("LEGACY_LOAD_LIMIT = 5000"));
         assertTrue(dataService.contains("productDAO.findAll(FIRST_PAGE, LEGACY_LOAD_LIMIT).getData()"));
         assertTrue(dataService.contains("getUserDAO().findAll(FIRST_PAGE, LEGACY_LOAD_LIMIT).getData()"));
-        assertTrue(dataService.contains("MemberDAO.findAll(FIRST_PAGE, LEGACY_LOAD_LIMIT).getData()"));
+        assertTrue(dataService.contains("getMemberDAO().findAll(FIRST_PAGE, LEGACY_LOAD_LIMIT).getData()"));
         assertTrue(dataService.contains("getTransactionDAO().findRecent(LEGACY_LOAD_LIMIT)"));
         assertTrue(dataService.contains("getPromotionDAO().findRecent(LEGACY_LOAD_LIMIT)"));
         assertTrue(dataService.contains("getRechargeRecordDAO().findRecent(LEGACY_LOAD_LIMIT)"));

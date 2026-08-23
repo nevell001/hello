@@ -24,6 +24,7 @@ class ReturnServiceTest extends DatabaseTestBase {
     private final RechargeRecordDAORefactored rechargeRecordDAO = DAOFactory.getInstance().getRechargeRecordDAO();
     private final OperationLogDAORefactored operationLogDAO = DAOFactory.getInstance().getOperationLogDAO();
     private final TransactionDAORefactored transactionDAO = DAOFactory.getInstance().getTransactionDAO();
+    private final MemberDAORefactored memberDAO = DAOFactory.getInstance().getMemberDAO();
 
     private Member testMember;
     private Product testProduct1;
@@ -48,7 +49,7 @@ class ReturnServiceTest extends DatabaseTestBase {
         testMember.points = BigDecimal.valueOf(100.0);
         testMember.level = "普通";
         testMember.discount = BigDecimal.TEN;
-        MemberDAO.insert(testMember);
+        memberDAO.insert(testMember);
 
         // 创建测试商品
         testProduct1 = createProduct("商品1", 10.0, 100);
@@ -227,7 +228,7 @@ class ReturnServiceTest extends DatabaseTestBase {
         assertNotNull(updatedOrder.completedDate);
 
         // 验证会员余额已增加
-        Member updatedMember = MemberDAO.findByPhone(testMember.phone);
+        Member updatedMember = memberDAO.findByPhone(testMember.phone);
         assertAmountEquals(initialBalance.add(BigDecimal.valueOf(50.0)), updatedMember.balance);
 
         // 验证充值记录已创建
@@ -255,7 +256,7 @@ class ReturnServiceTest extends DatabaseTestBase {
         assertNotNull(updatedOrder.completedDate);
 
         // 验证没有会员余额变化（非会员退货）
-        Member updatedMember = MemberDAO.findByPhone(testMember.phone);
+        Member updatedMember = memberDAO.findByPhone(testMember.phone);
         assertAmountEquals(testMember.balance, updatedMember.balance);
     }
 
@@ -435,7 +436,7 @@ class ReturnServiceTest extends DatabaseTestBase {
     @DisplayName("测试完成退货失败时状态、会员余额与充值记录一起回滚")
     void testCompleteReturnOrderRollbackOnRechargeRecordFailure() throws Exception {
         ReturnOrder returnOrder = createAndApproveReturnOrder(50.0, "会员余额");
-        BigDecimal initialBalance = MemberDAO.findByPhone(testMember.phone).balance;
+        BigDecimal initialBalance = memberDAO.findByPhone(testMember.phone).balance;
 
         RechargeRecord existingRecord = new RechargeRecord();
         existingRecord.recordId = returnOrder.returnOrderId;
@@ -455,7 +456,7 @@ class ReturnServiceTest extends DatabaseTestBase {
         assertNotNull(updatedOrder);
         assertEquals("APPROVED", updatedOrder.status);
         assertNull(updatedOrder.completedDate);
-        assertAmountEquals(initialBalance, MemberDAO.findByPhone(testMember.phone).balance);
+        assertAmountEquals(initialBalance, memberDAO.findByPhone(testMember.phone).balance);
         assertEquals(1, rechargeRecordDAO.findAll().size());
     }
 

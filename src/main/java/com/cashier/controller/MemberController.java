@@ -3,7 +3,7 @@ package com.cashier.controller;
 import com.cashier.i18n.I18nKeys;
 
 import com.cashier.controller.base.BaseController;
-import com.cashier.dao.MemberDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.i18n.I18nManager;
 import com.cashier.model.Member;
 import com.cashier.model.PageResult;
@@ -132,7 +132,7 @@ public class MemberController extends BaseController<Member> {
     protected void loadTableData() {
         new Thread(() -> {
             try {
-                PageResult<Member> memberData = MemberDAO.findAll(FIRST_PAGE, DESKTOP_PAGE_SIZE);
+                PageResult<Member> memberData = DAOFactory.getInstance().getMemberDAO().findAll(FIRST_PAGE, DESKTOP_PAGE_SIZE);
                 long total = memberData.getTotal();
                 java.util.HashMap<String, Member> memberMap = new java.util.HashMap<>();
                 for (Member m : memberData.getData()) {
@@ -200,7 +200,7 @@ public class MemberController extends BaseController<Member> {
             loadTableData();
         } else {
             try {
-                PageResult<Member> memberData = MemberDAO.search(searchText, FIRST_PAGE, DESKTOP_PAGE_SIZE);
+                PageResult<Member> memberData = DAOFactory.getInstance().getMemberDAO().search(searchText, FIRST_PAGE, DESKTOP_PAGE_SIZE);
                 totalMembers = memberData.getTotal();
                 setLoadedMembers(memberData.getData());
                 memberList.setAll(members.values());
@@ -242,9 +242,9 @@ public class MemberController extends BaseController<Member> {
                 Member updatedMember = controller.getMember();
                 try {
                     if (item == null) {
-                        MemberDAO.insert(updatedMember);
+                        DAOFactory.getInstance().getMemberDAO().insert(updatedMember);
                     } else {
-                        MemberDAO.update(updatedMember);
+                        DAOFactory.getInstance().getMemberDAO().update(updatedMember);
                     }
                     loadTableData();
                     updateStatus(item == null ? "会员添加成功: " + updatedMember.name : "会员更新成功: " + updatedMember.name);
@@ -299,7 +299,7 @@ public class MemberController extends BaseController<Member> {
             Member member = selected.get(0);
             if (confirmDeleteWithName(member.name)) {
                 try {
-                    MemberDAO.delete(member.id);
+                    DAOFactory.getInstance().getMemberDAO().delete(member.id);
                     loadTableData();
                     showSuccess(i18n.get("member.delete.success", member.name));
                 } catch (SQLException e) {
@@ -314,7 +314,7 @@ public class MemberController extends BaseController<Member> {
                 try {
                     int successCount = 0;
                     for (Member member : selected) {
-                        MemberDAO.delete(member.id);
+                        DAOFactory.getInstance().getMemberDAO().delete(member.id);
                         successCount++;
                     }
                     loadTableData();

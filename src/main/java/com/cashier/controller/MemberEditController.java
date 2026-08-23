@@ -1,6 +1,6 @@
 package com.cashier.controller;
 
-import com.cashier.dao.MemberDAO;
+import com.cashier.dao.DAOFactory;
 import com.cashier.model.Member;
 import com.cashier.service.MemberService;
 import javafx.collections.FXCollections;
@@ -270,7 +270,7 @@ public class MemberEditController {
 
     private void validateNewMemberPhone(StringBuilder errorMessage, String phone) {
         try {
-            if (MemberDAO.findByPhone(phone) != null) {
+            if (DAOFactory.getInstance().getMemberDAO().findByPhone(phone) != null) {
                 appendValidationError(errorMessage, "member.validation.phone_exists");
             }
         } catch (SQLException e) {

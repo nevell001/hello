@@ -1,7 +1,6 @@
 package com.cashier.api.controller;
 
 import com.cashier.dao.DAOFactory;
-import com.cashier.dao.MemberDAO;
 import com.cashier.dao.ProductDAORefactored;
 import com.cashier.dao.ReturnOrderDAO;
 import com.cashier.dao.ReturnOrderItemDAO;
@@ -263,13 +262,13 @@ public class TransactionApiController {
 
         // 积分按消费金额的 1% 计算，退货时扣减
         double pointsToDeduct = transaction.finalAmount.divide(BigDecimal.valueOf(100), 2, RoundingMode.DOWN).doubleValue();
-        MemberDAO.updatePointsWithConnection(conn, transaction.memberId, -pointsToDeduct);
+        DAOFactory.getInstance().getMemberDAO().updatePointsWithConnection(conn, transaction.memberId, -pointsToDeduct);
 
         // 重新计算会员等级
-        Member member = MemberDAO.findByIdWithConnection(conn, transaction.memberId);
+        Member member = DAOFactory.getInstance().getMemberDAO().findByIdWithConnection(conn, transaction.memberId);
         if (member != null) {
             member.level = calculateMemberLevel(member.points);
-            MemberDAO.updateWithConnection(conn, member);
+            DAOFactory.getInstance().getMemberDAO().updateWithConnection(conn, member);
         }
     }
 

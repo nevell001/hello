@@ -1,7 +1,7 @@
 package com.cashier.service;
 
-import com.cashier.dao.MemberDAO;
 import com.cashier.dao.DAOFactory;
+import com.cashier.dao.MemberDAORefactored;
 import com.cashier.util.DatabaseTestBase;
 import com.cashier.model.CartItem;
 import com.cashier.model.Member;
@@ -23,6 +23,8 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class TransactionConcurrencyTest extends DatabaseTestBase {
+
+    private final MemberDAORefactored memberDAO = DAOFactory.getInstance().getMemberDAO();
 
     private Member testMember;
     private Product testProduct;
@@ -47,7 +49,7 @@ class TransactionConcurrencyTest extends DatabaseTestBase {
         testMember.points = BigDecimal.valueOf(100.0);
         testMember.level = "普通";
         testMember.discount = BigDecimal.TEN;
-        MemberDAO.insert(testMember);
+        memberDAO.insert(testMember);
 
         // 创建测试商品
         testProduct = createProduct("商品1", 10.0, 100);
@@ -200,7 +202,7 @@ class TransactionConcurrencyTest extends DatabaseTestBase {
     void testInsufficientMemberBalance() throws Exception {
         // 设置会员折扣
         testMember.discount = BigDecimal.valueOf(9.0);
-        MemberDAO.update(testMember);
+        memberDAO.update(testMember);
 
         List<CartItem> cartItems = new ArrayList<>();
         cartItems.add(new CartItem(testProduct, 120)); // 120 * 10 = 1200, 打9折后 1080 > 1000 余额
@@ -223,7 +225,7 @@ class TransactionConcurrencyTest extends DatabaseTestBase {
         assertNotNull(result.getMessage());
 
         // 验证余额没有变化
-        Member updatedMember = MemberDAO.findByPhone(testMember.phone);
+        Member updatedMember = memberDAO.findByPhone(testMember.phone);
         assertAmountEquals(testMember.balance, updatedMember.balance);
     }
 
@@ -335,7 +337,7 @@ class TransactionConcurrencyTest extends DatabaseTestBase {
     void testMemberPointsUpdate() throws Exception {
         // 设置会员折扣
         testMember.discount = BigDecimal.valueOf(9.0);
-        MemberDAO.update(testMember);
+        memberDAO.update(testMember);
 
         BigDecimal initialPoints = testMember.points;
 
@@ -356,7 +358,7 @@ class TransactionConcurrencyTest extends DatabaseTestBase {
         assertTrue(result.isSuccess());
 
         // 验证会员积分已更新（每消费1元积10分）
-        Member updatedMember = MemberDAO.findByPhone(testMember.phone);
+        Member updatedMember = memberDAO.findByPhone(testMember.phone);
         BigDecimal expectedPoints = initialPoints.add(finalAmount.multiply(BigDecimal.TEN).setScale(0, RoundingMode.DOWN));
         assertAmountEquals(expectedPoints, updatedMember.points);
     }

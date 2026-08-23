@@ -2,7 +2,6 @@ package com.cashier.controller;
 
 import com.cashier.CashierSystemFXApplication;
 import com.cashier.dao.DAOFactory;
-import com.cashier.dao.MemberDAO;
 import com.cashier.dao.ProductDAORefactored;
 import com.cashier.i18n.I18nManager;
 import com.cashier.model.CartItem;
@@ -963,7 +962,7 @@ public class TouchCartController implements CartViewHost {
             deserializeHoldCartItems(order.itemsJson);
             if (order.memberId != null) {
                 try {
-                    currentMember = MemberDAO.findById(order.memberId);
+                    currentMember = DAOFactory.getInstance().getMemberDAO().findById(order.memberId);
                     if (currentMember != null) {
                         if (memberPhoneField != null) {
                             memberPhoneField.setText(currentMember.phone);
@@ -1151,7 +1150,7 @@ public class TouchCartController implements CartViewHost {
             return;
         }
         try {
-            Member m = MemberDAO.findByPhone(phone.trim());
+            Member m = DAOFactory.getInstance().getMemberDAO().findByPhone(phone.trim());
             if (m == null) {
                 currentMember = null;
                 memberInfoLabel.setText(i18n.get("tpos.member_not_found"));

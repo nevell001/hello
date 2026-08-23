@@ -14,6 +14,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class MemberDAOTest extends DatabaseTestBase {
 
+    private final MemberDAORefactored memberDAO = DAOFactory.getInstance().getMemberDAO();
+
     @BeforeEach
     void setUp() throws Exception {
         if (!DatabaseTestBase.isInitialized()) {
@@ -27,7 +29,7 @@ class MemberDAOTest extends DatabaseTestBase {
     void searchShouldMapMemberCode() throws Exception {
         Member member = createMember("MEM202606170001", "13800138001", "搜索会员", "银卡");
 
-        List<Member> result = MemberDAO.search("搜索会员");
+        List<Member> result = memberDAO.search("搜索会员");
 
         assertFalse(result.isEmpty());
         assertEquals(member.memberCode, result.get(0).memberCode);
@@ -38,7 +40,7 @@ class MemberDAOTest extends DatabaseTestBase {
     void findByLevelShouldMapMemberCode() throws Exception {
         Member member = createMember("MEM202606170002", "13800138002", "等级会员", "金卡");
 
-        List<Member> result = MemberDAO.findByLevel("金卡");
+        List<Member> result = memberDAO.findByLevel("金卡");
 
         assertFalse(result.isEmpty());
         assertEquals(member.memberCode, result.get(0).memberCode);
@@ -55,7 +57,7 @@ class MemberDAOTest extends DatabaseTestBase {
         member.balance = BigDecimal.valueOf(100);
         member.birthday = "";
 
-        MemberDAO.insert(member);
-        return MemberDAO.findByPhone(phone);
+        memberDAO.insert(member);
+        return memberDAO.findByPhone(phone);
     }
 }

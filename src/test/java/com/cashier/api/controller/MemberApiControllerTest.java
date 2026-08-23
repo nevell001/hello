@@ -1,7 +1,8 @@
 package com.cashier.api.controller;
 
 import com.cashier.api.support.TestContext;
-import com.cashier.dao.MemberDAO;
+import com.cashier.dao.DAOFactory;
+import com.cashier.dao.MemberDAORefactored;
 import com.cashier.model.Member;
 import com.cashier.util.DatabaseTestBase;
 import io.javalin.http.HandlerType;
@@ -17,6 +18,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MemberApiControllerTest extends DatabaseTestBase {
 
+    private final MemberDAORefactored memberDAO = DAOFactory.getInstance().getMemberDAO();
+
     private Member insertMember(String phone) throws Exception {
         Member member = new Member();
         member.phone = phone;
@@ -26,7 +29,7 @@ class MemberApiControllerTest extends DatabaseTestBase {
         member.discountRate = BigDecimal.TEN;
         member.balance = BigDecimal.ZERO;
         member.points = BigDecimal.ZERO;
-        assertTrue(MemberDAO.insert(member));
+        assertTrue(memberDAO.insert(member));
         return member;
     }
 
@@ -102,7 +105,7 @@ class MemberApiControllerTest extends DatabaseTestBase {
 
         assertEquals(HttpStatus.OK, ctx.status);
         assertTrue((Boolean) response(ctx).get("success"));
-        assertEquals("改名会员", MemberDAO.findById(saved.id).name);
+        assertEquals("改名会员", memberDAO.findById(saved.id).name);
     }
 
     @Test
@@ -132,7 +135,7 @@ class MemberApiControllerTest extends DatabaseTestBase {
         MemberApiController.recharge(ctx.context);
 
         assertEquals(HttpStatus.OK, ctx.status);
-        assertTrue(MemberDAO.findById(saved.id).balance.compareTo(BigDecimal.ZERO) > 0);
+        assertTrue(memberDAO.findById(saved.id).balance.compareTo(BigDecimal.ZERO) > 0);
     }
 
     @Test

@@ -202,8 +202,8 @@ public class TransactionService {
     private static void applyMemberInTransaction(Connection conn, Member member, Transaction transaction,
                                                  BigDecimal payableAmount) throws SQLException {
         Member latestMember = member.id > 0
-            ? MemberDAO.findByIdWithConnection(conn, member.id)
-            : MemberDAO.findByPhoneWithConnection(conn, member.phone);
+            ? DAOFactory.getInstance().getMemberDAO().findByIdWithConnection(conn, member.id)
+            : DAOFactory.getInstance().getMemberDAO().findByPhoneWithConnection(conn, member.phone);
         if (latestMember == null) {
             throw new SQLException(I18nManager.getInstance().get("service.member_not_found", member.phone));
         }
@@ -233,7 +233,7 @@ public class TransactionService {
             : latestMember.getBalance();
         member.points = updatedPoints;
 
-        if (!MemberDAO.updateWithConnection(conn, member)) {
+        if (!DAOFactory.getInstance().getMemberDAO().updateWithConnection(conn, member)) {
             throw new SQLException(I18nManager.getInstance().get("service.member_update_failed"));
         }
     }

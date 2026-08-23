@@ -1,9 +1,9 @@
 package com.cashier.service;
 
-import com.cashier.dao.MemberDAO;
 import com.cashier.dao.DAOFactory;
 import com.cashier.dao.PromotionDAORefactored;
 import com.cashier.dao.TransactionDAORefactored;
+import com.cashier.dao.MemberDAORefactored;
 import com.cashier.util.DatabaseTestBase;
 import com.cashier.model.CartItem;
 import com.cashier.model.Member;
@@ -29,6 +29,7 @@ class TransactionServiceTest extends DatabaseTestBase {
 
     private final PromotionDAORefactored promotionDAO = DAOFactory.getInstance().getPromotionDAO();
     private final TransactionDAORefactored transactionDAO = DAOFactory.getInstance().getTransactionDAO();
+    private final MemberDAORefactored memberDAO = DAOFactory.getInstance().getMemberDAO();
 
     private Member testMember;
     private List<Product> testProducts;
@@ -53,7 +54,7 @@ class TransactionServiceTest extends DatabaseTestBase {
         testMember.points = BigDecimal.valueOf(100.0);
         testMember.level = "普通";
         testMember.discount = BigDecimal.TEN;
-        MemberDAO.insert(testMember);
+        memberDAO.insert(testMember);
 
         // 创建测试商品
         testProducts = new ArrayList<>();
@@ -100,7 +101,7 @@ class TransactionServiceTest extends DatabaseTestBase {
     void testExecuteTransactionWithMember() throws Exception {
         // 设置会员折扣为9折
         testMember.discount = BigDecimal.valueOf(9.0);
-        MemberDAO.update(testMember);
+        memberDAO.update(testMember);
 
         // 执行交易
         TransactionService.TransactionResult result = TransactionService.executeTransaction(
@@ -153,7 +154,7 @@ class TransactionServiceTest extends DatabaseTestBase {
     void testTransactionDeductMemberBalance() throws Exception {
         // 设置会员折扣
         testMember.discount = BigDecimal.valueOf(9.0);
-        MemberDAO.update(testMember);
+        memberDAO.update(testMember);
 
         BigDecimal initialBalance = testMember.balance;
         double finalAmount = 36.0; // 40 * 0.9
@@ -171,7 +172,7 @@ class TransactionServiceTest extends DatabaseTestBase {
         assertTrue(result.isSuccess());
 
         // 验证会员余额已扣减
-        Member updatedMember = MemberDAO.findByPhone(testMember.phone);
+        Member updatedMember = memberDAO.findByPhone(testMember.phone);
         assertAmountEquals(initialBalance.subtract(BigDecimal.valueOf(finalAmount)), updatedMember.balance);
 
         // 验证会员积分已增加
@@ -193,7 +194,7 @@ class TransactionServiceTest extends DatabaseTestBase {
         );
 
         assertTrue(result.isSuccess());
-        Member updatedMember = MemberDAO.findByPhone(testMember.phone);
+        Member updatedMember = memberDAO.findByPhone(testMember.phone);
         assertAmountEquals(initialBalance, updatedMember.balance);
         assertTrue(updatedMember.points.compareTo(BigDecimal.valueOf(100)) > 0);
     }
@@ -246,7 +247,7 @@ class TransactionServiceTest extends DatabaseTestBase {
     @DisplayName("测试计算最终金额 - 有会员")
     void testCalculateFinalAmountWithMember() throws Exception {
         testMember.discount = BigDecimal.valueOf(9.0);
-        MemberDAO.update(testMember);
+        memberDAO.update(testMember);
 
         BigDecimal finalAmount = TransactionService.calculateFinalAmount(testCartItems, testMember);
         assertAmountEquals(36.0, finalAmount); // 40 * 0.9
@@ -321,7 +322,7 @@ class TransactionServiceTest extends DatabaseTestBase {
         testMember.points = BigDecimal.valueOf(995.0);
         testMember.level = "普通";
         testMember.discount = BigDecimal.TEN;
-        MemberDAO.update(testMember);
+        memberDAO.update(testMember);
 
         TransactionService.TransactionResult result = TransactionService.executeTransaction(
             testCartItems,
@@ -333,7 +334,7 @@ class TransactionServiceTest extends DatabaseTestBase {
         );
 
         assertTrue(result.isSuccess());
-        Member updatedMember = MemberDAO.findByPhone(testMember.phone);
+        Member updatedMember = memberDAO.findByPhone(testMember.phone);
         assertEquals("银卡", updatedMember.level);
         assertAmountEquals(9.5, updatedMember.discount);
         assertEquals("银卡", testMember.level);

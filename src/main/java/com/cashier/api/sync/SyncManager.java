@@ -1,6 +1,7 @@
 package com.cashier.api.sync;
 
 import com.cashier.model.User;
+import com.cashier.dao.DAOFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.websocket.WsContext;
 import org.slf4j.Logger;
@@ -248,7 +249,7 @@ public class SyncManager {
                 putPageResult(responseData, products);
             } else if ("MEMBERS".equals(entity)) {
                 com.cashier.model.PageResult<com.cashier.model.Member> members =
-                    com.cashier.dao.MemberDAO.findAll(page, pageSize);
+                    com.cashier.dao.DAOFactory.getInstance().getMemberDAO().findAll(page, pageSize);
                 putPageResult(responseData, members);
             } else if ("TRANSACTIONS".equals(entity)) {
                 responseData.put("items", com.cashier.dao.DAOFactory.getInstance().getTransactionDAO().findRecent(100));
