@@ -17,7 +17,7 @@
 | 凭据 | 配置字段 | 申请/生成方式 | 安全要求 | 存放位置 |
 |---|---|---|---|---|
 | MySQL root 密码 | `.env` `MYSQL_ROOT_PASSWORD` | 自行生成 | ≥16 位强随机，仅用于初始化 | `.env`（gitignored） |
-| 应用用户密码（lisuan） | `.env` `MYSQL_PASSWORD`；`config/database.properties` `db.password` | 自行生成 | ≥16 位强随机，与 root 不同 | `.env` + `config/database.properties` |
+| 应用用户密码（lisuan） | `.env` `CASHIER_DB_PASSWORD` | 自行生成 | ≥16 位强随机，与 root 不同 | 仅 `.env`（方案A：不写入 `config/database.properties`） |
 | 数据库主机/端口 | `DB_HOST` / `DB_PORT` / `db.url` | 部署环境 | 生产内网或 SSH 隧道 | `.env` + `config/database.properties` |
 | 数据库 SSL | `DB_USE_SSL=true`（建议） | 部署环境 | 生产启用 SSL/TLS | `.env` |
 

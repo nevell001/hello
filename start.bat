@@ -11,6 +11,18 @@ cd /d "%~dp0"
 set "APP_NAME=LiSuan"
 set "APP_VERSION=2.6.0"
 
+REM 从 .env 定向读取数据库密码（与 start.sh 保持一致，仅读取密码变量，兼容旧版 MYSQL_PASSWORD）
+if exist ".env" (
+    for /f "usebackq tokens=1,* delims==" %%a in (".env") do (
+        if /i "%%a"=="CASHIER_DB_PASSWORD" if not defined CASHIER_DB_PASSWORD set "CASHIER_DB_PASSWORD=%%b"
+        if /i "%%a"=="CASHER_DB_PASSWORD" if not defined CASHIER_DB_PASSWORD if not defined CASHER_DB_PASSWORD set "CASHER_DB_PASSWORD=%%b"
+        if /i "%%a"=="MYSQL_PASSWORD" if not defined CASHIER_DB_PASSWORD if not defined CASHER_DB_PASSWORD set "CASHIER_DB_PASSWORD=%%b"
+    )
+    if defined CASHIER_DB_PASSWORD set "CASHIER_DB_PASSWORD=!CASHIER_DB_PASSWORD:"=!"
+    if defined CASHER_DB_PASSWORD set "CASHER_DB_PASSWORD=!CASHER_DB_PASSWORD:"=!"
+    if defined CASHIER_DB_PASSWORD echo [INFO] CASHIER_DB_PASSWORD is set and will override db.password in config\database.properties
+)
+
 cls
 echo.
 echo =========================================

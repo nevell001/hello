@@ -349,11 +349,22 @@ else
 fi
 
 if [ "$DB_TYPE" != "skip_config" ]; then
+# 方案A：配置文件不保存明文密码。以下情况密码由 CASHIER_DB_PASSWORD（.env 或环境变量）提供：
+#   - ENVIRONMENT=production
+#   - .env 中已存在可用的 CASHIER_DB_PASSWORD / MYSQL_PASSWORD
+# 其余情况（纯交互开发、无 .env）仍写入明文，保证 install 后可直接 start。
+DB_CONFIG_PASSWORD=""
+if [ "$ENVIRONMENT" != "production" ] \
+    && { [ ! -f ".env" ] || { ! grep -qE '^CASHIER_DB_PASSWORD=.+' .env && ! grep -qE '^MYSQL_PASSWORD=.+' .env; }; }; then
+    DB_CONFIG_PASSWORD="${DB_PASSWORD}"
+fi
+
 cat > config/database.properties << EOF
 # Database Configuration
+# Production deployments should provide the password through CASHIER_DB_PASSWORD.
 db.url=jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?sslMode=PREFERRED&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8
 db.username=${DB_USERNAME}
-db.password=${DB_PASSWORD}
+db.password=${DB_CONFIG_PASSWORD}
 db.pool.size=10
 db.connection.timeout=30000
 db.idle.timeout=600000
@@ -361,6 +372,11 @@ db.max.lifetime=1800000
 EOF
 
 echo "[Done] Database configuration updated"
+if [ -z "$DB_CONFIG_PASSWORD" ]; then
+    echo "[Tip] db.password 未写入配置文件；运行时会从 CASHIER_DB_PASSWORD（.env 或环境变量）读取"
+else
+    echo "[Tip] 未检测到 .env，密码已写入 db.password（开发模式）；生产发布请使用 .env 的 CASHIER_DB_PASSWORD"
+fi
 echo ""
 fi
 
