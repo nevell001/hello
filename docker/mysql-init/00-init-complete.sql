@@ -2,7 +2,10 @@
 -- 收银系统 MySQL 完整初始化脚本
 -- ============================================
 -- 此脚本整合了用户创建、表结构初始化和示例数据
--- 使用方法: docker exec lisuan-mysql mysql -uroot -pYOUR_PASSWORD --default-character-set=utf8mb4 lisuan_system < 00-init-complete.sql
+-- 使用方法（库名由调用方提供，执行前需先建库）:
+--   docker exec lisuan-mysql mysql -uroot -pYOUR_PASSWORD -e "CREATE DATABASE IF NOT EXISTS lisuan_system CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+--   docker exec lisuan-mysql mysql -uroot -pYOUR_PASSWORD --default-character-set=utf8mb4 lisuan_system < 00-init-complete.sql
+-- Docker Compose 首次启动时会自动以 MYSQL_DATABASE（默认 lisuan_system）为目标库执行本脚本。
 -- 
 -- 版本: v2.5.9
 -- 更新日期: 2026-07-05
@@ -27,10 +30,13 @@ SET NAMES utf8mb4;
 SET CHARACTER SET utf8mb4;
 
 -- ============================================
--- 确保使用正确的数据库
+-- 目标数据库
 -- ============================================
-CREATE DATABASE IF NOT EXISTS lisuan_system CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE lisuan_system;
+-- 本脚本不创建、不切换数据库，目标库由调用方提供：
+--   - Docker Compose 首次启动：entrypoint 以 MYSQL_DATABASE 为目标库执行
+--   - install.sh：先 CREATE DATABASE ${DB_NAME}，再以 ${DB_NAME} 为参数导入
+--   - Java 安装器：连接到 jdbc:mysql://host:port/{dbName} 后执行
+-- 手动执行时请先创建目标库，再以库名为参数导入本脚本。
 
 -- ============================================
 -- 第一部分：创建基础表
@@ -946,7 +952,7 @@ VALUES ('admin', '$2a$10$EVvVqIyQ7Ve2dZb9DKnv/u8JVIyfsp6flS1q9qTVaDB1X4SUTywsu',
 
 SELECT '=== 数据库初始化完成 ===' AS status;
 SELECT CONCAT('MySQL 版本: ', VERSION()) AS mysql_version;
-SELECT COUNT(*) as 数据表总数 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'lisuan_system';
+SELECT COUNT(*) as 数据表总数 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE();
 
 -- ============================================
 -- 初始化脚本信息

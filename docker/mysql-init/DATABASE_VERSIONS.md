@@ -26,6 +26,8 @@
 **推荐使用**：`00-init-complete.sql`
 
 ```bash
+# 目标库默认 lisuan_system，可随 MYSQL_DATABASE 调整；脚本不再自动建库，需先创建
+docker exec lisuan-mysql mysql -uroot -pYOUR_ROOT_PASSWORD -e "CREATE DATABASE IF NOT EXISTS lisuan_system CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 docker exec lisuan-mysql mysql -uroot -pYOUR_ROOT_PASSWORD --default-character-set=utf8mb4 lisuan_system < docker/mysql-init/00-init-complete.sql
 ```
 
