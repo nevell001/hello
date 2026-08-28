@@ -146,7 +146,7 @@ public class DatabaseConfigDialog {
         String env = System.getenv("ENVIRONMENT");
         boolean isProduction = "production".equalsIgnoreCase(env);
         String defaultUser = isProduction ? "lisuan" : "root";
-        String passwordVariable = isProduction ? "MYSQL_PASSWORD" : "MYSQL_ROOT_PASSWORD";
+        String passwordVariable = isProduction ? "CASHIER_DB_PASSWORD" : "MYSQL_ROOT_PASSWORD";
         String defaultPassword = System.getenv(passwordVariable);
         if (defaultPassword == null) {
             defaultPassword = "";

@@ -42,6 +42,7 @@ if exist ".env" (
     for /f "usebackq tokens=1,* delims==" %%a in (".env") do (
         if /i "%%a"=="CASHIER_DB_PASSWORD" if not defined CASHIER_DB_PASSWORD set "CASHIER_DB_PASSWORD=%%b"
         if /i "%%a"=="CASHER_DB_PASSWORD" if not defined CASHER_DB_PASSWORD set "CASHER_DB_PASSWORD=%%b"
+        if /i "%%a"=="MYSQL_PASSWORD" if not defined CASHIER_DB_PASSWORD if not defined CASHER_DB_PASSWORD set "CASHIER_DB_PASSWORD=%%b"
     )
 )
 if defined CASHIER_DB_PASSWORD set "CASHIER_DB_PASSWORD=!CASHIER_DB_PASSWORD:"=!"

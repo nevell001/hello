@@ -32,7 +32,8 @@ DB_HOST=${DB_HOST:-"localhost"}
 DB_PORT=${DB_PORT:-"3306"}
 DB_NAME=${MYSQL_DATABASE:-"lisuan_system"}
 MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-""}
-MYSQL_PASSWORD=${MYSQL_PASSWORD:-""}
+# 统一的应用用户密码：CASHIER_DB_PASSWORD 为唯一权威变量（兼容旧版 MYSQL_PASSWORD）
+CASHIER_DB_PASSWORD=${CASHIER_DB_PASSWORD:-${MYSQL_PASSWORD:-""}}
 MYSQL_CONTAINER_NAME=${MYSQL_CONTAINER_NAME:-"lisuan-mysql"}
 
 # 环境类型：development 或 production
@@ -41,7 +42,7 @@ ENVIRONMENT=${ENVIRONMENT:-"development"}
 # 应用始终使用专用数据库用户；root 只用于初始化和维护数据库。
 MYSQL_USER=${MYSQL_USER:-"lisuan"}
 DB_USERNAME=${MYSQL_USER}
-DB_PASSWORD=${MYSQL_PASSWORD}
+DB_PASSWORD=${CASHIER_DB_PASSWORD}
 
 # Auto-detect executable fat JAR (works for any version)
 JAR_PATH=$(ls target/lisuan-fx-*-jar-with-dependencies.jar 2>/dev/null | head -n 1)
@@ -159,17 +160,17 @@ if [ "$DB_TYPE" == "docker" ]; then
         read -s -p "MySQL root password: " MYSQL_ROOT_PASSWORD
         echo ""
     fi
-    if [ -z "$MYSQL_PASSWORD" ]; then
-        read -s -p "MySQL application user password: " MYSQL_PASSWORD
+    if [ -z "$CASHIER_DB_PASSWORD" ]; then
+        read -s -p "MySQL application user password: " CASHIER_DB_PASSWORD
         echo ""
     fi
-    if [ -z "$MYSQL_ROOT_PASSWORD" ] || [ -z "$MYSQL_PASSWORD" ]; then
+    if [ -z "$MYSQL_ROOT_PASSWORD" ] || [ -z "$CASHIER_DB_PASSWORD" ]; then
         echo "[Error] Database passwords cannot be empty"
         exit 1
     fi
-    export MYSQL_ROOT_PASSWORD MYSQL_PASSWORD
+    export MYSQL_ROOT_PASSWORD CASHIER_DB_PASSWORD
     DB_USERNAME="$MYSQL_USER"
-    DB_PASSWORD="$MYSQL_PASSWORD"
+    DB_PASSWORD="$CASHIER_DB_PASSWORD"
 
     echo "[Docker] Checking Docker installation..."
     if ! command -v docker &> /dev/null; then
@@ -213,9 +214,9 @@ if [ "$DB_TYPE" == "docker" ]; then
         echo "[Docker] Creating database if not exists..."
         DB_NAME_SQL=$(printf "%s" "$DB_NAME" | sed 's/`/``/g')
         MYSQL_USER_SQL=$(printf "%s" "$MYSQL_USER" | sed "s/'/''/g")
-        MYSQL_PASSWORD_SQL=$(printf "%s" "$MYSQL_PASSWORD" | sed "s/'/''/g")
+        CASHIER_DB_PASSWORD_SQL=$(printf "%s" "$CASHIER_DB_PASSWORD" | sed "s/'/''/g")
         docker exec "${MYSQL_CONTAINER_NAME}" mysql -uroot -p"${MYSQL_ROOT_PASSWORD}" -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME_SQL}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>/dev/null
-        docker exec "${MYSQL_CONTAINER_NAME}" mysql -uroot -p"${MYSQL_ROOT_PASSWORD}" -e "CREATE USER IF NOT EXISTS '${MYSQL_USER_SQL}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD_SQL}'; ALTER USER '${MYSQL_USER_SQL}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD_SQL}'; GRANT ALL PRIVILEGES ON \`${DB_NAME_SQL}\`.* TO '${MYSQL_USER_SQL}'@'%'; FLUSH PRIVILEGES;" 2>/dev/null
+        docker exec "${MYSQL_CONTAINER_NAME}" mysql -uroot -p"${MYSQL_ROOT_PASSWORD}" -e "CREATE USER IF NOT EXISTS '${MYSQL_USER_SQL}'@'%' IDENTIFIED BY '${CASHIER_DB_PASSWORD_SQL}'; ALTER USER '${MYSQL_USER_SQL}'@'%' IDENTIFIED BY '${CASHIER_DB_PASSWORD_SQL}'; GRANT ALL PRIVILEGES ON \`${DB_NAME_SQL}\`.* TO '${MYSQL_USER_SQL}'@'%'; FLUSH PRIVILEGES;" 2>/dev/null
 
         echo "[Docker] Initializing database with complete schema..."
         docker exec "${MYSQL_CONTAINER_NAME}" mysql -uroot -p"${MYSQL_ROOT_PASSWORD}" --default-character-set=utf8mb4 "${DB_NAME}" < docker/mysql-init/00-init-complete.sql 2>/dev/null

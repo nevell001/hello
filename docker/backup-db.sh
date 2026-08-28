@@ -19,8 +19,8 @@ BACKUP_FILE="$BACKUP_DIR/lisuan_$TIMESTAMP.sql"
 
 # 执行备份
 # 注意：密码通过环境变量传递，避免在日志中暴露
-# 确保在运行此脚本的环境中已导出或设置了 MYSQL_PASSWORD
-docker exec "$CONTAINER_NAME" /usr/bin/mysqldump -u lisuan -p"$MYSQL_PASSWORD" "$DB_NAME" > "$BACKUP_FILE"
+# 确保在运行此脚本的环境中已导出或设置了 CASHIER_DB_PASSWORD（兼容旧版 MYSQL_PASSWORD）
+docker exec "$CONTAINER_NAME" /usr/bin/mysqldump -u lisuan -p"${CASHIER_DB_PASSWORD:-$MYSQL_PASSWORD}" "$DB_NAME" > "$BACKUP_FILE"
 
 # 校验备份是否成功
 if [ $? -eq 0 ]; then

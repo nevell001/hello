@@ -140,20 +140,21 @@ cp .env.example .env
 | `ENVIRONMENT` | `development`（root 连库）或 `production`（专用用户 lisuan 连库） |
 | `DB_TYPE` | 数据库类型：`docker` / `local` / `none`，用于 `install.sh` 引导 |
 | `MYSQL_CONTAINER_NAME` / `MYSQL_IMAGE` | Docker MySQL 容器与镜像 |
-| `MYSQL_ROOT_PASSWORD` / `MYSQL_PASSWORD` / `MYSQL_USER` / `MYSQL_DATABASE` | Docker 数据库初始化账号 |
+| `MYSQL_ROOT_PASSWORD` / `CASHIER_DB_PASSWORD` / `MYSQL_USER` / `MYSQL_DATABASE` | Docker 数据库初始化账号（`CASHIER_DB_PASSWORD` 同时作为应用运行密码） |
 | `DB_HOST` / `DB_PORT` | 数据库连接地址与端口 |
 | `TZ` | 时区（默认 `Asia/Shanghai`） |
 | `JVM_OPTS` | JVM 启动参数（`config/jvm.config` 优先） |
 | `TOKEN_SECRET` | API Token 密钥，至少 32 位强随机串 |
 | `CORS_ALLOWED_ORIGINS` | API 允许的跨域来源，生产禁止 `*` |
-| `CASHIER_DB_PASSWORD` / `CASHER_DB_PASSWORD` | 覆盖 `config/database.properties` 中的数据库密码（`start.sh` 定向读取） |
+| `CASHIER_DB_PASSWORD` / `CASHER_DB_PASSWORD` | 应用数据库用户密码（Docker 建库建用户与应用运行共用；`CASHER_DB_PASSWORD` 为旧拼写兼容） |
 
 使用说明：
 
 - `install.sh` / `install.bat` 会整体加载 `.env` 用于数据库初始化、配置生成和打包；未定义的变量会走交互式引导。
+- 检测到 `.env`（或 `ENVIRONMENT=production`）时，`install.sh` 不会把密码写入 `config/database.properties`，运行密码统一由 `CASHIER_DB_PASSWORD` 提供。
 - `start.sh` 只定向读取 `CASHIER_DB_PASSWORD` / `CASHER_DB_PASSWORD` 两个密码变量覆盖数据库密码，不把 `TOKEN_SECRET`、`CORS_ALLOWED_ORIGINS` 等占位配置带入运行环境（API 侧仍通过系统环境变量传递）。
 - `DataConfig.bat` 同样读取 `.env` 生成数据库配置。
-- **安全提示**：首次使用务必替换 `MYSQL_ROOT_PASSWORD`、`MYSQL_PASSWORD`、`TOKEN_SECRET` 为各自独立的强随机值，并限制 `CORS_ALLOWED_ORIGINS`。数据库密码也可以不改 `.env`，而是通过启动时注入 `CASHIER_DB_PASSWORD` 环境变量提供。
+- **安全提示**：首次使用务必替换 `MYSQL_ROOT_PASSWORD`、`CASHIER_DB_PASSWORD`、`TOKEN_SECRET` 为各自独立的强随机值，并限制 `CORS_ALLOWED_ORIGINS`。旧版 `.env` 中的 `MYSQL_PASSWORD` 已统一为 `CASHIER_DB_PASSWORD`（脚本仍向后兼容读取旧变量）。
 
 ### 开发运行
 

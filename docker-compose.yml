@@ -1,21 +1,23 @@
 services:
   mysql:
-    image: mysql:8.4
-    container_name: lisuan-mysql
+    image: ${MYSQL_IMAGE:-mysql:8.4}
+    container_name: ${MYSQL_CONTAINER_NAME:-lisuan-mysql}
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?请在 .env 中设置 MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: lisuan_system
-      MYSQL_USER: lisuan
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?请在 .env 中设置 MYSQL_PASSWORD}
-      TZ: Asia/Shanghai
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-lisuan_system}
+      MYSQL_USER: ${MYSQL_USER:-lisuan}
+      MYSQL_PASSWORD: ${CASHIER_DB_PASSWORD:?请在 .env 中设置 CASHIER_DB_PASSWORD}
+      TZ: ${TZ:-Asia/Shanghai}
       MYSQL_CHARSET: utf8mb4
       MYSQL_COLLATION: utf8mb4_unicode_ci
     command: --mysql-native-password=ON --bind-address=0.0.0.0 --skip-name-resolve
     ports:
-      - "127.0.0.1:3306:3306"
+      # 仅绑定本机回环地址（安全默认）；端口可由 .env 的 DB_PORT 调整
+      - "127.0.0.1:${DB_PORT:-3306}:3306"
     volumes:
       - lisuan-mysql-data:/var/lib/mysql
+      - ./docker/my.cnf:/etc/mysql/conf.d/lisuan.cnf:ro
       - ./docker/mysql-init/00-init-complete.sql:/docker-entrypoint-initdb.d/00-init-complete.sql:ro
       - ./backups/sql:/backup
     healthcheck:

@@ -57,21 +57,22 @@ fi
 # MySQL 配置 - ⚠️ 请修改以下密码！
 # 可以通过环境变量覆盖：
 #   export MYSQL_ROOT_PASSWORD="your_root_password"
-#   export MYSQL_PASSWORD="your_app_password"
+#   export CASHIER_DB_PASSWORD="your_app_password"
 MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD:-YOUR_ROOT_PASSWORD_HERE}"
 MYSQL_HOST="localhost"
 MYSQL_PORT="3306"
 MYSQL_DATABASE="lisuan_system"
 MYSQL_USER="lisuan"
-MYSQL_PASSWORD="${MYSQL_PASSWORD:-YOUR_CASHIER_PASSWORD_HERE}"
+# 统一的应用用户密码（兼容旧版 MYSQL_PASSWORD）
+CASHIER_DB_PASSWORD="${CASHIER_DB_PASSWORD:-${MYSQL_PASSWORD:-YOUR_CASHIER_PASSWORD_HERE}}"
 
 # 检查是否使用了默认密码
-if [[ "$MYSQL_ROOT_PASSWORD" == "YOUR_ROOT_PASSWORD_HERE" ]] || [[ "$MYSQL_PASSWORD" == "YOUR_CASHIER_PASSWORD_HERE" ]]; then
+if [[ "$MYSQL_ROOT_PASSWORD" == "YOUR_ROOT_PASSWORD_HERE" ]] || [[ "$CASHIER_DB_PASSWORD" == "YOUR_CASHIER_PASSWORD_HERE" ]]; then
     echo ""
     echo -e "${YELLOW}⚠️  安全警告：您正在使用默认密码占位符！${NC}"
     echo -e "${YELLOW}   请设置环境变量或在脚本中修改密码：${NC}"
     echo "   export MYSQL_ROOT_PASSWORD='your_secure_password'"
-    echo "   export MYSQL_PASSWORD='your_secure_password'"
+    echo "   export CASHIER_DB_PASSWORD='your_secure_password'"
     echo ""
     read -p "是否继续？(y/N) " -n 1 -r
     echo
@@ -101,9 +102,9 @@ echo "========================================="
 echo "  创建应用专用用户"
 echo "========================================="
 
-# 创建 cashier 用户（更安全的做法）
+# 创建应用专用用户（更安全的做法）
 $DOCKER_COMPOSE exec -T mysql mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "
-    CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED WITH mysql_native_password BY '${MYSQL_PASSWORD}';
+    CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED WITH mysql_native_password BY '${CASHIER_DB_PASSWORD}';
     GRANT ALL PRIVILEGES ON ${MYSQL_DATABASE}.* TO '${MYSQL_USER}'@'%';
     FLUSH PRIVILEGES;
 " 2>/dev/null
@@ -126,7 +127,7 @@ cat > config/database.properties << EOF
 # Database Configuration
 db.url=jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}?sslMode=PREFERRED&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8
 db.username=${MYSQL_USER}
-db.password=${MYSQL_PASSWORD}
+db.password=${CASHIER_DB_PASSWORD}
 db.pool.size=10
 db.connection.timeout=30000
 db.idle.timeout=600000
@@ -147,7 +148,7 @@ echo "  测试数据库连接"
 echo "========================================="
 
 # 测试连接
-if $DOCKER_COMPOSE exec -T mysql mysql -u${MYSQL_USER} -p${MYSQL_PASSWORD} -e "SELECT 'Connection successful!' AS Status;" 2>/dev/null; then
+if $DOCKER_COMPOSE exec -T mysql mysql -u${MYSQL_USER} -p${CASHIER_DB_PASSWORD} -e "SELECT 'Connection successful!' AS Status;" 2>/dev/null; then
     echo -e "${GREEN}✓ 数据库连接测试成功${NC}"
 else
     echo -e "${RED}✗ 数据库连接测试失败${NC}"

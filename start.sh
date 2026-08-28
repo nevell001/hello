@@ -83,6 +83,14 @@ if [ -f ".env" ]; then
     }
     load_db_password_from_env CASHIER_DB_PASSWORD
     load_db_password_from_env CASHER_DB_PASSWORD
+
+    # 兼容旧版 .env：MYSQL_PASSWORD 已统一为 CASHIER_DB_PASSWORD
+    if [ -z "${CASHIER_DB_PASSWORD:-}" ] && [ -z "${CASHER_DB_PASSWORD:-}" ]; then
+        MYSQL_PASSWORD_VALUE=$(grep -E "^MYSQL_PASSWORD=" .env | head -1 | cut -d= -f2- | sed 's/^[[:space:]]*"//;s/"[[:space:]]*$//')
+        if [ -n "$MYSQL_PASSWORD_VALUE" ]; then
+            export CASHIER_DB_PASSWORD="$MYSQL_PASSWORD_VALUE"
+        fi
+    fi
 fi
 
 if [ -n "${CASHIER_DB_PASSWORD:-}" ] || [ -n "${CASHER_DB_PASSWORD:-}" ]; then

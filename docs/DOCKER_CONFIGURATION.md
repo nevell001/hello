@@ -31,7 +31,7 @@ vim .env
 ```bash
 # 设置环境变量
 export MYSQL_ROOT_PASSWORD="YourSecurePassword"
-export MYSQL_PASSWORD="YourAppPassword"
+export CASHIER_DB_PASSWORD="YourAppPassword"
 
 # 运行安装脚本
 ./install.sh
@@ -74,8 +74,8 @@ docker exec -it lisuan-mysql bash
 | `MYSQL_IMAGE` | mysql:8.4 | MySQL 镜像版本 |
 | `MYSQL_ROOT_PASSWORD` | - | Root 密码（必填） |
 | `MYSQL_DATABASE` | lisuan_system | 数据库名称 |
-| `MYSQL_USER` | cashier | 应用用户名 |
-| `MYSQL_PASSWORD` | - | 应用密码（必填） |
+| `MYSQL_USER` | lisuan | 应用用户名 |
+| `CASHIER_DB_PASSWORD` | - | 应用用户密码（Docker 与应用共用，必填） |
 | `DB_HOST` | localhost | 数据库主机 |
 | `DB_PORT` | 3306 | 数据库端口 |
 

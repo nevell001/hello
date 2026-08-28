@@ -36,7 +36,7 @@ if "%ENVIRONMENT%"=="" set "ENVIRONMENT=development"
 REM 根据环境设置默认数据库用户
 if /i "%ENVIRONMENT%"=="production" (
     set "DB_USER=lisuan"
-    set "DB_PASSWORD=%MYSQL_PASSWORD%"
+    set "DB_PASSWORD=%CASHIER_DB_PASSWORD%"
 ) else (
     set "DB_USER=root"
     set "DB_PASSWORD=%MYSQL_ROOT_PASSWORD%"

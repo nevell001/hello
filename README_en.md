@@ -144,20 +144,21 @@ cp .env.example .env
 | `ENVIRONMENT` | `development` (connects as root) or `production` (dedicated user `lisuan`) |
 | `DB_TYPE` | Database type: `docker` / `local` / `none`, used to guide `install.sh` |
 | `MYSQL_CONTAINER_NAME` / `MYSQL_IMAGE` | Docker MySQL container and image |
-| `MYSQL_ROOT_PASSWORD` / `MYSQL_PASSWORD` / `MYSQL_USER` / `MYSQL_DATABASE` | Docker database initialization credentials |
+| `MYSQL_ROOT_PASSWORD` / `CASHIER_DB_PASSWORD` / `MYSQL_USER` / `MYSQL_DATABASE` | Docker database initialization credentials (`CASHIER_DB_PASSWORD` is also used by the application at runtime) |
 | `DB_HOST` / `DB_PORT` | Database host and port |
 | `TZ` | Time zone (default `Asia/Shanghai`) |
 | `JVM_OPTS` | JVM launch options (`config/jvm.config` takes precedence) |
 | `TOKEN_SECRET` | API token secret, at least 32 random characters |
 | `CORS_ALLOWED_ORIGINS` | Allowed CORS origins for the API; do not use `*` in production |
-| `CASHIER_DB_PASSWORD` / `CASHER_DB_PASSWORD` | Overrides the DB password in `config/database.properties` (selectively read by `start.sh`) |
+| `CASHIER_DB_PASSWORD` / `CASHER_DB_PASSWORD` | Application DB user password (shared by Docker DB bootstrap and app runtime; `CASHER_DB_PASSWORD` is the legacy spelling) |
 
 Usage notes:
 
 - `install.sh` / `install.bat` load the whole `.env` for database initialization, config generation, and packaging; undefined variables fall back to interactive prompts.
+- When `.env` is detected (or `ENVIRONMENT=production`), `install.sh` does not write the password into `config/database.properties`; the runtime password is provided solely by `CASHIER_DB_PASSWORD`.
 - `start.sh` only selectively reads the two password variables `CASHIER_DB_PASSWORD` / `CASHER_DB_PASSWORD` to override the DB password; it does not bring placeholder configs such as `TOKEN_SECRET`, `CORS_ALLOWED_ORIGINS` into the runtime environment (those are still passed to the API via system environment variables).
 - `DataConfig.bat` also reads `.env` to generate the database config.
-- **Security note**: On first use, replace `MYSQL_ROOT_PASSWORD`, `MYSQL_PASSWORD`, and `TOKEN_SECRET` with independent strong random values, and restrict `CORS_ALLOWED_ORIGINS`. As an alternative to editing `.env`, you can supply the DB password at startup via the `CASHIER_DB_PASSWORD` environment variable.
+- **Security note**: On first use, replace `MYSQL_ROOT_PASSWORD`, `CASHIER_DB_PASSWORD`, and `TOKEN_SECRET` with independent strong random values, and restrict `CORS_ALLOWED_ORIGINS`. The legacy `MYSQL_PASSWORD` key in `.env` has been unified into `CASHIER_DB_PASSWORD` (scripts still read the old variable for backward compatibility).
 
 ### Development Run
 
