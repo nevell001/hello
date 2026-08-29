@@ -4,11 +4,11 @@
 
 LiSuan Cashier System is a desktop POS (Point of Sale) cashier system built with JavaFX 17. It is designed for daily retail operations, covering checkout, products, members, purchasing, inventory, returns, reports, user permissions, data backup, and hardware integration.
 
-**Current Version**: v2.6.0 | **Latest Update**: 2026-08-29 | **Test Coverage**: 515 test cases
+**Current Version**: v2.6.0 | **Latest Update**: 2026-08-29 | **Test Coverage**: 520 test cases
 
-> Test scope: `mvn -q clean verify` runs 515 test cases by default (including SpotBugs and JaCoCo gates);
+> Test scope: `mvn -q clean verify` runs 520 test cases by default (including SpotBugs and JaCoCo gates);
 > `LoginControllerUITest` (17 cases) requires a real display environment and is run explicitly with
-> `mvn -Pui-tests -Dtest=LoginControllerUITest test`, for a total of 532 cases.
+> `mvn -Pui-tests -Dtest=LoginControllerUITest test`, for a total of 537 cases.
 
 ![Java](https://img.shields.io/badge/Java-17-orange)
 ![JavaFX](https://img.shields.io/badge/JavaFX-17.0.12-blue)
@@ -382,7 +382,7 @@ src/main/resources/
 - **Security Headers**: X-Content-Type-Options, X-Frame-Options, X-XSS-Protection
 
 ### Code Quality
-- **Unit Tests**: 515 test cases (`mvn -q clean verify`) covering DAOs, services, utilities, concurrency safety, and the API (532 in total including display-dependent UI tests)
+- **Unit Tests**: 520 test cases (`mvn -q clean verify`) covering DAOs, services, utilities, concurrency safety, and the API (537 in total including display-dependent UI tests)
 - **Static Analysis**: SpotBugs high-risk defect gate
 - **Coverage Gate**: JaCoCo line coverage ≥10%
 - **i18n Gate**: Enforces identical keys across the three language bundles, complete `I18nKeys` constants, and complete keys for source i18n calls

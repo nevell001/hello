@@ -4,11 +4,11 @@
 
 狸算 (LiSuan) 收銀系統是一個基於 JavaFX 17 的桌面 POS 收銀系統，面向零售門市的收銀、商品、會員、採購、庫存、退貨、報表、用戶權限、資料備份和硬體接入等日常經營場景。
 
-**當前版本**: v2.6.0 | **最新更新**: 2026-08-29 | **測試覆蓋**: 515 個測試用例
+**當前版本**: v2.6.0 | **最新更新**: 2026-08-29 | **測試覆蓋**: 520 個測試用例
 
-> 測試口徑：`mvn -q clean verify` 預設執行 515 個用例（含測試 + SpotBugs + JaCoCo 門檻）；
+> 測試口徑：`mvn -q clean verify` 預設執行 520 個用例（含測試 + SpotBugs + JaCoCo 門檻）；
 > `LoginControllerUITest`（17 個用例）需要真實顯示環境，在桌面環境用
-> `mvn -Pui-tests -Dtest=LoginControllerUITest test` 顯式執行，全量共 532 個。
+> `mvn -Pui-tests -Dtest=LoginControllerUITest test` 顯式執行，全量共 537 個。
 
 ![Java](https://img.shields.io/badge/Java-17-orange)
 ![JavaFX](https://img.shields.io/badge/JavaFX-17.0.12-blue)
@@ -381,7 +381,7 @@ src/main/resources/
 - **安全回應標頭**: X-Content-Type-Options, X-Frame-Options, X-XSS-Protection
 
 ### 程式碼品質
-- **單元測試**: 515 個測試用例（`mvn -q clean verify`），覆蓋 DAO、Service、工具類、並發安全與 API（全量 532，含需顯示環境的 UI 測試）
+- **單元測試**: 520 個測試用例（`mvn -q clean verify`），覆蓋 DAO、Service、工具類、並發安全與 API（全量 537，含需顯示環境的 UI 測試）
 - **靜態檢查**: SpotBugs 高風險缺陷門禁
 - **覆蓋率門檻**: JaCoCo 行覆蓋率 ≥10%
 - **i18n 門檻**: 強制三套語言包 key 一致、`I18nKeys` 常數齊全、原始碼 i18n 呼叫 key 齊全
