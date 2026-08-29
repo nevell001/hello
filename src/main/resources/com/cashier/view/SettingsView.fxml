@@ -182,6 +182,20 @@
 
                     <Separator/>
 
+                    <Label text="%settings.scanner_test" styleClass="text-primary, settings-section-title"/>
+
+                    <VBox spacing="10">
+                        <padding>
+                            <Insets top="10" right="0" bottom="0" left="0"/>
+                        </padding>
+
+                        <TextField fx:id="scannerTestField" promptText="%settings.scanner_test_prompt"
+                                   onAction="#handleScannerTest" prefWidth="400"/>
+                        <Label fx:id="scannerTestResultLabel" wrapText="true" styleClass="text-muted"/>
+                    </VBox>
+
+                    <Separator/>
+
                     <HBox spacing="10" alignment="CENTER_RIGHT">
                         <Button text="%settings.save"
                                 onAction="#handleSavePrintSettings"

@@ -13,6 +13,8 @@ import com.cashier.printer.NetworkPrinterDevice;
 import com.cashier.printer.PrintTask;
 import com.cashier.printer.PrinterDevice;
 import com.cashier.printer.PrinterManager;
+import com.cashier.scanner.ScanValidation;
+import com.cashier.scanner.USBHIDScannerDevice;
 import com.cashier.util.PasswordUtil;
 import com.cashier.util.FormValidator;
 import com.cashier.util.DatabaseManager;
@@ -107,6 +109,12 @@ public class SettingsController {
 
     @FXML
     private CheckBox printBarcodeCheckBox;
+
+    @FXML
+    private TextField scannerTestField;
+
+    @FXML
+    private Label scannerTestResultLabel;
 
     // 备份设置标签页
     @FXML
@@ -1357,6 +1365,31 @@ public class SettingsController {
         } else {
             showError(I18nManager.getInstance().get("runtime.print_failed"));
         }
+    }
+
+    /**
+     * 扫码枪测试：使用与设备一致的校验规则验证扫码数据
+     */
+    @FXML
+    public void handleScannerTest() {
+        ScanValidation validation = USBHIDScannerDevice.validateScanData(
+            scannerTestField.getText(), USBHIDScannerDevice.DEFAULT_MAX_SCAN_LENGTH);
+        I18nManager i18n = I18nManager.getInstance();
+
+        scannerTestResultLabel.getStyleClass().removeAll("text-success", "text-danger", "text-muted");
+        if (validation.isAccepted()) {
+            scannerTestResultLabel.setText(i18n.get(I18nKeys.Settings.SCANNER_TEST_OK,
+                validation.getNormalizedData(), validation.getNormalizedData().length()));
+            scannerTestResultLabel.getStyleClass().add("text-success");
+        } else if (ScanValidation.ERROR_TOO_LONG.equals(validation.getErrorCode())) {
+            scannerTestResultLabel.setText(i18n.get(I18nKeys.Settings.SCANNER_TEST_TOO_LONG,
+                validation.getNormalizedData().length(), USBHIDScannerDevice.DEFAULT_MAX_SCAN_LENGTH));
+            scannerTestResultLabel.getStyleClass().add("text-danger");
+        } else {
+            scannerTestResultLabel.setText(i18n.get(I18nKeys.Settings.SCANNER_TEST_EMPTY));
+            scannerTestResultLabel.getStyleClass().add("text-danger");
+        }
+        scannerTestField.selectAll();
     }
 
     /**

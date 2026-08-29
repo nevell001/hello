@@ -411,6 +411,7 @@ src/main/resources/
 
 #### 2026-08-29
 - Print settings wired: Settings-page "Enable Print / Printer Name / Paper Size / Logo" now applies to touch-POS checkout receipts (no receipt when disabled); added a "Test Print" button to the Settings page
+- Scanner test: added a "Scanner Test" field to the Settings page using the same validation rules (normalization, blank data, 128-char limit)
 
 #### 2026-08-28
 - Configuration security: unified the DB password variable to `CASHIER_DB_PASSWORD` (backward compatible with the legacy `CASHER_DB_PASSWORD` and old `MYSQL_PASSWORD`); config files no longer store plaintext passwords; the runtime password is injected from `.env`/environment variables

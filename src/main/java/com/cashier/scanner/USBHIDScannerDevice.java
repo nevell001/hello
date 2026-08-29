@@ -14,6 +14,7 @@ public class USBHIDScannerDevice implements ScannerDevice {
     
     private static final Logger logger = LoggerFactoryUtil.getLogger(USBHIDScannerDevice.class);
     private static final String MAX_SCAN_LENGTH_KEY = "maxScanLength";
+    public static final int DEFAULT_MAX_SCAN_LENGTH = 128;
     
     private final String deviceId;
     private final String deviceName;
@@ -21,7 +22,7 @@ public class USBHIDScannerDevice implements ScannerDevice {
     private Map<String, String> configuration;
     private final List<ScanListener> listeners;
     private boolean connected;
-    private int maxScanLength = 128;
+    private int maxScanLength = DEFAULT_MAX_SCAN_LENGTH;
     
     public USBHIDScannerDevice(String deviceId, String deviceName) {
         this.deviceId = deviceId;
@@ -175,18 +176,21 @@ public class USBHIDScannerDevice implements ScannerDevice {
             return;
         }
 
-        String normalizedData = normalizeScanData(data);
-        if (normalizedData == null) {
-            logger.warn("忽略空扫码数据: {}", data);
+        ScanValidation validation = validateScanData(data, maxScanLength);
+        if (!validation.isAccepted()) {
+            if (ScanValidation.ERROR_EMPTY.equals(validation.getErrorCode())) {
+                logger.warn("忽略空扫码数据: {}", data);
+            } else if (ScanValidation.ERROR_TOO_LONG.equals(validation.getErrorCode())) {
+                String normalizedData = validation.getNormalizedData();
+                logger.warn("扫码数据过长，已拒绝: device={}, length={}, max={}",
+                    deviceId, normalizedData.length(), maxScanLength);
+                notifyListeners(new ScanEvent(normalizedData, deviceId, ScanDataType.BARCODE, false,
+                    "扫码数据超过长度限制"));
+            }
             return;
         }
 
-        if (normalizedData.length() > maxScanLength) {
-            logger.warn("扫码数据过长，已拒绝: device={}, length={}, max={}", deviceId, normalizedData.length(), maxScanLength);
-            notifyListeners(new ScanEvent(normalizedData, deviceId, ScanDataType.BARCODE, false, "扫码数据超过长度限制"));
-            return;
-        }
-        
+        String normalizedData = validation.getNormalizedData();
         logger.debug("收到扫描数据: {}", normalizedData);
         status = ScannerDeviceStatus.SCANNING;
         
@@ -222,5 +226,30 @@ public class USBHIDScannerDevice implements ScannerDevice {
             .replace("\n", "")
             .trim();
         return normalized.isEmpty() ? null : normalized;
+    }
+
+    /**
+     * 校验扫码数据：归一化、空数据、长度限制
+     * @param rawData 原始扫码数据
+     * @param maxScanLength 最大长度（≤0 表示不限制）
+     * @return 校验结果
+     */
+    public static ScanValidation validateScanData(String rawData, int maxScanLength) {
+        String normalized = normalizeScanData(rawData);
+        if (normalized == null) {
+            return ScanValidation.rejected(ScanValidation.ERROR_EMPTY, null);
+        }
+        if (maxScanLength > 0 && normalized.length() > maxScanLength) {
+            return ScanValidation.rejected(ScanValidation.ERROR_TOO_LONG, normalized);
+        }
+        return ScanValidation.accepted(normalized);
+    }
+
+    /**
+     * 当前设备的扫码长度上限
+     * @return 最大长度
+     */
+    public int getMaxScanLength() {
+        return maxScanLength;
     }
 }

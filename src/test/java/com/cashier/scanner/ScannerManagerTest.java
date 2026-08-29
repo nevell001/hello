@@ -76,6 +76,31 @@ class ScannerManagerTest {
     }
 
     @Test
+    @DisplayName("扫码数据校验：归一化 / 空数据 / 超长")
+    void scanDataValidationRules() {
+        ScanValidation ok = USBHIDScannerDevice.validateScanData("  6901234567890\r\n", 128);
+        assertTrue(ok.isAccepted());
+        assertEquals("6901234567890", ok.getNormalizedData());
+
+        ScanValidation blank = USBHIDScannerDevice.validateScanData(" \r\n ", 128);
+        assertFalse(blank.isAccepted());
+        assertEquals(ScanValidation.ERROR_EMPTY, blank.getErrorCode());
+
+        ScanValidation tooLong = USBHIDScannerDevice.validateScanData("12345", 4);
+        assertFalse(tooLong.isAccepted());
+        assertEquals(ScanValidation.ERROR_TOO_LONG, tooLong.getErrorCode());
+        assertEquals("12345", tooLong.getNormalizedData());
+    }
+
+    @Test
+    @DisplayName("默认扫码长度上限为 128")
+    void defaultMaxScanLengthIs128() {
+        USBHIDScannerDevice device = new USBHIDScannerDevice("S1", "扫码枪");
+        assertEquals(128, device.getMaxScanLength());
+        assertEquals(128, USBHIDScannerDevice.DEFAULT_MAX_SCAN_LENGTH);
+    }
+
+    @Test
     @DisplayName("全局监听器回调中增删监听器不会影响本次分发")
     void globalListenersAreSafeDuringDispatch() {
         USBHIDScannerDevice device = new USBHIDScannerDevice("S1", "扫码枪");

@@ -226,6 +226,11 @@ public final class I18nKeys {
         public static final String FONT_SIZE_MEDIUM = "settings.font_size_medium";
         public static final String FONT_SIZE_SMALL = "settings.font_size_small";
         public static final String TEST_PRINT = "settings.test_print";
+        public static final String SCANNER_TEST = "settings.scanner_test";
+        public static final String SCANNER_TEST_PROMPT = "settings.scanner_test_prompt";
+        public static final String SCANNER_TEST_OK = "settings.scanner_test_ok";
+        public static final String SCANNER_TEST_TOO_LONG = "settings.scanner_test_too_long";
+        public static final String SCANNER_TEST_EMPTY = "settings.scanner_test_empty";
 
         private Settings() {
         }
