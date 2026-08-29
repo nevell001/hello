@@ -7,10 +7,11 @@
 --   docker exec lisuan-mysql mysql -uroot -pYOUR_PASSWORD --default-character-set=utf8mb4 lisuan_system < 00-init-complete.sql
 -- Docker Compose 首次启动时会自动以 MYSQL_DATABASE（默认 lisuan_system）为目标库执行本脚本。
 -- 
--- 版本: v2.5.9
--- 更新日期: 2026-07-05
+-- 版本: v2.6.0
+-- 更新日期: 2026-08-28
 --
 -- 变更说明:
+-- - 不再写死库名：目标库由调用方/`MYSQL_DATABASE` 提供
 -- - 支持 MySQL 8.4 LTS
 -- - 使用 --mysql-native-password=ON 参数确保向后兼容
 -- - 优化 TIMESTAMP 字段以支持 MySQL 8.4 的新特性

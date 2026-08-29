@@ -4,7 +4,7 @@
 
 LiSuan Cashier System is a desktop POS (Point of Sale) cashier system built with JavaFX 17. It is designed for daily retail operations, covering checkout, products, members, purchasing, inventory, returns, reports, user permissions, data backup, and hardware integration.
 
-**Current Version**: v2.6.0 | **Latest Update**: 2026-08-23 | **Test Coverage**: 515 test cases
+**Current Version**: v2.6.0 | **Latest Update**: 2026-08-28 | **Test Coverage**: 515 test cases
 
 > Test scope: `mvn -q clean verify` runs 515 test cases by default (including SpotBugs and JaCoCo gates);
 > `LoginControllerUITest` (17 cases) requires a real display environment and is run explicitly with
@@ -407,7 +407,14 @@ src/main/resources/
 
 ## Recent Updates
 
-### v2.6.0 (2026-08-23)
+### v2.6.0
+
+#### 2026-08-28
+- Configuration security: unified the DB password variable to `CASHIER_DB_PASSWORD` (backward compatible with the legacy `CASHER_DB_PASSWORD` and old `MYSQL_PASSWORD`); config files no longer store plaintext passwords; the runtime password is injected from `.env`/environment variables
+- Docker: initialization SQL no longer hardcodes the database name and supports a custom `MYSQL_DATABASE`; compose variables and mounted `my.cnf`
+- Script fixes: install.sh JDBC characterEncoding changed to UTF-8; release.bat Chinese output and version-gate fixes
+
+#### 2026-08-23
 - DAO layer fully migrated to instance-based `XxxDAORefactored extends BaseDAO` + `DAOFactory`; static DAOs and dead code removed
 - Payment: mock mode "Simulate Payment" button for closed-loop UI testing; payment callback routes made public with channel signature verification
 - Payment callback hardening: amount validation, idempotent duplicate callbacks, terminal-state protection for refunded/closed orders
@@ -417,7 +424,7 @@ src/main/resources/
 - Code quality: fixed payment callback auth interception, health-check connection leak, and electronic payment dialog NPE; added i18n completeness gate, concurrency-safety tests, and token-expiry tests
 - Added go-live checklist `docs/GO_LIVE_CHECKLIST.md` and credentials checklist `docs/CREDENTIALS_CHECKLIST.md`
 
-### v2.6.0 (2026-07-24)
+#### 2026-07-24
 - Touch screen POS adds language switching: One-tap toggle between Simplified Chinese/English/Traditional Chinese from toolbar
 - Language preference optimization: Saves both user preference and global default, new users automatically use system language
 - Fixed language switching not working: Unified language preference storage logic, prioritizes user preference > global default > system default

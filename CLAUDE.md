@@ -143,6 +143,7 @@ ApiController (15 classes) → Service Layer → DAO Layer
 **DatabaseManager** (`util/DatabaseManager.java`)
 - Uses HikariCP connection pooling (pool size, connection timeout, idle timeout, max lifetime configurable)
 - Reads from `config/database.properties`
+- Password is injected at runtime via `CASHIER_DB_PASSWORD` (legacy `CASHER_DB_PASSWORD` still accepted) from `.env`/environment; config files must not store plaintext passwords
 - Initializes all database tables on startup
 - Supports UTF-8/utf8mb4 encoding
 - Important: Product names have UNIQUE constraint (v2.4.3)
@@ -624,7 +625,7 @@ SyncManager.broadcastTransactionComplete(transactionId);
 **Default Login:** admin / admin123
 
 **Config Files:**
-- `config/database.properties` - Database connection (HikariCP pool settings included)
+- `config/database.properties` - Database connection (HikariCP pool settings included; password via `CASHIER_DB_PASSWORD` from `.env`/environment, legacy `CASHER_DB_PASSWORD` accepted)
 - `config/jvm.config` - JVM options
 - `config/printer.properties` - Printer settings
 - `config/api.properties` - API server settings (v2.5.0)
