@@ -347,6 +347,7 @@ src/main/resources/
 
 - [CLAUDE.md](CLAUDE.md) — 项目架构、迁移状态与开发约定
 - [docs/GO_LIVE_CHECKLIST.md](docs/GO_LIVE_CHECKLIST.md) — 上线走查清单
+- [docs/HARDWARE_ACCEPTANCE.md](docs/HARDWARE_ACCEPTANCE.md) — 硬件验收测试表（打印机/扫码枪/钱箱/触屏/客显）
 - [docs/CREDENTIALS_CHECKLIST.md](docs/CREDENTIALS_CHECKLIST.md) — 上线凭据准备清单（数据库/API/支付/云备份）
 - [docs/DATABASE_INIT.md](docs/DATABASE_INIT.md) — 数据库初始化说明
 
