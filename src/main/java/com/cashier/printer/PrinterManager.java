@@ -152,6 +152,65 @@ public class PrinterManager {
     public PrinterDevice getDefaultPrinter() {
         return defaultPrinter;
     }
+
+    /**
+     * 按名称查找打印设备（忽略大小写与首尾空白）
+     * @param name 设备名称
+     * @return 匹配的设备，未找到返回 null
+     */
+    public PrinterDevice findByName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return null;
+        }
+        String target = name.trim();
+        for (PrinterDevice device : devices.values()) {
+            String deviceName = device.getDeviceName();
+            if (deviceName != null && deviceName.trim().equalsIgnoreCase(target)) {
+                return device;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 按名称设置默认打印机
+     * @param name 设备名称
+     * @return 是否设置成功
+     */
+    public boolean setDefaultPrinterByName(String name) {
+        PrinterDevice device = findByName(name);
+        if (device == null) {
+            logger.warn("未找到名称匹配的打印设备: {}", name);
+            return false;
+        }
+        setDefaultPrinter(device.getDeviceId());
+        return true;
+    }
+
+    /**
+     * 按纸张规格标签（如 "58mm (热敏纸)" / "80mm (热敏纸)"）应用纸张宽度
+     * @param paperSizeLabel 设置页纸张大小选项
+     */
+    public void applyPaperSize(String paperSizeLabel) {
+        if (paperSizeLabel == null || paperSizeLabel.trim().isEmpty()) {
+            return;
+        }
+        int widthMM = -1;
+        if (paperSizeLabel.contains("58")) {
+            widthMM = 58;
+        } else if (paperSizeLabel.contains("80")) {
+            widthMM = 80;
+        }
+        if (widthMM <= 0) {
+            return;
+        }
+        for (PrinterDevice device : devices.values()) {
+            if (device instanceof NetworkPrinterDevice) {
+                ((NetworkPrinterDevice) device).setPaperWidth(widthMM);
+            }
+        }
+        logger.info("已应用纸张宽度: {}mm", widthMM);
+    }
     
     /**
      * 启动所有设备

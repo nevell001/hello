@@ -4,7 +4,7 @@
 
 LiSuan Cashier System is a desktop POS (Point of Sale) cashier system built with JavaFX 17. It is designed for daily retail operations, covering checkout, products, members, purchasing, inventory, returns, reports, user permissions, data backup, and hardware integration.
 
-**Current Version**: v2.6.0 | **Latest Update**: 2026-08-28 | **Test Coverage**: 515 test cases
+**Current Version**: v2.6.0 | **Latest Update**: 2026-08-29 | **Test Coverage**: 515 test cases
 
 > Test scope: `mvn -q clean verify` runs 515 test cases by default (including SpotBugs and JaCoCo gates);
 > `LoginControllerUITest` (17 cases) requires a real display environment and is run explicitly with
@@ -408,6 +408,9 @@ src/main/resources/
 ## Recent Updates
 
 ### v2.6.0
+
+#### 2026-08-29
+- Print settings wired: Settings-page "Enable Print / Printer Name / Paper Size / Logo" now applies to touch-POS checkout receipts (no receipt when disabled); added a "Test Print" button to the Settings page
 
 #### 2026-08-28
 - Configuration security: unified the DB password variable to `CASHIER_DB_PASSWORD` (backward compatible with the legacy `CASHER_DB_PASSWORD` and old `MYSQL_PASSWORD`); config files no longer store plaintext passwords; the runtime password is injected from `.env`/environment variables

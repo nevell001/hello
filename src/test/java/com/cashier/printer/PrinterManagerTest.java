@@ -50,6 +50,46 @@ class PrinterManagerTest {
     }
 
     @Test
+    void testFindByNameAndSetDefaultByName() {
+        PrinterDevice mockDevice = mock(PrinterDevice.class);
+        when(mockDevice.getDeviceId()).thenReturn("net-1");
+        when(mockDevice.getDeviceName()).thenReturn("收银台打印机");
+        printerManager.registerDevice(mockDevice);
+
+        assertSame(mockDevice, printerManager.findByName("收银台打印机"));
+        assertSame(mockDevice, printerManager.findByName("  收银台打印机  "));
+        assertNull(printerManager.findByName("不存在的打印机"));
+        assertNull(printerManager.findByName("   "));
+
+        assertTrue(printerManager.setDefaultPrinterByName("收银台打印机"));
+        assertSame(mockDevice, printerManager.getDefaultPrinter());
+        assertFalse(printerManager.setDefaultPrinterByName("不存在的打印机"));
+    }
+
+    @Test
+    void testApplyPaperSizeToNetworkPrinters() {
+        NetworkPrinterDevice device = new NetworkPrinterDevice("net-1", "测试打印机", "192.0.2.1", 9100);
+        printerManager.registerDevice(device);
+
+        printerManager.applyPaperSize("58mm (热敏纸)");
+        assertEquals(58, device.getPaperWidth());
+
+        printerManager.applyPaperSize("80mm (热敏纸)");
+        assertEquals(80, device.getPaperWidth());
+
+        printerManager.applyPaperSize("A4");
+        assertEquals(80, device.getPaperWidth());
+    }
+
+    @Test
+    void testCreateTestTask() {
+        PrintTask task = PrintTask.createTestTask("测试内容");
+        assertEquals(PrintTaskType.TEST, task.getTaskType());
+        assertEquals("测试内容", task.getContent());
+        assertTrue(task.isCutPaper());
+    }
+
+    @Test
     void testPrintTaskFlow() {
         PrinterDevice mockDevice = mock(PrinterDevice.class);
         when(mockDevice.getDeviceId()).thenReturn("test-printer");

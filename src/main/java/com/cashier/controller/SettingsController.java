@@ -8,10 +8,18 @@ import com.cashier.service.DataService;
 import com.cashier.service.PaymentService;
 import com.cashier.i18n.I18nManager;
 import com.cashier.model.User;
+import com.cashier.printer.EscPosUtils;
+import com.cashier.printer.NetworkPrinterDevice;
+import com.cashier.printer.PrintTask;
+import com.cashier.printer.PrinterDevice;
+import com.cashier.printer.PrinterManager;
 import com.cashier.util.PasswordUtil;
 import com.cashier.util.FormValidator;
 import com.cashier.util.DatabaseManager;
+import com.cashier.util.DateTimeFormats;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import javafx.animation.PauseTransition;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -75,6 +83,9 @@ public class SettingsController {
 
     @FXML
     private TextField printerNameField;
+
+    @FXML
+    private Button testPrintButton;
 
     @FXML
     private ComboBox<String> paperSizeComboBox;
@@ -334,6 +345,10 @@ public class SettingsController {
         // 加载打印设置
         enablePrintCheckBox.setSelected(Boolean.parseBoolean(settings.getOrDefault("enablePrint", "false")));
         printerNameField.setText(settings.getOrDefault("printerName", ""));
+        String savedPaperSize = settings.getOrDefault("paperSize", "");
+        if (!savedPaperSize.isEmpty() && paperSizeComboBox.getItems().contains(savedPaperSize)) {
+            paperSizeComboBox.setValue(savedPaperSize);
+        }
         printLogoCheckBox.setSelected(Boolean.parseBoolean(settings.getOrDefault("printLogo", "true")));
         printBarcodeCheckBox.setSelected(Boolean.parseBoolean(settings.getOrDefault("printBarcode", "true")));
 
@@ -1299,6 +1314,51 @@ public class SettingsController {
             "主题=" + themeCode + ", 语言=" + languageTag + ", 字号=" + fontSizeCode,
             settings.size());
     }
+
+    /**
+     * 测试打印：向当前默认打印机输出测试页
+     */
+    @FXML
+    public void handleTestPrint() {
+        PrinterManager manager = PrinterManager.getInstance();
+        PrinterDevice device = manager.getDefaultPrinter();
+        if (device == null) {
+            java.util.List<PrinterDevice> devices = manager.getAllDevices();
+            if (devices.size() == 1) {
+                device = devices.get(0);
+            }
+        }
+        if (device == null || !device.isConnected()) {
+            showError(I18nManager.getInstance().get("runtime.print_no_printer"));
+            return;
+        }
+
+        int width = 48;
+        StringBuilder content = new StringBuilder();
+        content.append(EscPosUtils.createSeparator(width, '-')).append("\n");
+        content.append(EscPosUtils.centerText(I18nManager.getInstance().get("settings.test_print"), width)).append("\n");
+        content.append(EscPosUtils.createSeparator(width, '-')).append("\n");
+        content.append("设备名称: ").append(device.getDeviceName()).append("\n");
+        content.append("设备ID: ").append(device.getDeviceId()).append("\n");
+        content.append("设备类型: ").append(device.getDeviceType().getDisplayName()).append("\n");
+        if (device instanceof NetworkPrinterDevice) {
+            NetworkPrinterDevice netPrinter = (NetworkPrinterDevice) device;
+            content.append("IP地址: ").append(netPrinter.getHostAddress()).append("\n");
+            content.append("端口: ").append(netPrinter.getPort()).append("\n");
+        }
+        content.append("打印时间: ")
+            .append(DateTimeFormats.formatStandard(LocalDateTime.now(ZoneId.systemDefault()))).append("\n");
+        content.append(EscPosUtils.createSeparator(width, '-')).append("\n");
+        content.append("\n\n");
+
+        boolean success = manager.print(PrintTask.createTestTask(content.toString()));
+        if (success) {
+            showSuccess(I18nManager.getInstance().get("runtime.print_success"));
+        } else {
+            showError(I18nManager.getInstance().get("runtime.print_failed"));
+        }
+    }
+
     /**
      * 显示成功消息
      * @param message 消息内容

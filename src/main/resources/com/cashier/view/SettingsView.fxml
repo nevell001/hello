@@ -127,6 +127,10 @@
                         <ComboBox fx:id="paperSizeComboBox" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="150"/>
                     </GridPane>
 
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Button fx:id="testPrintButton" text="%settings.test_print" onAction="#handleTestPrint" styleClass="primary-button"/>
+                    </HBox>
+
                     <Separator/>
 
                     <Label text="%settings.logo_settings" styleClass="text-primary, settings-section-title"/>

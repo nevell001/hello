@@ -11,6 +11,7 @@ import com.cashier.model.Product;
 import com.cashier.model.Transaction;
 import com.cashier.model.User;
 import com.cashier.printer.PrintUtil;
+import com.cashier.printer.PrinterManager;
 import com.cashier.service.TransactionService;
 import com.cashier.util.CurrencyUtil;
 import com.cashier.util.DateTimeFormats;
@@ -1852,6 +1853,19 @@ public class TouchCartController implements CartViewHost {
             totalQty += ci.quantity;
         }
         Map<String, String> settings = com.cashier.service.DataService.loadSettings();
+        if (!Boolean.parseBoolean(settings.getOrDefault("enablePrint", "false"))) {
+            logger.info("打印功能未启用（enablePrint=false），跳过小票打印");
+            return;
+        }
+        String printerName = settings.getOrDefault("printerName", "").trim();
+        if (!printerName.isEmpty()) {
+            boolean selected = PrinterManager.getInstance().setDefaultPrinterByName(printerName);
+            if (!selected) {
+                logger.warn("设置中的打印机名称未匹配到已注册设备: {}", printerName);
+            }
+        }
+        PrinterManager.getInstance().applyPaperSize(settings.getOrDefault("paperSize", ""));
+        boolean printLogo = Boolean.parseBoolean(settings.getOrDefault("printLogo", "true"));
         String storeName = settings.getOrDefault("storeName", "狸算收银");
         String cashierName = currentUser != null ? currentUser.name : "";
         String memberInfo = currentMember != null
@@ -1861,7 +1875,7 @@ public class TouchCartController implements CartViewHost {
         boolean ok = PrintUtil.printReceipt(
             tx.transactionId, storeName, cashierName, items.toString(), totalQty,
             total.doubleValue(), discount.doubleValue(), tx.finalAmount.doubleValue(),
-            received.doubleValue(), change.doubleValue(), paymentMethod, memberInfo);
+            received.doubleValue(), change.doubleValue(), paymentMethod, memberInfo, printLogo);
         if (!ok) {
             logger.info("小票打印未完成(可能未连接打印机),交易仍已成功");
         }

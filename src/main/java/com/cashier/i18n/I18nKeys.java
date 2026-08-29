@@ -188,6 +188,7 @@ public final class I18nKeys {
         public static final String FORMAT_LABEL = "runtime.format_label";
         public static final String INVALID_DATE_RANGE = "runtime.invalid_date_range";
         public static final String NO_ACTIVE_SHIFT = "runtime.no_active_shift";
+        public static final String PRINT_NO_PRINTER = "runtime.print_no_printer";
         public static final String ORDER_INFO = "runtime.order_info";
         public static final String PAYMENT_ALIPAY = "runtime.payment.alipay";
         public static final String PAYMENT_CARD = "runtime.payment.card";
@@ -224,6 +225,7 @@ public final class I18nKeys {
         public static final String FONT_SIZE_LARGE = "settings.font_size_large";
         public static final String FONT_SIZE_MEDIUM = "settings.font_size_medium";
         public static final String FONT_SIZE_SMALL = "settings.font_size_small";
+        public static final String TEST_PRINT = "settings.test_print";
 
         private Settings() {
         }

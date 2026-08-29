@@ -180,6 +180,15 @@ public class PrintTask {
         return new PrintTask(taskId, "销售小票", PrintTaskType.RECEIPT, content, 
                            1, printLogo, openCashDrawer, true, false);
     }
+
+    /**
+     * 创建测试打印任务
+     */
+    public static PrintTask createTestTask(String content) {
+        String taskId = "TST-" + System.currentTimeMillis();
+        return new PrintTask(taskId, "测试打印", PrintTaskType.TEST, content,
+                           1, true, false, true, false);
+    }
     
     /**
      * 创建入库单据任务

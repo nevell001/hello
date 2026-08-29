@@ -33,6 +33,21 @@ public class PrintUtil {
                                        String items, int totalQuantity, double totalAmount,
                                        double discountAmount, double finalAmount, double paidAmount,
                                        double changeAmount, String paymentMethod, String memberInfo) {
+        return printReceipt(transactionId, storeName, cashierName, items, totalQuantity, totalAmount,
+                            discountAmount, finalAmount, paidAmount, changeAmount, paymentMethod,
+                            memberInfo, true);
+    }
+
+    /**
+     * 打印销售小票
+     * @param printLogo 是否打印 Logo（来自设置页）
+     * @return 是否打印成功
+     */
+    public static boolean printReceipt(String transactionId, String storeName, String cashierName,
+                                       String items, int totalQuantity, double totalAmount,
+                                       double discountAmount, double finalAmount, double paidAmount,
+                                       double changeAmount, String paymentMethod, String memberInfo,
+                                       boolean printLogo) {
         try {
             PrintTemplate template = PrintTemplate.createReceiptTemplate();
             
@@ -50,7 +65,7 @@ public class PrintUtil {
             template.setVariable("paymentMethod", paymentMethod);
             template.setVariable("memberInfo", memberInfo != null ? memberInfo : "非会员");
             
-            PrintTask task = PrintTask.createReceiptTask(template.generate(), true, true);
+            PrintTask task = PrintTask.createReceiptTask(template.generate(), printLogo, true);
             
             return PrinterManager.getInstance().print(task);
             
