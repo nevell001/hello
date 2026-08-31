@@ -9,6 +9,7 @@ import com.cashier.model.Promotion;
 import org.junit.jupiter.api.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -130,13 +131,23 @@ class PromotionServiceTest extends DatabaseTestBase {
     @Order(5)
     @DisplayName("测试查询当前有效的促销")
     void testFindActivePromotions() throws Exception {
-        // 查询当前有效的促销（启用状态）
+        // 自建两个日期范围覆盖当前时间的促销，避免依赖共享测试库残留状态（消除 flaky）
+        Promotion active1 = createPromotion("满100减10", "FULL_REDUCTION", 100.0, 10.0);
+        active1.startDate = LocalDateTime.now().minusDays(1);
+        active1.endDate = LocalDateTime.now().plusDays(1);
+        promotionDAO.update(active1);
+
+        Promotion active2 = createPromotion("8折优惠", "PERCENTAGE_DISCOUNT", 0.0, 0.2);
+        active2.startDate = LocalDateTime.now().minusDays(1);
+        active2.endDate = LocalDateTime.now().plusDays(1);
+        promotionDAO.update(active2);
+
+        // 查询当前有效的促销（启用且日期范围包含当前时间）
         List<Promotion> activePromotions = promotionDAO.findActive();
 
-        // 应该包含所有启用的促销
         assertTrue(activePromotions.size() >= 2);
-        assertTrue(activePromotions.stream().anyMatch(p -> p.name.equals("满100减10")));
-        assertTrue(activePromotions.stream().anyMatch(p -> p.name.equals("8折优惠")));
+        assertTrue(activePromotions.stream().anyMatch(p -> p.id == active1.id));
+        assertTrue(activePromotions.stream().anyMatch(p -> p.id == active2.id));
     }
 
     @Test
