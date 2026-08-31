@@ -23,6 +23,7 @@ public class DatabaseConfigDialog {
 
     private JFrame frame;
     private JComboBox<String> dbTypeCombo;
+    private JComboBox<String> envCombo;
     private JTextField hostField;
     private JTextField portField;
     private JTextField dbNameField;
@@ -44,7 +45,7 @@ public class DatabaseConfigDialog {
     public void show() {
         frame = new JFrame("LiSuan - Database Configuration");
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.setSize(550, 450);
+        frame.setSize(550, 480);
         frame.setLocationRelativeTo(null);
         frame.setResizable(false);
 
@@ -74,36 +75,48 @@ public class DatabaseConfigDialog {
         dbTypeCombo.addActionListener(e -> updateFields());
         mainPanel.add(dbTypeCombo, gbc);
 
-        // Host
+        // Environment (development -> root, production -> lisuan, 与 .env 的 ENVIRONMENT 对齐)
         gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0;
+        mainPanel.add(new JLabel("Environment:"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        envCombo = new JComboBox<>(new String[]{"development", "production"});
+        String currentEnv = System.getenv("ENVIRONMENT");
+        if ("production".equalsIgnoreCase(currentEnv)) {
+            envCombo.setSelectedItem("production");
+        }
+        envCombo.addActionListener(e -> updateFields());
+        mainPanel.add(envCombo, gbc);
+
+        // Host
+        gbc.gridx = 0; gbc.gridy = 3; gbc.weightx = 0;
         mainPanel.add(new JLabel("Host:"), gbc);
         gbc.gridx = 1; gbc.weightx = 1.0;
         hostField = new JTextField("localhost", 20);
         mainPanel.add(hostField, gbc);
 
         // Port
-        gbc.gridx = 0; gbc.gridy = 3; gbc.weightx = 0;
+        gbc.gridx = 0; gbc.gridy = 4; gbc.weightx = 0;
         mainPanel.add(new JLabel("Port:"), gbc);
         gbc.gridx = 1; gbc.weightx = 1.0;
         portField = new JTextField("3306", 20);
         mainPanel.add(portField, gbc);
 
         // Database Name
-        gbc.gridx = 0; gbc.gridy = 4; gbc.weightx = 0;
+        gbc.gridx = 0; gbc.gridy = 5; gbc.weightx = 0;
         mainPanel.add(new JLabel("Database:"), gbc);
         gbc.gridx = 1; gbc.weightx = 1.0;
         dbNameField = new JTextField("lisuan_system", 20);
         mainPanel.add(dbNameField, gbc);
 
         // Username
-        gbc.gridx = 0; gbc.gridy = 5; gbc.weightx = 0;
+        gbc.gridx = 0; gbc.gridy = 6; gbc.weightx = 0;
         mainPanel.add(new JLabel("Username:"), gbc);
         gbc.gridx = 1; gbc.weightx = 1.0;
         userField = new JTextField("root", 20);
         mainPanel.add(userField, gbc);
 
         // Password
-        gbc.gridx = 0; gbc.gridy = 6; gbc.weightx = 0;
+        gbc.gridx = 0; gbc.gridy = 7; gbc.weightx = 0;
         mainPanel.add(new JLabel("Password:"), gbc);
         gbc.gridx = 1; gbc.weightx = 1.0;
         passField = new JPasswordField("", 20);
@@ -125,13 +138,13 @@ public class DatabaseConfigDialog {
         buttonPanel.add(testButton);
         buttonPanel.add(saveButton);
 
-        gbc.gridx = 0; gbc.gridy = 7; gbc.gridwidth = 2;
+        gbc.gridx = 0; gbc.gridy = 8; gbc.gridwidth = 2;
         mainPanel.add(buttonPanel, gbc);
 
         // Info label
         JLabel infoLabel = new JLabel("<html><center>Configure LiSuan database connection.<br>For first-time setup, the database will be created automatically.</center></html>");
         infoLabel.setForeground(Color.GRAY);
-        gbc.gridy = 8;
+        gbc.gridy = 9;
         mainPanel.add(infoLabel, gbc);
 
         frame.add(mainPanel);
@@ -142,9 +155,8 @@ public class DatabaseConfigDialog {
 
     private void updateFields() {
         String type = (String) dbTypeCombo.getSelectedItem();
-        // 根据环境变量选择默认用户（生产环境使用 lisuan，开发环境使用 root）
-        String env = System.getenv("ENVIRONMENT");
-        boolean isProduction = "production".equalsIgnoreCase(env);
+        // 根据界面选择的环境决定默认用户（生产环境使用 lisuan，开发环境使用 root）
+        boolean isProduction = "production".equals(envCombo.getSelectedItem());
         String defaultUser = isProduction ? "lisuan" : "root";
         String passwordVariable = isProduction ? "CASHIER_DB_PASSWORD" : "MYSQL_ROOT_PASSWORD";
         String defaultPassword = System.getenv(passwordVariable);
@@ -382,7 +394,10 @@ public class DatabaseConfigDialog {
     }
 
     private boolean isProductionEnvironment() {
-        return "production".equalsIgnoreCase(System.getenv("ENVIRONMENT"));
+        // 优先使用界面选择；未初始化时回退到环境变量（兼容 .env 加载场景）
+        return envCombo != null
+            ? "production".equals(envCombo.getSelectedItem())
+            : "production".equalsIgnoreCase(System.getenv("ENVIRONMENT"));
     }
 
     private void finishSuccessfulSave(String dbName) {
